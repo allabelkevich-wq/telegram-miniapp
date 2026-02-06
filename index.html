@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>YupSoul</title>
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Comfortaa',sans-serif}
+    body{background:linear-gradient(135deg,#f9f7ff 0%,#fefeff 100%);min-height:100vh;display:flex;flex-direction:column;padding:20px 15px;position:relative;overflow-x:hidden;color:#2d2d2d}
+    body::before{content:"";position:fixed;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 30%,rgba(167,139,250,.08) 0%,transparent 25%),radial-gradient(circle at 70% 70%,rgba(249,168,212,.08) 0%,transparent 25%);z-index:-1;opacity:.3}
+    .container{max-width:600px;margin:0 auto;width:100%}
+    .page{display:none;min-height:100vh;padding-top:20px}
+    .page.active{display:block}
+    header{text-align:center;margin:25px 0 20px}
+    h1{font-size:2.4rem;background:linear-gradient(90deg,#a78bfa,#f9a8d4,#5eead4);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;letter-spacing:-1px;line-height:1.1}
+    .subtitle{color:#6b7280;font-size:1.15rem;margin-top:8px;font-weight:400}
+    .tagline{color:#a78bfa;font-size:1.35rem;font-weight:700;margin:15px 0;letter-spacing:-0.5px}
+    .section{background:#fefeff;border-radius:24px;padding:30px 25px;box-shadow:0 8px 30px rgba(167,139,250,.15);border:1px solid #e5e7eb;position:relative;overflow:hidden;margin-bottom:25px}
+    .section::before{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:linear-gradient(to bottom,#a78bfa,#f9a8d4)}
+    .field{margin-bottom:22px;text-align:left}
+    label{display:block;margin-bottom:10px;color:#2d2d2d;font-weight:600;font-size:1.05rem;display:flex;align-items:center;gap:10px}
+    label::before{content:attr(data-icon);font-size:1.25rem}
+    input,textarea,select{width:100%;padding:15px;border-radius:16px;border:1px solid #e5e7eb;background:white;color:#2d2d2d;font-size:16px;transition:all .3s ease;font-family:'Comfortaa',sans-serif}
+    input:focus,textarea:focus,select:focus{outline:none;border-color:#a78bfa;box-shadow:0 0 0 3px rgba(167,139,250,.15)}
+    input.valid,textarea.valid{border-color:#4ade80}
+    .time-group{display:flex;flex-direction:column;gap:14px}
+    .checkbox{display:flex;align-items:center;gap:12px;margin-top:-6px}
+    .checkbox input{width:auto;height:20px;accent-color:#a78bfa}
+    .checkbox label{margin-bottom:0;font-weight:500;color:#2d2d2d;font-size:1rem;display:flex;align-items:center;gap:8px}
+    .checkbox label::before{content:"❓";font-size:1.3rem}
+    select{appearance:none;background:url("image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23a78bfa' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 16px center;background-size:20px;padding-right:48px}
+    textarea{min-height:140px;line-height:1.6;resize:vertical}
+    .request-label{font-size:1.3rem;text-align:center;margin-bottom:15px;color:#a78bfa;font-weight:700;letter-spacing:-0.5px}
+    button{background:linear-gradient(90deg,#a78bfa,#f9a8d4);color:white;border:none;padding:18px 30px;font-size:1.25rem;border-radius:20px;width:100%;font-weight:700;cursor:pointer;transition:all .3s ease;box-shadow:0 6px 20px rgba(167,139,250,.25);margin-top:10px;letter-spacing:1px;text-transform:uppercase;min-height:64px;position:relative;overflow:hidden}
+    button::after{content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);transform:rotate(30deg);transition:all .8s}
+    button:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(167,139,250,.35)}
+    button:hover::after{left:100%}
+    button:active{transform:translateY(1px)}
+    button:disabled{background:#d1d5db;cursor:not-allowed;transform:none;box-shadow:none;opacity:.85}
+    button.secondary{background:white;color:#a78bfa;border:2px solid #a78bfa;box-shadow:none;text-transform:none;letter-spacing:-0.5px;font-weight:600;min-height:56px}
+    button.secondary:hover{background:#a78bfa;color:white;box-shadow:0 6px 20px rgba(167,139,250,.25)}
+    .btn-group{display:flex;gap:15px;margin-top:25px}
+    .btn-group button{flex:1}
+    .price-tag{background:linear-gradient(90deg,#f9a8d4,#a78bfa);color:white;padding:12px 20px;border-radius:16px;font-size:1.4rem;font-weight:700;text-align:center;margin:20px 0;box-shadow:0 4px 15px rgba(249,168,212,.3);letter-spacing:1px}
+    .payment-info{background:rgba(167,139,250,.05);border-left:4px solid #a78bfa;padding:15px;border-radius:0 12px 12px 0;margin:15px 0;font-size:.95rem;line-height:1.6}
+    .payment-info::before{content:"💎 ";font-size:1.3rem}
+    .success-icon{font-size:5rem;text-align:center;margin:20px 0;background:linear-gradient(90deg,#5eead4,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .success-title{font-size:2.2rem;color:#a78bfa;font-weight:800;text-align:center;margin:20px 0;background:linear-gradient(90deg,#a78bfa,#f9a8d4);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .success-text{font-size:1.15rem;line-height:1.7;margin:20px 0;text-align:center;padding:0 10px}
+    .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px 40px;text-align:center;min-height:70vh}
+    .spinner{width:60px;height:60px;border:5px solid rgba(167,139,250,.2);border-top-color:#a78bfa;border-radius:50%;margin:0 auto 25px;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-text{font-size:1.5rem;color:#a78bfa;font-weight:700;margin-bottom:15px}
+    .song-preview{background:white;border-radius:16px;padding:20px;margin:20px 0;text-align:left;border:2px solid #a78bfa}
+    .song-preview h3{color:#a78bfa;font-size:1.4rem;margin-bottom:10px;text-align:center}
+    .song-preview p{font-size:1.05rem;line-height:1.7;color:#2d2d2d}
+    footer{text-align:center;padding:30px 0 20px;color:#6b7280;font-size:.95rem;margin-top:auto}
+    
+    /* Панель навигации для превью в браузере */
+    .preview-nav{background:white;border-radius:16px;padding:12px;margin-bottom:25px;box-shadow:0 4px 20px rgba(167,139,250,.15);text-align:center;border:1px solid #e5e7eb;display:none}
+    .preview-nav.show{display:block}
+    .preview-nav-buttons{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
+    .preview-nav button{background:white;color:#a78bfa;border:2px solid #a78bfa;padding:6px 14px;margin:0 4px;border-radius:20px;cursor:pointer;font-weight:600;transition:all .2s;font-size:.9rem;min-width:90px}
+    .preview-nav button:hover{background:#a78bfa;color:white;transform:translateY(-2px)}
+    .preview-nav button.active{background:linear-gradient(90deg,#a78bfa,#f9a8d4);color:white;border-color:transparent;box-shadow:0 4px 15px rgba(167,139,250,.3)}
+    
+    @media (max-width:480px){.container{padding:0 12px}h1{font-size:2.1rem}.subtitle{font-size:1.05rem}.tagline{font-size:1.2rem}.section{padding:25px 20px}.btn-group{flex-direction:column}.btn-group button{width:100%}button{font-size:1.15rem;padding:16px;min-height:60px}.price-tag{font-size:1.25rem;padding:10px 15px}.success-icon{font-size:4rem}.success-title{font-size:1.9rem}.success-text{font-size:1.05rem}.preview-nav-buttons{flex-direction:column;align-items:center}.preview-nav button{width:100%;max-width:200px}}
+  </style>
+</head>
+<body>
+  <!-- Панель навигации для превью (показывается только в браузере) -->
+  <div class="container">
+    <div class="preview-nav" id="previewNav">
+      <div style="font-weight:600;color:#a78bfa;margin-bottom:8px">🎨 Режим превью</div>
+      <div class="preview-nav-buttons">
+        <button class="active" data-page="home">Главная</button>
+        <button data-page="form">Форма</button>
+        <button data-page="payment">Оплата</button>
+        <button data-page="loading">Загрузка</button>
+        <button data-page="success">Успех</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Главная страница -->
+    <div class="page active" id="homePage">
+      <header>
+        <h1>YupSoul</h1>
+        <div class="subtitle">твоя жизнь — игра</div>
+        <div class="tagline">Отправь запрос во Вселенную</div>
+      </header>
+      
+      <div class="section">
+        <p style="text-align:center;font-size:1.15rem;line-height:1.7;margin-bottom:25px">
+          Создай свой персональный звуковой ключ — уникальную аудиокомпозицию, которая откроет тебе дверь к желаемому.
+        </p>
+        <button id="startBtn">✨ Начать</button>
+      </div>
+      
+      <footer>
+        <p>YupSoul • 2026</p>
+      </footer>
+    </div>
+    
+    <!-- Страница формы -->
+    <div class="page" id="formPage">
+      <header>
+        <h1>YupSoul</h1>
+        <div class="subtitle">твоя жизнь — игра</div>
+      </header>
+      
+      <div class="section">
+        <div class="field">
+          <label for="name" data-icon="✨">Имя</label>
+          <input type="text" id="name" placeholder="Как тебя зовут?" required>
+        </div>
+        
+        <div class="field">
+          <label for="birthdate" data-icon="📅">Дата рождения</label>
+          <input type="date" id="birthdate" required>
+        </div>
+        
+        <div class="field">
+          <label for="birthplace" data-icon="🌍">Место рождения</label>
+          <input type="text" id="birthplace" placeholder="Город, страна" required>
+        </div>
+        
+        <div class="field">
+          <label for="birthtime" data-icon="⏰">Время рождения</label>
+          <div class="time-group">
+            <input type="time" id="birthtime" required>
+            <div class="checkbox">
+              <input type="checkbox" id="unknown">
+              <label for="unknown">Не знаю точное время</label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="field">
+          <label for="gender" data-icon="⚧️">Пол</label>
+          <select id="gender" required>
+            <option value="">Выбери</option>
+            <option value="male">Мужской</option>
+            <option value="female">Женский</option>
+            <option value="other">Другой</option>
+          </select>
+        </div>
+        
+        <div class="field">
+          <div class="request-label">Отправь запрос во Вселенную</div>
+          <textarea id="request" placeholder="Что ты хочешь изменить в своей жизни? О чём просишь Вселенную?"></textarea>
+        </div>
+        
+        <div class="btn-group">
+          <button class="secondary" id="backBtn">← Назад</button>
+          <button id="nextBtn">Далее →</button>
+        </div>
+      </div>
+      
+      <footer>
+        <p>YupSoul • 2026</p>
+      </footer>
+    </div>
+    
+    <!-- Страница оплаты -->
+    <div class="page" id="paymentPage">
+      <header>
+        <h1>YupSoul</h1>
+        <div class="subtitle">Твой звуковой ключ</div>
+      </header>
+      
+      <div class="section">
+        <div class="price-tag">490₽</div>
+        
+        <div class="payment-info">
+          После оплаты я создам для тебя уникальную аудиокомпозицию на основе твоих данных и запроса. Это твой персональный звуковой ключ для игры жизни.
+        </div>
+        
+        <div style="background:rgba(249,168,212,.1);border-radius:12px;padding:15px;margin:20px 0;font-size:.95rem">
+          <strong>Что ты получишь:</strong>
+          <ul style="margin-left:20px;margin-top:10px;line-height:1.7">
+            <li>Уникальную музыку, созданную под твою натальную карту</li>
+            <li>Персональные аффирмации с твоим именем</li>
+            <li>Формулировки, помогающие реализовать твой запрос</li>
+            <li>Аудиофайл в высоком качестве</li>
+          </ul>
+        </div>
+        
+        <div class="btn-group">
+          <button class="secondary" id="backFromPaymentBtn">← Назад</button>
+          <button id="payBtn">💳 Оплатить</button>
+        </div>
+      </div>
+      
+      <footer>
+        <p>YupSoul • 2026</p>
+      </footer>
+    </div>
+    
+    <!-- Страница загрузки -->
+    <div class="page" id="loadingPage">
+      <div class="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">Создаю твой ключ...</div>
+        <div style="color:#6b7280;font-size:1.1rem;text-align:center;max-width:400px">
+          Магия творится в реальном времени. Твой персональный звуковой ключ формируется на основе твоих уникальных данных.
+        </div>
+      </div>
+    </div>
+    
+    <!-- Страница успеха -->
+    <div class="page" id="successPage">
+      <header>
+        <h1>YupSoul</h1>
+        <div class="subtitle">Ключ активирован!</div>
+      </header>
+      
+      <div class="section">
+        <div class="success-icon">🗝️</div>
+        <h2 class="success-title">Готово!</h2>
+        <p class="success-text">
+          Твой персональный звуковой ключ создан! Это твой уникальный артефакт силы для игры жизни.
+        </p>
+        
+        <div class="song-preview">
+          <h3>🎵 Твоя песня</h3>
+          <p id="songPreviewText">
+            Твоя уникальная аудиокомпозиция уже ждёт тебя в боте. Слушай её каждое утро, чтобы настроиться на волну успеха.
+          </p>
+        </div>
+        
+        <div style="background:rgba(167,139,250,.08);border-radius:12px;padding:15px;margin:20px 0;text-align:center;font-size:1.05rem;line-height:1.7">
+          <strong>Что дальше:</strong><br>
+          Открой бота <a href="https://t.me/YupSoulBot" style="color:#a78bfa;text-decoration:underline">@YupSoulBot</a> в Telegram — там тебя ждёт твой звуковой ключ.
+        </div>
+        
+        <button class="secondary" id="newKeyBtn" style="margin-top:25px">✨ Создать ещё один ключ</button>
+      </div>
+      
+      <footer>
+        <p>YupSoul • 2026</p>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('YupSoul Mini-App загружен');
+      
+      // Показать панель превью только в браузере (не в Telegram)
+      if (!window.Telegram || !window.Telegram.WebApp) {
+        document.getElementById('previewNav').classList.add('show');
+        console.log('Режим превью активирован');
+      } else {
+        console.log('Приложение запущено в Telegram WebApp');
+      }
+      
+      // Установка даты
+      const today = new Date();
+      document.getElementById('birthdate').max = today.toISOString().split('T')[0];
+      const minDate = new Date();
+      minDate.setFullYear(minDate.getFullYear() - 100);
+      document.getElementById('birthdate').min = minDate.toISOString().split('T')[0];
+      console.log('Дата рождения ограничена:', minDate.toISOString().split('T')[0], '—', today.toISOString().split('T')[0]);
+      
+      // Чекбокс времени
+      const unknown = document.getElementById('unknown');
+      const birthtime = document.getElementById('birthtime');
+      unknown.addEventListener('change', () => {
+        birthtime.required = !unknown.checked;
+        console.log('Время рождения:', unknown.checked ? 'неизвестно' : 'требуется');
+      });
+      
+      // Навигация по страницам
+      function goToPage(pageId) {
+        // Скрыть все страницы
+        document.querySelectorAll('.page').forEach(page => {
+          page.classList.remove('active');
+        });
+        // Показать нужную
+        document.getElementById(pageId).classList.add('active');
+        console.log('Переход на страницу:', pageId);
+        
+        // Обновить кнопки превью
+        if (document.getElementById('previewNav').classList.contains('show')) {
+          document.querySelectorAll('.preview-nav button').forEach(btn => {
+            btn.classList.remove('active');
+          });
+          const pageMap = {
+            'homePage': 'home',
+            'formPage': 'form',
+            'paymentPage': 'payment',
+            'loadingPage': 'loading',
+            'successPage': 'success'
+          };
+          const activeBtn = document.querySelector(`.preview-nav button[data-page="${pageMap[pageId]}"]`);
+          if (activeBtn) activeBtn.classList.add('active');
+        }
+      }
+      
+      // Кнопки навигации
+      document.getElementById('startBtn').addEventListener('click', () => goToPage('formPage'));
+      document.getElementById('backBtn').addEventListener('click', () => goToPage('homePage'));
+      document.getElementById('nextBtn').addEventListener('click', () => {
+        // Валидация
+        const name = document.getElementById('name').value.trim();
+        const birthdate = document.getElementById('birthdate').value;
+        const birthplace = document.getElementById('birthplace').value.trim();
+        const birthtimeVal = unknown.checked ? 'ok' : document.getElementById('birthtime').value;
+        const gender = document.getElementById('gender').value;
+        const request = document.getElementById('request').value.trim();
+        
+        if (name.length < 2) {
+          alert('Имя должно содержать минимум 2 символа');
+          return;
+        }
+        if (!birthdate) {
+          alert('Выбери дату рождения');
+          return;
+        }
+        if (birthplace.length < 3) {
+          alert('Место рождения должно содержать минимум 3 символа');
+          return;
+        }
+        if (!birthtimeVal || (!unknown.checked && !document.getElementById('birthtime').value)) {
+          alert('Укажи время рождения или отметь "Не знаю"');
+          return;
+        }
+        if (!gender) {
+          alert('Выбери пол');
+          return;
+        }
+        if (request.length < 10) {
+          alert('Запрос должен содержать минимум 10 символов');
+          return;
+        }
+        
+        goToPage('paymentPage');
+      });
+      
+      document.getElementById('backFromPaymentBtn').addEventListener('click', () => goToPage('formPage'));
+      document.getElementById('payBtn').addEventListener('click', () => {
+        goToPage('loadingPage');
+        
+        // Имитация обработки оплаты и генерации (2.5 сек)
+        setTimeout(() => {
+          const name = document.getElementById('name').value.trim() || 'Друг';
+          const request = document.getElementById('request').value.trim() || 'твои цели';
+          
+          let songText = `✨ ${name}, твоя песня создана!\n\n`;
+          songText += `На основе твоего запроса "${request.substring(0, 30)}..." сгенерирована уникальная аудиокомпозиция.\n\n`;
+          songText += `Это твой персональный звуковой ключ — артефакт силы для игры жизни.`;
+          
+          document.getElementById('songPreviewText').textContent = songText;
+          goToPage('successPage');
+        }, 2500);
+      });
+      
+      document.getElementById('newKeyBtn').addEventListener('click', () => {
+        // Сброс формы
+        document.getElementById('name').value = '';
+        document.getElementById('birthdate').value = '';
+        document.getElementById('birthplace').value = '';
+        document.getElementById('birthtime').value = '';
+        unknown.checked = false;
+        document.getElementById('gender').value = '';
+        document.getElementById('request').value = '';
+        goToPage('formPage');
+      });
+      
+      // Навигация превью
+      document.querySelectorAll('.preview-nav button').forEach(button => {
+        button.addEventListener('click', () => {
+          const pageMap = {
+            'home': 'homePage',
+            'form': 'formPage',
+            'payment': 'paymentPage',
+            'loading': 'loadingPage',
+            'success': 'successPage'
+          };
+          const targetPage = pageMap[button.getAttribute('data-page')];
+          goToPage(targetPage);
+        });
+      });
+      
+      console.log('Все страницы инициализированы');
+    });
+  </script>
+</body>
+</html>
