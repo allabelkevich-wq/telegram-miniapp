@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>YupSoul</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Comfortaa',sans-serif}
@@ -249,12 +250,18 @@
     document.addEventListener('DOMContentLoaded', () => {
       console.log('YupSoul Mini-App загружен');
       
-      // Показать панель превью только в браузере (не в Telegram)
-      if (!window.Telegram || !window.Telegram.WebApp) {
+      // Инициализация в Telegram
+      if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand(); // на весь экран
+        tg.enableClosingConfirmation(); // спросить при закрытии
+        document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#f9f7ff');
+        document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#2d2d2d');
+        console.log('Приложение запущено в Telegram WebApp');
+      } else {
         document.getElementById('previewNav').classList.add('show');
         console.log('Режим превью активирован');
-      } else {
-        console.log('Приложение запущено в Telegram WebApp');
       }
       
       // Установка даты
