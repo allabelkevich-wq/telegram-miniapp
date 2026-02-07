@@ -1,0 +1,9 @@
+{
+  "name": "telegram-miniapp",
+  "private": true,
+  "scripts": {
+    "preview": "npx live-server . --port=8080 --open=/index.html --no-css-inject",
+    "preview:quiet": "npx live-server . --port=8080 --no-browser",
+    "sync": "git add . && (git diff --cached --quiet && echo 'Нет изменений для коммита' || (git commit -m 'Update' && git push origin main))"
+  }
+}

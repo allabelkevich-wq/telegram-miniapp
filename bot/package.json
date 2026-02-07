@@ -1,0 +1,16 @@
+{
+  "name": "yupsoul-bot",
+  "version": "1.0.0",
+  "description": "Telegram-бот YupSoul: приём заявок из Mini App, уведомления",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "grammy": "^1.28.0",
+    "dotenv": "^16.4.5",
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}

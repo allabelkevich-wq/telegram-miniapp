@@ -1,0 +1,9 @@
+Ссылка для кнопки меню в @BotFather (если слетела):
+
+https://allabelkevich-wq.github.io/telegram-miniapp/
+
+Как вставить:
+1. Telegram → @BotFather → /mybots → твой бот
+2. Bot Settings → Menu Button → Configure menu button
+3. Вставить ссылку выше (без пробелов)
+4. Текст кнопки: Открыть приложение (или YupSoul)
