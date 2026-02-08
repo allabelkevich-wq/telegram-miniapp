@@ -1,16 +1,21 @@
 /**
  * YupSoul Telegram Bot
  * Принимает заявки из Mini App (sendData), сохраняет, отвечает пользователю.
+ * HTTP API для «Мои герои» (тариф Мастер).
  */
 
 import { Bot } from "grammy";
+import express from "express";
 import { createClient } from "@supabase/supabase-js";
+import { createHeroesRouter, getOrCreateAppUser } from "./heroesApi.js";
 import "dotenv/config";
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const MINI_APP_URL = process.env.MINI_APP_URL || "https://allabelkevich-wq.github.io/telegram-miniapp/";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";
+const HEROES_API_PORT = parseInt(PORT, 10);
 const ADMIN_IDS = (process.env.ADMIN_TELEGRAM_IDS || "")
   .split(",")
   .map((s) => s.trim())
@@ -33,9 +38,9 @@ function isAdmin(telegramId) {
   return telegramId && ADMIN_IDS.includes(Number(telegramId));
 }
 
-// Сохранение заявки: в Supabase и/или в память (для админки)
+// Сохранение заявки: в Supabase и/или в память (для админки). Поддержка client_id (тариф Мастер).
 async function saveRequest(data) {
-  const row = {
+  let row = {
     telegram_user_id: data.telegram_user_id,
     name: data.name || null,
     birthdate: data.birthdate || null,
@@ -43,9 +48,18 @@ async function saveRequest(data) {
     birthtime: data.birthtime || null,
     birthtime_unknown: !!data.birthtime_unknown,
     gender: data.gender || null,
+    language: data.language || null,
     request: data.request || null,
     status: "pending",
   };
+  if (data.client_id && supabase) {
+    const { data: client, error: clientErr } = await supabase.from("clients").select("name, birth_date, birth_time, birth_place, birthtime_unknown, gender").eq("id", data.client_id).maybeSingle();
+    if (!clientErr && client) {
+      row = { ...row, client_id: data.client_id, name: client.name ?? row.name, birthdate: client.birth_date ?? row.birthdate, birthtime: client.birth_time ?? row.birthtime, birthplace: client.birth_place ?? row.birthplace, birthtime_unknown: !!client.birthtime_unknown, gender: client.gender ?? row.gender };
+    } else {
+      row.client_id = data.client_id;
+    }
+  }
   const record = { id: null, ...row, created_at: new Date().toISOString() };
   if (supabase) {
     const { data: inserted, error } = await supabase.from("track_requests").insert(row).select("id").single();
@@ -54,7 +68,7 @@ async function saveRequest(data) {
       record.id = null;
     } else {
       record.id = inserted?.id ?? null;
-      console.log("[Supabase] Заявка сохранена, id:", record.id);
+      console.log("[Supabase] Заявка сохранена, id:", record.id, row.client_id ? `(для героя ${row.client_id})` : "");
     }
   } else {
     record.id = String(Date.now());
@@ -65,21 +79,34 @@ async function saveRequest(data) {
   return record.id;
 }
 
+const ADMIN_FETCH_TIMEOUT_MS = 8000;
+
 async function getRequestsForAdmin(limit = 30) {
-  if (supabase) {
+  if (!supabase) {
+    return { requests: memoryRequests.slice(0, limit), dbError: false };
+  }
+  const fetchPromise = (async () => {
     const { data, error } = await supabase
       .from("track_requests")
-      .select("id, telegram_user_id, name, birthdate, birthplace, birthtime, birthtime_unknown, gender, request, status, created_at")
+      .select("id, telegram_user_id, name, birthdate, birthplace, birthtime, birthtime_unknown, gender, language, request, status, created_at")
       .order("created_at", { ascending: false })
       .limit(limit);
+    return { data, error };
+  })();
+  const timeoutPromise = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ADMIN_FETCH_TIMEOUT_MS));
+  try {
+    const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
     if (error) {
-      console.error("[Supabase] Ошибка при загрузке заявок для /admin:", error.message, error.code);
+      console.error("[Supabase] Ошибка заявок /admin:", error.message);
       return { requests: memoryRequests.slice(0, limit), dbError: true };
     }
-    console.log("[Supabase] Загружено заявок для админа:", (data || []).length);
+    console.log("[Supabase] Заявок для админа:", (data || []).length);
     return { requests: data || [], dbError: false };
+  } catch (e) {
+    if (e?.message === "timeout") console.error("[Supabase] Таймаут заявок /admin");
+    else console.error("[Supabase] getRequestsForAdmin:", e?.message || e);
+    return { requests: memoryRequests.slice(0, limit), dbError: true };
   }
-  return { requests: memoryRequests.slice(0, limit), dbError: false };
 }
 
 bot.command("start", async (ctx) => {
@@ -118,8 +145,9 @@ bot.on("message:web_app_data", async (ctx) => {
     birthtime,
     birthtimeUnknown,
     gender,
+    language,
     request: userRequest,
-    initData
+    clientId,
   } = payload;
 
   const telegramUserId = ctx.from?.id;
@@ -131,55 +159,122 @@ bot.on("message:web_app_data", async (ctx) => {
     birthtime: birthtime || null,
     birthtime_unknown: !!birthtimeUnknown,
     gender: gender || "",
+    language: language || null,
     request: userRequest || "",
+    client_id: clientId || null,
   });
 
   console.log("[Заявка]", requestId ?? "(не сохранено)", { name, birthdate, birthplace, gender, request: (userRequest || "").slice(0, 50) });
+
+  if (requestId && supabase && birthdate && birthplace) {
+    import("./workerAstro.js").then(({ computeAndSaveAstroSnapshot }) =>
+      computeAndSaveAstroSnapshot(supabase, requestId)
+        .then((r) => {
+          if (r.ok) console.log("[Астро] Снапшот сохранён для заявки", requestId);
+          else console.warn("[Астро]", requestId, r.error);
+        })
+        .catch((e) => console.warn("[Астро] Ошибка для заявки", requestId, e.message))
+    );
+  }
 
   await ctx.reply(
     "✅ Заявка принята!\n\n" +
     "Твой персональный звуковой ключ будет создан. Как только он будет готов — пришлю его сюда в чат. Ожидай уведомление."
   );
+
+  // Уведомление админам в личку о новой заявке (приходит в чат с ботом)
+  if (ADMIN_IDS.length) {
+    const requestPreview = (userRequest || "").trim().slice(0, 150);
+    const adminText =
+      "🔔 Новая заявка\n\n" +
+      `Имя: ${name || "—"}\n` +
+      `Язык: ${language || "—"}\n` +
+      `Дата: ${birthdate || "—"} · Место: ${(birthplace || "—").slice(0, 40)}${(birthplace || "").length > 40 ? "…" : ""}\n` +
+      `Запрос: ${requestPreview}${(userRequest || "").length > 150 ? "…" : ""}\n\n` +
+      (requestId ? `ID заявки: ${requestId}\n` : "(в БД не сохранено)\n") +
+      `TG user: ${telegramUserId}`;
+    console.log("[Уведомление] Отправляю админам:", ADMIN_IDS.join(", "));
+    for (const adminId of ADMIN_IDS) {
+      bot.api
+        .sendMessage(adminId, adminText)
+        .then(() => console.log("[Уведомление] Доставлено админу", adminId))
+        .catch((e) => console.warn("[Уведомление админу]", adminId, e.message));
+    }
+  }
 });
 
 bot.command("admin_check", async (ctx) => {
   if (!isAdmin(ctx.from?.id)) return;
+  const send = (msg) => ctx.reply(msg).catch((e) => console.error("[admin_check] send:", e));
   try {
     if (!supabase) {
-      await ctx.reply("Supabase не настроен (нет SUPABASE_URL/SUPABASE_SERVICE_KEY в .env).");
+      await send("Supabase не настроен (нет SUPABASE_URL/SUPABASE_SERVICE_KEY в .env).");
       return;
     }
-    const { count, error } = await supabase.from("track_requests").select("id", { count: "exact", head: true });
+    const countPromise = supabase.from("track_requests").select("id", { count: "exact", head: true });
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 10000));
+    const result = await Promise.race([countPromise, timeoutPromise]);
+    const { count, error } = result;
     if (error) {
-      await ctx.reply("Ошибка подключения к Supabase:\n" + error.message + "\n\nПроверь: 1) Таблица track_requests создана (SQL из bot/supabase-schema.sql). 2) Ключ service_role верный. 3) Если используешь новый ключ (sb_secret_) — попробуй Legacy service_role в Supabase → Project Settings → API.");
+      await send("Ошибка Supabase: " + error.message + "\n\nПроверь таблицу track_requests и service_role ключ в Supabase → API.");
       return;
     }
-    await ctx.reply("Подключение к Supabase: OK.\nВ таблице track_requests записей: " + (count ?? 0) + ".\n\nЕсли 0 — отправь заявку из приложения и снова напиши /admin.");
+    await send("Подключение к Supabase: OK.\nВ таблице track_requests записей: " + (count ?? 0) + ".\n\nЕсли 0 — отправь заявку из приложения, затем /admin.");
   } catch (e) {
-    await ctx.reply("Ошибка: " + (e && e.message ? e.message : String(e)));
+    const msg = e?.message === "timeout" ? "Таймаут подключения к Supabase. Проверь сеть и доступность Supabase." : ("Ошибка: " + (e?.message || String(e)));
+    await send(msg);
   }
 });
 
+const TELEGRAM_MAX_MESSAGE_LENGTH = 4096;
+const ADMIN_CHUNK_SIZE = TELEGRAM_MAX_MESSAGE_LENGTH - 100;
+
+function sendLongMessage(ctx, text) {
+  const chatId = ctx.chat?.id;
+  if (!chatId) return Promise.resolve();
+  const sendOne = (msg) => bot.api.sendMessage(chatId, msg || "—").catch((e) => console.error("[admin] chunk:", e?.message));
+  if (!text || text.length <= ADMIN_CHUNK_SIZE) {
+    return sendOne(text);
+  }
+  const chunks = [];
+  for (let j = 0; j < text.length; j += ADMIN_CHUNK_SIZE) {
+    chunks.push(text.slice(j, j + ADMIN_CHUNK_SIZE));
+  }
+  return chunks.reduce((prev, chunk) => prev.then(() => sendOne(chunk)), Promise.resolve());
+}
+
 bot.command("admin", async (ctx) => {
+  const chatId = ctx.chat?.id;
+  const userId = ctx.from?.id;
+  console.log("[admin] Команда от chatId=" + chatId + " userId=" + userId + " isAdmin=" + isAdmin(userId));
+
+  const send = (msg) => {
+    if (!chatId) return Promise.resolve();
+    return bot.api.sendMessage(chatId, msg).catch((e) => console.error("[admin] sendMessage:", e?.message));
+  };
+
   try {
-    if (!isAdmin(ctx.from?.id)) {
-      await ctx.reply("У тебя нет доступа к этому разделу.");
+    if (!isAdmin(userId)) {
+      await send("У тебя нет доступа к этому разделу. Твой ID: " + (userId || "?") + ". Добавь его в ADMIN_TELEGRAM_IDS в .env бота.");
       return;
     }
-    await ctx.reply("Проверяю заявки…");
+
+    const sent = await send("Проверяю заявки…");
+    if (!sent) console.warn("[admin] Не удалось отправить «Проверяю заявки…»");
+
     const { requests, dbError } = await getRequestsForAdmin(30);
+
     if (dbError) {
-      await ctx.reply("Не удалось загрузить заявки из базы. Проверь консоль бота и что таблица track_requests создана в Supabase (SQL из bot/supabase-schema.sql).");
+      await send(
+        "Не удалось загрузить заявки из базы (таймаут или ошибка Supabase).\n\nНапиши /admin_check — проверка подключения к базе."
+      );
       return;
     }
     if (!requests.length) {
-      let hint = "Заявок пока нет.\n\n";
-      if (supabase) {
-        hint += "Проверь:\n1) Отправь тестовую заявку из приложения (меню → форма → донаты → Отправить заявку → кнопка внизу).\n2) В консоли бота при этом должна быть строка «[Supabase] Заявка сохранена» или «[Supabase] Ошибка».\n3) В Supabase → Table Editor → таблица track_requests — есть ли строки?\n\nНапиши /admin_check — покажу состояние подключения к базе.";
-      } else {
-        hint += "Supabase не подключён. Заявки хранятся только в памяти и пропадают после перезапуска бота.";
-      }
-      await ctx.reply(hint);
+      const hint = supabase
+        ? "Заявок пока нет.\n\nОтправь заявку из приложения (меню → форма → оплата → Отправить заявку). Затем снова /admin. Или /admin_check."
+        : "Заявок пока нет. Supabase не подключён — заявки только в памяти.";
+      await send(hint);
       return;
     }
     let text = "📋 Последние заявки:\n\n";
@@ -191,29 +286,17 @@ bot.command("admin", async (ctx) => {
       } catch (_) {
         dateStr = String(r.created_at || "—");
       }
-      text += `━━━━━━━━━━━━━━\n`;
       text += `#${i + 1} · ${dateStr}\n`;
-      text += `ID: ${r.id ?? "—"}\n`;
-      text += `Имя: ${r.name ?? "—"}\n`;
-      text += `Дата: ${r.birthdate ?? "—"}\n`;
+      text += `Имя: ${r.name ?? "—"} · Дата: ${r.birthdate ?? "—"}\n`;
       text += `Место: ${r.birthplace ?? "—"}\n`;
-      text += `Время: ${r.birthtime_unknown ? "не указано" : (r.birthtime ?? "—")}\n`;
-      text += `Пол: ${r.gender ?? "—"}\n`;
-      text += `Запрос: ${(r.request || "").slice(0, 120)}${(r.request && r.request.length > 120) ? "…" : ""}\n`;
-      text += `TG user: ${r.telegram_user_id ?? "—"}\n`;
-      text += `Статус: ${r.status ?? "pending"}\n`;
+      text += `Запрос: ${(r.request || "").slice(0, 100)}${(r.request && r.request.length > 100) ? "…" : ""}\n`;
+      text += `Язык: ${r.language ?? "—"} · TG: ${r.telegram_user_id ?? "—"} · ${r.status ?? "—"}\n\n`;
     }
-    text += `━━━━━━━━━━━━━━\nВсего: ${requests.length}`;
-    if (text.length > 4000) {
-      const chunks = [];
-      for (let j = 0; j < text.length; j += 4000) chunks.push(text.slice(j, j + 4000));
-      for (const chunk of chunks) await ctx.reply(chunk);
-    } else {
-      await ctx.reply(text);
-    }
+    text += `Всего: ${requests.length}`;
+    await sendLongMessage(ctx, text);
   } catch (err) {
-    console.error("[admin]", err);
-    await ctx.reply("Произошла ошибка при загрузке заявок. Проверь консоль бота или подключение к Supabase.").catch(() => {});
+    console.error("[admin] Ошибка:", err?.message || err);
+    await send("Ошибка при загрузке заявок. Смотри консоль бота.").catch(() => {});
   }
 });
 
@@ -234,25 +317,51 @@ bot.api.setChatMenuButton({ menuButton: { type: "web_app", text: "✨ Откры
   .then(() => console.log("Кнопка меню установлена:", MINI_APP_URL))
   .catch((e) => console.warn("Не удалось установить кнопку меню:", e.message));
 
-bot.start({
-  onStart: async (info) => {
-    console.log("Бот запущен:", info.username);
-    if (ADMIN_IDS.length) {
-      console.log("Админы (ID):", ADMIN_IDS.join(", "));
-    } else {
-      console.warn("ADMIN_TELEGRAM_IDS не задан — команда /admin недоступна.");
-    }
-    if (supabase) {
-      console.log("Supabase: подключен, URL:", SUPABASE_URL);
-      const { count, error } = await supabase.from("track_requests").select("id", { count: "exact", head: true });
-      if (error) {
-        console.error("Supabase: проверка таблицы track_requests — ошибка:", error.message);
-        console.error("Убедись, что таблица создана (SQL из bot/supabase-schema.sql выполнен в SQL Editor).");
-      } else {
-        console.log("Supabase: в таблице track_requests записей:", count ?? 0);
-      }
-    } else {
-      console.log("Supabase: не подключен (заявки только в памяти).");
-    }
-  }
+// HTTP: сначала слушаем порт (для Render health check), потом подключаем API и бота
+const app = express();
+app.use(express.json());
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Telegram-Init");
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
 });
+app.get("/healthz", (_req, res) => res.status(200).send("ok"));
+
+if (process.env.RENDER_HEALTHZ_FIRST) {
+  app.use("/api", createHeroesRouter(supabase, BOT_TOKEN));
+  globalThis.__EXPRESS_APP__ = app;
+  bot.start({
+    onStart: async (info) => {
+      console.log("Бот запущен:", info.username);
+      if (ADMIN_IDS.length) console.log("Админы (ID):", ADMIN_IDS.join(", "));
+      else console.warn("ADMIN_TELEGRAM_IDS не задан — команда /admin недоступна.");
+      if (supabase) {
+        console.log("Supabase: подключен, URL:", SUPABASE_URL);
+        const { count, error } = await supabase.from("track_requests").select("id", { count: "exact", head: true });
+        if (error) console.error("Supabase: ошибка таблицы track_requests:", error.message);
+        else console.log("Supabase: в таблице track_requests записей:", count ?? 0);
+      } else console.log("Supabase: не подключен (заявки только в памяти).");
+    },
+  }).catch((err) => console.error("Ошибка запуска бота:", err?.message || err));
+} else {
+  console.log("[HTTP] Слушаю порт", HEROES_API_PORT, "(env.PORT =", process.env.PORT + ")");
+  app.use("/api", createHeroesRouter(supabase, BOT_TOKEN));
+  app.listen(HEROES_API_PORT, "0.0.0.0", () => {
+    console.log("[HTTP] Порт открыт:", HEROES_API_PORT);
+    bot.start({
+      onStart: async (info) => {
+        console.log("Бот запущен:", info.username);
+        if (ADMIN_IDS.length) console.log("Админы (ID):", ADMIN_IDS.join(", "));
+        else console.warn("ADMIN_TELEGRAM_IDS не задан — команда /admin недоступна.");
+        if (supabase) {
+          console.log("Supabase: подключен, URL:", SUPABASE_URL);
+          const { count, error } = await supabase.from("track_requests").select("id", { count: "exact", head: true });
+          if (error) console.error("Supabase: ошибка таблицы track_requests:", error.message);
+          else console.log("Supabase: в таблице track_requests записей:", count ?? 0);
+        } else console.log("Supabase: не подключен (заявки только в памяти).");
+      },
+    }).catch((err) => console.error("Ошибка запуска бота:", err?.message || err));
+  });
+}

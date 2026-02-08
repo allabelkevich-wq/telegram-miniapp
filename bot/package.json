@@ -5,12 +5,19 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "dev": "node --watch index.js"
+    "start": "node healthz.js",
+    "dev": "node --watch index.js",
+    "run-migration": "node run-migration.js",
+    "seed-ideally-tuned": "node seed-ideally-tuned-prompt.js",
+    "worker": "node workerGenerate.js",
+    "test:apis": "node test-apis.js"
   },
   "dependencies": {
-    "grammy": "^1.28.0",
+    "@supabase/supabase-js": "^2.45.0",
     "dotenv": "^16.4.5",
-    "@supabase/supabase-js": "^2.45.0"
+    "express": "^5.2.1",
+    "grammy": "^1.28.0",
+    "pg": "^8.18.0",
+    "swisseph": "^0.5.17"
   }
 }
