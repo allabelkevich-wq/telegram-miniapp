@@ -18,7 +18,7 @@ function _dbg(loc, msg, data, hyp) {
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const MINI_APP_BASE = (process.env.MINI_APP_URL || "https://allabelkevich-wq.github.io/telegram-miniapp/").replace(/\?.*$/, "").replace(/\/$/, "");
-const MINI_APP_URL = MINI_APP_BASE + "?v=5";
+const MINI_APP_URL = MINI_APP_BASE + "?v=6";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";
@@ -145,18 +145,31 @@ async function getRequestsForAdmin(limit = 30) {
 
 bot.command("start", async (ctx) => {
   const name = ctx.from?.first_name || "друг";
-  await ctx.reply(
+  const text =
     `Привет, ${name}! 👋\n\n` +
     `Я — YupSoul. Твоя жизнь — игра.\n\n` +
-    `Нажми кнопку меню ниже, чтобы открыть приложение и создать свой персональный звуковой ключ — уникальную аудиокомпозицию по твоим данным и запросу.`,
-    {
-      reply_markup: {
-        inline_keyboard: [[
-          { text: "✨ Открыть приложение", web_app: { url: MINI_APP_URL } }
-        ]]
-      }
+    `Нажми кнопку меню ниже, чтобы открыть приложение и создать свой персональный звуковой ключ — уникальную аудиокомпозицию по твоим данным и запросу.`;
+  const replyMarkup = {
+    reply_markup: {
+      inline_keyboard: [[
+        { text: "✨ Открыть приложение", web_app: { url: MINI_APP_URL } }
+      ]]
     }
-  );
+  };
+  try {
+    const replyPromise = ctx.reply(text, replyMarkup);
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("reply_timeout")), 15000)
+    );
+    await Promise.race([replyPromise, timeout]);
+  } catch (e) {
+    console.error("[start] Ошибка ответа:", e?.message || e);
+    try {
+      await ctx.reply("Привет! Открой приложение по кнопке меню слева от поля ввода.");
+    } catch (e2) {
+      console.error("[start] Fallback reply failed:", e2?.message);
+    }
+  }
 });
 
 // Данные из Mini App (кнопка «Отправить заявку» → sendData)
