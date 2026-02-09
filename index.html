@@ -88,31 +88,10 @@
     .preview-nav button:hover{background:#a78bfa;color:white;transform:translateY(-2px)}
     .preview-nav button.active{background:linear-gradient(90deg,#a78bfa,#f9a8d4);color:white;border-color:transparent;box-shadow:0 4px 15px rgba(167,139,250,.3)}
     
-    /* Кнопка "Забота" — ненавязчивая, но заметная */
-    .care-btn{position:fixed;bottom:25px;right:25px;background:rgba(167,139,250,.15);color:#a78bfa;border:1px solid rgba(167,139,250,.4);border-radius:50px;padding:10px 20px;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .35s ease;z-index:1000;display:flex;align-items:center;gap:6px;box-shadow:0 4px 15px rgba(167,139,250,.2);backdrop-filter:blur(10px);font-family:'Comfortaa',sans-serif}
-    .care-btn:hover{background:rgba(167,139,250,.25);transform:translateY(-3px) scale(1.05);box-shadow:0 6px 20px rgba(167,139,250,.35)}
-    .care-btn:active{transform:translateY(1px) scale(.98)}
-    /* Страница "Забота" */
-    .care-page{background:linear-gradient(135deg,#fefeff 0%,#f0edff 100%);padding:30px 25px;border-radius:24px;box-shadow:0 8px 30px rgba(167,139,250,.15);margin-bottom:25px;position:relative;overflow:hidden}
-    .care-page::before{content:"";position:absolute;top:0;left:0;width:100%;height:6px;background:linear-gradient(90deg,#a78bfa,#f9a8d4,#5eead4)}
-    .care-section{background:#fff;border-radius:18px;padding:22px;margin:20px 0;border-left:3px solid #a78bfa;box-shadow:0 3px 12px rgba(0,0,0,.05);transition:transform .3s ease}
-    .care-section:hover{transform:translateX(5px)}
-    .care-section h3{color:#a78bfa;font-size:1.4rem;margin-bottom:12px;display:flex;align-items:center;gap:10px}
-    .care-section h3::before{content:"•";font-size:2rem;color:#f9a8d4}
-    .care-section p{line-height:1.7;margin-bottom:10px;color:#2d2d2d}
-    .care-section ul{padding-left:25px;margin-top:10px;line-height:1.8;color:#2d2d2d}
-    .care-section li{margin-bottom:8px;position:relative}
-    .care-section li::before{content:"✦";position:absolute;left:-20px;color:#a78bfa;font-size:.9rem}
-    .care-section a{color:#a78bfa;text-decoration:underline}
-    .back-care-btn{background:#fff;color:#a78bfa;border:2px solid #a78bfa;width:auto;padding:12px 28px;margin:25px auto 0;font-size:1.1rem;border-radius:16px;display:block;cursor:pointer;font-weight:600}
-    .back-care-btn:hover{background:#a78bfa;color:#fff}
-    
-    @media (max-width:480px){.container{padding:0 12px}h1{font-size:2.1rem}.subtitle{font-size:1.05rem}.tagline{font-size:1.2rem}.section{padding:25px 20px}.btn-group{flex-direction:column}.btn-group button{width:100%}button{font-size:1.15rem;padding:16px;min-height:60px}.price-tag{font-size:1.25rem;padding:10px 15px}.success-icon{font-size:4rem}.success-title{font-size:1.9rem}.success-text{font-size:1.05rem}.preview-nav-buttons{flex-direction:column;align-items:center}.preview-nav button{width:100%;max-width:200px}.care-btn{bottom:15px;right:15px;padding:8px 16px;font-size:.9rem}.care-section{padding:18px}}
+    @media (max-width:480px){.container{padding:0 12px}h1{font-size:2.1rem}.subtitle{font-size:1.05rem}.tagline{font-size:1.2rem}.section{padding:25px 20px}.btn-group{flex-direction:column}.btn-group button{width:100%}button{font-size:1.15rem;padding:16px;min-height:60px}.price-tag{font-size:1.25rem;padding:10px 15px}.success-icon{font-size:4rem}.success-title{font-size:1.9rem}.success-text{font-size:1.05rem}.preview-nav-buttons{flex-direction:column;align-items:center}.preview-nav button{width:100%;max-width:200px}}
   </style>
 </head>
 <body>
-  <!-- Кнопка "Забота" — всегда видна на всех страницах -->
-  <button class="care-btn" id="careBtn" type="button">❤️ Забота</button>
   <!-- Панель навигации для превью (показывается только в браузере) -->
   <div class="container">
     <div class="preview-nav" id="previewNav">
@@ -123,7 +102,6 @@
         <button data-page="payment">Оплата</button>
         <button data-page="loading">Загрузка</button>
         <button data-page="success">Успех</button>
-        <button data-page="care">Забота</button>
       </div>
     </div>
   </div>
@@ -138,7 +116,7 @@
       </header>
       
       <div class="section">
-        <img src="https://allabelkevich-wq.github.io/telegram-miniapp/logo.png?v=3" alt="YupSoul" class="app-logo" width="200" height="200">
+        <img src="/logo.png" alt="YupSoul" class="app-logo" width="200" height="200">
         <p style="text-align:center;font-size:1.15rem;line-height:1.7;margin-bottom:25px">
           Создай свой персональный звуковой ключ — уникальную аудиокомпозицию, которая откроет тебе дверь к желаемому.
         </p>
@@ -335,7 +313,7 @@
       </header>
       
       <div class="section">
-        <img src="https://allabelkevich-wq.github.io/telegram-miniapp/logo.png?v=3" alt="YupSoul" class="app-logo success" width="180" height="180">
+        <img src="/logo.png" alt="YupSoul" class="app-logo success" width="180" height="180">
         <h2 class="success-title">Готово!</h2>
         <p class="success-text">
           Твой персональный звуковой ключ создан! Это твой уникальный артефакт силы для игры жизни.
@@ -361,54 +339,6 @@
       </footer>
     </div>
     
-    <!-- Страница "Забота" -->
-    <div class="page" id="carePage">
-      <header>
-        <h1>YupSoul</h1>
-        <div class="subtitle">Забота о тебе</div>
-      </header>
-      <div class="care-page">
-        <div class="care-section">
-          <h3>Как создаётся твой ключ</h3>
-          <p>Твой звуковой ключ — это не просто аудиофайл. Это персональный артефакт, созданный на основе:</p>
-          <ul>
-            <li>Твоих уникальных данных рождения (дата, время, место)</li>
-            <li>Твоего личного запроса Вселенной</li>
-            <li>Глубокого анализа твоей натальной карты</li>
-            <li>Создания музыки и текста, резонирующих именно с тобой</li>
-          </ul>
-          <p style="margin-top:12px;font-weight:500;color:#4b5563">⏳ Время создания: до 24 часов (обычно 2–4 часа)</p>
-        </div>
-        <div class="care-section">
-          <h3>Конфиденциальность</h3>
-          <p>Твои данные — это святое. Мы:</p>
-          <ul>
-            <li>Никогда не передаём твои данные третьим лицам</li>
-            <li>Используем данные только для создания твоего звукового ключа</li>
-            <li>Шифруем персональные данные при хранении</li>
-            <li>Даём право запросить удаление данных в любой момент</li>
-          </ul>
-          <p style="margin-top:12px;font-weight:600;color:#a78bfa">🔒 Твоя тайна остаётся только между тобой и Вселенной</p>
-        </div>
-        <div class="care-section">
-          <h3>Частые вопросы</h3>
-          <p><strong>Что если я не знаю точное время рождения?</strong><br>Отметь галочку «Не знаю» — ключ всё равно будет мощным, с другим акцентом.</p>
-          <p style="margin-top:15px"><strong>Как использовать звуковой ключ?</strong><br>Лучше всего слушать каждое утро в тишине, с закрытыми глазами. Возвращайся к ключу в разные моменты жизни — он будет открываться по-новому.</p>
-          <p style="margin-top:15px"><strong>Что если мне не понравится результат?</strong><br>Напиши в поддержку — мы найдём решение вместе. ❤️</p>
-        </div>
-        <div class="care-section">
-          <h3>Поддержка</h3>
-          <p>Вопросы или нужна помощь:</p>
-          <ul>
-            <li>Напиши в бота: <a href="https://t.me/YupSoulBot" target="_blank" rel="noopener">@YupSoulBot</a></li>
-            <li>Или на почту: <a href="mailto:support@yupsoul.com">support@yupsoul.com</a></li>
-          </ul>
-          <p style="margin-top:12px;font-weight:600;color:#2d2d2d">🌸 Мы здесь, чтобы поддержать тебя на каждом шагу</p>
-        </div>
-        <button class="back-care-btn" id="backFromCareBtn" type="button">← Вернуться к созданию ключа</button>
-      </div>
-      <footer><p>YupSoul • 2026</p></footer>
-    </div>
   </div>
 
   <script>
@@ -669,7 +599,7 @@
           document.querySelectorAll('.preview-nav button').forEach(function(btn) {
             btn.classList.remove('active');
           });
-          var pageMap = { 'homePage': 'home', 'formPage': 'form', 'paymentPage': 'payment', 'loadingPage': 'loading', 'successPage': 'success', 'heroesPage': 'heroes', 'carePage': 'care' };
+          var pageMap = { 'homePage': 'home', 'formPage': 'form', 'paymentPage': 'payment', 'loadingPage': 'loading', 'successPage': 'success', 'heroesPage': 'heroes' };
           var activeBtn = document.querySelector('.preview-nav button[data-page="' + (pageMap[pageId] || '') + '"]');
           if (activeBtn) activeBtn.classList.add('active');
         }
@@ -970,11 +900,9 @@
         goToPage('formPage');
       });
       
-      document.getElementById('careBtn').addEventListener('click', function() { goToPage('carePage'); });
-      document.getElementById('backFromCareBtn').addEventListener('click', function() { goToPage('homePage'); });
       document.querySelectorAll('.preview-nav button').forEach(function(button) {
         button.addEventListener('click', function() {
-          var pageMap = { 'home': 'homePage', 'form': 'formPage', 'payment': 'paymentPage', 'loading': 'loadingPage', 'success': 'successPage', 'heroes': 'heroesPage', 'care': 'carePage' };
+          var pageMap = { 'home': 'homePage', 'form': 'formPage', 'payment': 'paymentPage', 'loading': 'loadingPage', 'success': 'successPage', 'heroes': 'heroesPage' };
           document.querySelectorAll('.preview-nav button').forEach(function(btn) { btn.classList.remove('active'); });
           this.classList.add('active');
           goToPage(pageMap[button.getAttribute('data-page')] || 'homePage');

@@ -1,6 +1,6 @@
 # Как добавить YupSoul в Telegram
 
-Сайт приложения: **https://allabelkevich-wq.github.io/telegram-miniapp/**
+Сайт приложения (Vercel): **https://telegram-miniapp-six-teal.vercel.app**
 
 ## Вариант 1: У тебя уже есть бот (например @YupSoulBot)
 
@@ -11,7 +11,7 @@
 3. Выбери своего бота (например YupSoulBot).
 4. Нажми **Bot Settings** → **Menu Button** → **Configure menu button**.
 5. Введи URL:  
-   **`https://allabelkevich-wq.github.io/telegram-miniapp/`**
+   **`https://telegram-miniapp-six-teal.vercel.app`**
 6. Введи текст кнопки, например: **Открыть приложение** или **YupSoul**.
 
 После этого у бота под полем ввода появится кнопка — по нажатию откроется твоё Mini App.
@@ -33,7 +33,7 @@
 
 Любой пользователь может открыть приложение по ссылке:
 
-- **https://allabelkevich-wq.github.io/telegram-miniapp/**
+- **https://telegram-miniapp-six-teal.vercel.app**
 
 Чтобы открыть его **внутри Telegram** (как Mini App), ссылка должна быть в формате:
 
@@ -61,7 +61,7 @@
 
 1. **URL в BotFather**  
    @BotFather → `/mybots` → твой бот → **Bot Settings** → **Menu Button** → **Configure menu button**.  
-   URL должен быть **ровно**: `https://allabelkevich-wq.github.io/telegram-miniapp/` (без пробелов в конце).
+   URL должен быть **ровно**: `https://telegram-miniapp-six-teal.vercel.app` (без пробелов в конце). Либо задай его в `bot/.env` как `MINI_APP_URL` — тогда бот сам выставит кнопку при запуске.
 
 2. **Кнопка под полем ввода**  
    Открывай приложение кнопкой **под полем ввода** в чате с ботом (кнопка меню), а не кнопкой под сообщением бота.

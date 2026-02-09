@@ -11,8 +11,8 @@ import { createHeroesRouter, getOrCreateAppUser } from "./heroesApi.js";
 import "dotenv/config";
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const MINI_APP_BASE = (process.env.MINI_APP_URL || "https://allabelkevich-wq.github.io/telegram-miniapp/").replace(/\?.*$/, "").replace(/\/$/, "");
-const MINI_APP_URL = MINI_APP_BASE + "?v=6";
+const MINI_APP_BASE = (process.env.MINI_APP_URL || "https://telegram-miniapp-six-teal.vercel.app").replace(/\?.*$/, "").replace(/\/$/, "");
+const MINI_APP_URL = MINI_APP_BASE + "?v=7";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";
@@ -21,7 +21,8 @@ const ADMIN_IDS = (process.env.ADMIN_TELEGRAM_IDS || "")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean)
-  .map(Number);
+  .map((s) => parseInt(s, 10))
+  .filter((n) => !Number.isNaN(n));
 
 if (!BOT_TOKEN) {
   console.error("Укажи BOT_TOKEN в .env (получить у @BotFather)");
@@ -142,10 +143,18 @@ bot.command("start", async (ctx) => {
   }
 });
 
+// Лог любых сообщений с web_app_data (если не видно [Заявка] — обновления уходят другому процессу, напр. бот на Render)
+bot.on("message", (ctx, next) => {
+  if (ctx.message?.web_app_data) {
+    console.log("[Заявка] Получены web_app_data, длина:", ctx.message.web_app_data?.data?.length ?? 0);
+  }
+  return next();
+});
+
 // Данные из Mini App (кнопка «Отправить заявку» → sendData)
 bot.on("message:web_app_data", async (ctx) => {
   const raw = ctx.message.web_app_data?.data;
-  console.log("[Заявка] Получены web_app_data, длина:", raw?.length || 0);
+  console.log("[Заявка] Обработка web_app_data, длина:", raw?.length || 0);
   if (!raw) {
     await ctx.reply("Не получил данные заявки. Нажми в приложении кнопку «Отправить заявку во Вселенную» внизу экрана.");
     return;
@@ -237,11 +246,11 @@ bot.on("message:web_app_data", async (ctx) => {
       `Запрос: ${requestPreview}${(userRequest || "").length > 150 ? "…" : ""}\n\n` +
       `ID заявки: ${requestId}\n` +
       `TG user: ${telegramUserId}`;
-    console.log("[Уведомление] Отправляю админам:", ADMIN_IDS.join(", "));
+    console.log("[Уведомление] Отправляю в личку админам:", ADMIN_IDS.join(", "));
     for (const adminId of ADMIN_IDS) {
       bot.api
         .sendMessage(adminId, adminText)
-        .then(() => console.log("[Уведомление] Доставлено админу", adminId))
+        .then(() => console.log("[Уведомление] Доставлено админу (личка)", adminId))
         .catch((e) => console.warn("[Уведомление админу]", adminId, e.message));
     }
   }
@@ -304,7 +313,15 @@ bot.command("get_analysis", sendAnalysisIfPaid);
 bot.hears(/^(расшифровка|получить расшифровку|детальный анализ)$/i, sendAnalysisIfPaid);
 
 bot.command("admin_check", async (ctx) => {
-  if (!isAdmin(ctx.from?.id)) return;
+  const userId = ctx.from?.id;
+  if (!ADMIN_IDS.length) {
+    await ctx.reply("ADMIN_TELEGRAM_IDS не задан в .env. Добавь свой Telegram ID и перезапусти бота.").catch(() => {});
+    return;
+  }
+  if (!isAdmin(userId)) {
+    await ctx.reply("Нет доступа. Твой ID: " + (userId ?? "?") + ". Добавь в ADMIN_TELEGRAM_IDS в .env.").catch(() => {});
+    return;
+  }
   const send = (msg) => ctx.reply(msg).catch((e) => console.error("[admin_check] send:", e));
   try {
     if (!supabase) {
@@ -344,37 +361,44 @@ function sendLongMessage(ctx, text) {
 }
 
 bot.command("admin", async (ctx) => {
-  const chatId = ctx.chat?.id;
   const userId = ctx.from?.id;
-  console.log("[admin] Команда от chatId=" + chatId + " userId=" + userId + " isAdmin=" + isAdmin(userId));
+  const chatId = ctx.chat?.id;
+  console.log("[admin] chatId=" + chatId + " userId=" + userId + " isAdmin=" + isAdmin(userId) + " ADMIN_IDS=" + JSON.stringify(ADMIN_IDS));
 
-  const send = (msg) => {
-    if (!chatId) return Promise.resolve();
-    return bot.api.sendMessage(chatId, msg).catch((e) => console.error("[admin] sendMessage:", e?.message));
+  const reply = async (text) => {
+    try {
+      return await ctx.reply(text);
+    } catch (e) {
+      console.error("[admin] ctx.reply:", e?.message || e);
+      if (chatId) return bot.api.sendMessage(chatId, text).catch((e2) => console.error("[admin] sendMessage:", e2?.message));
+    }
   };
 
   try {
+    if (!ADMIN_IDS.length) {
+      await reply("В .env бота не задан ADMIN_TELEGRAM_IDS. Добавь: ADMIN_TELEGRAM_IDS=твой_Telegram_ID (узнать ID: @userinfobot).");
+      return;
+    }
     if (!isAdmin(userId)) {
-      await send("У тебя нет доступа к этому разделу. Твой ID: " + (userId || "?") + ". Добавь его в ADMIN_TELEGRAM_IDS в .env бота.");
+      await reply("Нет доступа к админке. Твой Telegram ID: " + (userId ?? "?") + ". Добавь его в .env: ADMIN_TELEGRAM_IDS=" + (userId ?? "ТВОЙ_ID") + " и перезапусти бота.");
       return;
     }
 
-    const sent = await send("Проверяю заявки…");
-    if (!sent) console.warn("[admin] Не удалось отправить «Проверяю заявки…»");
+    await reply("Проверяю заявки…");
 
     const { requests, dbError } = await getRequestsForAdmin(30);
 
     if (dbError) {
-      await send(
-        "Не удалось загрузить заявки из базы (таймаут или ошибка Supabase).\n\nНапиши /admin_check — проверка подключения к базе."
+      await reply(
+        "Не удалось загрузить заявки из базы (таймаут или ошибка Supabase).\n\nКоманда /admin_check — проверка подключения к базе."
       );
       return;
     }
     if (!requests.length) {
       const hint = supabase
-        ? "Заявок пока нет.\n\nОтправь заявку из приложения (меню → форма → оплата → Отправить заявку). Затем снова /admin. Или /admin_check."
+        ? "Заявок пока нет.\n\nОтправь заявку из приложения (кнопка меню → форма → оплата → Отправить заявку). Затем снова /admin или /admin_check."
         : "Заявок пока нет. Supabase не подключён — заявки только в памяти.";
-      await send(hint);
+      await reply(hint);
       return;
     }
     let text = "📋 Последние заявки:\n\n";
@@ -396,7 +420,7 @@ bot.command("admin", async (ctx) => {
     await sendLongMessage(ctx, text);
   } catch (err) {
     console.error("[admin] Ошибка:", err?.message || err);
-    await send("Ошибка при загрузке заявок. Смотри консоль бота.").catch(() => {});
+    await reply("Ошибка при загрузке заявок. Смотри консоль бота.").catch(() => {});
   }
 });
 
