@@ -1,0 +1,22 @@
+# Render Blueprint: бот + воркер генерации (из папки bot/)
+# Переменные (BOT_TOKEN, SUPABASE_*, DEEPSEEK_API_KEY, SUNO_API_KEY) задай в Dashboard для обоих сервисов.
+services:
+  - type: web
+    name: yupsoul-bot
+    runtime: node
+    plan: free
+    rootDir: bot
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /healthz
+
+  - type: worker
+    name: yupsoul-worker
+    runtime: node
+    plan: free
+    rootDir: bot
+    buildCommand: npm install
+    startCommand: node worker-loop.js
+    envVars:
+      - key: WORKER_INTERVAL_MS
+        value: "300000"

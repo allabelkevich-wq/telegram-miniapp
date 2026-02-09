@@ -19,6 +19,12 @@ const server = createServer((req, res) => {
     expressApp(req, res);
     return;
   }
+  const url = (req.url || "").split("?")[0];
+  if (url === "/" || url === "") {
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    res.end("<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>YupSoul Bot</title></head><body><p>Bot is starting…</p><p><a href=\"/healthz\">/healthz</a></p></body></html>");
+    return;
+  }
   res.writeHead(404);
   res.end();
 });

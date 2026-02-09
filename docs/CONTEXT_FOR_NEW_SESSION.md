@@ -25,6 +25,8 @@
 - Заявки и /admin: таблица `track_requests` в Supabase, при ошибке базы в консоли и админу показывается подсказка. Тестовая заявка через приложение → потом /admin.
 - Превью локально и в Telegram не синхронизированы (локально — из папки, в TG — с GitHub Pages); финальную проверку делаем в Telegram после пуша.
 - Планировалась пересборка/дизайн в Qwen — бриф в `docs/BRIEF_FOR_QWEN.md`; встраивание дизайна от Qwen в наш код — по запросу, когда будет код от Qwen.
+- **Тариф «Мастер» и модуль «Мои герои»:** полное ТЗ в `docs/SPEC_MOI_GEROI_MASTER.md`. Миграция БД: `bot/supabase-migration-master-heroes.sql` (app_users, clients, track_requests.client_id). Реализация UI — по чек-листу в спеке.
+- **Главный промпт проекта** — **«Идеально отлаженный системный промт»**. В коде: `bot/promptTemplates.js` (MAIN_PROMPT_NAME = `ideally_tuned_system_v1`). Полный текст: `docs/IDEALLY_TUNED_PROMPT.md`. Шаблон с переменными: `bot/prompts/ideally_tuned_system.txt`. В БД загружается через `npm run seed-ideally-tuned` в папке `bot/`. Подробнее: `docs/PROMPTS_ENCYCLOPEDIA.md`.
 
 ---
 

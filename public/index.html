@@ -54,6 +54,8 @@
     .keys-composition-small{display:flex;align-items:center;justify-content:center;gap:12px;margin:15px 0}
     .keys-composition-small .key-music{width:36px;height:50px;transform:rotate(-8deg);opacity:.9}
     .keys-composition-small .key-door{width:34px;height:50px;transform:rotate(6deg);opacity:.9}
+    .app-logo{display:block;margin:0 auto;max-width:200px;width:100%;height:auto;border-radius:24px;box-shadow:0 8px 30px rgba(167,139,250,.2)}
+    .app-logo.success{max-width:180px;margin-bottom:15px}
     .success-title{font-size:2.2rem;color:#a78bfa;font-weight:800;text-align:center;margin:20px 0;background:linear-gradient(90deg,#a78bfa,#f9a8d4);-webkit-background-clip:text;background-clip:text;color:transparent}
     .success-text{font-size:1.15rem;line-height:1.7;margin:20px 0;text-align:center;padding:0 10px}
     .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px 40px;text-align:center;min-height:70vh}
@@ -101,10 +103,7 @@
       </header>
       
       <div class="section">
-        <div class="keys-composition-small" aria-hidden="true">
-          <svg class="key-music" viewBox="0 0 50 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="keyGradHome" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#a78bfa"/><stop offset="100%" style="stop-color:#f9a8d4"/></linearGradient></defs><path d="M25 92Q20 92 20 82Q20 68 28 54Q36 40 28 28Q20 16 25 8Q30 2 25 4" stroke="url(#keyGradHome)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="25" cy="78" rx="8" ry="10" fill="none" stroke="url(#keyGradHome)" stroke-width="2"/></svg>
-          <svg class="key-door" viewBox="0 0 56 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="keyGradHome2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#f9a8d4"/><stop offset="100%" style="stop-color:#a78bfa"/></linearGradient></defs><ellipse cx="28" cy="24" rx="16" ry="18" fill="none" stroke="url(#keyGradHome2)" stroke-width="2.5"/><path d="M28 40v44M24 84h8" stroke="url(#keyGradHome2)" stroke-width="2.5" stroke-linecap="round"/><path d="M28 54l12 8v16L28 86V54z" fill="url(#keyGradHome2)" opacity=".95"/><circle cx="28" cy="72" r="4" fill="url(#keyGradHome2)"/></svg>
-        </div>
+        <img src="logo.png" alt="YupSoul" class="app-logo" width="200" height="200">
         <p style="text-align:center;font-size:1.15rem;line-height:1.7;margin-bottom:25px">
           Создай свой персональный звуковой ключ — уникальную аудиокомпозицию, которая откроет тебе дверь к желаемому.
         </p>
@@ -167,6 +166,16 @@
         </div>
         
         <div class="field">
+          <label for="language" data-icon="🌐">Язык песни и описания</label>
+          <select id="language" required>
+            <option value="">Выбери язык</option>
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+            <option value="uk">Українська</option>
+          </select>
+        </div>
+        
+        <div class="field">
           <div class="request-label">Отправь запрос во Вселенную</div>
           <textarea id="request" placeholder="Что ты хочешь изменить в своей жизни? О чём просишь Вселенную?"></textarea>
         </div>
@@ -213,6 +222,9 @@
           </ul>
         </div>
         
+        <div id="mainButtonHint" style="display:none;background:rgba(167,139,250,.15);border:2px solid #a78bfa;border-radius:16px;padding:14px;margin-bottom:18px;text-align:center;font-weight:600;color:#6d28d9;font-size:1.05rem">
+          👇 Нажми фиолетовую кнопку <strong>внизу экрана</strong> «Отправить заявку во Вселенную»
+        </div>
         <div class="btn-group">
           <button class="secondary" id="backFromPaymentBtn">← Назад</button>
           <button id="payBtn">Отправить заявку</button>
@@ -243,10 +255,7 @@
       </header>
       
       <div class="section">
-        <div class="keys-composition" aria-hidden="true">
-          <svg class="key-music" viewBox="0 0 50 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="keyGradSuccess1" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#a78bfa"/><stop offset="100%" style="stop-color:#f9a8d4"/></linearGradient></defs><path d="M25 92Q20 92 20 82Q20 68 28 54Q36 40 28 28Q20 16 25 8Q30 2 25 4" stroke="url(#keyGradSuccess1)" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="25" cy="78" rx="8" ry="10" fill="none" stroke="url(#keyGradSuccess1)" stroke-width="2.5"/></svg>
-          <svg class="key-door" viewBox="0 0 56 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="keyGradSuccess2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#f9a8d4"/><stop offset="100%" style="stop-color:#a78bfa"/></linearGradient></defs><ellipse cx="28" cy="24" rx="16" ry="18" fill="none" stroke="url(#keyGradSuccess2)" stroke-width="3"/><path d="M28 40v44M24 84h8" stroke="url(#keyGradSuccess2)" stroke-width="3" stroke-linecap="round"/><path d="M28 54l12 8v16L28 86V54z" fill="url(#keyGradSuccess2)" opacity=".95"/><circle cx="28" cy="72" r="4" fill="url(#keyGradSuccess2)"/></svg>
-        </div>
+        <img src="logo.png" alt="YupSoul" class="app-logo success" width="180" height="180">
         <h2 class="success-title">Готово!</h2>
         <p class="success-text">
           Твой персональный звуковой ключ создан! Это твой уникальный артефакт силы для игры жизни.
@@ -296,6 +305,39 @@
       if (!tg) {
         document.getElementById('previewNav').classList.add('show');
         console.log('Режим превью активирован');
+      }
+      
+      // Один раз вешаем обработчик MainButton — так надёжнее на всех клиентах Telegram
+      var pendingPayload = null;
+      if (tg && tg.MainButton && tg.sendData) {
+        tg.MainButton.onClick(function() {
+          if (!pendingPayload) return;
+          var toSend = pendingPayload;
+          pendingPayload = null;
+          if (tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
+          var hintEl = document.getElementById('mainButtonHint');
+          if (hintEl) hintEl.style.display = 'none';
+          goToPage('loadingPage');
+          var loadingEl = document.querySelector('.loading-text');
+          if (loadingEl) loadingEl.textContent = 'Отправляю заявку…';
+          try {
+            tg.sendData(JSON.stringify(toSend));
+            if (typeof tg.close === 'function') {
+              tg.close();
+              return;
+            }
+          } catch (err) {
+            console.error('sendData:', err);
+            if (loadingEl) loadingEl.textContent = 'Ошибка отправки. Попробуй ещё раз или напиши в поддержку.';
+            var sp = document.getElementById('songPreviewText');
+            if (sp) sp.textContent = 'Не удалось отправить заявку. Закрой приложение и напиши боту в чат — он подскажет.';
+            goToPage('successPage');
+            return;
+          }
+          var sp = document.getElementById('songPreviewText');
+          if (sp) sp.textContent = 'Заявка отправлена. Ответ бота смотри в чате.';
+          goToPage('successPage');
+        });
       }
       
       var today = new Date();
@@ -360,6 +402,11 @@
           alert('Выбери пол');
           return;
         }
+        var language = document.getElementById('language') && document.getElementById('language').value;
+        if (!language) {
+          alert('Выбери язык, на котором будет создаваться песня и описание');
+          return;
+        }
         if (request.length < 10) {
           alert('Запрос должен содержать минимум 10 символов');
           return;
@@ -370,43 +417,46 @@
       
       document.getElementById('backFromPaymentBtn').addEventListener('click', function() {
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
+        pendingPayload = null;
+        var hintEl = document.getElementById('mainButtonHint');
+        if (hintEl) hintEl.style.display = 'none';
         goToPage('formPage');
       });
       document.getElementById('payBtn').addEventListener('click', function() {
         if (tg && tg.MainButton && tg.sendData) {
-          var payload = {
+          pendingPayload = {
             name: document.getElementById('name').value.trim(),
             birthdate: document.getElementById('birthdate').value,
             birthplace: document.getElementById('birthplace').value.trim(),
             birthtime: document.getElementById('birthtime').value,
             birthtimeUnknown: document.getElementById('unknown').checked,
             gender: document.getElementById('gender').value,
+            language: (document.getElementById('language') && document.getElementById('language').value) || 'ru',
             request: document.getElementById('request').value.trim(),
             initData: (tg.initData || '')
           };
           try {
             tg.MainButton.setText('Отправить заявку во Вселенную');
             tg.MainButton.show();
-            tg.MainButton.onClick(function() {
-              tg.sendData(JSON.stringify(payload));
-            });
+            var hintEl = document.getElementById('mainButtonHint');
+            if (hintEl) hintEl.style.display = 'block';
           } catch (e) {
             console.warn('MainButton:', e);
+            pendingPayload = null;
             goToPage('loadingPage');
             setTimeout(function() {
-              document.getElementById('songPreviewText').textContent = 'Заявка будет обработана. Ожидай уведомление в чате с ботом.';
+              document.getElementById('songPreviewText').textContent = 'Заявка будет обработана. Ответ бота смотри в чате.';
               goToPage('successPage');
             }, 1500);
           }
         } else {
+          // Приложение открыто в браузере — sendData недоступен, заявка не уйдёт в бота
           goToPage('loadingPage');
           setTimeout(function() {
-            var name = document.getElementById('name').value.trim() || 'Друг';
-            var request = document.getElementById('request').value.trim() || 'твои цели';
-            var songText = '✨ ' + name + ', твоя песня создана!\n\nНа основе твоего запроса \"' + request.substring(0, 30) + '...\" сгенерирована уникальная аудиокомпозиция.\n\nЭто твой персональный звуковой ключ — артефакт силы для игры жизни.';
-            document.getElementById('songPreviewText').textContent = songText;
+            document.getElementById('songPreviewText').textContent =
+              '⚠️ Чтобы отправить заявку, открой приложение из Telegram: в чате с ботом нажми кнопку меню (или «Открыть приложение»). Здесь заявка в бота не отправляется.';
             goToPage('successPage');
-          }, 2500);
+          }, 800);
         }
       });
       
@@ -417,6 +467,8 @@
         document.getElementById('birthtime').value = '';
         unknown.checked = false;
         document.getElementById('gender').value = '';
+        var langEl = document.getElementById('language');
+        if (langEl) langEl.value = '';
         document.getElementById('request').value = '';
         goToPage('formPage');
       });

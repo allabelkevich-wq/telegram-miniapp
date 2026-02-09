@@ -1,0 +1,28 @@
+В Render добавляй переменные по одной. Для каждой строки ниже:
+1) Нажми "Add Environment Variable"
+2) В поле Key вставь ровно то, что написано в кавычках (одну строку)
+3) В поле Value скопируй значение из своего файла bot/.env
+
+Key №1 (скопируй в поле Key):
+BOT_TOKEN
+
+Key №2:
+SUPABASE_URL
+
+Key №3:
+SUPABASE_SERVICE_KEY
+
+Key №4:
+ADMIN_TELEGRAM_IDS
+
+Key №5:
+MINI_APP_URL
+
+Key №6:
+DEEPSEEK_API_KEY
+
+Key №7:
+SUNO_API_KEY
+
+---
+Итого: 7 переменных. Значения (Value) бери из bot/.env — там такие же названия слева от знака =

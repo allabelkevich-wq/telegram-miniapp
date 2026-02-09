@@ -11,7 +11,8 @@ import { createHeroesRouter, getOrCreateAppUser } from "./heroesApi.js";
 import "dotenv/config";
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const MINI_APP_URL = process.env.MINI_APP_URL || "https://allabelkevich-wq.github.io/telegram-miniapp/";
+const MINI_APP_BASE = (process.env.MINI_APP_URL || "https://allabelkevich-wq.github.io/telegram-miniapp/").replace(/\?.*$/, "").replace(/\/$/, "");
+const MINI_APP_URL = MINI_APP_BASE + "?v=2";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";
@@ -138,6 +139,8 @@ bot.on("message:web_app_data", async (ctx) => {
     return;
   }
 
+  await ctx.reply("⏳ Получил заявку, сохраняю…");
+
   const {
     name,
     birthdate,
@@ -164,9 +167,15 @@ bot.on("message:web_app_data", async (ctx) => {
     client_id: clientId || null,
   });
 
-  console.log("[Заявка]", requestId ?? "(не сохранено)", { name, birthdate, birthplace, gender, request: (userRequest || "").slice(0, 50) });
+  if (!requestId) {
+    await ctx.reply("Не удалось сохранить заявку. Попробуй позже или напиши в поддержку.");
+    console.error("[Заявка] Ошибка сохранения", { name, birthdate, birthplace });
+    return;
+  }
 
-  if (requestId && supabase && birthdate && birthplace) {
+  console.log("[Заявка]", requestId, { name, birthdate, birthplace, gender, request: (userRequest || "").slice(0, 50) });
+
+  if (supabase && birthdate && birthplace) {
     import("./workerAstro.js").then(({ computeAndSaveAstroSnapshot }) =>
       computeAndSaveAstroSnapshot(supabase, requestId)
         .then((r) => {
@@ -179,7 +188,8 @@ bot.on("message:web_app_data", async (ctx) => {
 
   await ctx.reply(
     "✅ Заявка принята!\n\n" +
-    "Твой персональный звуковой ключ будет создан. Как только он будет готов — пришлю его сюда в чат. Ожидай уведомление."
+    "Твой персональный звуковой ключ будет создан. Как только он будет готов — пришлю его сюда в чат. Ожидай уведомление.\n\n" +
+    "Детальную расшифровку натальной карты можно запросить командой /get_analysis после оплаты."
   );
 
   // Уведомление админам в личку о новой заявке (приходит в чат с ботом)
@@ -191,7 +201,7 @@ bot.on("message:web_app_data", async (ctx) => {
       `Язык: ${language || "—"}\n` +
       `Дата: ${birthdate || "—"} · Место: ${(birthplace || "—").slice(0, 40)}${(birthplace || "").length > 40 ? "…" : ""}\n` +
       `Запрос: ${requestPreview}${(userRequest || "").length > 150 ? "…" : ""}\n\n` +
-      (requestId ? `ID заявки: ${requestId}\n` : "(в БД не сохранено)\n") +
+      `ID заявки: ${requestId}\n` +
       `TG user: ${telegramUserId}`;
     console.log("[Уведомление] Отправляю админам:", ADMIN_IDS.join(", "));
     for (const adminId of ADMIN_IDS) {
@@ -202,6 +212,58 @@ bot.on("message:web_app_data", async (ctx) => {
     }
   }
 });
+
+// Расшифровка карты только после оплаты (docs/ALGORITHM.md)
+async function sendAnalysisIfPaid(ctx) {
+  const telegramUserId = ctx.from?.id;
+  if (!telegramUserId || !supabase) return;
+  let row;
+  try {
+    const { data, error } = await supabase
+      .from("track_requests")
+      .select("id, detailed_analysis, analysis_paid")
+      .eq("telegram_user_id", telegramUserId)
+      .eq("status", "completed")
+      .not("detailed_analysis", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    row = data;
+  } catch (e) {
+    if (e?.message?.includes("column") && e?.message?.includes("does not exist")) {
+      await ctx.reply("Функция детальной расшифровки подключается. Выполни миграцию bot/supabase-migration-detailed-analysis.sql в Supabase.");
+      return;
+    }
+    await ctx.reply("Не удалось загрузить расшифровку. Попробуй позже.");
+    return;
+  }
+  if (!row?.detailed_analysis) {
+    await ctx.reply("У тебя пока нет готовой расшифровки натальной карты. Сначала дождись готовой песни по заявке — затем можно запросить детальный анализ (после оплаты).");
+    return;
+  }
+  if (!row.analysis_paid) {
+    await ctx.reply("Детальная расшифровка твоей карты готова, но доступна после оплаты. Напиши админу бота или используй реквизиты из приложения — после оплаты тебе откроют расшифровку.");
+    return;
+  }
+  const TELEGRAM_MAX = 4096;
+  const text = String(row.detailed_analysis || "").trim();
+  if (!text) {
+    await ctx.reply("Текст расшифровки пуст. Обратись к админу.");
+    return;
+  }
+  if (text.length <= TELEGRAM_MAX) {
+    await ctx.reply("📜 Твоя детальная расшифровка натальной карты:\n\n" + text);
+    return;
+  }
+  await ctx.reply("📜 Твоя детальная расшифровка (несколько сообщений):");
+  for (let i = 0; i < text.length; i += TELEGRAM_MAX - 50) {
+    await ctx.reply(text.slice(i, i + TELEGRAM_MAX - 50));
+  }
+}
+
+bot.command("get_analysis", sendAnalysisIfPaid);
+bot.hears(/^(расшифровка|получить расшифровку|детальный анализ)$/i, sendAnalysisIfPaid);
 
 bot.command("admin_check", async (ctx) => {
   if (!isAdmin(ctx.from?.id)) return;
@@ -300,11 +362,12 @@ bot.command("admin", async (ctx) => {
   }
 });
 
-// Регистрация команд в Telegram (чтобы /admin отображался в меню при вводе /)
+// Регистрация команд в Telegram (меню бота)
 const commands = [
   { command: "start", description: "Начать / открыть приложение" },
+  { command: "get_analysis", description: "Расшифровка карты (после оплаты)" },
   { command: "admin", description: "Админ: список заявок" },
-  { command: "admin_check", description: "Админ: проверка базы" }
+  { command: "admin_check", description: "Админ: проверка базы" },
 ];
 bot.api.setMyCommands(commands).catch(() => {});
 bot.api.setMyCommands(commands, { scope: { type: "all_private_chats" } }).catch(() => {});
@@ -328,40 +391,39 @@ app.use((req, res, next) => {
   next();
 });
 app.get("/healthz", (_req, res) => res.status(200).send("ok"));
+app.get("/", (_req, res) =>
+  res.status(200).set("Content-Type", "text/html; charset=utf-8").send(
+    "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>YupSoul Bot</title></head><body><p>YupSoul Bot работает.</p><p>Проверка: <a href=\"/healthz\">/healthz</a></p><p>Приложение открывай из Telegram — кнопка меню бота.</p></body></html>"
+  )
+);
+
+app.post("/suno-callback", express.json(), (req, res) => {
+  res.status(200).send("ok");
+  const taskId = req.body?.data?.taskId || req.body?.taskId;
+  if (taskId) console.log("[Suno callback] taskId:", taskId, "stage:", req.body?.data?.stage || req.body?.stage);
+});
+
+async function onBotStart(info) {
+  console.log("Бот запущен:", info.username);
+  if (ADMIN_IDS.length) console.log("Админы (ID):", ADMIN_IDS.join(", "));
+  else console.warn("ADMIN_TELEGRAM_IDS не задан — команда /admin недоступна.");
+  if (supabase) {
+    console.log("Supabase: подключен, URL:", SUPABASE_URL);
+    const { count, error } = await supabase.from("track_requests").select("id", { count: "exact", head: true });
+    if (error) console.error("Supabase: ошибка таблицы track_requests:", error.message);
+    else console.log("Supabase: в таблице track_requests записей:", count ?? 0);
+  } else console.log("Supabase: не подключен (заявки только в памяти).");
+}
 
 if (process.env.RENDER_HEALTHZ_FIRST) {
   app.use("/api", createHeroesRouter(supabase, BOT_TOKEN));
   globalThis.__EXPRESS_APP__ = app;
-  bot.start({
-    onStart: async (info) => {
-      console.log("Бот запущен:", info.username);
-      if (ADMIN_IDS.length) console.log("Админы (ID):", ADMIN_IDS.join(", "));
-      else console.warn("ADMIN_TELEGRAM_IDS не задан — команда /admin недоступна.");
-      if (supabase) {
-        console.log("Supabase: подключен, URL:", SUPABASE_URL);
-        const { count, error } = await supabase.from("track_requests").select("id", { count: "exact", head: true });
-        if (error) console.error("Supabase: ошибка таблицы track_requests:", error.message);
-        else console.log("Supabase: в таблице track_requests записей:", count ?? 0);
-      } else console.log("Supabase: не подключен (заявки только в памяти).");
-    },
-  }).catch((err) => console.error("Ошибка запуска бота:", err?.message || err));
+  bot.start({ onStart: onBotStart }).catch((err) => console.error("Ошибка запуска бота:", err?.message || err));
 } else {
-  console.log("[HTTP] Слушаю порт", HEROES_API_PORT, "(env.PORT =", process.env.PORT + ")");
+  console.log("[HTTP] Слушаю порт", HEROES_API_PORT);
   app.use("/api", createHeroesRouter(supabase, BOT_TOKEN));
   app.listen(HEROES_API_PORT, "0.0.0.0", () => {
     console.log("[HTTP] Порт открыт:", HEROES_API_PORT);
-    bot.start({
-      onStart: async (info) => {
-        console.log("Бот запущен:", info.username);
-        if (ADMIN_IDS.length) console.log("Админы (ID):", ADMIN_IDS.join(", "));
-        else console.warn("ADMIN_TELEGRAM_IDS не задан — команда /admin недоступна.");
-        if (supabase) {
-          console.log("Supabase: подключен, URL:", SUPABASE_URL);
-          const { count, error } = await supabase.from("track_requests").select("id", { count: "exact", head: true });
-          if (error) console.error("Supabase: ошибка таблицы track_requests:", error.message);
-          else console.log("Supabase: в таблице track_requests записей:", count ?? 0);
-        } else console.log("Supabase: не подключен (заявки только в памяти).");
-      },
-    }).catch((err) => console.error("Ошибка запуска бота:", err?.message || err));
+    bot.start({ onStart: onBotStart }).catch((err) => console.error("Ошибка запуска бота:", err?.message || err));
   });
 }
