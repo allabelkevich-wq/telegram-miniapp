@@ -75,6 +75,11 @@
     .preview-nav button:hover{background:#a78bfa;color:white;transform:translateY(-2px)}
     .preview-nav button.active{background:linear-gradient(90deg,#a78bfa,#f9a8d4);color:white;border-color:transparent;box-shadow:0 4px 15px rgba(167,139,250,.3)}
     
+    .top-send-bar{display:none;align-items:center;justify-content:flex-start;padding:10px 0 14px;margin-bottom:10px;border-bottom:1px solid rgba(167,139,250,.2)}
+    .top-send-bar.show{display:flex}
+    .top-send-bar .send-trigger{background:linear-gradient(90deg,#a78bfa,#f9a8d4);color:white;border:none;padding:10px 18px;border-radius:14px;font-weight:600;font-size:.95rem;cursor:pointer;box-shadow:0 4px 15px rgba(167,139,250,.25)}
+    .page#formPage .section,.page#paymentPage .section{padding-bottom:100px}
+    
     @media (max-width:480px){.container{padding:0 12px}h1{font-size:2.1rem}.subtitle{font-size:1.05rem}.tagline{font-size:1.2rem}.section{padding:25px 20px}.btn-group{flex-direction:column}.btn-group button{width:100%}button{font-size:1.15rem;padding:16px;min-height:60px}.price-tag{font-size:1.25rem;padding:10px 15px}.success-icon{font-size:4rem}.success-title{font-size:1.9rem}.success-text{font-size:1.05rem}.preview-nav-buttons{flex-direction:column;align-items:center}.preview-nav button{width:100%;max-width:200px}}
   </style>
 </head>
@@ -103,7 +108,7 @@
       </header>
       
       <div class="section">
-        <img src="logo.png" alt="YupSoul" class="app-logo" width="200" height="200">
+        <img src="logo.png?v=2" alt="YupSoul" class="app-logo" width="200" height="200">
         <p style="text-align:center;font-size:1.15rem;line-height:1.7;margin-bottom:25px">
           Создай свой персональный звуковой ключ — уникальную аудиокомпозицию, которая откроет тебе дверь к желаемому.
         </p>
@@ -199,6 +204,9 @@
       </header>
       
       <div class="section">
+        <div class="top-send-bar" id="topSendBar">
+          <button type="button" class="send-trigger" id="topSendBtn">Отправить заявку во Вселенную</button>
+        </div>
         <div class="tagline" style="margin-bottom:15px">Поддержать проект</div>
         <p style="text-align:center;font-size:1.05rem;line-height:1.7;margin-bottom:20px">
           Я создам для тебя уникальную аудиокомпозицию по твоим данным и запросу — персональный звуковой ключ. Если хочешь поддержать проект, можешь перевести любую сумму по желанию на карту ниже.
@@ -255,7 +263,7 @@
       </header>
       
       <div class="section">
-        <img src="logo.png" alt="YupSoul" class="app-logo success" width="180" height="180">
+        <img src="logo.png?v=2" alt="YupSoul" class="app-logo success" width="180" height="180">
         <h2 class="success-title">Готово!</h2>
         <p class="success-text">
           Твой персональный звуковой ключ создан! Это твой уникальный артефакт силы для игры жизни.
@@ -353,9 +361,19 @@
         birthtime.required = !unknown.checked;
         console.log('Время рождения:', unknown.checked ? 'неизвестно' : 'требуется');
       });
+      document.querySelectorAll('#formPage input, #formPage textarea, #formPage select').forEach(function(el) {
+        el.addEventListener('focus', function() {
+          if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
+        });
+      });
       
       function goToPage(pageId) {
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
+        pendingPayload = null;
+        var hintEl = document.getElementById('mainButtonHint');
+        if (hintEl) hintEl.style.display = 'none';
+        var topBar = document.getElementById('topSendBar');
+        if (topBar) topBar.classList.toggle('show', pageId === 'paymentPage' && !!tg);
         document.querySelectorAll('.page').forEach(function(page) {
           page.classList.remove('active');
         });
@@ -422,9 +440,9 @@
         if (hintEl) hintEl.style.display = 'none';
         goToPage('formPage');
       });
-      document.getElementById('payBtn').addEventListener('click', function() {
-        if (tg && tg.MainButton && tg.sendData) {
-          pendingPayload = {
+      function showMainButtonAndHint() {
+        if (!tg || !tg.MainButton || !tg.sendData) return;
+        pendingPayload = {
             name: document.getElementById('name').value.trim(),
             birthdate: document.getElementById('birthdate').value,
             birthplace: document.getElementById('birthplace').value.trim(),
@@ -435,20 +453,20 @@
             request: document.getElementById('request').value.trim(),
             initData: (tg.initData || '')
           };
-          try {
-            tg.MainButton.setText('Отправить заявку во Вселенную');
-            tg.MainButton.show();
-            var hintEl = document.getElementById('mainButtonHint');
-            if (hintEl) hintEl.style.display = 'block';
-          } catch (e) {
-            console.warn('MainButton:', e);
-            pendingPayload = null;
-            goToPage('loadingPage');
-            setTimeout(function() {
-              document.getElementById('songPreviewText').textContent = 'Заявка будет обработана. Ответ бота смотри в чате.';
-              goToPage('successPage');
-            }, 1500);
-          }
+        try {
+          tg.MainButton.setText('Отправить заявку во Вселенную');
+          tg.MainButton.show();
+          var hintEl = document.getElementById('mainButtonHint');
+          if (hintEl) hintEl.style.display = 'block';
+        } catch (e) {
+          console.warn('MainButton:', e);
+          pendingPayload = null;
+        }
+      }
+      document.getElementById('topSendBtn').addEventListener('click', showMainButtonAndHint);
+      document.getElementById('payBtn').addEventListener('click', function() {
+        if (tg && tg.MainButton && tg.sendData) {
+          showMainButtonAndHint();
         } else {
           // Приложение открыто в браузере — sendData недоступен, заявка не уйдёт в бота
           goToPage('loadingPage');
