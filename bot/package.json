@@ -15,6 +15,7 @@
     "worker:loop": "node worker-loop.js",
     "worker:start": "WORKER_INTERVAL_MS=60000 node worker-loop.js",
     "check-env": "node check-env.js",
+    "verify": "node verify-full-cycle.js",
     "ensure-db-url": "node ensure-database-url.js",
     "setup:db": "node run-all-migrations.js && node seed-ideally-tuned-prompt.js",
     "test:apis": "node test-apis.js"

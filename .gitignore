@@ -4,3 +4,6 @@ bot/node_modules/
 bot/.env
 *.log
 .DS_Store
+.env.local
+.cursor/
+debug.log
