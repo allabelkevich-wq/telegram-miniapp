@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>YupSoul</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>window.HEROES_API_BASE = '';</script>
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Comfortaa',sans-serif}
@@ -66,6 +71,14 @@
     .song-preview h3{color:#a78bfa;font-size:1.4rem;margin-bottom:10px;text-align:center}
     .song-preview p{font-size:1.05rem;line-height:1.7;color:#2d2d2d}
     footer{text-align:center;padding:30px 0 20px;color:#6b7280;font-size:.95rem;margin-top:auto}
+    .birthplace-wrap{position:relative}
+    .birthplace-suggestions{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;z-index:50;list-style:none;padding:6px 0}
+    .birthplace-suggestions li{padding:12px 16px;cursor:pointer;font-size:1rem;color:#2d2d2d;border-bottom:1px solid #f3f4f6;transition:background .15s}
+    .birthplace-suggestions li:last-child{border-bottom:none}
+    .birthplace-suggestions li:hover,.birthplace-suggestions li.selected{background:rgba(167,139,250,.12);color:#6d28d9}
+    .birthplace-suggestions .place-type{font-size:.85rem;color:#6b7280;margin-top:2px}
+    .birthplace-summary .place-name{font-weight:700;color:#5b21b6}
+    .place-coords{font-family:ui-monospace,monospace;letter-spacing:.02em}
     
     /* Панель навигации для превью в браузере */
     .preview-nav{background:white;border-radius:16px;padding:12px;margin-bottom:25px;box-shadow:0 4px 20px rgba(167,139,250,.15);text-align:center;border:1px solid #e5e7eb;display:none}
@@ -74,11 +87,6 @@
     .preview-nav button{background:white;color:#a78bfa;border:2px solid #a78bfa;padding:6px 14px;margin:0 4px;border-radius:20px;cursor:pointer;font-weight:600;transition:all .2s;font-size:.9rem;min-width:90px}
     .preview-nav button:hover{background:#a78bfa;color:white;transform:translateY(-2px)}
     .preview-nav button.active{background:linear-gradient(90deg,#a78bfa,#f9a8d4);color:white;border-color:transparent;box-shadow:0 4px 15px rgba(167,139,250,.3)}
-    
-    .top-send-bar{display:none;align-items:center;justify-content:flex-start;padding:10px 0 14px;margin-bottom:10px;border-bottom:1px solid rgba(167,139,250,.2)}
-    .top-send-bar.show{display:flex}
-    .top-send-bar .send-trigger{background:linear-gradient(90deg,#a78bfa,#f9a8d4);color:white;border:none;padding:10px 18px;border-radius:14px;font-weight:600;font-size:.95rem;cursor:pointer;box-shadow:0 4px 15px rgba(167,139,250,.25)}
-    .page#formPage .section,.page#paymentPage .section{padding-bottom:100px}
     
     @media (max-width:480px){.container{padding:0 12px}h1{font-size:2.1rem}.subtitle{font-size:1.05rem}.tagline{font-size:1.2rem}.section{padding:25px 20px}.btn-group{flex-direction:column}.btn-group button{width:100%}button{font-size:1.15rem;padding:16px;min-height:60px}.price-tag{font-size:1.25rem;padding:10px 15px}.success-icon{font-size:4rem}.success-title{font-size:1.9rem}.success-text{font-size:1.05rem}.preview-nav-buttons{flex-direction:column;align-items:center}.preview-nav button{width:100%;max-width:200px}}
   </style>
@@ -113,11 +121,48 @@
           Создай свой персональный звуковой ключ — уникальную аудиокомпозицию, которая откроет тебе дверь к желаемому.
         </p>
         <button id="startBtn">✨ Начать</button>
+        <div id="masterNav" style="display:none; margin-top:20px">
+          <button class="secondary" id="goHeroesBtn">👥 Мои герои</button>
+        </div>
       </div>
       
       <footer>
         <p>YupSoul • 2026</p>
       </footer>
+    </div>
+    
+    <!-- Страница «Мои герои» (тариф Мастер) -->
+    <div class="page" id="heroesPage">
+      <header>
+        <h1>Мои герои</h1>
+        <div class="subtitle">Картотека клиентов</div>
+      </header>
+      <div class="section">
+        <div class="field">
+          <label>Поиск по имени</label>
+          <input type="text" id="heroesSearch" placeholder="Введите имя...">
+        </div>
+        <button class="secondary" id="heroesSearchBtn" style="margin-bottom:15px">Искать</button>
+        <div id="heroesList"></div>
+        <button id="addHeroBtn" style="margin-top:15px">➕ Добавить героя</button>
+        <div id="heroFormWrap" style="display:none; margin-top:25px; padding-top:20px; border-top:1px solid #e5e7eb">
+          <div class="field"><label for="heroName">Имя *</label><input type="text" id="heroName" placeholder="Имя героя" required></div>
+          <div class="field"><label for="heroBirthdate">Дата рождения</label><input type="date" id="heroBirthdate"></div>
+          <div class="field"><label for="heroBirthtime">Время рождения</label><input type="time" id="heroBirthtime"></div>
+          <div class="field"><label for="heroBirthplace">Место рождения</label><input type="text" id="heroBirthplace" placeholder="Город, страна"></div>
+          <div class="checkbox" style="margin-bottom:15px"><input type="checkbox" id="heroBirthtimeUnknown"><label for="heroBirthtimeUnknown">Не знаю точное время</label></div>
+          <div class="field"><label for="heroGender">Пол</label><select id="heroGender"><option value="">Выбери</option><option value="male">Мужской</option><option value="female">Женский</option><option value="other">Другой</option></select></div>
+          <div class="field"><label for="heroNotes">Досье / заметки</label><textarea id="heroNotes" placeholder="Заметки о клиенте" rows="3"></textarea></div>
+          <div class="btn-group">
+            <button class="secondary" id="heroFormCancel">Отмена</button>
+            <button id="heroFormSave">Сохранить</button>
+          </div>
+        </div>
+      </div>
+      <div class="btn-group" style="margin-top:20px">
+        <button class="secondary" id="heroesBackBtn">← Назад</button>
+      </div>
+      <footer><p>YupSoul • 2026</p></footer>
     </div>
     
     <!-- Страница формы -->
@@ -128,6 +173,12 @@
       </header>
       
       <div class="section">
+        <div class="field" id="forWhoWrap" style="display:none">
+          <label for="forWho" data-icon="👤">Для кого создаём?</label>
+          <select id="forWho">
+            <option value="">Для себя</option>
+          </select>
+        </div>
         <div class="field">
           <label for="name" data-icon="✨">Имя</label>
           <input type="text" id="name" placeholder="Как тебя зовут?" required>
@@ -141,11 +192,16 @@
         
         <div class="field">
           <label for="birthplace" data-icon="🌍">Место рождения</label>
-          <input type="text" id="birthplace" placeholder="Город, страна" required>
-          <div id="birthplaceSummary" class="field-summary" style="display:none; margin-top:8px; padding:10px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
-          <div class="checkbox" style="margin-top:12px">
+          <p class="field-hint" style="margin:0 0 8px 0; font-size:.9rem; color:#6b7280;">По картам мира определяем координаты — так считается твоя натальная карта. Выбери место из списка.</p>
+          <div class="birthplace-wrap">
+            <input type="text" id="birthplace" placeholder="Начни вводить город или страну — выбери из списка" required autocomplete="off">
+            <ul id="birthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true"></ul>
+          </div>
+          <div id="birthplaceSummary" class="field-summary birthplace-summary" style="display:none; margin-top:8px; padding:12px 14px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
+          <div id="placeCoords" class="place-coords" style="display:none; margin-top:6px; padding:10px 14px; background:rgba(94,234,212,.1); border-radius:10px; font-size:.9rem; color:#0d9488;"></div>
+          <div id="placeConfirmBlock" class="checkbox" style="margin-top:12px; display:none">
             <input type="checkbox" id="placeConfirmed">
-            <label for="placeConfirmed">Подтверждаю: место рождения указано верно</label>
+            <label for="placeConfirmed" id="placeConfirmLabel">Подтверждаю: место рождения и координаты указаны верно</label>
           </div>
         </div>
         
@@ -204,9 +260,6 @@
       </header>
       
       <div class="section">
-        <div class="top-send-bar" id="topSendBar">
-          <button type="button" class="send-trigger" id="topSendBtn">Отправить заявку во Вселенную</button>
-        </div>
         <div class="tagline" style="margin-bottom:15px">Поддержать проект</div>
         <p style="text-align:center;font-size:1.05rem;line-height:1.7;margin-bottom:20px">
           Я создам для тебя уникальную аудиокомпозицию по твоим данным и запросу — персональный звуковой ключ. Если хочешь поддержать проект, можешь перевести любую сумму по желанию на карту ниже.
@@ -230,9 +283,6 @@
           </ul>
         </div>
         
-        <div id="mainButtonHint" style="display:none;background:rgba(167,139,250,.15);border:2px solid #a78bfa;border-radius:16px;padding:14px;margin-bottom:18px;text-align:center;font-weight:600;color:#6d28d9;font-size:1.05rem">
-          👇 Нажми фиолетовую кнопку <strong>внизу экрана</strong> «Отправить заявку во Вселенную»
-        </div>
         <div class="btn-group">
           <button class="secondary" id="backFromPaymentBtn">← Назад</button>
           <button id="payBtn">Отправить заявку</button>
@@ -288,115 +338,284 @@
         <p>YupSoul • 2026</p>
       </footer>
     </div>
+    
   </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('YupSoul Mini-App загружен');
-      
       var tg = null;
-      try {
-        if (window.Telegram && window.Telegram.WebApp) {
-          tg = window.Telegram.WebApp;
-          tg.ready();
-          tg.expand();
-          if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
-          if (tg.themeParams) {
-            document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#f9f7ff');
-            document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#2d2d2d');
-          }
-          console.log('Приложение запущено в Telegram WebApp');
-        }
-      } catch (e) {
-        console.warn('Telegram WebApp init:', e);
-      }
-      if (!tg) {
-        document.getElementById('previewNav').classList.add('show');
-        console.log('Режим превью активирован');
-      }
-      
-      // Один раз вешаем обработчик MainButton — так надёжнее на всех клиентах Telegram
-      var pendingPayload = null;
-      if (tg && tg.MainButton && tg.sendData) {
-        tg.MainButton.onClick(function() {
-          if (!pendingPayload) return;
-          var toSend = pendingPayload;
-          pendingPayload = null;
-          if (tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
-          var hintEl = document.getElementById('mainButtonHint');
-          if (hintEl) hintEl.style.display = 'none';
-          goToPage('loadingPage');
-          var loadingEl = document.querySelector('.loading-text');
-          if (loadingEl) loadingEl.textContent = 'Отправляю заявку…';
-          try {
-            tg.sendData(JSON.stringify(toSend));
-            if (typeof tg.close === 'function') {
-              tg.close();
-              return;
+      function initApp() {
+        try {
+          if (window.Telegram && window.Telegram.WebApp) {
+            tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
+            if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
+            if (tg.themeParams) {
+              document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#f9f7ff');
+              document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#2d2d2d');
             }
-          } catch (err) {
-            console.error('sendData:', err);
-            if (loadingEl) loadingEl.textContent = 'Ошибка отправки. Попробуй ещё раз или напиши в поддержку.';
-            var sp = document.getElementById('songPreviewText');
-            if (sp) sp.textContent = 'Не удалось отправить заявку. Закрой приложение и напиши боту в чат — он подскажет.';
-            goToPage('successPage');
-            return;
+            return true;
           }
-          var sp = document.getElementById('songPreviewText');
-          if (sp) sp.textContent = 'Заявка отправлена. Ответ бота смотри в чате.';
-          goToPage('successPage');
+        } catch (e) { console.warn('Telegram init:', e); }
+        return false;
+      }
+      if (!initApp()) {
+        var attempts = 0;
+        var t = setInterval(function() {
+          attempts++;
+          if (initApp() || attempts >= 50) {
+            clearInterval(t);
+            if (!tg) showNotFromTelegramBanner();
+          }
+        }, 100);
+      }
+      function showNotFromTelegramBanner() {
+        var banner = document.createElement('div');
+        banner.id = 'not-telegram-banner';
+        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fef3c7;color:#92400e;padding:12px 16px;text-align:center;font-size:0.95rem;border-bottom:1px solid #f59e0b;';
+        banner.textContent = 'Открой приложение из чата с ботом в Telegram (кнопка меню) — иначе заявка не отправится.';
+        document.body.insertBefore(banner, document.body.firstChild);
+      }
+      var userTariff = 'basic';
+      var heroesCache = [];
+      var editingHeroId = null;
+      function heroesApi(path, opts) {
+        var base = (window.HEROES_API_BASE || '').replace(/\/$/, '');
+        if (!base) return Promise.reject(new Error('API не настроен'));
+        var initData = (tg && tg.initData) ? tg.initData : '';
+        var url = base + '/api' + path;
+        var sep = path.indexOf('?') >= 0 ? '&' : '?';
+        if (initData && (!opts || opts.method === 'GET')) url += sep + 'initData=' + encodeURIComponent(initData);
+        if (opts && opts.query) url += (url.indexOf('?') >= 0 ? '&' : '?') + opts.query;
+        var options = { headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData } };
+        if (opts && opts.method) options.method = opts.method;
+        if (opts && opts.body) options.body = JSON.stringify(opts.body);
+        return fetch(url, options).then(function(r) {
+          if (r.status === 204) return null;
+          return r.json().then(function(j) { if (!r.ok) throw new Error(j.error || r.statusText); return j; });
         });
       }
-      
-      var today = new Date();
-      document.getElementById('birthdate').max = today.toISOString().split('T')[0];
-      var minDate = new Date();
-      minDate.setFullYear(minDate.getFullYear() - 100);
-      document.getElementById('birthdate').min = minDate.toISOString().split('T')[0];
-      console.log('Дата рождения ограничена:', minDate.toISOString().split('T')[0], '—', today.toISOString().split('T')[0]);
-      
-      var unknown = document.getElementById('unknown');
-      var birthtime = document.getElementById('birthtime');
-      unknown.addEventListener('change', function() {
-        birthtime.required = !unknown.checked;
-        console.log('Время рождения:', unknown.checked ? 'неизвестно' : 'требуется');
-      });
-      document.querySelectorAll('#formPage input, #formPage textarea, #formPage select').forEach(function(el) {
-        el.addEventListener('focus', function() {
-          if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
+      function loadMe() {
+        if (!(window.HEROES_API_BASE || '').replace(/\/$/, '')) return;
+        heroesApi('/me', { method: 'POST', body: { initData: (tg && tg.initData) || '' } }).then(function(d) {
+          userTariff = (d && d.tariff) || 'basic';
+          var masterNav = document.getElementById('masterNav');
+          if (masterNav && userTariff === 'master') masterNav.style.display = 'block';
+        }).catch(function() {});
+      }
+      if (tg) loadMe();
+
+      setTimeout(function() {
+        try {
+        if (!tg) {
+          var p = document.getElementById('previewNav');
+          if (p) p.classList.add('show');
+        }
+        var birthdateEl = document.getElementById('birthdate');
+        if (birthdateEl) {
+          var today = new Date();
+          birthdateEl.max = today.toISOString().split('T')[0];
+          var minDate = new Date();
+          minDate.setFullYear(minDate.getFullYear() - 100);
+          birthdateEl.min = minDate.toISOString().split('T')[0];
+        }
+        var unknown = document.getElementById('unknown');
+        var birthtime = document.getElementById('birthtime');
+        if (unknown && birthtime) unknown.addEventListener('change', function() {
+          birthtime.required = !unknown.checked;
         });
-      });
+        var birthdateSummary = document.getElementById('birthdateSummary');
+        var birthdateInput = document.getElementById('birthdate');
+        var birthplaceSummary = document.getElementById('birthplaceSummary');
+        var birthplaceInput = document.getElementById('birthplace');
+        var placeConfirmed = document.getElementById('placeConfirmed');
+        var monthsRu = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+        function formatDateRu(dateStr) {
+          if (!dateStr) return '';
+          var d = new Date(dateStr + 'T12:00:00');
+          if (isNaN(d.getTime())) return dateStr;
+          return d.getDate() + ' ' + monthsRu[d.getMonth()] + ' ' + d.getFullYear() + ' г.';
+        }
+        if (birthdateInput && birthdateSummary) {
+          birthdateInput.addEventListener('change', function() {
+            var v = birthdateInput.value;
+            if (v) {
+              birthdateSummary.textContent = 'Выбрано: ' + formatDateRu(v);
+              birthdateSummary.style.display = 'block';
+            } else {
+              birthdateSummary.style.display = 'none';
+            }
+          });
+          if (birthdateInput.value) {
+            birthdateSummary.textContent = 'Выбрано: ' + formatDateRu(birthdateInput.value);
+            birthdateSummary.style.display = 'block';
+          }
+        }
+        if (birthplaceInput && birthplaceSummary) {
+          var suggestionsEl = document.getElementById('birthplaceSuggestions');
+          var placeConfirmBlock = document.getElementById('placeConfirmBlock');
+          var placeConfirmLabel = document.getElementById('placeConfirmLabel');
+          var placeCoordsEl = document.getElementById('placeCoords');
+          var debounceTimer = null;
+          var lastSearch = '';
+          function hideSuggestions() {
+            if (suggestionsEl) { suggestionsEl.innerHTML = ''; suggestionsEl.setAttribute('aria-hidden', 'true'); suggestionsEl.style.display = 'none'; }
+          }
+          function escapeHtml(s) {
+            if (!s) return '';
+            var d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+          }
+          function formatLatLon(lat, lon) {
+            var la = parseFloat(lat); var lo = parseFloat(lon);
+            if (isNaN(la) || isNaN(lo)) return '';
+            var latStr = Math.abs(la).toFixed(2) + '° ' + (la >= 0 ? 'N' : 'S');
+            var lonStr = Math.abs(lo).toFixed(2) + '° ' + (lo >= 0 ? 'E' : 'W');
+            return latStr + ', ' + lonStr;
+          }
+          function showPlaceConfirm(displayName) {
+            if (placeConfirmBlock) placeConfirmBlock.style.display = 'flex';
+            if (placeConfirmLabel) placeConfirmLabel.textContent = 'Подтверждаю: место рождения и координаты указаны верно';
+          }
+          function selectPlace(displayName, lat, lon) {
+            birthplaceInput.value = displayName || '';
+            birthplaceInput.setAttribute('data-place-selected', '1');
+            if (lat != null && lon != null) {
+              birthplaceInput.setAttribute('data-lat', String(lat));
+              birthplaceInput.setAttribute('data-lon', String(lon));
+            }
+            birthplaceSummary.innerHTML = '<span class="place-name">Место рождения:</span> ' + escapeHtml(displayName || '');
+            birthplaceSummary.style.display = 'block';
+            if (placeCoordsEl && lat != null && lon != null) {
+              placeCoordsEl.textContent = 'Координаты: ' + formatLatLon(lat, lon);
+              placeCoordsEl.style.display = 'block';
+            } else if (placeCoordsEl) {
+              placeCoordsEl.style.display = 'none';
+            }
+            showPlaceConfirm(displayName);
+            hideSuggestions();
+          }
+          function clearPlaceSelection() {
+            birthplaceInput.removeAttribute('data-place-selected');
+            birthplaceInput.removeAttribute('data-lat');
+            birthplaceInput.removeAttribute('data-lon');
+            if (placeCoordsEl) placeCoordsEl.style.display = 'none';
+          }
+          function fetchPlaces(q) {
+            if (!q || q.length < 2) { hideSuggestions(); return; }
+            var url = 'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=8&addressdetails=1';
+            fetch(url, { headers: { 'Accept': 'application/json', 'Accept-Language': 'ru', 'User-Agent': 'YupSoulMiniApp/1.0 (contact@yupsoul.com)' } })
+              .then(function(r) { return r.json(); })
+              .then(function(list) {
+                if (lastSearch !== q) return;
+                if (!suggestionsEl) return;
+                suggestionsEl.innerHTML = '';
+                (list || []).forEach(function(item) {
+                  var li = document.createElement('li');
+                  var main = item.display_name || (item.address && (item.address.city || item.address.town || item.address.village || item.address.state || item.address.country));
+                  var sub = item.address && item.address.country ? (item.address.country + (item.address.country_code ? ' (' + item.address.country_code.toUpperCase() + ')' : '')) : '';
+                  li.textContent = main;
+                  if (sub) { var sp = document.createElement('div'); sp.className = 'place-type'; sp.textContent = sub; li.appendChild(sp); }
+                  var lat = item.lat; var lon = item.lon;
+                  li.addEventListener('click', function() { selectPlace(item.display_name || main, lat, lon); });
+                  suggestionsEl.appendChild(li);
+                });
+                suggestionsEl.style.display = (list && list.length) ? 'block' : 'none';
+                suggestionsEl.setAttribute('aria-hidden', list && list.length ? 'false' : 'true');
+              })
+              .catch(function() { hideSuggestions(); });
+          }
+          birthplaceInput.addEventListener('input', function() {
+            var v = birthplaceInput.value.trim();
+            clearPlaceSelection();
+            if (v) {
+              lastSearch = v;
+              clearTimeout(debounceTimer);
+              debounceTimer = setTimeout(function() { fetchPlaces(v); }, 320);
+              if (!suggestionsEl || suggestionsEl.style.display !== 'block') {
+                birthplaceSummary.innerHTML = 'Введите город и выберите точное место из списка — так делают все серьёзные астросервисы.';
+                birthplaceSummary.style.display = 'block';
+                showPlaceConfirm(v);
+              }
+            } else {
+              hideSuggestions();
+              birthplaceSummary.style.display = 'none';
+              if (placeConfirmBlock) placeConfirmBlock.style.display = 'none';
+            }
+          });
+          birthplaceInput.addEventListener('focus', function() {
+            var v = birthplaceInput.value.trim();
+            if (v && v.length >= 2) { lastSearch = v; fetchPlaces(v); }
+          });
+          birthplaceInput.addEventListener('blur', function() {
+            setTimeout(hideSuggestions, 200);
+            var v = birthplaceInput.value.trim();
+            if (v) {
+              if (birthplaceInput.getAttribute('data-place-selected')) {
+                birthplaceSummary.innerHTML = '<span class="place-name">Место рождения:</span> ' + escapeHtml(v);
+                if (placeCoordsEl && birthplaceInput.getAttribute('data-lat')) {
+                  placeCoordsEl.textContent = 'Координаты: ' + formatLatLon(birthplaceInput.getAttribute('data-lat'), birthplaceInput.getAttribute('data-lon'));
+                  placeCoordsEl.style.display = 'block';
+                }
+              } else {
+                birthplaceSummary.innerHTML = 'Введите город и выберите точное место из списка.';
+                if (placeCoordsEl) placeCoordsEl.style.display = 'none';
+              }
+              birthplaceSummary.style.display = 'block';
+              showPlaceConfirm(v);
+            }
+          });
+          if (birthplaceInput.value.trim()) {
+            if (birthplaceInput.getAttribute('data-place-selected')) {
+              birthplaceSummary.innerHTML = '<span class="place-name">Место рождения:</span> ' + escapeHtml(birthplaceInput.value.trim());
+              if (placeCoordsEl && birthplaceInput.getAttribute('data-lat')) {
+                placeCoordsEl.textContent = 'Координаты: ' + formatLatLon(birthplaceInput.getAttribute('data-lat'), birthplaceInput.getAttribute('data-lon'));
+                placeCoordsEl.style.display = 'block';
+              }
+            } else {
+              birthplaceSummary.innerHTML = 'Введите город и выберите место из списка.';
+            }
+            birthplaceSummary.style.display = 'block';
+            showPlaceConfirm(birthplaceInput.value.trim());
+          }
+        }
+        var formPage = document.getElementById('formPage');
+        if (formPage && userTariff === 'master') loadForWhoSelect();
       
+      // Навигация по страницам
       function goToPage(pageId) {
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
-        pendingPayload = null;
-        var hintEl = document.getElementById('mainButtonHint');
-        if (hintEl) hintEl.style.display = 'none';
-        var topBar = document.getElementById('topSendBar');
-        if (topBar) topBar.classList.toggle('show', pageId === 'paymentPage' && !!tg);
+        if (pageId !== 'paymentPage') {
+          var payBtnReset = document.getElementById('payBtn');
+          if (payBtnReset) { payBtnReset.disabled = false; payBtnReset.textContent = 'Отправить заявку'; }
+        }
         document.querySelectorAll('.page').forEach(function(page) {
           page.classList.remove('active');
         });
-        document.getElementById(pageId).classList.add('active');
-        console.log('Переход на страницу:', pageId);
-        
-        if (document.getElementById('previewNav').classList.contains('show')) {
+        var target = document.getElementById(pageId);
+        if (target) target.classList.add('active');
+        if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
+        if (document.getElementById('previewNav') && document.getElementById('previewNav').classList.contains('show')) {
           document.querySelectorAll('.preview-nav button').forEach(function(btn) {
             btn.classList.remove('active');
           });
-          var pageMap = { 'homePage': 'home', 'formPage': 'form', 'paymentPage': 'payment', 'loadingPage': 'loading', 'successPage': 'success' };
+          var pageMap = { 'homePage': 'home', 'formPage': 'form', 'paymentPage': 'payment', 'loadingPage': 'loading', 'successPage': 'success', 'heroesPage': 'heroes' };
           var activeBtn = document.querySelector('.preview-nav button[data-page="' + (pageMap[pageId] || '') + '"]');
           if (activeBtn) activeBtn.classList.add('active');
         }
       }
       
-      document.getElementById('startBtn').addEventListener('click', function() { goToPage('formPage'); });
-      document.getElementById('backBtn').addEventListener('click', function() { goToPage('homePage'); });
-      document.getElementById('nextBtn').addEventListener('click', function() {
+      // Кнопки навигации
+      var startBtn = document.getElementById('startBtn');
+      var backBtn = document.getElementById('backBtn');
+      var nextBtn = document.getElementById('nextBtn');
+      if (startBtn) startBtn.addEventListener('click', function() { goToPage('formPage'); });
+      if (backBtn) backBtn.addEventListener('click', function() { goToPage('homePage'); });
+      if (nextBtn) nextBtn.addEventListener('click', function() {
         var name = document.getElementById('name').value.trim();
         var birthdate = document.getElementById('birthdate').value;
         var birthplace = document.getElementById('birthplace').value.trim();
-        var birthtimeVal = unknown.checked ? 'ok' : document.getElementById('birthtime').value;
+        var birthtimeVal = (unknown && unknown.checked) ? 'ok' : (document.getElementById('birthtime') ? document.getElementById('birthtime').value : '');
         var gender = document.getElementById('gender').value;
         var request = document.getElementById('request').value.trim();
         
@@ -412,7 +631,17 @@
           alert('Место рождения должно содержать минимум 3 символа');
           return;
         }
-        if (!birthtimeVal || (!unknown.checked && !document.getElementById('birthtime').value)) {
+        var birthplaceField = document.getElementById('birthplace');
+        if (!(birthplaceField && birthplaceField.getAttribute('data-place-selected'))) {
+          alert('Как в популярных астросервисах: выбери место рождения из списка подсказок (начни вводить город и нажми на нужный вариант). Так мы избегаем ошибок в расчёте карты.');
+          return;
+        }
+        if (!(placeConfirmed && placeConfirmed.checked)) {
+          alert('Подтверди, что место рождения и координаты указаны верно (отметь галочку)');
+          return;
+        }
+        var btVal = document.getElementById('birthtime');
+        if (!birthtimeVal || (!(unknown && unknown.checked) && (!btVal || !btVal.value))) {
           alert('Укажи время рождения или отметь "Не знаю"');
           return;
         }
@@ -433,16 +662,20 @@
         goToPage('paymentPage');
       });
       
-      document.getElementById('backFromPaymentBtn').addEventListener('click', function() {
+      var backFromPaymentBtn = document.getElementById('backFromPaymentBtn');
+      if (backFromPaymentBtn) backFromPaymentBtn.addEventListener('click', function() {
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
-        pendingPayload = null;
-        var hintEl = document.getElementById('mainButtonHint');
-        if (hintEl) hintEl.style.display = 'none';
+        var payBtnEl = document.getElementById('payBtn');
+        if (payBtnEl) { payBtnEl.disabled = false; payBtnEl.textContent = 'Отправить заявку'; }
         goToPage('formPage');
       });
-      function showMainButtonAndHint() {
-        if (!tg || !tg.MainButton || !tg.sendData) return;
-        pendingPayload = {
+      var payBtn = document.getElementById('payBtn');
+      if (payBtn) payBtn.addEventListener('click', function() {
+        if (payBtn.disabled) return;
+        if (tg && tg.MainButton && tg.sendData) {
+          var forWho = document.getElementById('forWho');
+          var clientId = (forWho && forWho.value && userTariff === 'master') ? forWho.value : null;
+          var payload = {
             name: document.getElementById('name').value.trim(),
             birthdate: document.getElementById('birthdate').value,
             birthplace: document.getElementById('birthplace').value.trim(),
@@ -453,52 +686,232 @@
             request: document.getElementById('request').value.trim(),
             initData: (tg.initData || '')
           };
-        try {
-          tg.MainButton.setText('Отправить заявку во Вселенную');
-          tg.MainButton.show();
-          var hintEl = document.getElementById('mainButtonHint');
-          if (hintEl) hintEl.style.display = 'block';
-        } catch (e) {
-          console.warn('MainButton:', e);
-          pendingPayload = null;
-        }
-      }
-      document.getElementById('topSendBtn').addEventListener('click', showMainButtonAndHint);
-      document.getElementById('payBtn').addEventListener('click', function() {
-        if (tg && tg.MainButton && tg.sendData) {
-          showMainButtonAndHint();
+          if (clientId) payload.clientId = clientId;
+          try {
+            if (tg.MainButton.offClick) tg.MainButton.offClick();
+            tg.MainButton.setText('Отправить заявку во Вселенную');
+            tg.MainButton.show();
+            var sent = false;
+            tg.MainButton.onClick(function() {
+              if (sent) return;
+              sent = true;
+              if (tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
+              var msg = 'Заявка отправлена. Можно закрыть приложение.';
+              var sp = document.getElementById('songPreviewText');
+              if (sp) sp.textContent = msg + ' Когда песня будет готова — придёт уведомление в чат с ботом.';
+              goToPage('successPage');
+              setTimeout(function() {
+                try { tg.sendData(JSON.stringify(payload)); } catch (e) { console.warn('sendData:', e); }
+              }, 300);
+            });
+            payBtn.disabled = true;
+            payBtn.textContent = 'Нажми кнопку внизу экрана →';
+          } catch (e) {
+            console.warn('MainButton:', e);
+            goToPage('loadingPage');
+            setTimeout(function() {
+              var sp = document.getElementById('songPreviewText');
+              if (sp) sp.textContent = 'Заявка будет обработана. Ожидай уведомление в чате с ботом.';
+              goToPage('successPage');
+            }, 1500);
+          }
         } else {
-          // Приложение открыто в браузере — sendData недоступен, заявка не уйдёт в бота
           goToPage('loadingPage');
           setTimeout(function() {
-            document.getElementById('songPreviewText').textContent =
-              '⚠️ Чтобы отправить заявку, открой приложение из Telegram: в чате с ботом нажми кнопку меню (или «Открыть приложение»). Здесь заявка в бота не отправляется.';
+            var nameEl = document.getElementById('name');
+            var reqEl = document.getElementById('request');
+            var name = nameEl ? nameEl.value.trim() : '';
+            var request = reqEl ? reqEl.value.trim() : '';
+            if (!name) name = 'Друг';
+            if (!request) request = 'твои цели';
+            var songText = '✨ ' + name + ', твоя песня создана!\n\nНа основе твоего запроса \"' + request.substring(0, 30) + '...\" сгенерирована уникальная аудиокомпозиция.\n\nЭто твой персональный звуковой ключ — артефакт силы для игры жизни.';
+            var sp = document.getElementById('songPreviewText');
+            if (sp) sp.textContent = songText;
             goToPage('successPage');
-          }, 800);
+          }, 2500);
         }
       });
       
-      document.getElementById('newKeyBtn').addEventListener('click', function() {
-        document.getElementById('name').value = '';
-        document.getElementById('birthdate').value = '';
-        document.getElementById('birthplace').value = '';
-        document.getElementById('birthtime').value = '';
-        unknown.checked = false;
-        document.getElementById('gender').value = '';
+      var goHeroesBtn = document.getElementById('goHeroesBtn');
+      if (goHeroesBtn) goHeroesBtn.addEventListener('click', function() { goToPage('heroesPage'); loadHeroesList(); });
+
+      function loadHeroesList() {
+        var listEl = document.getElementById('heroesList');
+        if (!listEl) return;
+        listEl.innerHTML = '<p style="color:#6b7280">Загрузка...</p>';
+        var search = (document.getElementById('heroesSearch') || {}).value;
+        var q = search ? '?search=' + encodeURIComponent(search) : '';
+        heroesApi('/heroes' + q, { method: 'GET' }).then(function(d) {
+          heroesCache = (d && d.clients) || [];
+          if (!heroesCache.length) { listEl.innerHTML = '<p style="color:#6b7280">Пока нет героев. Нажми «Добавить героя».</p>'; return; }
+          listEl.innerHTML = heroesCache.map(function(h) {
+            var dateStr = h.birth_date || '—';
+            var addStr = h.created_at ? new Date(h.created_at).toLocaleDateString('ru-RU') : '';
+            return '<div class="section" style="margin-bottom:12px" data-hero-id="' + (h.id || '') + '">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">' +
+              '<strong>' + (h.name || '—') + '</strong>' +
+              '<span style="font-size:.9rem;color:#6b7280">' + dateStr + (addStr ? ' · ' + addStr : '') + '</span>' +
+              '</div>' +
+              (h.birth_place ? '<div style="font-size:.95rem;color:#6b7280;margin-top:6px">' + h.birth_place + '</div>' : '') +
+              '<div style="margin-top:10px;display:flex;gap:8px">' +
+              '<button type="button" class="secondary hero-edit-btn" style="padding:8px 14px;font-size:.9rem" data-id="' + (h.id || '') + '">Изменить</button>' +
+              '<button type="button" class="secondary hero-delete-btn" style="padding:8px 14px;font-size:.9rem;color:#dc2626" data-id="' + (h.id || '') + '" data-name="' + (h.name || '').replace(/"/g, '&quot;') + '">Удалить</button>' +
+              '</div></div>';
+          }).join('');
+          listEl.querySelectorAll('.hero-edit-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+              var id = btn.getAttribute('data-id');
+              var h = heroesCache.find(function(c) { return c.id === id; });
+              if (!h) return;
+              editingHeroId = id;
+              document.getElementById('heroName').value = h.name || '';
+              document.getElementById('heroBirthdate').value = h.birth_date || '';
+              document.getElementById('heroBirthtime').value = (h.birth_time || '').substring(0, 5);
+              document.getElementById('heroBirthplace').value = h.birth_place || '';
+              document.getElementById('heroBirthtimeUnknown').checked = !!h.birthtime_unknown;
+              document.getElementById('heroGender').value = h.gender || '';
+              document.getElementById('heroNotes').value = h.notes || '';
+              document.getElementById('heroFormWrap').style.display = 'block';
+            });
+          });
+          listEl.querySelectorAll('.hero-delete-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+              var id = btn.getAttribute('data-id');
+              var name = btn.getAttribute('data-name') || 'этого героя';
+              if (!confirm('Удалить «' + name + '»? Это действие нельзя отменить.')) return;
+              heroesApi('/heroes/' + id, { method: 'DELETE' }).then(function() { loadHeroesList(); }).catch(function(e) { alert('Ошибка: ' + (e.message || e)); });
+            });
+          });
+        }).catch(function(e) {
+          listEl.innerHTML = '<p style="color:#dc2626">Не удалось загрузить список. Проверьте настройку API.</p>';
+        });
+      }
+      var addHeroBtn = document.getElementById('addHeroBtn');
+      var heroFormWrap = document.getElementById('heroFormWrap');
+      var heroFormCancel = document.getElementById('heroFormCancel');
+      if (addHeroBtn) addHeroBtn.addEventListener('click', function() {
+        editingHeroId = null;
+        document.getElementById('heroName').value = '';
+        document.getElementById('heroBirthdate').value = '';
+        document.getElementById('heroBirthtime').value = '';
+        document.getElementById('heroBirthplace').value = '';
+        document.getElementById('heroBirthtimeUnknown').checked = false;
+        document.getElementById('heroGender').value = '';
+        document.getElementById('heroNotes').value = '';
+        heroFormWrap.style.display = 'block';
+      });
+      if (heroFormCancel) heroFormCancel.addEventListener('click', function() { heroFormWrap.style.display = 'none'; editingHeroId = null; });
+      var heroFormSave = document.getElementById('heroFormSave');
+      if (heroFormSave) heroFormSave.addEventListener('click', function() {
+        var name = (document.getElementById('heroName') || {}).value.trim();
+        if (!name) { alert('Введите имя'); return; }
+        var payload = {
+          initData: (tg && tg.initData) || '',
+          name: name,
+          birth_date: (document.getElementById('heroBirthdate') || {}).value || null,
+          birth_time: (document.getElementById('heroBirthtime') || {}).value || null,
+          birth_place: (document.getElementById('heroBirthplace') || {}).value.trim() || null,
+          birthtime_unknown: (document.getElementById('heroBirthtimeUnknown') || {}).checked,
+          gender: (document.getElementById('heroGender') || {}).value || null,
+          notes: (document.getElementById('heroNotes') || {}).value.trim() || null
+        };
+        if (editingHeroId) {
+          heroesApi('/heroes/' + editingHeroId, { method: 'PATCH', body: payload }).then(function() {
+            heroFormWrap.style.display = 'none';
+            editingHeroId = null;
+            loadHeroesList();
+          }).catch(function(e) { alert('Ошибка: ' + (e.message || e)); });
+        } else {
+          heroesApi('/heroes', { method: 'POST', body: payload }).then(function() {
+            heroFormWrap.style.display = 'none';
+            loadHeroesList();
+          }).catch(function(e) { alert('Ошибка: ' + (e.message || e)); });
+        }
+      });
+      var heroesSearchBtn = document.getElementById('heroesSearchBtn');
+      if (heroesSearchBtn) heroesSearchBtn.addEventListener('click', loadHeroesList);
+      var heroesBackBtn = document.getElementById('heroesBackBtn');
+      if (heroesBackBtn) heroesBackBtn.addEventListener('click', function() { goToPage('homePage'); });
+      var todayHero = new Date();
+      var heroBirthdateEl = document.getElementById('heroBirthdate');
+      if (heroBirthdateEl) {
+        heroBirthdateEl.max = todayHero.toISOString().split('T')[0];
+        var minH = new Date(); minH.setFullYear(minH.getFullYear() - 100);
+        heroBirthdateEl.min = minH.toISOString().split('T')[0];
+      }
+
+      function fillFormFromHero(hero) {
+        if (!hero) return;
+        var nameEl = document.getElementById('name');
+        var bd = document.getElementById('birthdate');
+        var bt = document.getElementById('birthtime');
+        var bp = document.getElementById('birthplace');
+        var unk = document.getElementById('unknown');
+        var g = document.getElementById('gender');
+        if (nameEl) nameEl.value = hero.name || '';
+        if (bd) bd.value = hero.birth_date || '';
+        if (bt) bt.value = (hero.birth_time || '').substring(0, 5);
+        if (bp) bp.value = hero.birth_place || '';
+        if (unk) unk.checked = !!hero.birthtime_unknown;
+        if (g) g.value = hero.gender || '';
         var langEl = document.getElementById('language');
+        if (langEl && hero.language) langEl.value = hero.language;
+        if (birthdateSummary) { birthdateSummary.textContent = hero.birth_date ? 'Выбрано: ' + formatDateRu(hero.birth_date) : ''; birthdateSummary.style.display = hero.birth_date ? 'block' : 'none'; }
+        if (birthplaceSummary) { birthplaceSummary.textContent = hero.birth_place ? 'Место рождения: ' + hero.birth_place : ''; birthplaceSummary.style.display = hero.birth_place ? 'block' : 'none'; }
+      }
+      function loadForWhoSelect() {
+        var wrap = document.getElementById('forWhoWrap');
+        var sel = document.getElementById('forWho');
+        if (!wrap || !sel) return;
+        if (userTariff !== 'master') { wrap.style.display = 'none'; return; }
+        wrap.style.display = 'block';
+        heroesApi('/heroes', { method: 'GET' }).then(function(d) {
+          heroesCache = (d && d.clients) || [];
+          sel.innerHTML = '<option value="">Для себя</option>' + heroesCache.map(function(h) { return '<option value="' + (h.id || '') + '">Для: ' + (h.name || '—') + '</option>'; }).join('');
+          sel.addEventListener('change', function() {
+            var id = sel.value;
+            if (!id) { fillFormFromHero(null); return; }
+            var hero = heroesCache.find(function(c) { return c.id === id; });
+            if (hero) fillFormFromHero(hero);
+          });
+        }).catch(function() { wrap.style.display = 'none'; });
+      }
+
+      var newKeyBtn = document.getElementById('newKeyBtn');
+      if (newKeyBtn) newKeyBtn.addEventListener('click', function() {
+        var n = document.getElementById('name');
+        var bd = document.getElementById('birthdate');
+        var bp = document.getElementById('birthplace');
+        var bt = document.getElementById('birthtime');
+        var g = document.getElementById('gender');
+        var langEl = document.getElementById('language');
+        var r = document.getElementById('request');
+        if (n) n.value = '';
+        if (bd) bd.value = '';
+        if (bp) bp.value = '';
+        if (bt) bt.value = '';
+        if (unknown) unknown.checked = false;
+        if (placeConfirmed) placeConfirmed.checked = false;
+        if (g) g.value = '';
         if (langEl) langEl.value = '';
-        document.getElementById('request').value = '';
+        if (r) r.value = '';
+        if (birthdateSummary) birthdateSummary.style.display = 'none';
+        if (birthplaceSummary) birthplaceSummary.style.display = 'none';
         goToPage('formPage');
       });
       
       document.querySelectorAll('.preview-nav button').forEach(function(button) {
         button.addEventListener('click', function() {
-          var pageMap = { 'home': 'homePage', 'form': 'formPage', 'payment': 'paymentPage', 'loading': 'loadingPage', 'success': 'successPage' };
+          var pageMap = { 'home': 'homePage', 'form': 'formPage', 'payment': 'paymentPage', 'loading': 'loadingPage', 'success': 'successPage', 'heroes': 'heroesPage' };
+          document.querySelectorAll('.preview-nav button').forEach(function(btn) { btn.classList.remove('active'); });
+          this.classList.add('active');
           goToPage(pageMap[button.getAttribute('data-page')] || 'homePage');
         });
       });
-      
-      console.log('Все страницы инициализированы');
+        } catch (e) {
+          console.warn('App init error:', e);
+        }
+      }, 50);
     });
   </script>
 </body>

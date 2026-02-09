@@ -10,9 +10,15 @@ import { createClient } from "@supabase/supabase-js";
 import { createHeroesRouter, getOrCreateAppUser } from "./heroesApi.js";
 import "dotenv/config";
 
+// #region agent log
+function _dbg(loc, msg, data, hyp) {
+  fetch("http://127.0.0.1:7242/ingest/3d8a5f16-8394-4bc8-bad3-0e950acbd108", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: loc, message: msg, data: data || {}, timestamp: Date.now(), hypothesisId: hyp || "" }) }).catch(() => {});
+}
+// #endregion
+
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const MINI_APP_BASE = (process.env.MINI_APP_URL || "https://allabelkevich-wq.github.io/telegram-miniapp/").replace(/\?.*$/, "").replace(/\/$/, "");
-const MINI_APP_URL = MINI_APP_BASE + "?v=2";
+const MINI_APP_URL = MINI_APP_BASE + "?v=5";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";
@@ -41,37 +47,55 @@ function isAdmin(telegramId) {
 
 // Сохранение заявки: в Supabase и/или в память (для админки). Поддержка client_id (тариф Мастер).
 async function saveRequest(data) {
+  if (!data.telegram_user_id) {
+    // #region agent log
+    _dbg("index.js:saveRequest", "no telegram_user_id", {}, "C");
+    // #endregion
+    console.error("[Supabase] saveRequest: нет telegram_user_id");
+    return null;
+  }
+  const emptyToNull = (v) => (v === "" || v == null ? null : v);
   let row = {
     telegram_user_id: data.telegram_user_id,
-    name: data.name || null,
-    birthdate: data.birthdate || null,
-    birthplace: data.birthplace || null,
-    birthtime: data.birthtime || null,
+    name: emptyToNull(data.name),
+    birthdate: emptyToNull(data.birthdate),
+    birthplace: emptyToNull(data.birthplace),
+    birthtime: emptyToNull(data.birthtime),
     birthtime_unknown: !!data.birthtime_unknown,
-    gender: data.gender || null,
-    language: data.language || null,
-    request: data.request || null,
+    gender: emptyToNull(data.gender),
+    language: emptyToNull(data.language),
+    request: emptyToNull(data.request),
     status: "pending",
   };
   if (data.client_id && supabase) {
     const { data: client, error: clientErr } = await supabase.from("clients").select("name, birth_date, birth_time, birth_place, birthtime_unknown, gender").eq("id", data.client_id).maybeSingle();
     if (!clientErr && client) {
       row = { ...row, client_id: data.client_id, name: client.name ?? row.name, birthdate: client.birth_date ?? row.birthdate, birthtime: client.birth_time ?? row.birthtime, birthplace: client.birth_place ?? row.birthplace, birthtime_unknown: !!client.birthtime_unknown, gender: client.gender ?? row.gender };
-    } else {
-      row.client_id = data.client_id;
     }
   }
   const record = { id: null, ...row, created_at: new Date().toISOString() };
   if (supabase) {
+    // #region agent log
+    _dbg("index.js:saveRequest", "before insert", { hasSupabase: true, rowKeys: Object.keys(row), birthdateType: typeof row.birthdate }, "C");
+    // #endregion
     const { data: inserted, error } = await supabase.from("track_requests").insert(row).select("id").single();
     if (error) {
+      // #region agent log
+      _dbg("index.js:saveRequest", "insert error", { errorMessage: error.message, code: error.code }, "C");
+      // #endregion
       console.error("[Supabase] Ошибка при сохранении заявки:", error.message, error.code, error.details);
       record.id = null;
     } else {
       record.id = inserted?.id ?? null;
+      // #region agent log
+      _dbg("index.js:saveRequest", "insert ok", { id: record.id }, "C");
+      // #endregion
       console.log("[Supabase] Заявка сохранена, id:", record.id, row.client_id ? `(для героя ${row.client_id})` : "");
     }
   } else {
+    // #region agent log
+    _dbg("index.js:saveRequest", "no supabase, memory only", { id: record.id }, "C");
+    // #endregion
     record.id = String(Date.now());
   }
   memoryRequests.unshift(record);
@@ -98,12 +122,21 @@ async function getRequestsForAdmin(limit = 30) {
   try {
     const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
     if (error) {
+      // #region agent log
+      _dbg("index.js:getRequestsForAdmin", "fetch error", { errorMessage: error.message }, "D");
+      // #endregion
       console.error("[Supabase] Ошибка заявок /admin:", error.message);
       return { requests: memoryRequests.slice(0, limit), dbError: true };
     }
+    // #region agent log
+    _dbg("index.js:getRequestsForAdmin", "fetch ok", { count: (data || []).length }, "D");
+    // #endregion
     console.log("[Supabase] Заявок для админа:", (data || []).length);
     return { requests: data || [], dbError: false };
   } catch (e) {
+    // #region agent log
+    _dbg("index.js:getRequestsForAdmin", "race catch", { message: e?.message }, "D");
+    // #endregion
     if (e?.message === "timeout") console.error("[Supabase] Таймаут заявок /admin");
     else console.error("[Supabase] getRequestsForAdmin:", e?.message || e);
     return { requests: memoryRequests.slice(0, limit), dbError: true };
@@ -129,18 +162,40 @@ bot.command("start", async (ctx) => {
 // Данные из Mini App (кнопка «Отправить заявку» → sendData)
 bot.on("message:web_app_data", async (ctx) => {
   const raw = ctx.message.web_app_data?.data;
-  if (!raw) return;
+  // #region agent log
+  _dbg("index.js:web_app_data", "web_app_data received", { rawLength: raw?.length ?? 0, hasFrom: !!ctx.from, fromId: ctx.from?.id }, "A");
+  // #endregion
+  console.log("[Заявка] Получены web_app_data, длина:", raw?.length || 0);
+  if (!raw) {
+    await ctx.reply("Не получил данные заявки. Нажми в приложении кнопку «Отправить заявку во Вселенную» внизу экрана.");
+    return;
+  }
 
   let payload;
   try {
     payload = JSON.parse(raw);
   } catch (e) {
+    // #region agent log
+    _dbg("index.js:web_app_data", "JSON parse failed", { error: e.message }, "B");
+    // #endregion
+    console.error("[Заявка] Ошибка парсинга JSON:", e.message);
     await ctx.reply("Не удалось прочитать данные заявки. Попробуй ещё раз из приложения.");
+    return;
+  }
+  // #region agent log
+  _dbg("index.js:web_app_data", "payload parsed", { keys: Object.keys(payload || {}), hasName: !!payload?.name, hasBirthdate: !!payload?.birthdate }, "B");
+  // #endregion
+
+  const telegramUserId = ctx.from?.id;
+  if (!telegramUserId) {
+    console.error("[Заявка] Нет ctx.from.id");
+    await ctx.reply("Ошибка: не удалось определить пользователя. Закрой приложение и открой снова из чата с ботом.");
     return;
   }
 
   await ctx.reply("⏳ Получил заявку, сохраняю…");
 
+  try {
   const {
     name,
     birthdate,
@@ -153,8 +208,9 @@ bot.on("message:web_app_data", async (ctx) => {
     clientId,
   } = payload;
 
-  const telegramUserId = ctx.from?.id;
-  const requestId = await saveRequest({
+  let requestId;
+  try {
+    requestId = await saveRequest({
     telegram_user_id: telegramUserId,
     name: name || "",
     birthdate: birthdate || "",
@@ -166,10 +222,15 @@ bot.on("message:web_app_data", async (ctx) => {
     request: userRequest || "",
     client_id: clientId || null,
   });
+  } catch (err) {
+    console.error("[Заявка] Ошибка saveRequest:", err?.message || err);
+    await ctx.reply("Произошла ошибка при сохранении. Попробуй ещё раз или напиши в поддержку.");
+    return;
+  }
 
   if (!requestId) {
     await ctx.reply("Не удалось сохранить заявку. Попробуй позже или напиши в поддержку.");
-    console.error("[Заявка] Ошибка сохранения", { name, birthdate, birthplace });
+    console.error("[Заявка] Ошибка сохранения (saveRequest вернул null)", { name, birthdate, birthplace });
     return;
   }
 
@@ -210,6 +271,10 @@ bot.on("message:web_app_data", async (ctx) => {
         .then(() => console.log("[Уведомление] Доставлено админу", adminId))
         .catch((e) => console.warn("[Уведомление админу]", adminId, e.message));
     }
+  }
+  } catch (err) {
+    console.error("[Заявка] Необработанная ошибка в обработчике web_app_data:", err?.message || err);
+    await ctx.reply("Произошла ошибка. Попробуй ещё раз или напиши в поддержку.").catch(() => {});
   }
 });
 
