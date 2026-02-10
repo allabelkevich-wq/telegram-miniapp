@@ -583,7 +583,6 @@
       
       // Навигация по страницам
       function goToPage(pageId) {
-        if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
         if (pageId !== 'paymentPage') {
           var payBtnReset = document.getElementById('payBtn');
           if (payBtnReset) { payBtnReset.disabled = false; payBtnReset.textContent = 'Отправить заявку'; }
@@ -659,7 +658,6 @@
       
       var backFromPaymentBtn = document.getElementById('backFromPaymentBtn');
       if (backFromPaymentBtn) backFromPaymentBtn.addEventListener('click', function() {
-        if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
         var payBtnEl = document.getElementById('payBtn');
         if (payBtnEl) { payBtnEl.disabled = false; payBtnEl.textContent = 'Отправить заявку'; }
         goToPage('formPage');
@@ -731,54 +729,42 @@
           return;
         }
         var payloadStr = JSON.stringify(payload);
-        if (typeof app.sendData !== 'function') {
-          if (sendViaApi(payload, function() {
-            console.log('[YupSoul] Заявка отправлена через API.');
-            showSuccessPage('Заявка отправлена. Можно закрыть приложение. Когда песня будет готова — придёт уведомление в чат с ботом.');
-          }, function(err) {
-            console.warn('[YupSoul] API fallback:', err);
-            alert('Не удалось отправить заявку: ' + (err || 'ошибка сети').slice(0, 80) + '. Проверь, что открыт из чата с ботом и BACKEND_URL задан.');
-          })) return;
-          console.warn('[YupSoul] sendData недоступен и BACKEND_URL не задан.');
-          goToPage('loadingPage');
-          setTimeout(function() { showSuccessPage('Заявка будет обработана. Ожидай уведомление в чате с ботом.'); }, 1500);
+        var done = function() {
+          showSuccessPage('Заявка отправлена. Можно закрыть приложение. Когда песня будет готова — придёт уведомление в чат с ботом.');
+        };
+        var fail = function(msg) {
+          payBtn.disabled = false;
+          payBtn.textContent = 'Отправить заявку';
+          if (msg) alert(msg);
+        };
+        payBtn.disabled = true;
+        payBtn.textContent = 'Отправка…';
+        if (typeof app.sendData === 'function') {
+          try {
+            app.sendData(payloadStr);
+            console.log('[YupSoul] sendData вызван, данные отправлены в бота.');
+            done();
+          } catch (e) {
+            console.warn('[YupSoul] sendData ошибка:', e && e.message ? e.message : e);
+            if (apiBase && sendViaApi(payload, done, function(err) {
+              console.warn('[YupSoul] API fallback:', err);
+              fail('Не удалось отправить: ' + (err || 'ошибка').slice(0, 60));
+            })) return;
+            fail('Не удалось отправить. Открой приложение из чата с ботом и попробуй снова.');
+          }
           return;
         }
-        try {
-          app.sendData(payloadStr);
-          console.log('[YupSoul] sendData вызван, данные отправлены в бота.');
-          if (app.MainButton && app.MainButton.hide) app.MainButton.hide();
-          showSuccessPage('Заявка отправлена. Можно закрыть приложение. Когда песня будет готова — придёт уведомление в чат с ботом.');
-        } catch (e) {
-          console.warn('[YupSoul] sendData (один клик):', e && e.message ? e.message : e);
-          var apiSent = sendViaApi(payload, function() {
-            console.log('[YupSoul] Заявка отправлена через API (после ошибки sendData).');
-            if (app.MainButton && app.MainButton.hide) app.MainButton.hide();
-            showSuccessPage('Заявка отправлена. Можно закрыть приложение. Когда песня будет готова — придёт уведомление в чат с ботом.');
+        if (apiBase) {
+          sendViaApi(payload, function() {
+            console.log('[YupSoul] Заявка отправлена через API.');
+            done();
           }, function(err) {
-            console.warn('[YupSoul] API fallback:', err);
-            alert('Не удалось отправить через API: ' + (err || 'ошибка').slice(0, 60));
+            console.warn('[YupSoul] API:', err);
+            fail('Не удалось отправить заявку: ' + (err || 'ошибка сети').slice(0, 80));
           });
-          if (apiSent) return;
-          if (app.MainButton && typeof app.MainButton.onClick === 'function') {
-            if (app.MainButton.offClick) app.MainButton.offClick();
-            app.MainButton.setText('Отправить заявку во Вселенную');
-            app.MainButton.show();
-            var sent = false;
-            app.MainButton.onClick(function() {
-              if (sent) return;
-              sent = true;
-              try { app.sendData(payloadStr); } catch (e2) { console.warn('[YupSoul] sendData (MainButton):', e2); }
-              if (app.MainButton && app.MainButton.hide) app.MainButton.hide();
-              showSuccessPage('Заявка отправлена. Можно закрыть приложение. Когда песня будет готова — придёт уведомление в чат с ботом.');
-            });
-            payBtn.disabled = true;
-            payBtn.textContent = 'Нажми кнопку внизу экрана →';
-          } else {
-            goToPage('loadingPage');
-            setTimeout(function() { showSuccessPage('Заявка будет обработана. Ожидай уведомление в чате с ботом.'); }, 1500);
-          }
+          return;
         }
+        fail('Открой приложение из чата с ботом в Telegram (кнопка меню) — иначе заявка не отправится.');
       });
       
       var goHeroesBtn = document.getElementById('goHeroesBtn');

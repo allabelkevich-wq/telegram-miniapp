@@ -30,6 +30,17 @@ if (!BOT_TOKEN) {
 }
 
 const bot = new Bot(BOT_TOKEN);
+
+// Лог входящих апдейтов и сразу «печатает…» — чтобы сообщение не казалось «не отправленным»
+bot.use(async (ctx, next) => {
+  const msg = ctx.message;
+  const fromId = ctx.from?.id;
+  if (msg?.text) console.log("[TG] msg from", fromId, ":", msg.text.slice(0, 80) + (msg.text.length > 80 ? "…" : ""));
+  const chatId = ctx.chat?.id;
+  if (chatId) ctx.api.sendChatAction(chatId, "typing").catch(() => {});
+  return next();
+});
+
 const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
   ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
   : null;
@@ -113,6 +124,13 @@ async function getRequestsForAdmin(limit = 30) {
     return { requests: memoryRequests.slice(0, limit), dbError: true };
   }
 }
+
+// Кнопку меню (слева от поля ввода) задаём только в @BotFather → Bot Settings → Menu Button.
+// Бот НЕ вызывает setChatMenuButton — иначе перезаписывает настройку и кнопка «слетает».
+
+bot.command("ping", async (ctx) => {
+  await ctx.reply("Бот на связи. Команды работают.");
+});
 
 bot.command("start", async (ctx) => {
   const name = ctx.from?.first_name || "друг";
@@ -262,7 +280,14 @@ bot.on("message:web_app_data", async (ctx) => {
 // Расшифровка карты только после оплаты (docs/ALGORITHM.md)
 async function sendAnalysisIfPaid(ctx) {
   const telegramUserId = ctx.from?.id;
-  if (!telegramUserId || !supabase) return;
+  if (!telegramUserId) {
+    await ctx.reply("Не удалось определить пользователя. Напиши из лички с ботом.");
+    return;
+  }
+  if (!supabase) {
+    await ctx.reply("База не подключена. Обратись к админу.");
+    return;
+  }
   let row;
   try {
     const { data, error } = await supabase
@@ -311,17 +336,35 @@ async function sendAnalysisIfPaid(ctx) {
 bot.command("get_analysis", sendAnalysisIfPaid);
 bot.hears(/^(расшифровка|получить расшифровку|детальный анализ)$/i, sendAnalysisIfPaid);
 
+// Любая неизвестная команда — подсказка (чтобы не было «пустого» отклика)
+bot.on("message:text", async (ctx, next) => {
+  const text = (ctx.message?.text || "").trim();
+  if (!text.startsWith("/")) return next();
+  const cmd = text.split(/\s/)[0].toLowerCase();
+  if (["/start", "/ping", "/get_analysis", "/admin", "/admin_check"].includes(cmd)) return next();
+  await ctx.reply("Неизвестная команда. Доступны: /start — открыть приложение, /get_analysis — расшифровка после оплаты. Админам: /admin, /admin_check. Проверка связи: /ping.");
+});
+
 bot.command("admin_check", async (ctx) => {
-  const userId = ctx.from?.id;
+  const userId = ctx?.from?.id;
+  const chatId = ctx?.chat?.id ?? userId;
+  const targetId = chatId || userId;
+  const send = async (msg) => {
+    try {
+      await ctx.reply(msg);
+    } catch (e) {
+      console.error("[admin_check] ctx.reply:", e?.message || e);
+      if (targetId) await bot.api.sendMessage(targetId, msg).catch((e2) => console.error("[admin_check] sendMessage:", e2?.message));
+    }
+  };
   if (!ADMIN_IDS.length) {
-    await ctx.reply("ADMIN_TELEGRAM_IDS не задан в .env. Добавь свой Telegram ID и перезапусти бота.").catch(() => {});
+    await send("ADMIN_TELEGRAM_IDS не задан в Render (Environment). Добавь свой Telegram ID и перезапусти бота.");
     return;
   }
   if (!isAdmin(userId)) {
-    await ctx.reply("Нет доступа. Твой ID: " + (userId ?? "?") + ". Добавь в ADMIN_TELEGRAM_IDS в .env.").catch(() => {});
+    await send("Нет доступа. Твой ID: " + (userId ?? "?") + ". Добавь в ADMIN_TELEGRAM_IDS в Render.");
     return;
   }
-  const send = (msg) => ctx.reply(msg).catch((e) => console.error("[admin_check] send:", e));
   try {
     if (!supabase) {
       await send("Supabase не настроен (нет SUPABASE_URL/SUPABASE_SERVICE_KEY в .env).");
@@ -360,22 +403,32 @@ function sendLongMessage(ctx, text) {
 }
 
 bot.command("admin", async (ctx) => {
-  const userId = ctx.from?.id;
-  const chatId = ctx.chat?.id;
-  console.log("[admin] chatId=" + chatId + " userId=" + userId + " isAdmin=" + isAdmin(userId) + " ADMIN_IDS=" + JSON.stringify(ADMIN_IDS));
+  const userId = ctx?.from?.id;
+  const chatId = ctx?.chat?.id ?? userId;
+  const targetId = chatId || userId;
 
   const reply = async (text) => {
     try {
       return await ctx.reply(text);
     } catch (e) {
       console.error("[admin] ctx.reply:", e?.message || e);
-      if (chatId) return bot.api.sendMessage(chatId, text).catch((e2) => console.error("[admin] sendMessage:", e2?.message));
+      if (targetId) return bot.api.sendMessage(targetId, text).catch((e2) => console.error("[admin] sendMessage:", e2?.message));
     }
   };
 
+  const replyAny = (text) => {
+    if (targetId) bot.api.sendMessage(targetId, text).catch((e) => console.error("[admin] replyAny:", e?.message));
+  };
+
   try {
+    if (!ctx?.chat && !ctx?.from) {
+      console.warn("[admin] Нет ctx.chat и ctx.from");
+      return;
+    }
+    console.log("[admin] chatId=" + chatId + " userId=" + userId + " isAdmin=" + isAdmin(userId) + " ADMIN_IDS=" + JSON.stringify(ADMIN_IDS));
+
     if (!ADMIN_IDS.length) {
-      await reply("В .env бота не задан ADMIN_TELEGRAM_IDS. Добавь в Render (Environment): ADMIN_TELEGRAM_IDS=твой_Telegram_ID (узнать ID: @userinfobot), затем перезапусти сервис.");
+      await reply("В Render (Environment) не задан ADMIN_TELEGRAM_IDS. Добавь: ADMIN_TELEGRAM_IDS=твой_Telegram_ID (узнать ID: @userinfobot), затем перезапусти сервис.");
       return;
     }
     if (!isAdmin(userId)) {
@@ -395,7 +448,7 @@ bot.command("admin", async (ctx) => {
     }
     if (!requests.length) {
       const hint = supabase
-        ? "Заявок пока нет.\n\nОтправь заявку из приложения (кнопка меню → форма → оплата → «Отправить заявку» → кнопка внизу экрана «Отправить заявку во Вселенную»). Затем снова /admin или /admin_check."
+        ? "Заявок пока нет.\n\nОтправь заявку из приложения (кнопка меню → форма → «Отправить заявку»). Затем снова /admin или /admin_check."
         : "Заявок пока нет. Supabase не подключён — заявки только в памяти.";
       await reply(hint);
       return;
@@ -422,13 +475,14 @@ bot.command("admin", async (ctx) => {
     });
   } catch (err) {
     console.error("[admin] Ошибка:", err?.message || err);
-    await reply("Ошибка при загрузке заявок. Смотри консоль бота.").catch(() => {});
+    replyAny("Ошибка при выполнении /admin. Попробуй /admin_check или подожди минуту (сервер мог проснуться) и напиши /admin снова.");
   }
 });
 
 // Регистрация команд в Telegram (меню бота)
 const commands = [
   { command: "start", description: "Начать / открыть приложение" },
+  { command: "ping", description: "Проверка связи с ботом" },
   { command: "get_analysis", description: "Расшифровка карты (после оплаты)" },
   { command: "admin", description: "Админ: список заявок" },
   { command: "admin_check", description: "Админ: проверка базы" },
@@ -438,14 +492,6 @@ bot.api.setMyCommands(commands, { scope: { type: "all_private_chats" } }).catch(
 
 // Для русскоязычного меню (часть клиентов показывает команды по языку)
 bot.api.setMyCommands(commands, { language_code: "ru" }).catch(() => {});
-
-// Кнопку меню лучше задать один раз в @BotFather (Bot Settings → Menu Button), чтобы она не слетала после каждого редеплоя.
-// Если нужна автоматическая подстановка из кода — в Render задай SET_MENU_BUTTON=true.
-if (process.env.SET_MENU_BUTTON === "true") {
-  bot.api.setChatMenuButton({ menuButton: { type: "web_app", text: "✨ Открыть приложение", web_app: { url: MINI_APP_URL } } })
-    .then(() => console.log("Кнопка меню установлена:", MINI_APP_URL))
-    .catch((e) => console.warn("Не удалось установить кнопку меню:", e.message));
-}
 
 // HTTP: сначала слушаем порт (для Render health check), потом подключаем API и бота
 const app = express();
@@ -457,12 +503,27 @@ app.use((req, res, next) => {
   if (req.method === "OPTIONS") return res.sendStatus(204);
   next();
 });
-app.get("/healthz", (_req, res) => res.status(200).send("ok"));
+// Health check: и для Render, и для «пробуждения» в браузере — показываем страницу, а не пустой/серый экран
+const healthHtml =
+  "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"><title>YupSoul Bot</title><style>body{font-family:sans-serif;padding:2rem;max-width:32rem;margin:0 auto;}</style></head><body><h1>Сервис работает</h1><p>Бот пробуждён — можно писать ему в Telegram.</p><p><a href=\"/\">Главная</a></p></body></html>";
+app.get("/healthz", (_req, res) =>
+  res.status(200).set("Content-Type", "text/html; charset=utf-8").send(healthHtml)
+);
 app.get("/", (_req, res) =>
   res.status(200).set("Content-Type", "text/html; charset=utf-8").send(
-    "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>YupSoul Bot</title></head><body><p>YupSoul Bot работает.</p><p>Проверка: <a href=\"/healthz\">/healthz</a></p><p>Приложение открывай из Telegram — кнопка меню бота.</p></body></html>"
+    "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>YupSoul Bot</title></head><body><p>YupSoul Bot работает.</p><p>Проверка: <a href=\"/healthz\">/healthz</a></p><p>Статус webhook: <a href=\"/healthz?webhook=1\">/healthz?webhook=1</a> — если бот не видит команды.</p><p>Приложение открывай из Telegram — кнопка меню бота.</p></body></html>"
   )
 );
+app.get(["/webhook-info", "/webhook-info/"], async (_req, res) => {
+  try {
+    const info = await bot.api.getWebhookInfo();
+    const url = info.url || "(не установлен)";
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Webhook</title><style>body{font-family:sans-serif;padding:2rem;}</style></head><body><h1>Статус webhook</h1><p>URL: <strong>${url}</strong></p><p>Если здесь указан какой-то адрес — Telegram шлёт туда все сообщения, и бот на Render их не получает. При каждом старте бот сбрасывает webhook и переходит на long polling. Сделай Redeploy и снова открой эту страницу: должно быть «(не установлен)».</p><p><a href="/">Главная</a></p></body></html>`;
+    res.status(200).set("Content-Type", "text/html; charset=utf-8").send(html);
+  } catch (e) {
+    res.status(500).set("Content-Type", "text/html; charset=utf-8").send(`<html><body><p>Ошибка: ${e?.message || e}</p><a href="/">Главная</a></body></html>`);
+  }
+});
 
 app.post("/suno-callback", express.json(), (req, res) => {
   res.status(200).send("ok");
@@ -545,15 +606,32 @@ async function onBotStart(info) {
   } else console.log("Supabase: не подключен (заявки только в памяти).");
 }
 
+/** При старте сбрасываем webhook, иначе Telegram шлёт апдейты на старый URL и бот не видит команды. */
+async function startBotWithPolling() {
+  try {
+    const info = await bot.api.getWebhookInfo();
+    if (info.url) {
+      console.warn("[Bot] Был установлен webhook:", info.url, "— сбрасываю, чтобы бот получал команды через long polling.");
+      await bot.api.deleteWebhook({ drop_pending_updates: false });
+      console.log("[Bot] Webhook сброшен.");
+    } else {
+      console.log("[Bot] Webhook не установлен — запускаю long polling.");
+    }
+    await bot.start({ onStart: onBotStart });
+  } catch (err) {
+    console.error("Ошибка запуска бота:", err?.message || err);
+  }
+}
+
 if (process.env.RENDER_HEALTHZ_FIRST) {
   app.use("/api", createHeroesRouter(supabase, BOT_TOKEN));
   globalThis.__EXPRESS_APP__ = app;
-  bot.start({ onStart: onBotStart }).catch((err) => console.error("Ошибка запуска бота:", err?.message || err));
+  startBotWithPolling();
 } else {
   console.log("[HTTP] Слушаю порт", HEROES_API_PORT);
   app.use("/api", createHeroesRouter(supabase, BOT_TOKEN));
   app.listen(HEROES_API_PORT, "0.0.0.0", () => {
     console.log("[HTTP] Порт открыт:", HEROES_API_PORT);
-    bot.start({ onStart: onBotStart }).catch((err) => console.error("Ошибка запуска бота:", err?.message || err));
+    startBotWithPolling();
   });
 }
