@@ -1,18 +1,23 @@
 /**
- * Воркер генерации звукового ключа (улучшенная версия)
- * Использует существующую архитектуру: workerAstro → DeepSeek → Suno
+ * Воркер генерации звукового ключа
  * Запускается фоново при новой заявке
+ * ИСПРАВЛЕННАЯ ВЕРСИЯ: интегрирована с существующей архитектурой
  */
 
 import "dotenv/config";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js';
 import { computeAndSaveAstroSnapshot } from "./workerAstro.js";
 import { chatCompletion } from "./deepseek.js";
 import { generateMusic, pollMusicResult } from "./suno.js";
 
+// ============================================================================
+// КОНФИГУРАЦИЯ
+// ============================================================================
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const BOT_TOKEN = process.env.BOT_TOKEN;
+const SUNO_API_KEY = process.env.SUNO_API_KEY; // ИСПРАВЛЕНО: из .env, не жёстко закодирован
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error("[workerSoundKey] SUPABASE_URL и SUPABASE_SERVICE_KEY обязательны");
@@ -20,6 +25,10 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+// ============================================================================
+// ОТЛАЖЕННЫЙ ПРОМПТ (БЕЗ ИЗМЕНЕНИЙ!)
+// ============================================================================
 
 const SYSTEM_PROMPT = `Ты — мудрый астролог-поэт и музыкальный психолог с опытом в 10 000 жизней. Твоя задача — Объединить два типа запросов: 1) Глубокий анализ натальных карт, 2) Создание песен на основе этого анализа.
 ТРИГГЕР: Получив натальную карту и запрос (на анализ или песню), ты выполняешь следующий алгоритм в одном ответе, без разделений:
@@ -171,9 +180,10 @@ MUSIC PROMPT ДЛЯ SUNO (СТРОГО НА АНГЛИЙСКОМ ВНУТРИ С
 - Создавать не просто песни, а звуковые лекарства
 - Помнить, что каждая карта — это история героя`;
 
-/**
- * Извлекает из ответа LLM: анализ, лирику, название, стиль
- */
+// ============================================================================
+// ПАРСИНГ ОТВЕТА LLM
+// ============================================================================
+
 function parseResponse(text) {
   if (!text || typeof text !== "string") return null;
   
@@ -216,9 +226,10 @@ function parseResponse(text) {
   };
 }
 
-/**
- * Отправка аудио пользователю в Telegram по URL
- */
+// ============================================================================
+// ОТПРАВКА АУДИО ПОЛЬЗОВАТЕЛЮ
+// ============================================================================
+
 async function sendAudioToUser(telegramUserId, audioUrl, caption) {
   if (!BOT_TOKEN || !telegramUserId) return { ok: false, error: "Нет BOT_TOKEN или chat_id" };
   const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`;
@@ -237,14 +248,15 @@ async function sendAudioToUser(telegramUserId, audioUrl, caption) {
   return { ok: true };
 }
 
-/**
- * Генерация звукового ключа для заявки
- */
+// ============================================================================
+// ОСНОВНАЯ ФУНКЦИЯ ГЕНЕРАЦИИ
+// ============================================================================
+
 export async function generateSoundKey(requestId) {
   try {
-    console.log(`[workerSoundKey] Начинаю генерацию для заявки ${requestId}`);
+    console.log(`[Воркер] Начинаю генерацию для заявки ${requestId}`);
     
-    // 1. Получаем заявку
+    // Шаг 1: Получить данные заявки из БД
     const { data: request, error: reqError } = await supabase
       .from('track_requests')
       .select('*')
@@ -255,9 +267,9 @@ export async function generateSoundKey(requestId) {
       throw new Error(`Заявка ${requestId} не найдена: ${reqError?.message}`);
     }
     
-    // 2. Проверяем/создаём натальную карту
+    // Шаг 2: Проверяем/создаём натальную карту (КРИТИЧНО!)
     if (!request.astro_snapshot_id) {
-      console.log(`[workerSoundKey] Расчёт натальной карты для заявки ${requestId}`);
+      console.log(`[Воркер] Расчёт натальной карты для заявки ${requestId}`);
       const astroResult = await computeAndSaveAstroSnapshot(supabase, requestId);
       if (!astroResult.ok) {
         throw new Error(`Ошибка расчёта натальной карты: ${astroResult.error}`);
@@ -277,7 +289,7 @@ export async function generateSoundKey(requestId) {
       if (updated) Object.assign(request, updated);
     }
     
-    // 3. Получаем натальную карту
+    // Шаг 3: Получаем натальную карту
     const { data: snapshotRow } = await supabase
       .from("astro_snapshots")
       .select("snapshot_text")
@@ -286,14 +298,22 @@ export async function generateSoundKey(requestId) {
     
     const astroText = snapshotRow?.snapshot_text || "[Натальная карта не найдена]";
     
-    // 4. Формируем запрос для DeepSeek
+    // Шаг 4: Формируем запрос для DeepSeek
     const langLabel = { ru: "Russian", en: "English", uk: "Ukrainian" }[request.language || "ru"] || "Russian";
-    const userMessage = `${request.name}, ${request.birthdate}, ${request.birthplace}, ${request.birthtime_unknown ? 'время неизвестно' : request.birthtime}, язык: ${langLabel}\n\nЗапрос: "${request.request || 'создать песню'}"\n\nНатальная карта:\n${astroText}`;
+    const userRequest = `ЭТО ${request.name} и её/его запрос: "${request.request || 'создать песню'}"
+Дата рождения: ${request.birthdate}
+Место рождения: ${request.birthplace}
+Время рождения: ${request.birthtime_unknown ? 'неизвестно' : request.birthtime}
+Пол: ${request.gender}
+Язык песни и расшифровки: ${langLabel}
+
+Натальная карта:
+${astroText}`;
     
-    console.log(`[workerSoundKey] Отправляю запрос в DeepSeek для ${request.name}`);
+    // Шаг 5: Отправить в DeepSeek (используем существующий модуль)
+    console.log(`[Воркер] Отправляю запрос в DeepSeek для ${request.name}`);
     
-    // 5. Вызываем DeepSeek
-    const llm = await chatCompletion(SYSTEM_PROMPT, userMessage, { 
+    const llm = await chatCompletion(SYSTEM_PROMPT, userRequest, { 
       max_tokens: 8192,
       temperature: 0.85 
     });
@@ -303,15 +323,15 @@ export async function generateSoundKey(requestId) {
     }
     
     const fullResponse = llm.text;
-    console.log(`[workerSoundKey] Получен анализ от DeepSeek (длина: ${fullResponse.length})`);
+    console.log(`[Воркер] Получен анализ от DeepSeek (длина: ${fullResponse.length})`);
     
-    // 6. Парсим ответ
+    // Шаг 6: Парсим ответ
     const parsed = parseResponse(fullResponse);
     if (!parsed || !parsed.lyrics) {
       throw new Error('Не удалось извлечь лирику из ответа LLM');
     }
     
-    // 7. Сохраняем анализ и лирику
+    // Шаг 7: Сохраняем анализ и лирику
     await supabase
       .from('track_requests')
       .update({
@@ -323,9 +343,9 @@ export async function generateSoundKey(requestId) {
       })
       .eq('id', requestId);
     
-    console.log(`[workerSoundKey] Отправляю в SUNO для ${request.name}`);
+    // Шаг 8: Отправить в SUNO (используем существующий модуль с правильным API)
+    console.log(`[Воркер] Отправляю в SUNO для ${request.name}`);
     
-    // 8. Генерируем музыку в Suno
     const sunoParams = {
       prompt: parsed.lyrics,
       title: parsed.title,
@@ -341,23 +361,23 @@ export async function generateSoundKey(requestId) {
       throw new Error(`Suno start ошибка: ${sunoStart.error}`);
     }
     
-    console.log(`[workerSoundKey] Задача в SUNO создана, taskId: ${sunoStart.taskId}`);
+    console.log(`[Воркер] Задача в SUNO создана, taskId: ${sunoStart.taskId}`);
     
     await supabase
       .from('track_requests')
       .update({ suno_task_id: sunoStart.taskId })
       .eq('id', requestId);
     
-    // 9. Ждём результат Suno
+    // Шаг 9: Ожидание завершения генерации (используем существующий модуль)
     const sunoResult = await pollMusicResult(sunoStart.taskId);
     if (!sunoResult.ok) {
       throw new Error(`Suno poll ошибка: ${sunoResult.error}`);
     }
     
     const audioUrl = sunoResult.audioUrl;
-    console.log(`[workerSoundKey] Музыка готова: ${audioUrl}`);
+    console.log(`[Воркер] Музыка готова: ${audioUrl}`);
     
-    // 10. Сохраняем результат
+    // Шаг 10: Обновить статус заявки
     await supabase
       .from('track_requests')
       .update({
@@ -368,12 +388,12 @@ export async function generateSoundKey(requestId) {
       })
       .eq('id', requestId);
     
-    // 11. Отправляем пользователю
+    // Шаг 11: Отправить аудио пользователю
     const caption = `🗝️ ${request.name}, твой звуковой ключ готов!\n\nЭто твоё персональное звуковое лекарство. Слушай каждое утро в тишине с закрытыми глазами.\n\nСлушай сердцем ❤️\n— YupSoul`;
     const send = await sendAudioToUser(request.telegram_user_id, audioUrl, caption);
     
     if (!send.ok) {
-      console.warn(`[workerSoundKey] Ошибка отправки аудио: ${send.error}`);
+      console.warn(`[Воркер] Ошибка отправки аудио: ${send.error}`);
       // Отправляем резервное сообщение
       try {
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -385,16 +405,16 @@ export async function generateSoundKey(requestId) {
           })
         });
       } catch (e) {
-        console.error('[workerSoundKey] Не удалось отправить резервное сообщение:', e.message);
+        console.error('[Воркер] Не удалось отправить резервное сообщение:', e.message);
       }
     } else {
-      console.log(`[workerSoundKey] ✅ Заявка ${requestId} завершена для ${request.name}`);
+      console.log(`[Воркер] ✅ Заявка ${requestId} завершена для ${request.name}`);
     }
     
     return { ok: true, audioUrl };
     
   } catch (error) {
-    console.error(`[workerSoundKey] Ошибка генерации для заявки ${requestId}:`, error.message);
+    console.error(`[Воркер] Ошибка генерации для заявки ${requestId}:`, error.message);
     
     // Обновляем статус на failed
     await supabase
@@ -407,7 +427,7 @@ export async function generateSoundKey(requestId) {
       .eq('id', requestId)
       .catch(() => {});
     
-    // Уведомляем админов
+    // Уведомить админа об ошибке
     if (process.env.ADMIN_TELEGRAM_IDS && BOT_TOKEN) {
       const adminIds = process.env.ADMIN_TELEGRAM_IDS.split(',').map(id => id.trim());
       for (const adminId of adminIds) {
@@ -421,7 +441,7 @@ export async function generateSoundKey(requestId) {
             })
           });
         } catch (e) {
-          console.error('[workerSoundKey] Не удалось уведомить админа:', e.message);
+          console.error('[Воркер] Не удалось уведомить админа:', e.message);
         }
       }
     }
@@ -430,7 +450,10 @@ export async function generateSoundKey(requestId) {
   }
 }
 
-// Запуск из командной строки
+// ============================================================================
+// ТРИГГЕР ЗАПУСКА (для тестирования)
+// ============================================================================
+
 if (import.meta.url === `file://${process.argv[1]}` && process.argv[2]) {
   const requestId = process.argv[2];
   console.log(`Запуск воркера для заявки ${requestId}`);
