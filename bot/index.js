@@ -250,13 +250,18 @@ bot.on("message:web_app_data", async (ctx) => {
   console.log("[Заявка] Сохранена успешно, ID:", requestId, { name, birthdate, birthplace, gender, language, request: (userRequest || "").slice(0, 50), hasCoords: !!(birthplaceLat && birthplaceLon) });
 
   if (supabase && birthdate && birthplace) {
-    import("./workerAstro.js").then(({ computeAndSaveAstroSnapshot }) =>
-      computeAndSaveAstroSnapshot(supabase, requestId, { lat: birthplaceLat, lon: birthplaceLon })
+    // Сначала сохраняем координаты места рождения (если есть) для последующего расчёта астро
+    if (birthplaceLat != null && birthplaceLon != null) {
+      // Координаты уже переданы в saveRequest, они будут использованы в workerAstro
+    }
+    // Запускаем полный пайплайн генерации звукового ключа
+    import("./workerSoundKey.js").then(({ generateSoundKey }) =>
+      generateSoundKey(requestId)
         .then((r) => {
-          if (r.ok) console.log("[Астро] Снапшот сохранён для заявки", requestId);
-          else console.warn("[Астро]", requestId, r.error);
+          if (r.ok) console.log(`[Воркер] Ключ создан для заявки ${requestId}`);
+          else console.warn(`[Воркер] Ошибка для заявки ${requestId}:`, r.error);
         })
-        .catch((e) => console.warn("[Астро] Ошибка для заявки", requestId, e.message))
+        .catch((e) => console.warn(`[Воркер] Исключение для заявки ${requestId}:`, e.message))
     );
   }
 
@@ -603,9 +608,14 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
     }
   }
   if (supabase && birthdate && birthplace) {
-    import("./workerAstro.js").then(({ computeAndSaveAstroSnapshot }) =>
-      computeAndSaveAstroSnapshot(supabase, requestId, { lat: birthplaceLat, lon: birthplaceLon })
-        .catch((e) => console.warn("[Астро] submit-request:", e?.message))
+    // Запускаем полный пайплайн генерации звукового ключа
+    import("./workerSoundKey.js").then(({ generateSoundKey }) =>
+      generateSoundKey(requestId)
+        .then((r) => {
+          if (r.ok) console.log(`[Воркер] Ключ создан для заявки ${requestId}`);
+          else console.warn(`[Воркер] Ошибка для заявки ${requestId}:`, r.error);
+        })
+        .catch((e) => console.warn(`[Воркер] Исключение для заявки ${requestId}:`, e.message))
     );
   }
   return res.status(200).json({ ok: true, requestId });
