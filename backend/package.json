@@ -1,0 +1,17 @@
+{
+  "name": "yupsoul-backend",
+  "version": "1.0.0",
+  "description": "Backend for YupSoul Telegram Mini App with initData validation",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@tma.js/init-data-node": "^2.0.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0"
+  }
+}
