@@ -155,4 +155,4 @@ function createHeroesRouter(supabase, botToken) {
   return router;
 }
 
-export { createHeroesRouter, validateInitData, getOrCreateAppUser };
+export { createHeroesRouter, getOrCreateAppUser };
