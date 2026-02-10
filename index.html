@@ -689,6 +689,7 @@
         
         // Пытаемся отправить через Telegram sendData
         if (tg && tg.MainButton && tg.sendData) {
+          console.log('[YupSoul] Telegram WebApp API доступен, настраиваем MainButton');
           try {
             // Убираем предыдущий обработчик, если был
             if (tg.MainButton.offClick) {
@@ -697,6 +698,7 @@
             
             tg.MainButton.setText('Отправить заявку во Вселенную');
             tg.MainButton.show();
+            console.log('[YupSoul] MainButton показана, ждём нажатия');
             
             var sent = false;
             var sendAttempted = false;
@@ -719,7 +721,14 @@
                 // Отправляем данные
                 var payloadStr = JSON.stringify(payload);
                 console.log('[YupSoul] sendData вызван, длина данных:', payloadStr.length);
-                tg.sendData(payloadStr);
+                
+                try {
+                  tg.sendData(payloadStr);
+                  console.log('[YupSoul] sendData вызван, ожидаем подтверждение от Telegram...');
+                } catch (sendErr) {
+                  console.error('[YupSoul] Ошибка при вызове sendData:', sendErr);
+                  throw sendErr;
+                }
                 
                 sent = true;
                 console.log('[YupSoul] sendData выполнен успешно');
@@ -730,7 +739,10 @@
                 if (sp) sp.textContent = msg + ' Когда песня будет готова — придёт уведомление в чат с ботом.';
                 goToPage('successPage');
                 
-                // Закрываем окно через небольшую задержку (чтобы пользователь увидел сообщение)
+                // НЕ закрываем окно автоматически - пусть пользователь сам закроет после того как увидит сообщение
+                // Это гарантирует, что данные точно отправятся
+                // Если нужно закрыть автоматически, можно раскомментировать код ниже с большей задержкой
+                /*
                 setTimeout(function() {
                   try {
                     if (tg && tg.close) {
@@ -740,7 +752,8 @@
                   } catch (e) {
                     console.warn('[YupSoul] Ошибка при закрытии:', e);
                   }
-                }, 2000);
+                }, 5000); // Увеличена задержка до 5 секунд
+                */
                 
               } catch (sendError) {
                 console.error('[YupSoul] Ошибка sendData:', sendError);
@@ -797,11 +810,12 @@
               var sp = document.getElementById('songPreviewText');
               if (sp) sp.textContent = 'Заявка отправлена. Когда песня будет готова — придёт уведомление в чат с ботом.';
               goToPage('successPage');
-              setTimeout(function() {
-                if (tg && tg.close) {
-                  try { tg.close(); } catch (e) {}
-                }
-              }, 2000);
+              // Не закрываем окно автоматически при fallback - пусть пользователь сам закроет
+              // setTimeout(function() {
+              //   if (tg && tg.close) {
+              //     try { tg.close(); } catch (e) {}
+              //   }
+              // }, 3000);
             })
             .catch(function(error) {
               console.error('[YupSoul] Ошибка API:', error);

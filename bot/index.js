@@ -163,7 +163,16 @@ bot.command("start", async (ctx) => {
 // Лог любых сообщений с web_app_data (если не видно [Заявка] — обновления уходят другому процессу, напр. бот на Render)
 bot.on("message", (ctx, next) => {
   if (ctx.message?.web_app_data) {
-    console.log("[Заявка] Получены web_app_data, длина:", ctx.message.web_app_data?.data?.length ?? 0);
+    const data = ctx.message.web_app_data?.data;
+    console.log("[Заявка] Получены web_app_data, длина:", data?.length ?? 0, "пользователь:", ctx.from?.id, "имя:", ctx.from?.first_name);
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+        console.log("[Заявка] Предпросмотр данных:", { name: parsed.name, birthplace: parsed.birthplace, hasCoords: !!(parsed.birthplaceLat && parsed.birthplaceLon) });
+      } catch (e) {
+        console.warn("[Заявка] Не удалось распарсить предпросмотр:", e.message);
+      }
+    }
   }
   return next();
 });
