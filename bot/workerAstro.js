@@ -33,9 +33,10 @@ function parseBirthDateTime(birthdate, birthtime, timeUnknown) {
  * По заявке: геокодинг → расчёт AstroSnapshot → сохранение в astro_snapshots, привязка к track_requests.
  * @param {object} supabase — клиент Supabase (service role)
  * @param {string} trackRequestId — uuid заявки
+ * @param {{ lat?: number, lon?: number } | null} providedCoords — опциональные координаты (если уже известны)
  * @returns {{ ok: boolean, astro_snapshot_id?: string, error?: string }}
  */
-export async function computeAndSaveAstroSnapshot(supabase, trackRequestId) {
+export async function computeAndSaveAstroSnapshot(supabase, trackRequestId, providedCoords = null) {
   if (!supabase || !trackRequestId) {
     return { ok: false, error: "supabase и trackRequestId обязательны" };
   }
@@ -50,9 +51,17 @@ export async function computeAndSaveAstroSnapshot(supabase, trackRequestId) {
     return { ok: false, error: fetchErr?.message || "Заявка не найдена" };
   }
 
-  const coords = await geocode(req.birthplace || "");
-  if (!coords) {
-    return { ok: false, error: "Не удалось определить координаты места рождения: " + (req.birthplace || "") };
+  // Используем переданные координаты, если есть, иначе геокодим
+  let coords = null;
+  if (providedCoords && typeof providedCoords.lat === 'number' && typeof providedCoords.lon === 'number') {
+    coords = { lat: providedCoords.lat, lon: providedCoords.lon };
+    console.log("[workerAstro] Используем переданные координаты:", coords);
+  } else {
+    coords = await geocode(req.birthplace || "");
+    if (!coords) {
+      return { ok: false, error: "Не удалось определить координаты места рождения: " + (req.birthplace || "") };
+    }
+    console.log("[workerAstro] Координаты получены через геокодинг:", coords);
   }
 
   const dt = parseBirthDateTime(req.birthdate, req.birthtime, req.birthtime_unknown);

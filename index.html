@@ -657,63 +657,173 @@
       var payBtn = document.getElementById('payBtn');
       if (payBtn) payBtn.addEventListener('click', function() {
         if (payBtn.disabled) return;
+        
+        // Собираем данные формы
+        var forWho = document.getElementById('forWho');
+        var clientId = (forWho && forWho.value && userTariff === 'master') ? forWho.value : null;
+        var birthplaceField = document.getElementById('birthplace');
+        var birthplaceLat = birthplaceField && birthplaceField.getAttribute('data-lat') ? parseFloat(birthplaceField.getAttribute('data-lat')) : null;
+        var birthplaceLon = birthplaceField && birthplaceField.getAttribute('data-lon') ? parseFloat(birthplaceField.getAttribute('data-lon')) : null;
+        
+        var payload = {
+          name: document.getElementById('name').value.trim(),
+          birthdate: document.getElementById('birthdate').value,
+          birthplace: document.getElementById('birthplace').value.trim(),
+          birthtime: document.getElementById('birthtime').value,
+          birthtimeUnknown: document.getElementById('unknown').checked,
+          gender: document.getElementById('gender').value,
+          language: (document.getElementById('language') && document.getElementById('language').value) || 'ru',
+          request: document.getElementById('request').value.trim(),
+          initData: (tg && tg.initData) || ''
+        };
+        
+        // Добавляем координаты места рождения, если есть
+        if (birthplaceLat != null && birthplaceLon != null) {
+          payload.birthplaceLat = birthplaceLat;
+          payload.birthplaceLon = birthplaceLon;
+        }
+        
+        if (clientId) payload.clientId = clientId;
+        
+        console.log('[YupSoul] Подготовка отправки заявки:', { name: payload.name, birthplace: payload.birthplace, hasCoords: (birthplaceLat != null && birthplaceLon != null) });
+        
+        // Пытаемся отправить через Telegram sendData
         if (tg && tg.MainButton && tg.sendData) {
-          var forWho = document.getElementById('forWho');
-          var clientId = (forWho && forWho.value && userTariff === 'master') ? forWho.value : null;
-          var payload = {
-            name: document.getElementById('name').value.trim(),
-            birthdate: document.getElementById('birthdate').value,
-            birthplace: document.getElementById('birthplace').value.trim(),
-            birthtime: document.getElementById('birthtime').value,
-            birthtimeUnknown: document.getElementById('unknown').checked,
-            gender: document.getElementById('gender').value,
-            language: (document.getElementById('language') && document.getElementById('language').value) || 'ru',
-            request: document.getElementById('request').value.trim(),
-            initData: (tg.initData || '')
-          };
-          if (clientId) payload.clientId = clientId;
           try {
-            if (tg.MainButton.offClick) tg.MainButton.offClick();
+            // Убираем предыдущий обработчик, если был
+            if (tg.MainButton.offClick) {
+              try { tg.MainButton.offClick(); } catch (e) { console.warn('[YupSoul] offClick error:', e); }
+            }
+            
             tg.MainButton.setText('Отправить заявку во Вселенную');
             tg.MainButton.show();
+            
             var sent = false;
+            var sendAttempted = false;
+            
             tg.MainButton.onClick(function() {
-              if (sent) return;
-              sent = true;
-              if (tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
-              var msg = 'Заявка отправлена. Можно закрыть приложение.';
-              var sp = document.getElementById('songPreviewText');
-              if (sp) sp.textContent = msg + ' Когда песня будет готова — придёт уведомление в чат с ботом.';
-              goToPage('successPage');
-              setTimeout(function() {
-                try { tg.sendData(JSON.stringify(payload)); } catch (e) { console.warn('sendData:', e); }
-              }, 300);
+              if (sent) {
+                console.log('[YupSoul] MainButton onClick: уже отправлено, игнорируем');
+                return;
+              }
+              
+              sendAttempted = true;
+              console.log('[YupSoul] MainButton onClick: отправка заявки через sendData');
+              
+              try {
+                // Скрываем кнопку перед отправкой
+                if (tg.MainButton && tg.MainButton.hide) {
+                  tg.MainButton.hide();
+                }
+                
+                // Отправляем данные
+                var payloadStr = JSON.stringify(payload);
+                console.log('[YupSoul] sendData вызван, длина данных:', payloadStr.length);
+                tg.sendData(payloadStr);
+                
+                sent = true;
+                console.log('[YupSoul] sendData выполнен успешно');
+                
+                // Показываем страницу успеха
+                var msg = 'Заявка отправлена. Можно закрыть приложение.';
+                var sp = document.getElementById('songPreviewText');
+                if (sp) sp.textContent = msg + ' Когда песня будет готова — придёт уведомление в чат с ботом.';
+                goToPage('successPage');
+                
+                // Закрываем окно через небольшую задержку (чтобы пользователь увидел сообщение)
+                setTimeout(function() {
+                  try {
+                    if (tg && tg.close) {
+                      console.log('[YupSoul] Закрываем окно приложения');
+                      tg.close();
+                    }
+                  } catch (e) {
+                    console.warn('[YupSoul] Ошибка при закрытии:', e);
+                  }
+                }, 2000);
+                
+              } catch (sendError) {
+                console.error('[YupSoul] Ошибка sendData:', sendError);
+                // Если sendData не сработал, пробуем альтернативный способ
+                sendViaFallback(payload);
+              }
             });
+            
             payBtn.disabled = true;
             payBtn.textContent = 'Нажми кнопку внизу экрана →';
-          } catch (e) {
-            console.warn('MainButton:', e);
-            goToPage('loadingPage');
+            
+            // Таймаут на случай, если пользователь не нажмёт кнопку
             setTimeout(function() {
+              if (!sendAttempted && !sent) {
+                console.warn('[YupSoul] Таймаут ожидания MainButton, используем fallback');
+                if (tg.MainButton && tg.MainButton.hide) {
+                  try { tg.MainButton.hide(); } catch (e) {}
+                }
+                sendViaFallback(payload);
+              }
+            }, 30000); // 30 секунд
+            
+          } catch (e) {
+            console.error('[YupSoul] Ошибка настройки MainButton:', e);
+            sendViaFallback(payload);
+          }
+        } else {
+          console.warn('[YupSoul] Telegram WebApp API недоступен, используем fallback');
+          sendViaFallback(payload);
+        }
+        
+        // Функция fallback для отправки заявки (если sendData не работает)
+        function sendViaFallback(payloadData) {
+          console.log('[YupSoul] Используем fallback метод отправки');
+          goToPage('loadingPage');
+          
+          // Пробуем отправить через POST API, если доступен
+          var backendUrl = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+          if (backendUrl) {
+            var apiUrl = backendUrl + '/api/submit-request';
+            console.log('[YupSoul] Отправка через API:', apiUrl);
+            
+            fetch(apiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payloadData)
+            })
+            .then(function(response) {
+              if (!response.ok) throw new Error('HTTP ' + response.status);
+              return response.json();
+            })
+            .then(function(data) {
+              console.log('[YupSoul] Заявка отправлена через API:', data);
+              var sp = document.getElementById('songPreviewText');
+              if (sp) sp.textContent = 'Заявка отправлена. Когда песня будет готова — придёт уведомление в чат с ботом.';
+              goToPage('successPage');
+              setTimeout(function() {
+                if (tg && tg.close) {
+                  try { tg.close(); } catch (e) {}
+                }
+              }, 2000);
+            })
+            .catch(function(error) {
+              console.error('[YupSoul] Ошибка API:', error);
               var sp = document.getElementById('songPreviewText');
               if (sp) sp.textContent = 'Заявка будет обработана. Ожидай уведомление в чате с ботом.';
               goToPage('successPage');
+            });
+          } else {
+            // Если API недоступен, просто показываем сообщение
+            setTimeout(function() {
+              var nameEl = document.getElementById('name');
+              var reqEl = document.getElementById('request');
+              var name = nameEl ? nameEl.value.trim() : '';
+              var request = reqEl ? reqEl.value.trim() : '';
+              if (!name) name = 'Друг';
+              if (!request) request = 'твои цели';
+              var songText = '✨ ' + name + ', твоя песня создана!\n\nНа основе твоего запроса \"' + request.substring(0, 30) + '...\" сгенерирована уникальная аудиокомпозиция.\n\nЭто твой персональный звуковой ключ — артефакт силы для игры жизни.';
+              var sp = document.getElementById('songPreviewText');
+              if (sp) sp.textContent = songText;
+              goToPage('successPage');
             }, 1500);
           }
-        } else {
-          goToPage('loadingPage');
-          setTimeout(function() {
-            var nameEl = document.getElementById('name');
-            var reqEl = document.getElementById('request');
-            var name = nameEl ? nameEl.value.trim() : '';
-            var request = reqEl ? reqEl.value.trim() : '';
-            if (!name) name = 'Друг';
-            if (!request) request = 'твои цели';
-            var songText = '✨ ' + name + ', твоя песня создана!\n\nНа основе твоего запроса \"' + request.substring(0, 30) + '...\" сгенерирована уникальная аудиокомпозиция.\n\nЭто твой персональный звуковой ключ — артефакт силы для игры жизни.';
-            var sp = document.getElementById('songPreviewText');
-            if (sp) sp.textContent = songText;
-            goToPage('successPage');
-          }, 2500);
         }
       });
       

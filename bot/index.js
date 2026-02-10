@@ -173,6 +173,7 @@ bot.on("message:web_app_data", async (ctx) => {
   const raw = ctx.message.web_app_data?.data;
   console.log("[Заявка] Обработка web_app_data, длина:", raw?.length || 0);
   if (!raw) {
+    console.error("[Заявка] Пустые web_app_data");
     await ctx.reply("Не получил данные заявки. Нажми в приложении кнопку «Отправить заявку во Вселенную» внизу экрана.");
     return;
   }
@@ -180,18 +181,20 @@ bot.on("message:web_app_data", async (ctx) => {
   let payload;
   try {
     payload = JSON.parse(raw);
+    console.log("[Заявка] JSON распарсен, поля:", Object.keys(payload));
   } catch (e) {
-    console.error("[Заявка] Ошибка парсинга JSON:", e.message);
+    console.error("[Заявка] Ошибка парсинга JSON:", e.message, "Сырые данные (первые 200 символов):", raw?.slice(0, 200));
     await ctx.reply("Не удалось прочитать данные заявки. Попробуй ещё раз из приложения.");
     return;
   }
   const telegramUserId = ctx.from?.id;
   if (!telegramUserId) {
-    console.error("[Заявка] Нет ctx.from.id");
+    console.error("[Заявка] Нет ctx.from.id, ctx.from:", ctx.from);
     await ctx.reply("Ошибка: не удалось определить пользователя. Закрой приложение и открой снова из чата с ботом.");
     return;
   }
 
+  console.log("[Заявка] Пользователь:", telegramUserId, "Имя:", payload.name, "Место:", payload.birthplace, "Координаты:", payload.birthplaceLat ? `${payload.birthplaceLat}, ${payload.birthplaceLon}` : "нет");
   await ctx.reply("⏳ Получил заявку, сохраняю…");
 
   try {
@@ -205,6 +208,8 @@ bot.on("message:web_app_data", async (ctx) => {
     language,
     request: userRequest,
     clientId,
+    birthplaceLat,
+    birthplaceLon,
   } = payload;
 
   let requestId;
@@ -222,22 +227,22 @@ bot.on("message:web_app_data", async (ctx) => {
     client_id: clientId || null,
   });
   } catch (err) {
-    console.error("[Заявка] Ошибка saveRequest:", err?.message || err);
+    console.error("[Заявка] Ошибка saveRequest:", err?.message || err, err?.stack);
     await ctx.reply("Произошла ошибка при сохранении. Попробуй ещё раз или напиши в поддержку.");
     return;
   }
 
   if (!requestId) {
     await ctx.reply("Не удалось сохранить заявку. Попробуй позже или напиши в поддержку.");
-    console.error("[Заявка] Ошибка сохранения (saveRequest вернул null)", { name, birthdate, birthplace });
+    console.error("[Заявка] Ошибка сохранения (saveRequest вернул null)", { name, birthdate, birthplace, telegramUserId });
     return;
   }
 
-  console.log("[Заявка]", requestId, { name, birthdate, birthplace, gender, request: (userRequest || "").slice(0, 50) });
+  console.log("[Заявка] Сохранена успешно, ID:", requestId, { name, birthdate, birthplace, gender, language, request: (userRequest || "").slice(0, 50), hasCoords: !!(birthplaceLat && birthplaceLon) });
 
   if (supabase && birthdate && birthplace) {
     import("./workerAstro.js").then(({ computeAndSaveAstroSnapshot }) =>
-      computeAndSaveAstroSnapshot(supabase, requestId)
+      computeAndSaveAstroSnapshot(supabase, requestId, { lat: birthplaceLat, lon: birthplaceLon })
         .then((r) => {
           if (r.ok) console.log("[Астро] Снапшот сохранён для заявки", requestId);
           else console.warn("[Астро]", requestId, r.error);
@@ -548,6 +553,8 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
     language,
     request: userRequest,
     clientId,
+    birthplaceLat,
+    birthplaceLon,
   } = req.body || {};
   let requestId;
   try {
@@ -588,7 +595,8 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   }
   if (supabase && birthdate && birthplace) {
     import("./workerAstro.js").then(({ computeAndSaveAstroSnapshot }) =>
-      computeAndSaveAstroSnapshot(supabase, requestId).catch((e) => console.warn("[Астро] submit-request:", e?.message))
+      computeAndSaveAstroSnapshot(supabase, requestId, { lat: birthplaceLat, lon: birthplaceLon })
+        .catch((e) => console.warn("[Астро] submit-request:", e?.message))
     );
   }
   return res.status(200).json({ ok: true, requestId });
