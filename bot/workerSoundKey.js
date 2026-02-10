@@ -17,7 +17,7 @@ import { generateMusic, pollMusicResult } from "./suno.js";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const SUNO_API_KEY = process.env.SUNO_API_KEY; // ИСПРАВЛЕНО: из .env, не жёстко закодирован
+// Примечание: DEEPSEEK_API_KEY и SUNO_API_KEY используются через модули deepseek.js и suno.js
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error("[workerSoundKey] SUPABASE_URL и SUPABASE_SERVICE_KEY обязательны");
