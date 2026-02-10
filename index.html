@@ -688,8 +688,14 @@
         console.log('[YupSoul] Подготовка отправки заявки:', { name: payload.name, birthplace: payload.birthplace, hasCoords: (birthplaceLat != null && birthplaceLon != null) });
         
         // Пытаемся отправить через Telegram sendData
+        console.log('[YupSoul] Проверка Telegram API:', { 
+          tg: !!tg, 
+          MainButton: !!(tg && tg.MainButton), 
+          sendData: !!(tg && tg.sendData),
+          initData: !!(tg && tg.initData)
+        });
         if (tg && tg.MainButton && tg.sendData) {
-          console.log('[YupSoul] Telegram WebApp API доступен, настраиваем MainButton');
+          console.log('[YupSoul] ✅ Telegram WebApp API доступен, настраиваем MainButton');
           try {
             // Убираем предыдущий обработчик, если был
             if (tg.MainButton.offClick) {
@@ -724,8 +730,9 @@
                 
                 try {
                   // Отправляем данные СРАЗУ - sendData отправляет данные синхронно
+                  console.log('[YupSoul] ⚠️ ВЫЗЫВАЮ sendData, payload:', JSON.stringify(payload).substring(0, 200));
                   tg.sendData(payloadStr);
-                  console.log('[YupSoul] sendData вызван, данные отправлены в Telegram');
+                  console.log('[YupSoul] ✅ sendData вызван успешно, данные отправлены в Telegram, длина:', payloadStr.length);
                   
                   // sendData в Telegram WebApp API отправляет данные немедленно
                   // Но для надёжности отключаем предупреждение о закрытии через небольшую задержку

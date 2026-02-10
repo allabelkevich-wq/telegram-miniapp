@@ -164,7 +164,8 @@ bot.command("start", async (ctx) => {
 bot.on("message", (ctx, next) => {
   if (ctx.message?.web_app_data) {
     const data = ctx.message.web_app_data?.data;
-    console.log("[Заявка] Получены web_app_data, длина:", data?.length ?? 0, "пользователь:", ctx.from?.id, "имя:", ctx.from?.first_name);
+    console.log("[Заявка] ⚠️ ВАЖНО: Получены web_app_data, длина:", data?.length ?? 0, "пользователь:", ctx.from?.id, "имя:", ctx.from?.first_name);
+    console.log("[Заявка] Полное сообщение:", JSON.stringify(ctx.message, null, 2));
     if (data) {
       try {
         const parsed = JSON.parse(data);
@@ -172,6 +173,8 @@ bot.on("message", (ctx, next) => {
       } catch (e) {
         console.warn("[Заявка] Не удалось распарсить предпросмотр:", e.message);
       }
+    } else {
+      console.error("[Заявка] ⚠️ КРИТИЧНО: web_app_data.data пустой или undefined!");
     }
   }
   return next();
@@ -179,10 +182,11 @@ bot.on("message", (ctx, next) => {
 
 // Данные из Mini App (кнопка «Отправить заявку» → sendData)
 bot.on("message:web_app_data", async (ctx) => {
+  console.log("[Заявка] ⚠️ ОБРАБОТЧИК АКТИВИРОВАН! message:", ctx.message ? "есть" : "нет", "web_app_data:", ctx.message?.web_app_data ? "есть" : "нет");
   const raw = ctx.message.web_app_data?.data;
-  console.log("[Заявка] Обработка web_app_data, длина:", raw?.length || 0);
+  console.log("[Заявка] Обработка web_app_data, длина:", raw?.length || 0, "тип:", typeof raw);
   if (!raw) {
-    console.error("[Заявка] Пустые web_app_data");
+    console.error("[Заявка] ⚠️ КРИТИЧНО: Пустые web_app_data! ctx.message:", JSON.stringify(ctx.message, null, 2));
     await ctx.reply("Не получил данные заявки. Нажми в приложении кнопку «Отправить заявку во Вселенную» внизу экрана.");
     return;
   }
