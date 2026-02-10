@@ -13,7 +13,7 @@ router.use(express.json({ limit: "500kb" }));
  * Валидация initData из Telegram Mini App.
  * @see https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
  */
-function validateInitData(initData, botToken) {
+export function validateInitData(initData, botToken) {
   if (!initData || typeof initData !== "string" || !botToken) return null;
   const params = new URLSearchParams(initData);
   const hash = params.get("hash");

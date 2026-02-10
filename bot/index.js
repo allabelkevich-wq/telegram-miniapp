@@ -7,7 +7,7 @@
 import { Bot } from "grammy";
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
-import { createHeroesRouter, getOrCreateAppUser } from "./heroesApi.js";
+import { createHeroesRouter, getOrCreateAppUser, validateInitData } from "./heroesApi.js";
 import "dotenv/config";
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
@@ -128,11 +128,10 @@ bot.command("start", async (ctx) => {
     }
   };
   try {
-    const replyPromise = ctx.reply(text, replyMarkup);
-    const timeout = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("reply_timeout")), 15000)
-    );
-    await Promise.race([replyPromise, timeout]);
+    // Сначала быстрый ответ без кнопки — убирает колесо загрузки у сообщения пользователя
+    await ctx.reply(text);
+    // Затем кнопка отдельным сообщением
+    await ctx.reply("Открыть приложение:", replyMarkup);
   } catch (e) {
     console.error("[start] Ошибка ответа:", e?.message || e);
     try {
@@ -376,11 +375,11 @@ bot.command("admin", async (ctx) => {
 
   try {
     if (!ADMIN_IDS.length) {
-      await reply("В .env бота не задан ADMIN_TELEGRAM_IDS. Добавь: ADMIN_TELEGRAM_IDS=твой_Telegram_ID (узнать ID: @userinfobot).");
+      await reply("В .env бота не задан ADMIN_TELEGRAM_IDS. Добавь в Render (Environment): ADMIN_TELEGRAM_IDS=твой_Telegram_ID (узнать ID: @userinfobot), затем перезапусти сервис.");
       return;
     }
     if (!isAdmin(userId)) {
-      await reply("Нет доступа к админке. Твой Telegram ID: " + (userId ?? "?") + ". Добавь его в .env: ADMIN_TELEGRAM_IDS=" + (userId ?? "ТВОЙ_ID") + " и перезапусти бота.");
+      await reply("Нет доступа к админке. Твой Telegram ID: " + (userId ?? "?") + ". Добавь в Render → Environment: ADMIN_TELEGRAM_IDS=" + (userId ?? "ТВОЙ_ID") + " и перезапусти бота.");
       return;
     }
 
@@ -396,7 +395,7 @@ bot.command("admin", async (ctx) => {
     }
     if (!requests.length) {
       const hint = supabase
-        ? "Заявок пока нет.\n\nОтправь заявку из приложения (кнопка меню → форма → оплата → Отправить заявку). Затем снова /admin или /admin_check."
+        ? "Заявок пока нет.\n\nОтправь заявку из приложения (кнопка меню → форма → оплата → «Отправить заявку» → кнопка внизу экрана «Отправить заявку во Вселенную»). Затем снова /admin или /admin_check."
         : "Заявок пока нет. Supabase не подключён — заявки только в памяти.";
       await reply(hint);
       return;
@@ -417,7 +416,10 @@ bot.command("admin", async (ctx) => {
       text += `Язык: ${r.language ?? "—"} · TG: ${r.telegram_user_id ?? "—"} · ${r.status ?? "—"}\n\n`;
     }
     text += `Всего: ${requests.length}`;
-    await sendLongMessage(ctx, text);
+    await sendLongMessage(ctx, text).catch(async (e) => {
+      console.error("[admin] sendLongMessage:", e?.message || e);
+      await reply("Не удалось отправить список (ошибка Telegram). Попробуй /admin ещё раз.");
+    });
   } catch (err) {
     console.error("[admin] Ошибка:", err?.message || err);
     await reply("Ошибка при загрузке заявок. Смотри консоль бота.").catch(() => {});
@@ -463,6 +465,69 @@ app.post("/suno-callback", express.json(), (req, res) => {
   res.status(200).send("ok");
   const taskId = req.body?.data?.taskId || req.body?.taskId;
   if (taskId) console.log("[Suno callback] taskId:", taskId, "stage:", req.body?.data?.stage || req.body?.stage);
+});
+
+// Запасной приём заявок: Mini App шлёт POST с initData + форма (если sendData в TG не срабатывает).
+app.post("/api/submit-request", express.json(), async (req, res) => {
+  const initData = req.body?.initData || req.headers["x-telegram-init"];
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) {
+    return res.status(401).json({ error: "Неверные или устаревшие данные. Открой приложение из чата с ботом и попробуй снова." });
+  }
+  const {
+    name,
+    birthdate,
+    birthplace,
+    birthtime,
+    birthtimeUnknown,
+    gender,
+    language,
+    request: userRequest,
+    clientId,
+  } = req.body || {};
+  let requestId;
+  try {
+    requestId = await saveRequest({
+      telegram_user_id: telegramUserId,
+      name: name || "",
+      birthdate: birthdate || "",
+      birthplace: birthplace || "",
+      birthtime: birthtime || null,
+      birthtime_unknown: !!birthtimeUnknown,
+      gender: gender || "",
+      language: language || null,
+      request: userRequest || "",
+      client_id: clientId || null,
+    });
+  } catch (err) {
+    console.error("[submit-request] saveRequest:", err?.message || err);
+    return res.status(500).json({ error: "Ошибка сохранения заявки" });
+  }
+  if (!requestId) {
+    return res.status(500).json({ error: "Не удалось сохранить заявку" });
+  }
+  console.log("[submit-request] Заявка принята, id:", requestId, "user:", telegramUserId);
+  const successText =
+    "✅ Заявка принята!\n\n" +
+    "Твой персональный звуковой ключ будет создан. Как только он будет готов — пришлю его сюда в чат. Ожидай уведомление.\n\n" +
+    "Детальную расшифровку натальной карты можно запросить командой /get_analysis после оплаты.";
+  bot.api.sendMessage(telegramUserId, successText).catch((e) => console.warn("[submit-request] sendMessage:", e?.message));
+  if (ADMIN_IDS.length) {
+    const requestPreview = (userRequest || "").trim().slice(0, 150);
+    const adminText =
+      "🔔 Новая заявка (через API)\n\n" +
+      `Имя: ${name || "—"}\nЯзык: ${language || "—"}\nДата: ${birthdate || "—"} · Место: ${(birthplace || "—").slice(0, 40)}${(birthplace || "").length > 40 ? "…" : ""}\n` +
+      `Запрос: ${requestPreview}${(userRequest || "").length > 150 ? "…" : ""}\n\nID: ${requestId}\nTG: ${telegramUserId}`;
+    for (const adminId of ADMIN_IDS) {
+      bot.api.sendMessage(adminId, adminText).catch((e) => console.warn("[Уведомление админу]", adminId, e.message));
+    }
+  }
+  if (supabase && birthdate && birthplace) {
+    import("./workerAstro.js").then(({ computeAndSaveAstroSnapshot }) =>
+      computeAndSaveAstroSnapshot(supabase, requestId).catch((e) => console.warn("[Астро] submit-request:", e?.message))
+    );
+  }
+  return res.status(200).json({ ok: true, requestId });
 });
 
 async function onBotStart(info) {
