@@ -8,8 +8,8 @@
   <meta http-equiv="Expires" content="0">
   <title>YupSoul</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- После деплоя бэкенда на Vercel подставь URL: window.HEROES_API_BASE = 'https://твой-проект.vercel.app'; -->
-  <script>window.HEROES_API_BASE = '';</script>
+  <!-- URL бота с API заявок (Render). Заявки идут через POST /api/submit-request. -->
+  <script>window.HEROES_API_BASE = 'https://telegram-miniapp-ar09.onrender.com';</script>
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Comfortaa',sans-serif}
@@ -656,10 +656,15 @@
         goToPage('formPage');
       });
       var payBtn = document.getElementById('payBtn');
-      if (payBtn) payBtn.addEventListener('click', function() {
+      if (payBtn) payBtn.addEventListener('click', async function() {
         if (payBtn.disabled) return;
         
-        // Собираем данные формы
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        if (!apiBase) {
+          alert('Не настроен адрес API. Укажи HEROES_API_BASE — URL бота на Render (например https://yupsoul-bot.onrender.com).');
+          return;
+        }
+        
         var forWho = document.getElementById('forWho');
         var clientId = (forWho && forWho.value && userTariff === 'master') ? forWho.value : null;
         var birthplaceField = document.getElementById('birthplace');
@@ -674,203 +679,44 @@
           birthtimeUnknown: document.getElementById('unknown').checked,
           gender: document.getElementById('gender').value,
           language: (document.getElementById('language') && document.getElementById('language').value) || 'ru',
-          request: document.getElementById('request').value.trim(),
-          initData: (tg && tg.initData) || ''
+          request: document.getElementById('request').value.trim()
         };
-        
-        // Добавляем координаты места рождения, если есть
+        if (payload.birthtimeUnknown) payload.birthtime = null;
         if (birthplaceLat != null && birthplaceLon != null) {
           payload.birthplaceLat = birthplaceLat;
           payload.birthplaceLon = birthplaceLon;
         }
-        
         if (clientId) payload.clientId = clientId;
         
-        console.log('[YupSoul] Подготовка отправки заявки:', { name: payload.name, birthplace: payload.birthplace, hasCoords: (birthplaceLat != null && birthplaceLon != null) });
-        
-        // Пытаемся отправить через Telegram sendData
-        console.log('[YupSoul] Проверка Telegram API:', { 
-          tg: !!tg, 
-          MainButton: !!(tg && tg.MainButton), 
-          sendData: !!(tg && tg.sendData),
-          initData: !!(tg && tg.initData)
-        });
-        if (tg && tg.MainButton && tg.sendData) {
-          console.log('[YupSoul] ✅ Telegram WebApp API доступен, настраиваем MainButton');
-          try {
-            // Убираем предыдущий обработчик, если был
-            if (tg.MainButton.offClick) {
-              try { tg.MainButton.offClick(); } catch (e) { console.warn('[YupSoul] offClick error:', e); }
-            }
-            
-            tg.MainButton.setText('Отправить заявку во Вселенную');
-            tg.MainButton.show();
-            console.log('[YupSoul] MainButton показана, ждём нажатия');
-            
-            var sent = false;
-            var sendAttempted = false;
-            
-            tg.MainButton.onClick(function() {
-              if (sent) {
-                console.log('[YupSoul] MainButton onClick: уже отправлено, игнорируем');
-                return;
-              }
-              
-              sendAttempted = true;
-              console.log('[YupSoul] MainButton onClick: отправка заявки через sendData');
-              
-              try {
-                // Скрываем кнопку перед отправкой
-                if (tg.MainButton && tg.MainButton.hide) {
-                  tg.MainButton.hide();
-                }
-                
-                // Отправляем данные
-                var payloadStr = JSON.stringify(payload);
-                console.log('[YupSoul] sendData вызван, длина данных:', payloadStr.length);
-                
-                try {
-                  // Отправляем данные СРАЗУ - sendData отправляет данные синхронно
-                  console.log('[YupSoul] ⚠️ ВЫЗЫВАЮ sendData, payload:', JSON.stringify(payload).substring(0, 200));
-                  tg.sendData(payloadStr);
-                  console.log('[YupSoul] ✅ sendData вызван успешно, данные отправлены в Telegram, длина:', payloadStr.length);
-                  
-                  // sendData в Telegram WebApp API отправляет данные немедленно
-                  // Но для надёжности отключаем предупреждение о закрытии через небольшую задержку
-                  // Это гарантирует, что данные точно успели отправиться
-                  setTimeout(function() {
-                    try {
-                      if (tg && tg.disableClosingConfirmation) {
-                        tg.disableClosingConfirmation();
-                        console.log('[YupSoul] Предупреждение о закрытии отключено - можно безопасно закрывать');
-                      }
-                    } catch (e) {
-                      console.warn('[YupSoul] Ошибка при отключении предупреждения:', e);
-                    }
-                  }, 300); // 300мс достаточно для отправки данных через sendData
-                  
-                } catch (sendErr) {
-                  console.error('[YupSoul] Ошибка при вызове sendData:', sendErr);
-                  // Если sendData не сработал, пробуем fallback
-                  sendViaFallback(payload);
-                  return; // Выходим, чтобы не показывать страницу успеха
-                }
-                
-                sent = true;
-                console.log('[YupSoul] sendData выполнен успешно');
-                
-                // Показываем страницу успеха
-                var msg = '✅ Заявка отправлена!\n\nМожно закрыть приложение — данные уже сохранены.';
-                var sp = document.getElementById('songPreviewText');
-                if (sp) sp.textContent = msg + '\n\nКогда песня будет готова — придёт уведомление в чат с ботом.';
-                goToPage('successPage');
-                
-                // НЕ закрываем окно автоматически - пусть пользователь сам закроет после того как увидит сообщение
-                // Это гарантирует, что данные точно отправятся
-                // Если нужно закрыть автоматически, можно раскомментировать код ниже с большей задержкой
-                /*
-                setTimeout(function() {
-                  try {
-                    if (tg && tg.close) {
-                      console.log('[YupSoul] Закрываем окно приложения');
-                      tg.close();
-                    }
-                  } catch (e) {
-                    console.warn('[YupSoul] Ошибка при закрытии:', e);
-                  }
-                }, 5000); // Увеличена задержка до 5 секунд
-                */
-                
-              } catch (sendError) {
-                console.error('[YupSoul] Ошибка в обработчике MainButton:', sendError);
-                // Если sendData не сработал, пробуем альтернативный способ
-                sendViaFallback(payload);
-              }
-            });
-            
-            payBtn.disabled = true;
-            payBtn.textContent = 'Нажми кнопку внизу экрана →';
-            
-            // Таймаут на случай, если пользователь не нажмёт кнопку
-            setTimeout(function() {
-              if (!sendAttempted && !sent) {
-                console.warn('[YupSoul] Таймаут ожидания MainButton, используем fallback');
-                if (tg.MainButton && tg.MainButton.hide) {
-                  try { tg.MainButton.hide(); } catch (e) {}
-                }
-                sendViaFallback(payload);
-              }
-            }, 30000); // 30 секунд
-            
-          } catch (e) {
-            console.error('[YupSoul] Ошибка настройки MainButton:', e);
-            sendViaFallback(payload);
-          }
-        } else {
-          console.warn('[YupSoul] Telegram WebApp API недоступен, используем fallback');
-          sendViaFallback(payload);
+        var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
+        if (!initData) {
+          alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.');
+          return;
         }
+        payload.initData = initData;
         
-        // Функция fallback для отправки заявки (если sendData не работает)
-        function sendViaFallback(payloadData) {
-          console.log('[YupSoul] Используем fallback метод отправки');
-          goToPage('loadingPage');
+        goToPage('loadingPage');
+        try {
+          var response = await fetch(apiBase + '/api/submit-request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+            body: JSON.stringify(payload)
+          });
+          var result = await response.json().catch(function() { return {}; });
           
-          // Пробуем отправить через POST API, если доступен
-          var backendUrl = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
-          if (backendUrl) {
-            var apiUrl = backendUrl + '/api/submit-request';
-            console.log('[YupSoul] Отправка через API:', apiUrl);
-            
-            fetch(apiUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payloadData)
-            })
-            .then(function(response) {
-              if (!response.ok) throw new Error('HTTP ' + response.status);
-              return response.json();
-            })
-            .then(function(data) {
-              console.log('[YupSoul] Заявка отправлена через API:', data);
-              
-              // Отключаем предупреждение о закрытии после успешной отправки через API
-              if (tg && tg.disableClosingConfirmation) {
-                setTimeout(function() {
-                  try {
-                    tg.disableClosingConfirmation();
-                    console.log('[YupSoul] Предупреждение о закрытии отключено (API)');
-                  } catch (e) {
-                    console.warn('[YupSoul] Ошибка при отключении предупреждения (API):', e);
-                  }
-                }, 300);
-              }
-              
-              var sp = document.getElementById('songPreviewText');
-              if (sp) sp.textContent = '✅ Заявка отправлена!\n\nМожно закрыть приложение — данные уже сохранены.\n\nКогда песня будет готова — придёт уведомление в чат с ботом.';
-              goToPage('successPage');
-            })
-            .catch(function(error) {
-              console.error('[YupSoul] Ошибка API:', error);
-              var sp = document.getElementById('songPreviewText');
-              if (sp) sp.textContent = 'Заявка будет обработана. Ожидай уведомление в чате с ботом.';
-              goToPage('successPage');
-            });
+          if (response.ok && result.ok && result.requestId) {
+            console.log('[MiniApp] Заявка отправлена на API, requestId:', result.requestId);
+            var sp = document.getElementById('songPreviewText');
+            if (sp) sp.textContent = '✨ ' + payload.name + ', Вселенная услышала твой запрос.\n\nТвой звуковой ключ формируется. Когда он будет готов — придёт в этот чат.';
+            if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
+            goToPage('successPage');
           } else {
-            // Если API недоступен, просто показываем сообщение
-            setTimeout(function() {
-              var nameEl = document.getElementById('name');
-              var reqEl = document.getElementById('request');
-              var name = nameEl ? nameEl.value.trim() : '';
-              var request = reqEl ? reqEl.value.trim() : '';
-              if (!name) name = 'Друг';
-              if (!request) request = 'твои цели';
-              var songText = '✨ ' + name + ', твоя песня создана!\n\nНа основе твоего запроса \"' + request.substring(0, 30) + '...\" сгенерирована уникальная аудиокомпозиция.\n\nЭто твой персональный звуковой ключ — артефакт силы для игры жизни.';
-              var sp = document.getElementById('songPreviewText');
-              if (sp) sp.textContent = songText;
-              goToPage('successPage');
-            }, 1500);
+            throw new Error(result.error || 'HTTP ' + response.status);
           }
+        } catch (error) {
+          console.error('[MiniApp] Ошибка отправки заявки:', error);
+          alert('Не удалось отправить заявку. Проверь интернет и открой приложение из чата с ботом, затем попробуй снова.');
+          goToPage('paymentPage');
         }
       });
       

@@ -9,9 +9,10 @@
   <meta http-equiv="Expires" content="0">
   <title>YupSoul</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Заявки только через POST /api/submit-request на бота (Render). Не sendData. -->
   <script>
-    window.HEROES_API_BASE = '';
-    window.BACKEND_URL = 'https://telegram-miniapp-ar09.onrender.com'; // URL бота на Render
+    window.HEROES_API_BASE = 'https://telegram-miniapp-ar09.onrender.com';
+    window.BACKEND_URL = window.HEROES_API_BASE;
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -357,7 +358,7 @@
               document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#f9f7ff');
               document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#2d2d2d');
             }
-            console.log('[YupSoul] Telegram WebApp доступен: true, sendData:', typeof tg.sendData);
+            console.log('[YupSoul] Telegram WebApp доступен: true');
             return true;
           }
         } catch (e) { console.warn('[YupSoul] Telegram init:', e); }
@@ -715,56 +716,58 @@
         return true;
       }
       var payBtn = document.getElementById('payBtn');
-      if (payBtn) payBtn.addEventListener('click', function() {
+      if (payBtn) payBtn.addEventListener('click', async function() {
         if (payBtn.disabled) return;
         var app = (window.Telegram && window.Telegram.WebApp) || tg;
-        if (!app) {
-          console.warn('[YupSoul] Telegram WebApp не найден — открой приложение из чата с ботом.');
+        if (!app || !(app.initData)) {
+          console.warn('[YupSoul] Нет initData — открой приложение из чата с ботом.');
           showNotFromTelegramBanner();
           return;
         }
         var payload = buildSubmitPayload();
-        if (!payload.name || !payload.birthdate || !payload.birthplace || payload.request.length < 10) {
+        if (!payload.name || !payload.birthdate || !payload.birthplace || (payload.request && payload.request.length < 10)) {
           alert('Заполни все поля формы (имя, дата, место рождения, запрос не менее 10 символов).');
           return;
         }
-        var payloadStr = JSON.stringify(payload);
-        var done = function() {
-          showSuccessPage('Заявка отправлена. Можно закрыть приложение. Когда песня будет готова — придёт уведомление в чат с ботом.');
-        };
-        var fail = function(msg) {
-          payBtn.disabled = false;
-          payBtn.textContent = 'Отправить заявку';
-          if (msg) alert(msg);
-        };
+        if (!apiBase) {
+          alert('Не настроен адрес API (HEROES_API_BASE).');
+          return;
+        }
         payBtn.disabled = true;
         payBtn.textContent = 'Отправка…';
-        if (typeof app.sendData === 'function') {
-          try {
-            app.sendData(payloadStr);
-            console.log('[YupSoul] sendData вызван, данные отправлены в бота.');
-            done();
-          } catch (e) {
-            console.warn('[YupSoul] sendData ошибка:', e && e.message ? e.message : e);
-            if (apiBase && sendViaApi(payload, done, function(err) {
-              console.warn('[YupSoul] API fallback:', err);
-              fail('Не удалось отправить: ' + (err || 'ошибка').slice(0, 60));
-            })) return;
-            fail('Не удалось отправить. Открой приложение из чата с ботом и попробуй снова.');
-          }
-          return;
-        }
-        if (apiBase) {
-          sendViaApi(payload, function() {
-            console.log('[YupSoul] Заявка отправлена через API.');
-            done();
-          }, function(err) {
-            console.warn('[YupSoul] API:', err);
-            fail('Не удалось отправить заявку: ' + (err || 'ошибка сети').slice(0, 80));
+        goToPage('loadingPage');
+        try {
+          var body = {
+            initData: app.initData,
+            name: payload.name,
+            birthdate: payload.birthdate,
+            birthplace: payload.birthplace,
+            birthtime: payload.birthtimeUnknown ? null : payload.birthtime,
+            birthtimeUnknown: payload.birthtimeUnknown,
+            gender: payload.gender,
+            language: payload.language,
+            request: payload.request,
+            clientId: payload.clientId || null
+          };
+          var r = await fetch(apiBase + '/api/submit-request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': app.initData },
+            body: JSON.stringify(body)
           });
-          return;
+          var data = await r.json().catch(function() { return {}; });
+          if (r.ok && data.ok && data.requestId) {
+            console.log('[MiniApp] Заявка отправлена на API, requestId:', data.requestId);
+            showSuccessPage('✨ ' + payload.name + ', Вселенная услышала твой запрос.\n\nТвой звуковой ключ формируется. Когда будет готов — придёт в этот чат.');
+          } else {
+            throw new Error(data.error || 'HTTP ' + r.status);
+          }
+        } catch (e) {
+          console.error('[MiniApp] Ошибка:', e);
+          payBtn.disabled = false;
+          payBtn.textContent = 'Отправить заявку';
+          goToPage('paymentPage');
+          alert('Не удалось отправить заявку. Проверь интернет и открой приложение из чата с ботом.');
         }
-        fail('Открой приложение из чата с ботом в Telegram (кнопка меню) — иначе заявка не отправится.');
       });
       
       var goHeroesBtn = document.getElementById('goHeroesBtn');
