@@ -439,10 +439,13 @@ bot.api.setMyCommands(commands, { scope: { type: "all_private_chats" } }).catch(
 // Для русскоязычного меню (часть клиентов показывает команды по языку)
 bot.api.setMyCommands(commands, { language_code: "ru" }).catch(() => {});
 
-// При старте выставляем Menu Button на Mini App (чтобы ссылка не слетала)
-bot.api.setChatMenuButton({ menuButton: { type: "web_app", text: "✨ Открыть приложение", web_app: { url: MINI_APP_URL } } })
-  .then(() => console.log("Кнопка меню установлена:", MINI_APP_URL))
-  .catch((e) => console.warn("Не удалось установить кнопку меню:", e.message));
+// Кнопку меню лучше задать один раз в @BotFather (Bot Settings → Menu Button), чтобы она не слетала после каждого редеплоя.
+// Если нужна автоматическая подстановка из кода — в Render задай SET_MENU_BUTTON=true.
+if (process.env.SET_MENU_BUTTON === "true") {
+  bot.api.setChatMenuButton({ menuButton: { type: "web_app", text: "✨ Открыть приложение", web_app: { url: MINI_APP_URL } } })
+    .then(() => console.log("Кнопка меню установлена:", MINI_APP_URL))
+    .catch((e) => console.warn("Не удалось установить кнопку меню:", e.message));
+}
 
 // HTTP: сначала слушаем порт (для Render health check), потом подключаем API и бота
 const app = express();

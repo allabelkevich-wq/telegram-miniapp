@@ -425,7 +425,6 @@
         var birthdateInput = document.getElementById('birthdate');
         var birthplaceSummary = document.getElementById('birthplaceSummary');
         var birthplaceInput = document.getElementById('birthplace');
-        var placeConfirmed = document.getElementById('placeConfirmed');
         var monthsRu = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
         function formatDateRu(dateStr) {
           if (!dateStr) return '';
@@ -450,8 +449,6 @@
         }
         if (birthplaceInput && birthplaceSummary) {
           var suggestionsEl = document.getElementById('birthplaceSuggestions');
-          var placeConfirmBlock = document.getElementById('placeConfirmBlock');
-          var placeConfirmLabel = document.getElementById('placeConfirmLabel');
           var placeCoordsEl = document.getElementById('placeCoords');
           var debounceTimer = null;
           var lastSearch = '';
@@ -469,10 +466,7 @@
             var lonStr = Math.abs(lo).toFixed(2) + '° ' + (lo >= 0 ? 'E' : 'W');
             return latStr + ', ' + lonStr;
           }
-          function showPlaceConfirm(displayName) {
-            if (placeConfirmBlock) placeConfirmBlock.style.display = 'flex';
-            if (placeConfirmLabel) placeConfirmLabel.textContent = 'Подтверждаю: место рождения и координаты указаны верно';
-          }
+          function showPlaceConfirm(displayName) {}
           function selectPlace(displayName, lat, lon) {
             birthplaceInput.value = displayName || '';
             birthplaceInput.setAttribute('data-place-selected', '1');
@@ -536,7 +530,6 @@
             } else {
               hideSuggestions();
               birthplaceSummary.style.display = 'none';
-              if (placeConfirmBlock) placeConfirmBlock.style.display = 'none';
             }
           });
           birthplaceInput.addEventListener('focus', function() {
@@ -883,7 +876,6 @@
         if (bp) bp.value = '';
         if (bt) bt.value = '';
         if (unknown) unknown.checked = false;
-        if (placeConfirmed) placeConfirmed.checked = false;
         if (g) g.value = '';
         if (langEl) langEl.value = '';
         if (r) r.value = '';
