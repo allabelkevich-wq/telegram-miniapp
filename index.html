@@ -723,20 +723,38 @@
                 console.log('[YupSoul] sendData вызван, длина данных:', payloadStr.length);
                 
                 try {
+                  // Отправляем данные СРАЗУ - sendData отправляет данные синхронно
                   tg.sendData(payloadStr);
-                  console.log('[YupSoul] sendData вызван, ожидаем подтверждение от Telegram...');
+                  console.log('[YupSoul] sendData вызван, данные отправлены в Telegram');
+                  
+                  // sendData в Telegram WebApp API отправляет данные немедленно
+                  // Но для надёжности отключаем предупреждение о закрытии через небольшую задержку
+                  // Это гарантирует, что данные точно успели отправиться
+                  setTimeout(function() {
+                    try {
+                      if (tg && tg.disableClosingConfirmation) {
+                        tg.disableClosingConfirmation();
+                        console.log('[YupSoul] Предупреждение о закрытии отключено - можно безопасно закрывать');
+                      }
+                    } catch (e) {
+                      console.warn('[YupSoul] Ошибка при отключении предупреждения:', e);
+                    }
+                  }, 300); // 300мс достаточно для отправки данных через sendData
+                  
                 } catch (sendErr) {
                   console.error('[YupSoul] Ошибка при вызове sendData:', sendErr);
-                  throw sendErr;
+                  // Если sendData не сработал, пробуем fallback
+                  sendViaFallback(payload);
+                  return; // Выходим, чтобы не показывать страницу успеха
                 }
                 
                 sent = true;
                 console.log('[YupSoul] sendData выполнен успешно');
                 
                 // Показываем страницу успеха
-                var msg = 'Заявка отправлена. Можно закрыть приложение.';
+                var msg = '✅ Заявка отправлена!\n\nМожно закрыть приложение — данные уже сохранены.';
                 var sp = document.getElementById('songPreviewText');
-                if (sp) sp.textContent = msg + ' Когда песня будет готова — придёт уведомление в чат с ботом.';
+                if (sp) sp.textContent = msg + '\n\nКогда песня будет готова — придёт уведомление в чат с ботом.';
                 goToPage('successPage');
                 
                 // НЕ закрываем окно автоматически - пусть пользователь сам закроет после того как увидит сообщение
@@ -756,7 +774,7 @@
                 */
                 
               } catch (sendError) {
-                console.error('[YupSoul] Ошибка sendData:', sendError);
+                console.error('[YupSoul] Ошибка в обработчике MainButton:', sendError);
                 // Если sendData не сработал, пробуем альтернативный способ
                 sendViaFallback(payload);
               }
@@ -807,15 +825,22 @@
             })
             .then(function(data) {
               console.log('[YupSoul] Заявка отправлена через API:', data);
+              
+              // Отключаем предупреждение о закрытии после успешной отправки через API
+              if (tg && tg.disableClosingConfirmation) {
+                setTimeout(function() {
+                  try {
+                    tg.disableClosingConfirmation();
+                    console.log('[YupSoul] Предупреждение о закрытии отключено (API)');
+                  } catch (e) {
+                    console.warn('[YupSoul] Ошибка при отключении предупреждения (API):', e);
+                  }
+                }, 300);
+              }
+              
               var sp = document.getElementById('songPreviewText');
-              if (sp) sp.textContent = 'Заявка отправлена. Когда песня будет готова — придёт уведомление в чат с ботом.';
+              if (sp) sp.textContent = '✅ Заявка отправлена!\n\nМожно закрыть приложение — данные уже сохранены.\n\nКогда песня будет готова — придёт уведомление в чат с ботом.';
               goToPage('successPage');
-              // Не закрываем окно автоматически при fallback - пусть пользователь сам закроет
-              // setTimeout(function() {
-              //   if (tg && tg.close) {
-              //     try { tg.close(); } catch (e) {}
-              //   }
-              // }, 3000);
             })
             .catch(function(error) {
               console.error('[YupSoul] Ошибка API:', error);
