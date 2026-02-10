@@ -12,7 +12,7 @@
 
 ## Что уже сделано
 
-- **Mini App** (`index.html`): главная → форма с подтверждением даты и места (галочка «Подтверждаю место рождения») → страница донатов (Приорбанк и Альфа-банк реквизиты) → кнопка «Отправить заявку» → в Telegram вызывается MainButton и `sendData`, приложение закрывается.
+- **Mini App** (`index.html`): главная → форма (дата, место из подсказок) → страница донатов (Приорбанк и Альфа-банк реквизиты) → кнопка «Отправить заявку» → в Telegram вызывается MainButton и `sendData`, приложение закрывается.
 - **Бот** (`bot/`): grammY, `/start`, приём `web_app_data`, сохранение в Supabase (таблица `track_requests`) и в память, `/admin` для списка заявок. При старте выставляется Menu Button на Mini App. Секреты в `bot/.env` (BOT_TOKEN, ADMIN_TELEGRAM_IDS, SUPABASE_URL, SUPABASE_SERVICE_KEY).
 - **Документация**: `ССЫЛКА_ДЛЯ_КНОПКИ_БОТА.txt`, `docs/ПОЛНАЯ_ИНСТРУКЦИЯ_ДЛЯ_ЗАПУСКА.md`, `bot/НАСТРОЙКА_АДМИНА.md`, `docs/ASTRO_AUTOMATION.md`, `docs/BRIEF_FOR_QWEN.md`. Локальный превью: в корне `npm run preview` (live-server).
 

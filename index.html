@@ -199,10 +199,6 @@
           </div>
           <div id="birthplaceSummary" class="field-summary birthplace-summary" style="display:none; margin-top:8px; padding:12px 14px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
           <div id="placeCoords" class="place-coords" style="display:none; margin-top:6px; padding:10px 14px; background:rgba(94,234,212,.1); border-radius:10px; font-size:.9rem; color:#0d9488;"></div>
-          <div id="placeConfirmBlock" class="checkbox" style="margin-top:12px; display:none">
-            <input type="checkbox" id="placeConfirmed">
-            <label for="placeConfirmed" id="placeConfirmLabel">Подтверждаю: место рождения и координаты указаны верно</label>
-          </div>
         </div>
         
         <div class="field">
@@ -634,10 +630,6 @@
         var birthplaceField = document.getElementById('birthplace');
         if (!(birthplaceField && birthplaceField.getAttribute('data-place-selected'))) {
           alert('Как в популярных астросервисах: выбери место рождения из списка подсказок (начни вводить город и нажми на нужный вариант). Так мы избегаем ошибок в расчёте карты.');
-          return;
-        }
-        if (!(placeConfirmed && placeConfirmed.checked)) {
-          alert('Подтверди, что место рождения и координаты указаны верно (отметь галочку)');
           return;
         }
         var btVal = document.getElementById('birthtime');
