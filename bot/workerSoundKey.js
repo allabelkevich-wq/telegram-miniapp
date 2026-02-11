@@ -84,50 +84,24 @@ const SYSTEM_PROMPT = `Ты — мудрый астролог-поэт и муз
 
 ЛИРИКА: Каждая строчка — метафора из анализа(ов). Припев = мантра/девиз из рекомендаций. Бридж = решение ключевого противоречия. НИКАКИХ астрологических терминов. Создай эмоциональную дугу от вызова к решению.
 
-СТРУКТУРА ЛИРИКИ ДЛЯ SUNO (СТРОГО СОБЛЮДАЙ ФОРМАТ):
-[intro]
-(необязательно, 1-2 строки)
+СТРУКТУРА ЛИРИКИ:
+[Тема песни:] [Какой аспект личности/задачи отражает]
+[Verse 1:] [Описание текущего состояния/вызова]
+[Verse 2:] [Осознание или встреча с внутренней правдой]
+[Pre-Chorus:] [Момент выбора/поворота]
+[Chorus:] [Провозглашение силы/принятия/нового пути]
+[Bridge:] [Глубокое откровение или разговор с душой]
+[Final Chorus:] [Триумфальное или умиротворенное завершение]
+[Outro:] [Тихая кода-напоминание]
 
-[verse 1]
-текст первого куплета строчными буквами на русском языке
+MUSIC PROMPT для Suno/AI (Формируется автоматически на основе энергии карты):
 
-[verse 2]
-текст второго куплета строчными буквами на русском языке
-
-[pre-chorus]
-текст пред-припева строчными буквами на русском языке
-
-[chorus]
-текст припева строчными буквами на русском языке
-
-[bridge]
-текст бриджа строчными буквами на русском языке
-
-[final chorus]
-текст финального припева строчными буквами на русском языке
-
-[outro]
-текст аутро строчными буквами на русском языке
-
-ВАЖНО ДЛЯ ФОРМАТА ТЕКСТА ПЕСНИ:
-- ВСЕ СТРОКИ ТЕКСТА ПЕСНИ (вне квадратных скобок) ДОЛЖНЫ БЫТЬ ТОЛЬКО СТРОЧНЫМИ БУКВАМИ НА РУССКОМ ЯЗЫКЕ
-- НИКАКИХ ЗАГЛАВНЫХ БУКВ В ТЕКСТЕ ПЕСНИ (даже в начале предложений)
-- НИКАКОГО КАПС-ЛОКА
-- КВАДРАТНЫЕ СКОБКИ СОХРАНЯЙ КАК ЕСТЬ — ЭТО ТЕХНИЧЕСКИЕ ТЕГИ ДЛЯ SUNO
-- ВНУТРИ КВАДРАТНЫХ СКОБОК — ТОЛЬКО АНГЛИЙСКИЕ СЛОВА БЕЗ ДВОЕТОЧИЙ: [verse 1], [chorus], [bridge] и т.д.
-
-MUSIC PROMPT ДЛЯ SUNO (СТРОГО НА АНГЛИЙСКОМ ВНУТРИ СКОБОК):
-[style: ambient cinematic]
-[vocal: ethereal female voice with warm tone]
-[mood: mystical hopeful introspective]
-[instruments: synth pads piano strings subtle bass]
+[style: [ЖАНР, ПОДЖАНР, соответствующие энергии натальной карты]]
+[vocal: [ТИП ГОЛОСА, соответствующий энергии карты], [ХАРАКТЕРИСТИКИ, соответствующие энергии карты]]
+[mood: [КЛЮЧЕВЫЕ ЭМОЦИИ, соответствующие энергии карты], [РАЗВИТИЕ НАСТРОЕНИЯ, соответствующее энергии карты]]
+[instruments: [3-5 ИНСТРУМЕНТОВ, соответствующих энергии карты]]
 [language: Russian]
-[tempo: 90 BPM]
-
-ВАЖНО ДЛЯ MUSIC PROMPT:
-- ВСЕ ПАРАМЕТРЫ ВНУТРИ КВАДРАТНЫХ СКОБОК ДОЛЖНЫ БЫТЬ НА АНГЛИЙСКОМ ЯЗЫКЕ
-- ФОРМАТ: [параметр: значение] — без заглавных букв в параметрах
-- НИКАКИХ РУССКИХ СЛОВ ВНУТРИ КВАДРАТНЫХ СКОБОК В ЭТОМ БЛОКЕ
+[tempo: [ТЕМП] BPM]
 
 ### STRICT TECHNICAL DIRECTIVES FOR SUNO (ОБЯЗАТЕЛЬНЫЕ):
 **[GENRE & STYLE FIDELITY:]**
@@ -151,25 +125,9 @@ MUSIC PROMPT ДЛЯ SUNO (СТРОГО НА АНГЛИЙСКОМ ВНУТРИ С
 - **НИКАКОЙ** несвязанной импровизации (джазовые соло, дабстеп-дропы и т.п.).
 - Для меланхоличного [mood:] — **НИКАКОГО** мажорного, счастливого разрешения.
 - **НИКАКИХ** мультяшных или мемных звуков. Сохранять серьёзный художественный тон.
-- **ВСЕ ТЕГИ В КВАДРАТНЫХ СКОБКАХ ДОЛЖНЫ БЫТЬ НА АНГЛИЙСКОМ ЯЗЫКЕ** (verse, chorus, bridge, style, vocal, mood, instruments, language, tempo)
-- **ВСЕ СТРОКИ ТЕКСТА ПЕСНИ (ВНЕ СКОБОК) ДОЛЖНЫ БЫТЬ ТОЛЬКО СТРОЧНЫМИ БУКВАМИ НА РУССКОМ ЯЗЫКЕ** (никаких заглавных букв)
 
-ПРИМЕР ПРАВИЛЬНОГО ФОРМАТА ДЛЯ SUNO:
-
-[style: ambient cinematic]
-[vocal: ethereal female]
-[mood: mystical hopeful]
-[instruments: synth pads piano strings]
-[language: Russian]
-[tempo: 90 BPM]
-
-[verse 1]
-твои крылья расправились в ночи
-звёзды шепчут тебе о твоей силе
-
-[chorus]
-я иду к своей цели с открытым сердцем
-моя душа знает путь домой
+ТЕКСТ ПЕСНИ С РАЗМЕТКОЙ:
+(Текст должен быть заранее подготовлен: с соблюдением рифмы и ритма. ВСЕ указания для Suno внутри текста — ТОЛЬКО в квадратных скобках []).
 
 Песня должна быть 4-5 минут, НЕ БОЛЕЕ!
 
@@ -325,11 +283,11 @@ export async function generateSoundKey(requestId) {
     
     // Шаг 4: Формируем запрос для DeepSeek
     const langLabel = { ru: "Russian", en: "English", uk: "Ukrainian" }[request.language || "ru"] || "Russian";
-    const userRequest = `ЭТО ${request.name} и её/его запрос: "${request.request || 'создать песню'}"
+    const userRequest = `ЭТО ${request.name} (${request.gender || "—"})
 Дата рождения: ${request.birthdate}
 Место рождения: ${request.birthplace}
 Время рождения: ${request.birthtime_unknown ? 'неизвестно' : request.birthtime}
-Пол: ${request.gender}
+Запрос: "${request.request || 'создать песню'}"
 Язык песни и расшифровки: ${langLabel}
 
 Натальная карта:
@@ -373,19 +331,8 @@ ${astroText}`;
       })
       .eq('id', requestId);
     
-    // Шаг 8: Отправить в SUNO (очищенная лирика, минимум 32 строки)
+    // Шаг 8: Отправить в SUNO (очищенная лирика; [style]/[vocal]/[mood] из ответа ИИ — уникально по архетипу)
     console.log(`[Воркер] Отправляю в SUNO для ${request.name}`);
-    
-    // Голос по полу пользователя (строгое соответствие)
-    let vocalGender;
-    if (request.gender === "male" || request.gender === "м" || String(request.gender || "").toLowerCase().includes("male")) {
-      vocalGender = "m";
-    } else if (request.gender === "female" || request.gender === "ж" || String(request.gender || "").toLowerCase().includes("female")) {
-      vocalGender = "f";
-    } else {
-      vocalGender = process.env.SUNO_VOCAL_GENDER === "m" || process.env.SUNO_VOCAL_GENDER === "f" ? process.env.SUNO_VOCAL_GENDER : undefined;
-    }
-    console.log(`[Воркер] Пол: ${request.gender} → Голос: ${vocalGender === "m" ? "male" : vocalGender === "f" ? "female" : "по умолчанию"}`);
 
     const sunoParams = {
       prompt: lyricsForSuno,
@@ -393,8 +340,8 @@ ${astroText}`;
       style: parsed.style,
     };
     if (process.env.SUNO_MODEL) sunoParams.model = process.env.SUNO_MODEL;
-    if (vocalGender === "m" || vocalGender === "f") sunoParams.vocalGender = vocalGender;
-    
+    if (process.env.SUNO_VOCAL_GENDER === "m" || process.env.SUNO_VOCAL_GENDER === "f") sunoParams.vocalGender = process.env.SUNO_VOCAL_GENDER;
+
     const sunoStart = await generateMusic(sunoParams);
     if (!sunoStart.ok) {
       throw new Error(`Suno start ошибка: ${sunoStart.error}`);

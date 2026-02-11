@@ -497,8 +497,8 @@ bot.on("message:text", async (ctx, next) => {
   const text = (ctx.message?.text || "").trim();
   if (!text.startsWith("/")) return next();
   const cmd = text.split(/\s/)[0].toLowerCase();
-  if (["/start", "/ping", "/get_analysis", "/admin", "/admin_check"].includes(cmd)) return next();
-  await ctx.reply("Неизвестная команда. Доступны: /start — открыть приложение, /get_analysis — расшифровка после оплаты. Админам: /admin, /admin_check. Проверка связи: /ping.");
+  if (["/start", "/ping", "/get_analysis", "/admin", "/admin_check", "/astro", "/full_analysis"].includes(cmd)) return next();
+  await ctx.reply("Неизвестная команда. Доступны: /start — открыть приложение, /get_analysis — расшифровка после оплаты. Админам: /admin, /admin_check, /astro <id>, /full_analysis <id>. Проверка связи: /ping.");
 });
 
 bot.command("admin_check", async (ctx) => {
