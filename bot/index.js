@@ -638,17 +638,22 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
     }
   }
   if (supabase && birthdate && birthplace) {
-    // Временно отключаем воркер для стабильности
-    // import("./workerSoundKey.js").then(({ generateSoundKey }) => {
-    //   generateSoundKey(requestId)
-    //     .then(r => console.log(`[Воркер] Результат:`, r))
-    //     .catch(e => console.error(`[Воркер] Ошибка:`, e));
-    // });
+    // Запускаем воркер генерации песни
+    import("./workerSoundKey.js")
+      .then(({ generateSoundKey }) => {
+        generateSoundKey(requestId)
+          .then(r => {
+            if (r?.ok) console.log(`[Воркер] Заявка ${requestId} завершена`);
+            else console.warn(`[Воркер] Ошибка для заявки ${requestId}:`, r?.error);
+          })
+          .catch(e => console.error(`[Воркер] Исключение для заявки ${requestId}:`, e?.message));
+      })
+      .catch(e => console.error("[Воркер] Не удалось импортировать:", e?.message));
   }
   return res.status(200).json({
     ok: true,
     requestId,
-    message: "Заявка сохранена. Воркер временно отключён для настройки.",
+    message: "Заявка принята, генерация начата.",
   });
 });
 
