@@ -192,10 +192,10 @@
         </div>
         
         <div class="field">
-          <label for="birthplace" data-icon="🌍">Место рождения</label>
-          <p class="field-hint" style="margin:0 0 8px 0; font-size:.9rem; color:#6b7280;">По картам мира определяем координаты — так считается твоя натальная карта. Выбери место из списка.</p>
+          <label for="birthplace" data-icon="🌍">Выбери локацию проявления в игре</label>
+          <p class="field-hint" style="margin:0 0 8px 0; font-size:.9rem; color:#6b7280;">Город или страна — координаты подтянутся из базы. Выбери вариант из подсказок.</p>
           <div class="birthplace-wrap">
-            <input type="text" id="birthplace" placeholder="Начни вводить город или страну — выбери из списка" required autocomplete="off">
+            <input type="text" id="birthplace" placeholder="Введи город или страну, выбери из списка" required autocomplete="off">
             <ul id="birthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true"></ul>
           </div>
           <div id="birthplaceSummary" class="field-summary birthplace-summary" style="display:none; margin-top:8px; padding:12px 14px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
@@ -524,7 +524,7 @@
               clearTimeout(debounceTimer);
               debounceTimer = setTimeout(function() { fetchPlaces(v); }, 320);
               if (!suggestionsEl || suggestionsEl.style.display !== 'block') {
-                birthplaceSummary.innerHTML = 'Введите город и выберите точное место из списка — так делают все серьёзные астросервисы.';
+                birthplaceSummary.innerHTML = 'Выбери локацию из подсказок — нужны точные координаты для расчёта.';
                 birthplaceSummary.style.display = 'block';
                 showPlaceConfirm(v);
               }
@@ -548,7 +548,7 @@
                   placeCoordsEl.style.display = 'block';
                 }
               } else {
-                birthplaceSummary.innerHTML = 'Введите город и выберите точное место из списка.';
+                birthplaceSummary.innerHTML = 'Выбери место из подсказок (клик по варианту в списке).';
                 if (placeCoordsEl) placeCoordsEl.style.display = 'none';
               }
               birthplaceSummary.style.display = 'block';
@@ -563,7 +563,7 @@
                 placeCoordsEl.style.display = 'block';
               }
             } else {
-              birthplaceSummary.innerHTML = 'Введите город и выберите место из списка.';
+              birthplaceSummary.innerHTML = 'Выбери место из подсказок (клик по варианту в списке).';
             }
             birthplaceSummary.style.display = 'block';
             showPlaceConfirm(birthplaceInput.value.trim());
@@ -623,7 +623,7 @@
         }
         var birthplaceField = document.getElementById('birthplace');
         if (!(birthplaceField && birthplaceField.getAttribute('data-place-selected'))) {
-          alert('Как в популярных астросервисах: выбери место рождения из списка подсказок (начни вводить город и нажми на нужный вариант). Так мы избегаем ошибок в расчёте карты.');
+          alert('Выбери локацию из списка: введи город и нажми на вариант в подсказках — так подтянутся координаты для расчёта.');
           return;
         }
         var btVal = document.getElementById('birthtime');

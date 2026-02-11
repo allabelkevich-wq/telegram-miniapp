@@ -278,8 +278,6 @@ async function sendAudioToUser(telegramUserId, audioUrl, caption) {
 
 export async function generateSoundKey(requestId) {
   try {
-    console.log(`[Воркер] Начинаю генерацию для заявки ${requestId}`);
-    
     // Шаг 1: Получить данные заявки из БД
     const { data: request, error: reqError } = await supabase
       .from('track_requests')
@@ -290,6 +288,9 @@ export async function generateSoundKey(requestId) {
     if (reqError || !request) {
       throw new Error(`Заявка ${requestId} не найдена: ${reqError?.message}`);
     }
+
+    console.log(`[Воркер] Запуск генерации для ${request.name}`);
+    console.log(`[Воркер] Запрос: "${(request.request || "").substring(0, 50)}..."`);
     
     // Шаг 2: Проверяем/создаём натальную карту (КРИТИЧНО!)
     if (!request.astro_snapshot_id) {
@@ -375,15 +376,24 @@ ${astroText}`;
     // Шаг 8: Отправить в SUNO (очищенная лирика, минимум 32 строки)
     console.log(`[Воркер] Отправляю в SUNO для ${request.name}`);
     
+    // Голос по полу пользователя (строгое соответствие)
+    let vocalGender;
+    if (request.gender === "male" || request.gender === "м" || String(request.gender || "").toLowerCase().includes("male")) {
+      vocalGender = "m";
+    } else if (request.gender === "female" || request.gender === "ж" || String(request.gender || "").toLowerCase().includes("female")) {
+      vocalGender = "f";
+    } else {
+      vocalGender = process.env.SUNO_VOCAL_GENDER === "m" || process.env.SUNO_VOCAL_GENDER === "f" ? process.env.SUNO_VOCAL_GENDER : undefined;
+    }
+    console.log(`[Воркер] Пол: ${request.gender} → Голос: ${vocalGender === "m" ? "male" : vocalGender === "f" ? "female" : "по умолчанию"}`);
+
     const sunoParams = {
       prompt: lyricsForSuno,
       title: parsed.title,
       style: parsed.style,
     };
     if (process.env.SUNO_MODEL) sunoParams.model = process.env.SUNO_MODEL;
-    if (process.env.SUNO_VOCAL_GENDER === "m" || process.env.SUNO_VOCAL_GENDER === "f") {
-      sunoParams.vocalGender = process.env.SUNO_VOCAL_GENDER;
-    }
+    if (vocalGender === "m" || vocalGender === "f") sunoParams.vocalGender = vocalGender;
     
     const sunoStart = await generateMusic(sunoParams);
     if (!sunoStart.ok) {
