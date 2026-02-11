@@ -123,3 +123,10 @@ alter table track_requests add column if not exists transit_date text;
 alter table track_requests add column if not exists transit_time text;
 alter table track_requests add column if not exists transit_location text;
 alter table track_requests add column if not exists transit_intent text;
+
+-- 6. Аудит генерации: контроль каждого этапа (DeepSeek → парсинг → Suno)
+alter table track_requests add column if not exists llm_truncated boolean default false;
+alter table track_requests add column if not exists suno_style_sent text;
+comment on column track_requests.deepseek_response is 'Полный сырой ответ DeepSeek (до парсинга)';
+comment on column track_requests.llm_truncated is 'true если ответ обрезан по max_tokens (песня могла остаться недоделанной)';
+comment on column track_requests.suno_style_sent is 'Точная строка style, отправленная в Suno (для сверки)';

@@ -8,7 +8,11 @@ import { Bot, webhookCallback } from "grammy";
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
 import { createHeroesRouter, getOrCreateAppUser, validateInitData } from "./heroesApi.js";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import "dotenv/config";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const MINI_APP_BASE = (process.env.MINI_APP_URL || "https://telegram-miniapp-six-teal.vercel.app").replace(/\?.*$/, "").replace(/\/$/, "");
@@ -23,6 +27,7 @@ const ADMIN_IDS = (process.env.ADMIN_TELEGRAM_IDS || "")
   .filter(Boolean)
   .map((s) => parseInt(s, 10))
   .filter((n) => !Number.isNaN(n));
+const ADMIN_SECRET = process.env.ADMIN_SECRET || "";
 
 if (!BOT_TOKEN) {
   console.error("Укажи BOT_TOKEN в .env (получить у @BotFather)");
@@ -671,7 +676,7 @@ app.use(express.json());
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Telegram-Init");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Telegram-Init, Authorization");
   if (req.method === "OPTIONS") return res.sendStatus(204);
   next();
 });
@@ -690,6 +695,61 @@ app.get("/", (_req, res) =>
 app.get("/api/me", (_req, res) => {
   res.json({ ok: true, user: null, authenticated: false });
 });
+
+function resolveAdminAuth(req) {
+  const initData = req.headers["x-telegram-init"] || req.query?.initData || req.body?.initData;
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId != null && isAdmin(telegramUserId)) return { admin: true, userId: telegramUserId };
+  const token = req.headers.authorization?.replace(/^Bearer\s+/i, "") || req.query?.token;
+  if (ADMIN_SECRET && token === ADMIN_SECRET) return { admin: true, userId: "token" };
+  return null;
+}
+
+app.get("/admin", (req, res) => {
+  const adminPath = path.join(__dirname, "admin.html");
+  res.type("html");
+  res.sendFile(adminPath, (err) => {
+    if (err) {
+      console.error("[admin] sendFile error:", err.message);
+      res.status(500).send("<!DOCTYPE html><html><head><meta charset='utf-8'><title>Ошибка</title></head><body><p>Файл админки не найден. Проверь, что admin.html задеплоен вместе с ботом (папка bot).</p><p><a href='/'>На главную</a></p></body></html>");
+    }
+  });
+});
+
+app.get("/api/admin/me", (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ error: "Доступ только для админа", admin: false });
+  return res.json({ admin: true, userId: auth.userId });
+});
+
+app.get("/api/admin/requests", async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ error: "Supabase недоступен" });
+  const limit = Math.min(parseInt(req.query?.limit, 10) || 50, 100);
+  const { data, error } = await supabase
+    .from("track_requests")
+    .select("id, name, status, created_at, llm_truncated, audio_url, mode, request")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json({ requests: data || [] });
+});
+
+app.get("/api/admin/requests/:id", async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ error: "Supabase недоступен" });
+  const { data, error } = await supabase
+    .from("track_requests")
+    .select("*")
+    .eq("id", req.params.id)
+    .maybeSingle();
+  if (error) return res.status(500).json({ error: error.message });
+  if (!data) return res.status(404).json({ error: "Заявка не найдена" });
+  return res.json(data);
+});
+
 app.get(["/webhook-info", "/webhook-info/"], async (_req, res) => {
   try {
     const info = await bot.api.getWebhookInfo();

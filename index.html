@@ -12,8 +12,122 @@
   <script>window.HEROES_API_BASE = 'https://telegram-miniapp-ar09.onrender.com'; window.BACKEND_URL = window.HEROES_API_BASE;</script>
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    /* АДАПТИВНЫЕ СТИЛИ С ПОДДЕРЖКОЙ ТЕМЫ ТЕЛЕГРАМ */
+    :root {
+      --primary-color: #8b5cf6;
+      --secondary-color: #ec4899;
+      --success-color: #10b981;
+    }
+    body {
+      background: var(--tg-theme-bg-color, #1a1a1a) !important;
+      color: var(--tg-theme-text-color, #fff) !important;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 20px 15px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+    }
+    .content-wrapper { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; color: var(--tg-theme-text-color, #fff); font-size: 14px; margin-bottom: 8px; font-weight: 500; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 12px 16px; background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.05));
+      border: 1px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1)); border-radius: 8px;
+      color: var(--tg-theme-text-color, #fff); font-size: 14px; box-sizing: border-box;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--tg-theme-button-color, #8b5cf6); box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    }
+    .checkbox-group { display: flex; align-items: center; margin-top: 8px; }
+    .checkbox-group input[type="checkbox"] { width: 18px; height: 18px; margin-right: 8px; cursor: pointer; }
+    .checkbox-group label { margin: 0; font-size: 13px; color: var(--tg-theme-text-color, #fff); opacity: 0.9; }
+    small { color: var(--tg-theme-hint-color, rgba(255, 255, 255, 0.6)); font-size: 12px; }
+    h3 { color: var(--tg-theme-text-color, #fff); font-size: 18px; margin: 0 0 15px 0; font-weight: 600; }
+    #payBtn {
+      width: 100%; padding: 16px; background: linear-gradient(135deg, var(--tg-theme-button-color, #8b5cf6), #ec4899);
+      border: none; border-radius: 10px; color: var(--tg-theme-button-text-color, #fff); font-size: 16px; font-weight: 600;
+      cursor: pointer; transition: all 0.3s; margin-top: 20px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    }
+    #payBtn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4); }
+    #payBtn:active { transform: translateY(0); }
+    .form-section {
+      background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.05)); border-radius: 12px; padding: 20px; margin-bottom: 20px;
+      border: 1px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1));
+    }
+    .request-examples {
+      margin: 20px 0; padding: 15px; background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.05));
+      border-radius: 12px; border: 1px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1));
+    }
+    .request-examples h3 { font-size: 16px; color: var(--tg-theme-text-color, #fff); margin: 0 0 12px 0; font-weight: 500; }
+    .examples-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+    .example-btn {
+      background: var(--tg-theme-button-color, #8b5cf6); border: 1px solid var(--tg-theme-button-color, #8b5cf6);
+      color: var(--tg-theme-button-text-color, #fff); padding: 10px 12px; border-radius: 8px; font-size: 12px;
+      cursor: pointer; text-align: left; transition: all 0.2s; width: 100%;
+    }
+    .example-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .example-btn.special { background: var(--tg-theme-button-color, #8b5cf6); border-color: var(--tg-theme-button-color, #8b5cf6); }
+    .mode-selector {
+      margin: 20px 0; padding: 15px; background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.05));
+      border-radius: 12px; border: 1px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1));
+    }
+    .mode-selector h3 { font-size: 16px; color: var(--tg-theme-text-color, #fff); margin: 0 0 15px 0; font-weight: 500; text-align: center; }
+    .mode-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .mode-btn {
+      background: var(--tg-theme-bg-color, #1a1a1a); border: 2px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1));
+      color: var(--tg-theme-text-color, #fff); padding: 16px 12px; border-radius: 10px; cursor: pointer; transition: all 0.3s;
+      text-align: center; font-size: 14px; line-height: 1.4;
+    }
+    .mode-btn:hover {
+      background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.1)); border-color: var(--tg-theme-button-color, #8b5cf6);
+      transform: translateY(-2px);
+    }
+    .mode-btn.active {
+      background: linear-gradient(135deg, var(--tg-theme-button-color, #8b5cf6), #ec4899);
+      border-color: var(--tg-theme-button-color, #8b5cf6); color: var(--tg-theme-button-text-color, #fff);
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    }
+    .mode-icon { font-size: 28px; display: block; margin: 0 auto 8px; }
+    .mode-label { font-weight: 600; font-size: 14px; display: block; margin: 0 0 4px; }
+    .mode-desc { font-size: 11px; opacity: 0.8; display: block; margin-top: 4px; }
+    .location-input-wrapper { position: relative; }
+    .location-input {
+      width: 100%; padding: 12px 16px; background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.05));
+      border: 1px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1)); border-radius: 8px;
+      color: var(--tg-theme-text-color, #fff); font-size: 14px; box-sizing: border-box;
+    }
+    .location-input:focus {
+      outline: none; border-color: var(--tg-theme-button-color, #8b5cf6); box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    }
+    .location-suggestions {
+      position: absolute; z-index: 1000; background: var(--tg-theme-bg-color, #1a1a1a);
+      border: 1px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1)); border-radius: 8px;
+      max-height: 200px; overflow-y: auto; width: 100%; margin-top: 4px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      display: none;
+    }
+    .location-suggestion {
+      padding: 10px 12px; cursor: pointer; border-bottom: 1px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1));
+      color: var(--tg-theme-text-color, #fff); font-size: 14px; transition: background 0.2s;
+    }
+    .location-suggestion:hover { background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.1)); }
+    .location-suggestion:last-child { border-bottom: none; }
+    @media (max-width: 480px) {
+      .mode-buttons { grid-template-columns: 1fr; }
+      .examples-grid { grid-template-columns: 1fr; }
+      .mode-btn { padding: 14px 10px; }
+      .mode-icon { font-size: 24px; }
+      .content-wrapper { padding: 15px; }
+      #payBtn { padding: 14px; font-size: 15px; }
+    }
+    @media (min-width: 481px) and (max-width: 768px) {
+      .mode-buttons { grid-template-columns: repeat(2, 1fr); }
+      .examples-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    /* Остальные стили приложения */
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Comfortaa',sans-serif}
-    body{background:var(--tg-theme-bg-color,#f9f7ff);min-height:100vh;display:flex;flex-direction:column;padding:20px 15px;position:relative;overflow-x:hidden;color:var(--tg-theme-text-color,#2d2d2d)}
     body::before{content:"";position:fixed;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 30%,rgba(167,139,250,.08) 0%,transparent 25%),radial-gradient(circle at 70% 70%,rgba(249,168,212,.08) 0%,transparent 25%);z-index:-1;opacity:.3}
     .container{max-width:600px;margin:0 auto;width:100%}
     .page{display:none;min-height:100vh;padding-top:20px}
@@ -22,18 +136,18 @@
     h1{font-size:2.4rem;background:linear-gradient(90deg,#a78bfa,#f9a8d4,#5eead4);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;letter-spacing:-1px;line-height:1.1}
     .subtitle{color:#6b7280;font-size:1.15rem;margin-top:8px;font-weight:400}
     .tagline{color:#a78bfa;font-size:1.35rem;font-weight:700;margin:15px 0;letter-spacing:-0.5px}
-    .section{background:#fefeff;border-radius:24px;padding:30px 25px;box-shadow:0 8px 30px rgba(167,139,250,.15);border:1px solid #e5e7eb;position:relative;overflow:hidden;margin-bottom:25px}
+    .section{background:var(--tg-theme-secondary-bg-color,#fefeff);border-radius:24px;padding:30px 25px;box-shadow:0 8px 30px rgba(167,139,250,.15);border:1px solid var(--tg-theme-border-color,#e5e7eb);position:relative;overflow:hidden;margin-bottom:25px}
     .section::before{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:linear-gradient(to bottom,#a78bfa,#f9a8d4)}
     .field{margin-bottom:22px;text-align:left}
-    label{display:block;margin-bottom:10px;color:#2d2d2d;font-weight:600;font-size:1.05rem;display:flex;align-items:center;gap:10px}
+    label{display:block;margin-bottom:10px;color:var(--tg-theme-text-color,#2d2d2d);font-weight:600;font-size:1.05rem;display:flex;align-items:center;gap:10px}
     label::before{content:attr(data-icon);font-size:1.25rem}
-    input,textarea,select{width:100%;padding:15px;border-radius:16px;border:1px solid #e5e7eb;background:white;color:#2d2d2d;font-size:16px;transition:all .3s ease;font-family:'Comfortaa',sans-serif}
-    input:focus,textarea:focus,select:focus{outline:none;border-color:#a78bfa;box-shadow:0 0 0 3px rgba(167,139,250,.15)}
+    input,textarea,select{width:100%;padding:15px;border-radius:16px;border:1px solid var(--tg-theme-border-color,#e5e7eb);background:var(--tg-theme-secondary-bg-color,#fff);color:var(--tg-theme-text-color,#2d2d2d);font-size:16px;transition:all .3s ease;font-family:'Comfortaa',sans-serif}
+    input:focus,textarea:focus,select:focus{outline:none;border-color:var(--tg-theme-button-color,#a78bfa);box-shadow:0 0 0 3px rgba(167,139,250,.15)}
     input.valid,textarea.valid{border-color:#4ade80}
     .time-group{display:flex;flex-direction:column;gap:14px}
     .checkbox{display:flex;align-items:center;gap:12px;margin-top:-6px}
     .checkbox input{width:auto;height:20px;accent-color:#a78bfa}
-    .checkbox label{margin-bottom:0;font-weight:500;color:#2d2d2d;font-size:1rem;display:flex;align-items:center;gap:8px}
+    .checkbox label{margin-bottom:0;font-weight:500;color:var(--tg-theme-text-color,#2d2d2d);font-size:1rem;display:flex;align-items:center;gap:8px}
     .checkbox label::before{content:"❓";font-size:1.3rem}
     select{appearance:none;background:url("image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23a78bfa' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 16px center;background-size:20px;padding-right:48px}
     textarea{min-height:140px;line-height:1.6;resize:vertical}
@@ -70,37 +184,21 @@
     .loading-text{font-size:1.5rem;color:#a78bfa;font-weight:700;margin-bottom:15px}
     .song-preview{background:white;border-radius:16px;padding:20px;margin:20px 0;text-align:left;border:2px solid #a78bfa}
     .song-preview h3{color:#a78bfa;font-size:1.4rem;margin-bottom:10px;text-align:center}
-    .song-preview p{font-size:1.05rem;line-height:1.7;color:#2d2d2d}
+    .song-preview p{font-size:1.05rem;line-height:1.7;color:var(--tg-theme-text-color,#2d2d2d)}
     footer{text-align:center;padding:30px 0 20px;color:#6b7280;font-size:.95rem;margin-top:auto}
     .birthplace-wrap{position:relative}
-    .birthplace-suggestions{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;z-index:50;list-style:none;padding:6px 0}
-    .birthplace-suggestions li{padding:12px 16px;cursor:pointer;font-size:1rem;color:#2d2d2d;border-bottom:1px solid #f3f4f6;transition:background .15s}
+    .birthplace-suggestions{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--tg-theme-bg-color,#fff);border:1px solid var(--tg-theme-border-color,#e5e7eb);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;z-index:50;list-style:none;padding:6px 0}
+    .birthplace-suggestions li{padding:12px 16px;cursor:pointer;font-size:1rem;color:var(--tg-theme-text-color,#2d2d2d);border-bottom:1px solid var(--tg-theme-border-color,#f3f4f6);transition:background .15s}
     .birthplace-suggestions li:last-child{border-bottom:none}
     .birthplace-suggestions li:hover,.birthplace-suggestions li.selected{background:rgba(167,139,250,.12);color:#6d28d9}
     .birthplace-suggestions .place-type{font-size:.85rem;color:#6b7280;margin-top:2px}
     .birthplace-summary .place-name{font-weight:700;color:#5b21b6}
     .place-coords{font-family:ui-monospace,monospace;letter-spacing:.02em}
     
-    .mode-selector{margin:20px 0;padding:15px;background:rgba(167,139,250,.06);border-radius:12px;border:1px solid rgba(167,139,250,.2)}
-    .mode-selector h3{font-size:16px;color:#a78bfa;margin:0 0 12px 0;font-weight:600}
-    .mode-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-    .mode-btn{background:rgba(255,255,255,.05);border:2px solid rgba(167,139,250,.2);color:var(--tg-theme-text-color,#2d2d2d);padding:12px;border-radius:8px;cursor:pointer;transition:all .3s;text-align:center}
-    .mode-btn:hover{background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.4);transform:translateY(-2px)}
-    .mode-btn.active{background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(236,72,153,.2));border-color:rgba(167,139,250,.6);box-shadow:0 4px 12px rgba(167,139,250,.2)}
-    .mode-icon{font-size:24px;display:block;margin:0 auto 8px}
-    .mode-label{font-weight:600;font-size:14px;display:block;margin:0 0 4px}
-    .mode-desc{font-size:11px;opacity:.85;display:block}
-    #transitForm{display:none;margin-top:30px;padding:20px;background:rgba(167,139,250,.06);border-radius:12px;border:1px solid rgba(167,139,250,.2)}
-    #transitForm h3{color:#a78bfa;margin:0 0 15px 0;font-size:18px}
-    .request-examples{margin:20px 0;padding:15px;background:rgba(167,139,250,.06);border-radius:12px;border:1px solid rgba(167,139,250,.15)}
-    .request-examples h3{font-size:16px;color:#a78bfa;margin:0 0 12px 0;font-weight:600}
-    .examples-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
-    .example-btn{background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);color:var(--tg-theme-text-color,#2d2d2d);padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer;text-align:left;transition:all .2s;font-family:'Comfortaa',sans-serif}
-    .example-btn:hover{background:rgba(167,139,250,.25);border-color:rgba(167,139,250,.6);transform:translateY(-1px)}
-    .example-btn.special{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.3)}
-    .example-btn.special:hover{background:rgba(59,130,246,.25);border-color:rgba(59,130,246,.6)}
-    #secondPersonForm{display:none;margin-top:30px;padding:20px;background:rgba(167,139,250,.06);border-radius:12px;border:1px solid rgba(167,139,250,.2)}
-    #secondPersonForm h3{color:#a78bfa;margin:0 0 15px 0;font-size:18px}
+    #transitForm{display:none;margin-top:30px;padding:20px;background:var(--tg-theme-secondary-bg-color,rgba(255,255,255,0.05));border-radius:12px;border:1px solid var(--tg-theme-border-color,rgba(255,255,255,0.1))}
+    #transitForm h3{color:var(--tg-theme-text-color,#fff);margin:0 0 15px 0;font-size:18px}
+    #secondPersonForm{display:none;margin-top:30px;padding:20px;background:var(--tg-theme-secondary-bg-color,rgba(255,255,255,0.05));border-radius:12px;border:1px solid var(--tg-theme-border-color,rgba(255,255,255,0.1))}
+    #secondPersonForm h3{color:var(--tg-theme-text-color,#fff);margin:0 0 15px 0;font-size:18px}
     
     /* Панель навигации для превью в браузере */
     .preview-nav{background:white;border-radius:16px;padding:12px;margin-bottom:25px;box-shadow:0 4px 20px rgba(167,139,250,.15);text-align:center;border:1px solid #e5e7eb;display:none}
@@ -288,10 +386,11 @@
             <label for="birthdate2">Дата рождения</label>
             <input type="date" id="birthdate2" max="2010-12-31">
           </div>
-          <div class="field">
+          <div class="field form-group location-input-wrapper">
             <label for="birthplace2">Место рождения</label>
-            <input type="text" id="birthplace2" placeholder="Город, страна" maxlength="100">
-            <div class="checkbox" style="margin-top:8px">
+            <input type="text" id="birthplace2" class="location-input" placeholder="Начни вводить город..." maxlength="100" autocomplete="off">
+            <div id="birthplaceSuggestions2" class="location-suggestions"></div>
+            <div class="checkbox-group" style="margin-top: 10px;">
               <input type="checkbox" id="placeConfirmed2">
               <label for="placeConfirmed2">Подтверждаю, что место рождения указано верно</label>
             </div>
@@ -329,11 +428,12 @@
             <input type="time" id="transitTime">
             <small style="color:#6b7280;display:block;margin-top:4px;font-size:.9rem">Точное время (если важно)</small>
           </div>
-          <div class="field">
+          <div class="field form-group location-input-wrapper">
             <label for="transitLocation">Локация транзита</label>
-            <input type="text" id="transitLocation" placeholder="Город, где будет энергия дня" maxlength="100">
-            <small style="color:#6b7280;display:block;margin-top:4px;font-size:.9rem">Где ты будешь в этот момент?</small>
-            <div class="checkbox" style="margin-top:8px">
+            <input type="text" id="transitLocation" class="location-input" placeholder="Город, где будет энергия дня..." maxlength="100" autocomplete="off">
+            <div id="transitLocationSuggestions" class="location-suggestions"></div>
+            <small style="color: var(--tg-theme-hint-color, rgba(255,255,255,0.6)); display: block; margin-top: 4px;">Где ты будешь в этот момент?</small>
+            <div class="checkbox-group" style="margin-top: 10px;">
               <input type="checkbox" id="transitLocationConfirmed">
               <label for="transitLocationConfirmed">Подтверждаю, что локация указана верно</label>
             </div>
@@ -506,6 +606,54 @@
         banner.textContent = 'Открой приложение из чата с ботом в Telegram (кнопка меню) — иначе заявка не отправится.';
         document.body.insertBefore(banner, document.body.firstChild);
       }
+      async function showLocationSuggestions(inputElement, suggestionsContainerId, confirmCheckboxId) {
+        var value = inputElement.value.trim();
+        var suggestionsContainer = document.getElementById(suggestionsContainerId);
+        if (value.length < 2) {
+          if (suggestionsContainer) suggestionsContainer.style.display = 'none';
+          return;
+        }
+        try {
+          var response = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(value) + '&addressdetails=1&limit=5', { headers: { 'Accept': 'application/json', 'User-Agent': 'YupSoulMiniApp/1.0' } });
+          var locations = await response.json();
+          if (locations.length === 0) {
+            if (suggestionsContainer) {
+              suggestionsContainer.innerHTML = '<div style="padding: 10px; color: var(--tg-theme-hint-color, rgba(255,255,255,0.6)); text-align: center;">Не найдено</div>';
+              suggestionsContainer.style.display = 'block';
+            }
+            return;
+          }
+          if (suggestionsContainer) {
+            suggestionsContainer.innerHTML = locations.map(function(loc) {
+              var display = (loc.display_name || '')
+                .replace(', Россия', '').replace(', Беларусь', '').replace(', Российская Федерация', '').replace(', Republic of Belarus', '');
+              return '<div class="location-suggestion" data-value="' + (display.replace(/"/g, '&quot;')) + '">' + (display.replace(/</g, '&lt;')) + '</div>';
+            }).join('');
+            suggestionsContainer.style.display = 'block';
+            suggestionsContainer.querySelectorAll('.location-suggestion').forEach(function(item) {
+              item.addEventListener('click', function() {
+                inputElement.value = item.getAttribute('data-value');
+                suggestionsContainer.style.display = 'none';
+                if (confirmCheckboxId) {
+                  var checkbox = document.getElementById(confirmCheckboxId);
+                  if (checkbox) checkbox.checked = true;
+                }
+              });
+            });
+          }
+        } catch (err) {
+          console.error('Ошибка поиска местоположения:', err);
+          if (suggestionsContainer) {
+            suggestionsContainer.innerHTML = '<div style="padding: 10px; color: #ef4444; text-align: center;">Ошибка поиска</div>';
+            suggestionsContainer.style.display = 'block';
+          }
+        }
+      }
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.location-input-wrapper')) {
+          document.querySelectorAll('.location-suggestions').forEach(function(el) { el.style.display = 'none'; });
+        }
+      });
       var userTariff = 'basic';
       var heroesCache = [];
       var editingHeroId = null;
@@ -701,6 +849,24 @@
             showPlaceConfirm(birthplaceInput.value.trim());
           }
         }
+        var birthplace2Input = document.getElementById('birthplace2');
+        if (birthplace2Input) {
+          var debounce2 = null;
+          birthplace2Input.addEventListener('input', function() {
+            var self = this;
+            clearTimeout(debounce2);
+            debounce2 = setTimeout(function() { showLocationSuggestions(self, 'birthplaceSuggestions2', 'placeConfirmed2'); }, 320);
+          });
+        }
+        var transitLocationInput = document.getElementById('transitLocation');
+        if (transitLocationInput) {
+          var debounceTransit = null;
+          transitLocationInput.addEventListener('input', function() {
+            var self = this;
+            clearTimeout(debounceTransit);
+            debounceTransit = setTimeout(function() { showLocationSuggestions(self, 'transitLocationSuggestions', 'transitLocationConfirmed'); }, 320);
+          });
+        }
         var formPage = document.getElementById('formPage');
         if (formPage && userTariff === 'master') loadForWhoSelect();
       
@@ -866,7 +1032,7 @@
           if (name2.length < 2) { alert('✨ Имя второго человека должно содержать минимум 2 символа'); return; }
           if (!birthdate2) { alert('✨ Выбери дату рождения второго человека'); return; }
           if (birthplace2.length < 3) { alert('✨ Место рождения второго человека должно содержать минимум 3 символа'); return; }
-          if (!(document.getElementById('placeConfirmed2') && document.getElementById('placeConfirmed2').checked)) { alert('✨ Подтверди место рождения второго человека'); return; }
+          if (!(document.getElementById('placeConfirmed2') && document.getElementById('placeConfirmed2').checked)) { alert('✨ Подтверди, что место рождения второго человека указано верно'); return; }
           if (!birthtimeUnknown2 && !birthtime2) { alert('✨ Укажи время рождения второго человека'); return; }
           if (!gender2) { alert('✨ Выбери пол второго человека'); return; }
           payload.person2 = { name: name2, birthdate: birthdate2, birthplace: birthplace2, birthtime: birthtimeUnknown2 ? null : birthtime2, birthtimeUnknown: birthtimeUnknown2, gender: gender2 };

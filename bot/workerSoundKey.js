@@ -80,11 +80,18 @@ const SYSTEM_PROMPT = `Ты — мудрый астролог-поэт и муз
 
 ЭТАП 3: СОЗДАНИЕ ПЕСНИ
 
-Когда завершишь ЭТАП 1, создай песню на основе анализа, используй этот шаблон:
+Когда завершишь ЭТАП 1, создай песню СТРОГО на основе этого анализа. Не привноси тем, которых нет в этапах 1–2.
 
-ПЕСНЯ ДЛЯ [ИМЯ]: «[НАЗВАНИЕ-МЕТАФОРА]»
+**КРИТИЧЕСКИ ВАЖНО — СООТВЕТСТВИЕ НАТАЛЬНОЙ КАРТЕ:**
+- Песня должна быть НЕОТДЕЛИМА от твоего анализа. Запрещены общие мотивационные фразы, не вытекающие из этой конкретной карты и запроса.
+- **Припев (Chorus):** используй формулировку мантры/девиза из раздела ПРАКТИЧЕСКИЕ РЕКОМЕНДАЦИИ — можно слегка ритмизовать, но смысл и образ тот же.
+- **Бридж (Bridge):** вырази решение ключевого противоречия из раздела КЛЮЧЕВЫЕ ПРОТИВОРЕЧИЯ (ресурс для решения).
+- **Куплеты:** образы и метафоры только из СУТЬ ДУШИ, СИЛА И ТЕНЬ, ЭВОЛЮЦИОННЫЙ УРОВЕНЬ. Если идеи нет в анализе — её не должно быть в песне.
+- Название песни — метафора из анализа (архетип, миссия или ключевой образ), не абстрактное слово.
 
-ЛИРИКА: Каждая строчка — метафора из анализа(ов). Припев = мантра/девиз из рекомендаций. Бридж = решение ключевого противоречия. НИКАКИХ астрологических терминов. Создай эмоциональную дугу от вызова к решению.
+ПЕСНЯ ДЛЯ [ИМЯ]: «[НАЗВАНИЕ-МЕТАФОРА ИЗ АНАЛИЗА]»
+
+ЛИРИКА: Каждая строчка — метафора из твоего анализа. Припев = мантра из рекомендаций. Бридж = решение противоречия. НИКАКИХ астрологических терминов. Эмоциональная дуга от вызова к решению — только из этой карты.
 
 СТРУКТУРА ЛИРИКИ:
 [Тема песни:] [Какой аспект личности/задачи отражает]
@@ -157,9 +164,10 @@ const FORBIDDEN_TERMS = [
 
 function sanitizeSongText(text) {
   if (!text || typeof text !== "string") return text;
-  let cleaned = text.toLowerCase();
+  let cleaned = text;
   FORBIDDEN_TERMS.forEach((term) => {
-    cleaned = cleaned.replace(new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi"), "твой внутренний свет");
+    const re = new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi");
+    cleaned = cleaned.replace(re, "сила");
   });
   return cleaned;
 }
@@ -349,6 +357,8 @@ ${astroTextFull}
 ПОЛНАЯ НАТАЛЬНАЯ КАРТА ВТОРОГО ЧЕЛОВЕКА:
 ${astroTextPerson2}
 
+ТРЕБОВАНИЕ: Песня должна строго отражать анализ обеих карт и их связь, без общих мест — только выводы из карт выше и запрос пары.
+
 Язык песни и расшифровки: ${langLabel}`;
     } else if (request.mode === "transit" && (request.transit_date || request.transit_location)) {
       userRequest = `ЭТО ${request.name} (${request.gender || "—"}) — режим ЭНЕРГИЯ ДНЯ
@@ -372,6 +382,8 @@ ${astroTextPerson2}
 ПОЛНАЯ НАТАЛЬНАЯ КАРТА:
 ${astroTextFull}
 
+ТРЕБОВАНИЕ: Песня должна строго отражать энергию момента (транзит + натальная карта) и намерение, без общих мест — только из этого контекста.
+
 Язык песни и расшифровки: ${langLabel}`;
     } else {
       userRequest = `ЭТО ${request.name} (${request.gender || "—"})
@@ -385,15 +397,18 @@ ${astroTextFull}
 ПОЛНАЯ НАТАЛЬНАЯ КАРТА (все данные — используй для анализа; в своём ответе НЕ упоминай астрологические термины, только метафоры):
 ${astroTextFull}
 
+ТРЕБОВАНИЕ: Песня должна строго отражать только этот анализ и этот запрос. Без общих мест и чужих тем — только то, что выведено из карты выше.
+
 Язык песни и расшифровки: ${langLabel}`;
     }
     
-    // Шаг 5: Отправить в DeepSeek (используем существующий модуль)
-    console.log(`[Воркер] Отправляю запрос в DeepSeek для ${request.name}`);
+    // ========== ЭТАП 1: DEEPSEEK ==========
+    const MAX_TOKENS_LLM = 3500;
+    console.log(`[Воркер] ЭТАП 1 — DeepSeek: отправляю запрос для ${request.name} (max_tokens=${MAX_TOKENS_LLM})`);
     
     const llm = await chatCompletion(SYSTEM_PROMPT, userRequest, {
-      max_tokens: 3500,
-      temperature: 0.95,
+      max_tokens: MAX_TOKENS_LLM,
+      temperature: 0.72,
     });
     
     if (!llm.ok) {
@@ -401,7 +416,13 @@ ${astroTextFull}
     }
     
     const fullResponse = llm.text;
-    console.log(`[Воркер] Получен анализ от DeepSeek (длина: ${fullResponse.length})`);
+    const finishReason = llm.finish_reason || null;
+    const llmTruncated = finishReason === "length";
+    if (llmTruncated) {
+      console.warn(`[Воркер] ЭТАП 1 — DeepSeek: ВНИМАНИЕ — ответ обрезан по лимиту (finish_reason=length). Песня могла остаться недоделанной. Длина: ${fullResponse.length}`);
+    } else {
+      console.log(`[Воркер] ЭТАП 1 — DeepSeek: ответ получен, длина ${fullResponse.length} символов, finish_reason=${finishReason || "—"}${llm.usage ? `, токенов: ${llm.usage.completion_tokens}` : ""}`);
+    }
     
     // === ПРОВЕРКА КАЧЕСТВА ОТВЕТА ===
     const MIN_RESPONSE_LENGTH = 2500;
@@ -441,21 +462,24 @@ ${astroTextFull}
       throw new Error("Плохой ответ от DeepSeek: ответ слишком короткий, отсутствуют обязательные разделы или содержатся астрологические термины");
     }
     
-    // Шаг 6: Парсим ответ
+    // ========== ЭТАП 2: ПАРСИНГ ОТВЕТА ==========
     const parsed = parseResponse(fullResponse);
     if (!parsed || !parsed.lyrics) {
       throw new Error('Не удалось извлечь лирику из ответа LLM');
     }
     let lyricsForSuno = sanitizeSongText(parsed.lyrics);
     const lineCount = lyricsForSuno.split(/\n/).filter((l) => l.trim()).length;
+    console.log(`[Воркер] ЭТАП 2 — Парсинг: лирика ${lyricsForSuno.length} символов, ${lineCount} строк; title="${parsed.title || ""}"; style длина=${(parsed.style || "").length}`);
     if (lineCount < 32) {
       throw new Error(`Песня слишком короткая (${lineCount} строк, нужно минимум 32)`);
     }
     
-    // Шаг 7: Сохраняем анализ и лирику (в БД — очищенная версия)
+    // Сохраняем сырой ответ DeepSeek и аудит (контроль этапа 1)
     await supabase
       .from('track_requests')
       .update({
+        deepseek_response: fullResponse,
+        llm_truncated: llmTruncated,
         lyrics: lyricsForSuno,
         title: parsed.title,
         detailed_analysis: parsed.detailed_analysis,
@@ -464,13 +488,14 @@ ${astroTextFull}
       })
       .eq('id', requestId);
     
-    // Шаг 8: Отправить в SUNO (очищенная лирика; [style]/[vocal]/[mood] из ответа ИИ — уникально по архетипу)
-    console.log(`[Воркер] Отправляю в SUNO для ${request.name}`);
+    // ========== ЭТАП 3: SUNO ==========
+    const styleSentToSuno = parsed.style || "";
+    console.log(`[Воркер] ЭТАП 3 — Suno: отправляю лирику ${lyricsForSuno.length} символов, title="${parsed.title}", style (первые 120 символов): ${styleSentToSuno.slice(0, 120)}${styleSentToSuno.length > 120 ? "…" : ""}`);
 
     const sunoParams = {
       prompt: lyricsForSuno,
       title: parsed.title,
-      style: parsed.style,
+      style: styleSentToSuno,
     };
     if (process.env.SUNO_MODEL) sunoParams.model = process.env.SUNO_MODEL;
     if (process.env.SUNO_VOCAL_GENDER === "m" || process.env.SUNO_VOCAL_GENDER === "f") sunoParams.vocalGender = process.env.SUNO_VOCAL_GENDER;
@@ -484,7 +509,10 @@ ${astroTextFull}
     
     await supabase
       .from('track_requests')
-      .update({ suno_task_id: sunoStart.taskId })
+      .update({
+        suno_task_id: sunoStart.taskId,
+        suno_style_sent: styleSentToSuno,
+      })
       .eq('id', requestId);
     
     // Шаг 9: Ожидание завершения генерации (используем существующий модуль)
@@ -494,7 +522,7 @@ ${astroTextFull}
     }
     
     const audioUrl = sunoResult.audioUrl;
-    console.log(`[Воркер] Музыка готова: ${audioUrl}`);
+    console.log(`[Воркер] ЭТАП 3 — Suno: музыка готова, audio_url=${audioUrl}`);
     
     // Шаг 10: Обновить статус заявки и сохранить поля песни в БД
     await supabase

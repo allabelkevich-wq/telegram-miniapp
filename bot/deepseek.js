@@ -88,11 +88,19 @@ export async function chatCompletion(systemPrompt, userMessage, opts = {}) {
         return { ok: false, error: lastError };
       }
 
-      const content = data.choices?.[0]?.message?.content;
+      const choice = data.choices?.[0];
+      const content = choice?.message?.content;
       if (content == null) {
         return { ok: false, error: "Пустой ответ DeepSeek" };
       }
-      return { ok: true, text: String(content).trim() };
+      const finishReason = choice?.finish_reason || null;
+      const usage = data.usage || null;
+      return {
+        ok: true,
+        text: String(content).trim(),
+        finish_reason: finishReason,
+        usage: usage ? { total_tokens: usage.total_tokens, completion_tokens: usage.completion_tokens } : null,
+      };
     } catch (e) {
       lastError = e?.message || String(e);
       if (attempt < maxAttempts) await new Promise((r) => setTimeout(r, 5000));
