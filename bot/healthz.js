@@ -64,6 +64,14 @@ const server = createServer(async (req, res) => {
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log("[healthz] Порт открыт:", PORT);
+  if (!process.env.BOT_TOKEN) {
+    console.error("[healthz] BOT_TOKEN не задан. Добавь в Render → Environment (Environment Variables) и сделай Redeploy.");
+    process.exit(1);
+  }
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+    console.error("[healthz] SUPABASE_URL или SUPABASE_SERVICE_KEY не заданы. Добавь в Render → Environment.");
+    process.exit(1);
+  }
   import("./index.js")
     .then(() => {
       expressApp = globalThis.__EXPRESS_APP__;

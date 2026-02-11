@@ -4,7 +4,7 @@
  * HTTP API для «Мои герои» (тариф Мастер).
  */
 
-import { Bot } from "grammy";
+import { Bot, webhookCallback } from "grammy";
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
 import { createHeroesRouter, getOrCreateAppUser, validateInitData } from "./heroesApi.js";
@@ -36,6 +36,10 @@ bot.use(async (ctx, next) => {
   const msg = ctx.message;
   const fromId = ctx.from?.id;
   if (msg?.text) console.log("[TG] msg from", fromId, ":", msg.text.slice(0, 80) + (msg.text.length > 80 ? "…" : ""));
+  // #region agent log
+  const hasWebAppData = !!(msg?.web_app_data);
+  fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:bot.use',message:'incoming update',data:{updateId:ctx.update?.update_id,hasWebAppData,fromId},hypothesisId:'H3',timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   const chatId = ctx.chat?.id;
   if (chatId) ctx.api.sendChatAction(chatId, "typing").catch(() => {});
   return next();
@@ -182,6 +186,9 @@ bot.on("message", (ctx, next) => {
 
 // Данные из Mini App (кнопка «Отправить заявку» → sendData)
 bot.on("message:web_app_data", async (ctx) => {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:web_app_data',message:'handler entered',data:{rawLen:(ctx.message?.web_app_data?.data||'').length},hypothesisId:'H4',timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   console.log("[Заявка] ⚠️ ОБРАБОТЧИК АКТИВИРОВАН! message:", ctx.message ? "есть" : "нет", "web_app_data:", ctx.message?.web_app_data ? "есть" : "нет");
   const raw = ctx.message.web_app_data?.data;
   console.log("[Заявка] Обработка web_app_data, длина:", raw?.length || 0, "тип:", typeof raw);
@@ -251,6 +258,9 @@ bot.on("message:web_app_data", async (ctx) => {
     return;
   }
 
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:web_app_data_saved',message:'request saved',data:{requestId},hypothesisId:'H4',timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   console.log("[Заявка] Сохранена успешно, ID:", requestId, { name, birthdate, birthplace, gender, language, request: (userRequest || "").slice(0, 50), hasCoords: !!(birthplaceLat && birthplaceLon) });
 
   if (supabase && birthdate && birthplace) {
@@ -258,15 +268,12 @@ bot.on("message:web_app_data", async (ctx) => {
     if (birthplaceLat != null && birthplaceLon != null) {
       // Координаты уже переданы в saveRequest, они будут использованы в workerAstro
     }
-    // Запускаем полный пайплайн генерации звукового ключа
-    import("./workerSoundKey.js").then(({ generateSoundKey }) =>
-      generateSoundKey(requestId)
-        .then((r) => {
-          if (r.ok) console.log(`[Воркер] Ключ создан для заявки ${requestId}`);
-          else console.warn(`[Воркер] Ошибка для заявки ${requestId}:`, r.error);
-        })
-        .catch((e) => console.warn(`[Воркер] Исключение для заявки ${requestId}:`, e.message))
-    );
+    // Временно отключаем воркер для стабильности
+    // import("./workerSoundKey.js").then(({ generateSoundKey }) => {
+    //   generateSoundKey(requestId)
+    //     .then(r => console.log(`[Воркер] Результат:`, r))
+    //     .catch(e => console.error(`[Воркер] Ошибка:`, e));
+    // });
   }
 
   await ctx.reply(
@@ -518,6 +525,11 @@ bot.api.setMyCommands(commands, { language_code: "ru" }).catch(() => {});
 
 // HTTP: сначала слушаем порт (для Render health check), потом подключаем API и бота
 const app = express();
+// Вебхук — до express.json(), чтобы получать raw body (нужно для grammY)
+const WEBHOOK_URL = (process.env.WEBHOOK_URL || "").replace(/\/$/, "");
+if (WEBHOOK_URL) {
+  app.use("/webhook", express.raw({ type: "application/json" }), webhookCallback(bot, "express"));
+}
 app.use(express.json());
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -537,11 +549,16 @@ app.get("/", (_req, res) =>
     "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>YupSoul Bot</title></head><body><p>YupSoul Bot работает.</p><p>Проверка: <a href=\"/healthz\">/healthz</a></p><p>Статус webhook: <a href=\"/healthz?webhook=1\">/healthz?webhook=1</a> — если бот не видит команды.</p><p>Приложение открывай из Telegram — кнопка меню бота.</p></body></html>"
   )
 );
+// Обработчик /api/me (чтобы не было 500 ошибки)
+app.get("/api/me", (_req, res) => {
+  res.json({ ok: true, user: null, authenticated: false });
+});
 app.get(["/webhook-info", "/webhook-info/"], async (_req, res) => {
   try {
     const info = await bot.api.getWebhookInfo();
     const url = info.url || "(не установлен)";
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Webhook</title><style>body{font-family:sans-serif;padding:2rem;}</style></head><body><h1>Статус webhook</h1><p>URL: <strong>${url}</strong></p><p>Если здесь указан какой-то адрес — Telegram шлёт туда все сообщения, и бот на Render их не получает. При каждом старте бот сбрасывает webhook и переходит на long polling. Сделай Redeploy и снова открой эту страницу: должно быть «(не установлен)».</p><p><a href="/">Главная</a></p></body></html>`;
+    const mode = WEBHOOK_URL ? " (режим вебхуков)" : "";
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Webhook</title><style>body{font-family:sans-serif;padding:2rem;}</style></head><body><h1>Статус webhook</h1><p>URL: <strong>${url}</strong>${mode}</p><p>${WEBHOOK_URL ? "Вебхук установлен — Telegram шлёт апдейты сюда. Конфликта 409 не будет." : "При каждом старте бот сбрасывает webhook и использует long polling. Чтобы использовать вебхуки, задай WEBHOOK_URL в Render."}</p><p><a href="/">Главная</a></p></body></html>`;
     res.status(200).set("Content-Type", "text/html; charset=utf-8").send(html);
   } catch (e) {
     res.status(500).set("Content-Type", "text/html; charset=utf-8").send(`<html><body><p>Ошибка: ${e?.message || e}</p><a href="/">Главная</a></body></html>`);
@@ -557,8 +574,14 @@ app.post("/suno-callback", express.json(), (req, res) => {
 // Запасной приём заявок: Mini App шлёт POST с initData + форма (если sendData в TG не срабатывает).
 app.post("/api/submit-request", express.json(), async (req, res) => {
   const initData = req.body?.initData || req.headers["x-telegram-init"];
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:submit-request',message:'POST hit',data:{hasInitData:!!initData,initDataLen:(initData||'').length},hypothesisId:'H5',timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   const telegramUserId = validateInitData(initData, BOT_TOKEN);
   if (telegramUserId == null) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:submit-request',message:'validateInitData failed',data:{},hypothesisId:'H2',timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     return res.status(401).json({ error: "Неверные или устаревшие данные. Открой приложение из чата с ботом и попробуй снова." });
   }
   const {
@@ -595,6 +618,9 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   if (!requestId) {
     return res.status(500).json({ error: "Не удалось сохранить заявку" });
   }
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:submit-request',message:'request accepted',data:{requestId,telegramUserId},hypothesisId:'H5',timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   console.log("[submit-request] Заявка принята, id:", requestId, "user:", telegramUserId);
   const successText =
     "✅ Заявка принята!\n\n" +
@@ -612,17 +638,18 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
     }
   }
   if (supabase && birthdate && birthplace) {
-    // Запускаем полный пайплайн генерации звукового ключа
-    import("./workerSoundKey.js").then(({ generateSoundKey }) =>
-      generateSoundKey(requestId)
-        .then((r) => {
-          if (r.ok) console.log(`[Воркер] Ключ создан для заявки ${requestId}`);
-          else console.warn(`[Воркер] Ошибка для заявки ${requestId}:`, r.error);
-        })
-        .catch((e) => console.warn(`[Воркер] Исключение для заявки ${requestId}:`, e.message))
-    );
+    // Временно отключаем воркер для стабильности
+    // import("./workerSoundKey.js").then(({ generateSoundKey }) => {
+    //   generateSoundKey(requestId)
+    //     .then(r => console.log(`[Воркер] Результат:`, r))
+    //     .catch(e => console.error(`[Воркер] Ошибка:`, e));
+    // });
   }
-  return res.status(200).json({ ok: true, requestId });
+  return res.status(200).json({
+    ok: true,
+    requestId,
+    message: "Заявка сохранена. Воркер временно отключён для настройки.",
+  });
 });
 
 async function onBotStart(info) {
@@ -635,14 +662,23 @@ async function onBotStart(info) {
     if (error) console.error("Supabase: ошибка таблицы track_requests:", error.message);
     else console.log("Supabase: в таблице track_requests записей:", count ?? 0);
   } else console.log("Supabase: не подключен (заявки только в памяти).");
+
+  // Уведомление админам о перезапуске/обновлении бота
+  if (ADMIN_IDS.length) {
+    const time = new Date().toLocaleString("ru-RU", { timeZone: "Europe/Moscow" });
+    const text = "🔄 Бот обновлён и запущен.\n\n" + time;
+    for (const adminId of ADMIN_IDS) {
+      bot.api.sendMessage(adminId, text).catch((e) => console.warn("[onStart] Уведомление админу", adminId, e?.message));
+    }
+  }
 }
 
-/** При старте сбрасываем webhook, иначе Telegram шлёт апдейты на старый URL и бот не видит команды. */
+/** Long polling: сбрасываем webhook и запускаем опрос getUpdates. */
 async function startBotWithPolling() {
   try {
     const info = await bot.api.getWebhookInfo();
     if (info.url) {
-      console.warn("[Bot] Был установлен webhook:", info.url, "— сбрасываю, чтобы бот получал команды через long polling.");
+      console.warn("[Bot] Был установлен webhook:", info.url, "— сбрасываю для long polling.");
       await bot.api.deleteWebhook({ drop_pending_updates: false });
       console.log("[Bot] Webhook сброшен.");
     } else {
@@ -654,15 +690,36 @@ async function startBotWithPolling() {
   }
 }
 
+/** Режим вебхуков: один инстанс получает апдейты, нет конфликта 409 при нескольких репликах. */
+async function startBotWithWebhook() {
+  try {
+    const url = WEBHOOK_URL + "/webhook";
+    await bot.api.setWebhook(url);
+    console.log("[Bot] Вебхук установлен:", url);
+    const me = await bot.api.getMe();
+    await onBotStart(me);
+  } catch (err) {
+    console.error("[Bot] Ошибка установки вебхука:", err?.message || err);
+  }
+}
+
 if (process.env.RENDER_HEALTHZ_FIRST) {
   app.use("/api", createHeroesRouter(supabase, BOT_TOKEN));
   globalThis.__EXPRESS_APP__ = app;
-  startBotWithPolling();
+  if (WEBHOOK_URL) {
+    startBotWithWebhook();
+  } else {
+    startBotWithPolling();
+  }
 } else {
   console.log("[HTTP] Слушаю порт", HEROES_API_PORT);
   app.use("/api", createHeroesRouter(supabase, BOT_TOKEN));
   app.listen(HEROES_API_PORT, "0.0.0.0", () => {
     console.log("[HTTP] Порт открыт:", HEROES_API_PORT);
-    startBotWithPolling();
+    if (WEBHOOK_URL) {
+      startBotWithWebhook();
+    } else {
+      startBotWithPolling();
+    }
   });
 }
