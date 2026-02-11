@@ -272,33 +272,42 @@ export async function generateSoundKey(requestId) {
       if (updated) Object.assign(request, updated);
     }
     
-    // Шаг 3: Получаем натальную карту
+    // Шаг 3: Получаем астро-снапшот из БД (по track_request_id)
     const { data: snapshotRow } = await supabase
       .from("astro_snapshots")
-      .select("snapshot_text")
-      .eq("id", request.astro_snapshot_id)
+      .select("*")
+      .eq("track_request_id", requestId)
       .maybeSingle();
     
-    const astroText = snapshotRow?.snapshot_text || "[Натальная карта не найдена]";
+    const snapshot = snapshotRow?.snapshot_json && typeof snapshotRow.snapshot_json === "object" ? snapshotRow.snapshot_json : null;
+    const pos = snapshot?.positions ?? [];
+    const posBy = (name) => pos.find((p) => p.name === name);
+    const sun = posBy("Солнце");
+    const moon = posBy("Луна");
+    const aspectsStr = (snapshot?.aspects ?? []).slice(0, 3).map((a) => `${a.p1}-${a.p2}: ${a.aspect}`).join(", ") || "—";
     
-    // Шаг 4: Формируем запрос для DeepSeek
-    const langLabel = { ru: "Russian", en: "English", uk: "Ukrainian" }[request.language || "ru"] || "Russian";
+    // Шаг 4: Формируем запрос с данными карты (без астрологических терминов в финальном ответе ИИ)
+    const langLabel = request.language || "русский";
     const userRequest = `ЭТО ${request.name} (${request.gender || "—"})
 Дата рождения: ${request.birthdate}
 Место рождения: ${request.birthplace}
-Время рождения: ${request.birthtime_unknown ? 'неизвестно' : request.birthtime}
-Запрос: "${request.request || 'создать песню'}"
-Язык песни и расшифровки: ${langLabel}
+Время рождения: ${request.birthtime_unknown ? "неизвестно" : request.birthtime}
+Запрос: "${request.request || "создать песню"}"
 
-Натальная карта:
-${astroText}`;
+НАТАЛЬНАЯ КАРТА (используй для анализа, но НЕ упоминай термины в ответе):
+Атмакарака: ${snapshot?.atmakaraka ?? "—"}
+Солнце: ${sun ? `${sun.sign} в доме ${sun.house}` : "—"}
+Луна: ${moon ? `${moon.sign} в доме ${moon.house}` : "—"}
+Ключевые аспекты: ${aspectsStr}
+
+Язык песни и расшифровки: ${langLabel}`;
     
     // Шаг 5: Отправить в DeepSeek (используем существующий модуль)
     console.log(`[Воркер] Отправляю запрос в DeepSeek для ${request.name}`);
     
-    const llm = await chatCompletion(SYSTEM_PROMPT, userRequest, { 
-      max_tokens: 4000,
-      temperature: 0.85 
+    const llm = await chatCompletion(SYSTEM_PROMPT, userRequest, {
+      max_tokens: 3500,
+      temperature: 0.95,
     });
     
     if (!llm.ok) {
@@ -307,6 +316,44 @@ ${astroText}`;
     
     const fullResponse = llm.text;
     console.log(`[Воркер] Получен анализ от DeepSeek (длина: ${fullResponse.length})`);
+    
+    // === ПРОВЕРКА КАЧЕСТВА ОТВЕТА ===
+    const MIN_RESPONSE_LENGTH = 2500;
+    const REQUIRED_SECTIONS = [
+      "СУТЬ ДУШИ",
+      "ЭВОЛЮЦИОННЫЙ УРОВЕНЬ",
+      "КЛЮЧЕВЫЕ ПРОТИВОРЕЧИЯ",
+      "СИЛА И ТЕНЬ",
+      "ПРАКТИЧЕСКИЕ РЕКОМЕНДАЦИИ",
+    ];
+    let isQualityResponse = true;
+    if (fullResponse.length < MIN_RESPONSE_LENGTH) {
+      console.warn(`[Воркер] Ответ слишком короткий (${fullResponse.length} < ${MIN_RESPONSE_LENGTH})`);
+      isQualityResponse = false;
+    }
+    for (const section of REQUIRED_SECTIONS) {
+      if (!fullResponse.includes(section)) {
+        console.warn(`[Воркер] Отсутствует раздел: ${section}`);
+        isQualityResponse = false;
+      }
+    }
+    const astroTerms = [
+      "солнце", "луна", "меркурий", "венера", "марс", "юпитер",
+      "сатурн", "уран", "нептун", "плутон", "асцендент", "дом",
+      "знак зодиака", "овен", "телец", "близнецы", "рак", "лев",
+      "дева", "весы", "скорпион", "стрелец", "козерог", "водолей", "рыбы",
+    ];
+    const responseLower = fullResponse.toLowerCase();
+    for (const term of astroTerms) {
+      if (responseLower.includes(term)) {
+        console.warn(`[Воркер] Найден астрологический термин: ${term}`);
+        isQualityResponse = false;
+      }
+    }
+    if (!isQualityResponse) {
+      console.error("[Воркер] Ответ не соответствует требованиям промпта (длина/разделы/запрет терминов)");
+      throw new Error("Плохой ответ от DeepSeek: ответ слишком короткий, отсутствуют обязательные разделы или содержатся астрологические термины");
+    }
     
     // Шаг 6: Парсим ответ
     const parsed = parseResponse(fullResponse);
@@ -400,6 +447,25 @@ ${astroText}`;
       }
     } else {
       console.log(`[Воркер] ✅ Заявка ${requestId} завершена для ${request.name}`);
+      // Сообщение с опциональной поддержкой (реквизиты как на странице донатов)
+      const donationText =
+        `💫 Если песня коснулась твоей души — ты можешь поддержать создание таких ключей:\n\n` +
+        `▫️ Приорбанк: 4916 9896 3237 0697\n` +
+        `▫️ Альфа-банк: 4585 2200 0626 0623\n\n` +
+        `Любая сумма от сердца. Это не оплата — это благодарность от сердца к сердцу ❤️\n\n` +
+        `С любовью, — YupSoul`;
+      try {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: request.telegram_user_id,
+            text: donationText
+          })
+        });
+      } catch (e) {
+        console.warn("[Воркер] Не удалось отправить сообщение о донате:", e?.message);
+      }
     }
     
     return { ok: true, audioUrl };

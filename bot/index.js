@@ -268,7 +268,7 @@ bot.on("message:web_app_data", async (ctx) => {
     if (birthplaceLat != null && birthplaceLon != null) {
       // Координаты уже переданы в saveRequest, они будут использованы в workerAstro
     }
-    // Временно отключаем воркер для стабильности
+    // Воркер запускается только из POST /api/submit-request (Mini App шлёт заявки через fetch)
     // import("./workerSoundKey.js").then(({ generateSoundKey }) => {
     //   generateSoundKey(requestId)
     //     .then(r => console.log(`[Воркер] Результат:`, r))
@@ -747,11 +747,9 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   // #region agent log
   fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:submit-request',message:'request accepted',data:{requestId,telegramUserId},hypothesisId:'H5',timestamp:Date.now()})}).catch(()=>{});
   // #endregion
-  console.log("[submit-request] Заявка принята, id:", requestId, "user:", telegramUserId);
+  console.log(`[API] Заявка ${requestId} сохранена — ГЕНЕРИРУЕМ ПЕСНЮ БЕСПЛАТНО`);
   const successText =
-    "✅ Заявка принята!\n\n" +
-    "Твой персональный звуковой ключ будет создан. Как только он будет готов — пришлю его сюда в чат. Ожидай уведомление.\n\n" +
-    "Детальную расшифровку натальной карты можно запросить командой /get_analysis после оплаты.";
+    "✨ Твой звуковой ключ создаётся! Первый трек — в подарок 🎁\n\nЧерез 2–3 минуты он придёт в этот чат.";
   bot.api.sendMessage(telegramUserId, successText).catch((e) => console.warn("[submit-request] sendMessage:", e?.message));
   if (ADMIN_IDS.length) {
     const requestPreview = (userRequest || "").trim().slice(0, 150);
@@ -764,7 +762,7 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
     }
   }
   if (supabase && birthdate && birthplace) {
-    // Запускаем воркер генерации песни
+    // ЗАПУСКАЕМ ГЕНЕРАЦИЮ СРАЗУ (без оплаты)
     import("./workerSoundKey.js")
       .then(({ generateSoundKey }) => {
         generateSoundKey(requestId)
@@ -779,7 +777,7 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   return res.status(200).json({
     ok: true,
     requestId,
-    message: "Заявка принята, генерация начата.",
+    message: "✨ Твой звуковой ключ создаётся! Первый трек — в подарок 🎁\nЧерез 2-3 минуты он придёт в этот чат.",
   });
 });
 
