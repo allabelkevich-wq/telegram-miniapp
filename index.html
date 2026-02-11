@@ -9,7 +9,7 @@
   <title>YupSoul</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <!-- URL бота с API заявок (Render). Заявки идут через POST /api/submit-request. -->
-  <script>window.HEROES_API_BASE = 'https://telegram-miniapp-ar09.onrender.com';</script>
+  <script>window.HEROES_API_BASE = 'https://telegram-miniapp-ar09.onrender.com'; window.BACKEND_URL = window.HEROES_API_BASE;</script>
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Comfortaa',sans-serif}
@@ -80,6 +80,27 @@
     .birthplace-suggestions .place-type{font-size:.85rem;color:#6b7280;margin-top:2px}
     .birthplace-summary .place-name{font-weight:700;color:#5b21b6}
     .place-coords{font-family:ui-monospace,monospace;letter-spacing:.02em}
+    
+    .mode-selector{margin:20px 0;padding:15px;background:rgba(167,139,250,.06);border-radius:12px;border:1px solid rgba(167,139,250,.2)}
+    .mode-selector h3{font-size:16px;color:#a78bfa;margin:0 0 12px 0;font-weight:600}
+    .mode-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .mode-btn{background:rgba(255,255,255,.05);border:2px solid rgba(167,139,250,.2);color:var(--tg-theme-text-color,#2d2d2d);padding:12px;border-radius:8px;cursor:pointer;transition:all .3s;text-align:center}
+    .mode-btn:hover{background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.4);transform:translateY(-2px)}
+    .mode-btn.active{background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(236,72,153,.2));border-color:rgba(167,139,250,.6);box-shadow:0 4px 12px rgba(167,139,250,.2)}
+    .mode-icon{font-size:24px;display:block;margin:0 auto 8px}
+    .mode-label{font-weight:600;font-size:14px;display:block;margin:0 0 4px}
+    .mode-desc{font-size:11px;opacity:.85;display:block}
+    #transitForm{display:none;margin-top:30px;padding:20px;background:rgba(167,139,250,.06);border-radius:12px;border:1px solid rgba(167,139,250,.2)}
+    #transitForm h3{color:#a78bfa;margin:0 0 15px 0;font-size:18px}
+    .request-examples{margin:20px 0;padding:15px;background:rgba(167,139,250,.06);border-radius:12px;border:1px solid rgba(167,139,250,.15)}
+    .request-examples h3{font-size:16px;color:#a78bfa;margin:0 0 12px 0;font-weight:600}
+    .examples-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+    .example-btn{background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);color:var(--tg-theme-text-color,#2d2d2d);padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer;text-align:left;transition:all .2s;font-family:'Comfortaa',sans-serif}
+    .example-btn:hover{background:rgba(167,139,250,.25);border-color:rgba(167,139,250,.6);transform:translateY(-1px)}
+    .example-btn.special{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.3)}
+    .example-btn.special:hover{background:rgba(59,130,246,.25);border-color:rgba(59,130,246,.6)}
+    #secondPersonForm{display:none;margin-top:30px;padding:20px;background:rgba(167,139,250,.06);border-radius:12px;border:1px solid rgba(167,139,250,.2)}
+    #secondPersonForm h3{color:#a78bfa;margin:0 0 15px 0;font-size:18px}
     
     /* Панель навигации для превью в браузере */
     .preview-nav{background:white;border-radius:16px;padding:12px;margin-bottom:25px;box-shadow:0 4px 20px rgba(167,139,250,.15);text-align:center;border:1px solid #e5e7eb;display:none}
@@ -180,6 +201,26 @@
             <option value="">Для себя</option>
           </select>
         </div>
+        <div class="mode-selector">
+          <h3>✨ Выбери тип звукового ключа</h3>
+          <div class="mode-buttons">
+            <button type="button" class="mode-btn active" data-mode="single">
+              <span class="mode-icon">👤</span>
+              <span class="mode-label">Для себя</span>
+              <span class="mode-desc">Глубокий анализ твоей натальной карты</span>
+            </button>
+            <button type="button" class="mode-btn" data-mode="couple">
+              <span class="mode-icon">💞</span>
+              <span class="mode-label">Для двоих</span>
+              <span class="mode-desc">Анализ связи двух натальных карт</span>
+            </button>
+            <button type="button" class="mode-btn" data-mode="transit">
+              <span class="mode-icon">🌅</span>
+              <span class="mode-label">Энергия дня</span>
+              <span class="mode-desc">Транзиты + натальная карта</span>
+            </button>
+          </div>
+        </div>
         <div class="field">
           <label for="name" data-icon="✨">Имя</label>
           <input type="text" id="name" placeholder="Как тебя зовут?" required>
@@ -200,6 +241,10 @@
           </div>
           <div id="birthplaceSummary" class="field-summary birthplace-summary" style="display:none; margin-top:8px; padding:12px 14px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
           <div id="placeCoords" class="place-coords" style="display:none; margin-top:6px; padding:10px 14px; background:rgba(94,234,212,.1); border-radius:10px; font-size:.9rem; color:#0d9488;"></div>
+          <div class="checkbox" style="margin-top:10px">
+            <input type="checkbox" id="placeConfirmed">
+            <label for="placeConfirmed">Подтверждаю, что место рождения указано верно</label>
+          </div>
         </div>
         
         <div class="field">
@@ -233,8 +278,95 @@
           </select>
         </div>
         
+        <div id="secondPersonForm">
+          <h3>💞 Второй человек</h3>
+          <div class="field">
+            <label for="name2">Имя</label>
+            <input type="text" id="name2" placeholder="Имя второго человека" maxlength="50">
+          </div>
+          <div class="field">
+            <label for="birthdate2">Дата рождения</label>
+            <input type="date" id="birthdate2" max="2010-12-31">
+          </div>
+          <div class="field">
+            <label for="birthplace2">Место рождения</label>
+            <input type="text" id="birthplace2" placeholder="Город, страна" maxlength="100">
+            <div class="checkbox" style="margin-top:8px">
+              <input type="checkbox" id="placeConfirmed2">
+              <label for="placeConfirmed2">Подтверждаю, что место рождения указано верно</label>
+            </div>
+          </div>
+          <div class="field">
+            <label>Время рождения</label>
+            <div class="time-group">
+              <input type="time" id="birthtime2" style="flex:1">
+              <div class="checkbox" style="margin:0 0 0 15px">
+                <input type="checkbox" id="unknown2">
+                <label for="unknown2">Не знаю</label>
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="gender2">Пол</label>
+            <select id="gender2">
+              <option value="">Выбери</option>
+              <option value="female">Женский</option>
+              <option value="male">Мужской</option>
+              <option value="other">Другой</option>
+            </select>
+          </div>
+        </div>
+        
+        <div id="transitForm">
+          <h3>🌅 Энергия момента</h3>
+          <div class="field">
+            <label for="transitDate">Дата транзита</label>
+            <input type="date" id="transitDate" min="2024-01-01" max="2030-12-31">
+            <small style="color:#6b7280;display:block;margin-top:4px;font-size:.9rem">Когда хочешь узнать энергию дня?</small>
+          </div>
+          <div class="field">
+            <label for="transitTime">Время транзита</label>
+            <input type="time" id="transitTime">
+            <small style="color:#6b7280;display:block;margin-top:4px;font-size:.9rem">Точное время (если важно)</small>
+          </div>
+          <div class="field">
+            <label for="transitLocation">Локация транзита</label>
+            <input type="text" id="transitLocation" placeholder="Город, где будет энергия дня" maxlength="100">
+            <small style="color:#6b7280;display:block;margin-top:4px;font-size:.9rem">Где ты будешь в этот момент?</small>
+            <div class="checkbox" style="margin-top:8px">
+              <input type="checkbox" id="transitLocationConfirmed">
+              <label for="transitLocationConfirmed">Подтверждаю, что локация указана верно</label>
+            </div>
+          </div>
+          <div class="field">
+            <label for="transitIntent">Намерение момента</label>
+            <textarea id="transitIntent" placeholder="Что ты хочешь узнать об энергии этого дня? (необязательно)" rows="2" maxlength="200" style="min-height:60px"></textarea>
+            <small style="color:#6b7280;display:block;margin-top:4px;font-size:.9rem">Например: Как мне использовать эту энергию?</small>
+          </div>
+        </div>
+        
         <div class="field">
           <div class="request-label">Отправь запрос во Вселенную</div>
+          <div class="request-examples">
+            <h3>✨ Вдохновение для запроса</h3>
+            <div class="examples-grid">
+              <button type="button" class="example-btn" data-text="хочу найти гармонию в отношениях и научиться любить себя">Гармония в отношениях</button>
+              <button type="button" class="example-btn" data-text="помоги мне обрести уверенность в себе и найти своё предназначение">Уверенность и предназначение</button>
+              <button type="button" class="example-btn" data-text="как мне раскрыть свой творческий потенциал и начать творить без страха">Творческий потенциал</button>
+              <button type="button" class="example-btn" data-text="хочу научиться слушать своё сердце и принимать решения из любви, а не из страха">Слушать сердце</button>
+              <button type="button" class="example-btn" data-text="помоги мне отпустить прошлое и открыться новым возможностям">Отпустить прошлое</button>
+              <button type="button" class="example-btn" data-text="как мне найти баланс между работой и личной жизнью">Баланс жизни</button>
+              <button type="button" class="example-btn" data-text="хочу понять свои истинные желания и начать жить в соответствии с ними">Истинные желания</button>
+              <button type="button" class="example-btn" data-text="помоги мне исцелить детские травмы и обрести внутреннюю свободу">Исцеление травм</button>
+              <button type="button" class="example-btn" data-text="как мне научиться доверять жизни и отпускать контроль">Доверять жизни</button>
+              <button type="button" class="example-btn" data-text="хочу найти свой путь к счастью и внутреннему спокойствию">Путь к счастью</button>
+              <button type="button" class="example-btn special" data-text="РЕЖИМ ЮМОР 100%: создай весёлую песню про мои недостатки, но с любовью и принятием">😂 Режим юмор</button>
+              <button type="button" class="example-btn special" data-text="НАСТРОЕНИЕ ЭПИЧНОСТИ: создай песню о моей силе и величии">👑 Эпическое настроение</button>
+              <button type="button" class="example-btn special" data-text="НАСТРОЕНИЕ СИЛЫ И ПРЕОДОЛЕНИЯ: создай мощную песню о моей внутренней борьбе и победе">💪 Сила и преодоление</button>
+              <button type="button" class="example-btn special" data-text="НАСТРОЕНИЕ ГЛУБИНЫ И ТИШИНЫ: создай медитативную песню для ежедневной практики и исцеления">🧘 Глубина и тишина</button>
+              <button type="button" class="example-btn special" data-text="НАСТРОЕНИЕ НЕЖНОСТИ И ЗАБОТЫ: создай тёплую песню о моей способности любить и заботиться">💖 Нежность и забота</button>
+            </div>
+          </div>
           <textarea id="request" placeholder="Что ты хочешь изменить в своей жизни? О чём просишь Вселенную?"></textarea>
         </div>
         
@@ -601,6 +733,43 @@
       var nextBtn = document.getElementById('nextBtn');
       if (startBtn) startBtn.addEventListener('click', function() { goToPage('formPage'); });
       if (backBtn) backBtn.addEventListener('click', function() { goToPage('homePage'); });
+      var currentMode = 'single';
+      function toggleFormsByMode(mode) {
+        var secondForm = document.getElementById('secondPersonForm');
+        var transitForm = document.getElementById('transitForm');
+        if (secondForm) secondForm.style.display = 'none';
+        if (transitForm) transitForm.style.display = 'none';
+        if (mode === 'couple' && secondForm) {
+          secondForm.style.display = 'block';
+          secondForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (mode === 'transit' && transitForm) {
+          transitForm.style.display = 'block';
+          transitForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+      document.querySelectorAll('.mode-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.mode-btn').forEach(function(b) { b.classList.remove('active'); });
+          this.classList.add('active');
+          currentMode = this.getAttribute('data-mode') || 'single';
+          toggleFormsByMode(currentMode);
+        });
+      });
+      document.querySelectorAll('.example-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var requestField = document.getElementById('request');
+          if (requestField) {
+            requestField.value = this.getAttribute('data-text') || '';
+            requestField.focus();
+          }
+          document.querySelectorAll('.example-btn').forEach(function(b) {
+            b.style.borderColor = b.classList.contains('special') ? 'rgba(59,130,246,0.3)' : 'rgba(167,139,250,0.3)';
+            b.style.background = b.classList.contains('special') ? 'rgba(59,130,246,0.15)' : 'rgba(167,139,250,0.15)';
+          });
+          this.style.borderColor = this.classList.contains('special') ? 'rgba(59,130,246,0.8)' : 'rgba(167,139,250,0.8)';
+          this.style.background = this.classList.contains('special') ? 'rgba(59,130,246,0.3)' : 'rgba(167,139,250,0.3)';
+        });
+      });
       if (nextBtn) nextBtn.addEventListener('click', function() {
         var name = document.getElementById('name').value.trim();
         var birthdate = document.getElementById('birthdate').value;
@@ -658,64 +827,83 @@
       var payBtn = document.getElementById('payBtn');
       if (payBtn) payBtn.addEventListener('click', async function() {
         if (payBtn.disabled) return;
-        
-        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
-        if (!apiBase) {
-          alert('Не настроен адрес API. Укажи HEROES_API_BASE — URL бота на Render (например https://yupsoul-bot.onrender.com).');
-          return;
-        }
-        
-        var forWho = document.getElementById('forWho');
-        var clientId = (forWho && forWho.value && userTariff === 'master') ? forWho.value : null;
-        var birthplaceField = document.getElementById('birthplace');
-        var birthplaceLat = birthplaceField && birthplaceField.getAttribute('data-lat') ? parseFloat(birthplaceField.getAttribute('data-lat')) : null;
-        var birthplaceLon = birthplaceField && birthplaceField.getAttribute('data-lon') ? parseFloat(birthplaceField.getAttribute('data-lon')) : null;
-        
+        var mode = currentMode;
+        var name1 = document.getElementById('name').value.trim();
+        var birthdate1 = document.getElementById('birthdate').value;
+        var birthplace1 = document.getElementById('birthplace').value.trim();
+        var birthtime1 = document.getElementById('birthtime').value;
+        var birthtimeUnknown1 = document.getElementById('unknown').checked;
+        var gender1 = document.getElementById('gender').value;
+        var requestText = document.getElementById('request').value.trim();
+        if (name1.length < 2) { alert('✨ Имя должно содержать минимум 2 символа'); return; }
+        if (!birthdate1) { alert('✨ Выбери дату рождения'); return; }
+        if (birthplace1.length < 3) { alert('✨ Место рождения должно содержать минимум 3 символа'); return; }
+        var placeConfirmedEl = document.getElementById('placeConfirmed');
+        if (placeConfirmedEl && !placeConfirmedEl.checked) { alert('✨ Подтверди, что место рождения указано верно'); return; }
+        if (!birthtimeUnknown1 && !birthtime1) { alert('✨ Укажи время рождения или отметь "Не знаю"'); return; }
+        if (!gender1) { alert('✨ Выбери свой путь'); return; }
+        if (requestText.length < 15) { alert('✨ Расскажи Вселенной подробнее (минимум 15 символов)'); return; }
         var payload = {
-          name: document.getElementById('name').value.trim(),
-          birthdate: document.getElementById('birthdate').value,
-          birthplace: document.getElementById('birthplace').value.trim(),
-          birthtime: document.getElementById('birthtime').value,
-          birthtimeUnknown: document.getElementById('unknown').checked,
-          gender: document.getElementById('gender').value,
-          language: (document.getElementById('language') && document.getElementById('language').value) || 'ru',
-          request: document.getElementById('request').value.trim()
+          mode: mode,
+          person1: { name: name1, birthdate: birthdate1, birthplace: birthplace1, birthtime: birthtimeUnknown1 ? null : birthtime1, birthtimeUnknown: birthtimeUnknown1, gender: gender1 },
+          request: requestText,
+          language: (document.getElementById('language') && document.getElementById('language').value) || 'ru'
         };
-        if (payload.birthtimeUnknown) payload.birthtime = null;
-        if (birthplaceLat != null && birthplaceLon != null) {
-          payload.birthplaceLat = birthplaceLat;
-          payload.birthplaceLon = birthplaceLon;
+        var birthplaceField = document.getElementById('birthplace');
+        if (birthplaceField && birthplaceField.getAttribute('data-lat') && birthplaceField.getAttribute('data-lon')) {
+          payload.person1.birthplaceLat = parseFloat(birthplaceField.getAttribute('data-lat'));
+          payload.person1.birthplaceLon = parseFloat(birthplaceField.getAttribute('data-lon'));
         }
-        if (clientId) payload.clientId = clientId;
-        
+        var forWho = document.getElementById('forWho');
+        if (forWho && forWho.value && userTariff === 'master') payload.clientId = forWho.value;
+        if (mode === 'couple') {
+          var name2 = document.getElementById('name2').value.trim();
+          var birthdate2 = document.getElementById('birthdate2').value;
+          var birthplace2 = document.getElementById('birthplace2').value.trim();
+          var birthtime2 = document.getElementById('birthtime2').value;
+          var birthtimeUnknown2 = document.getElementById('unknown2').checked;
+          var gender2 = document.getElementById('gender2').value;
+          if (name2.length < 2) { alert('✨ Имя второго человека должно содержать минимум 2 символа'); return; }
+          if (!birthdate2) { alert('✨ Выбери дату рождения второго человека'); return; }
+          if (birthplace2.length < 3) { alert('✨ Место рождения второго человека должно содержать минимум 3 символа'); return; }
+          if (!(document.getElementById('placeConfirmed2') && document.getElementById('placeConfirmed2').checked)) { alert('✨ Подтверди место рождения второго человека'); return; }
+          if (!birthtimeUnknown2 && !birthtime2) { alert('✨ Укажи время рождения второго человека'); return; }
+          if (!gender2) { alert('✨ Выбери пол второго человека'); return; }
+          payload.person2 = { name: name2, birthdate: birthdate2, birthplace: birthplace2, birthtime: birthtimeUnknown2 ? null : birthtime2, birthtimeUnknown: birthtimeUnknown2, gender: gender2 };
+        }
+        if (mode === 'transit') {
+          var transitDate = document.getElementById('transitDate').value;
+          var transitTime = document.getElementById('transitTime').value;
+          var transitLocation = (document.getElementById('transitLocation') && document.getElementById('transitLocation').value) ? document.getElementById('transitLocation').value.trim() : '';
+          var transitIntent = (document.getElementById('transitIntent') && document.getElementById('transitIntent').value) ? document.getElementById('transitIntent').value.trim() : null;
+          if (!transitDate) { alert('✨ Выбери дату транзита'); return; }
+          if (!transitLocation) { alert('✨ Укажи локацию транзита'); return; }
+          if (!(document.getElementById('transitLocationConfirmed') && document.getElementById('transitLocationConfirmed').checked)) { alert('✨ Подтверди, что локация указана верно'); return; }
+          payload.transit = { date: transitDate, time: transitTime || null, location: transitLocation, intent: transitIntent || null };
+        }
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        if (!apiBase) { alert('Не настроен адрес API. Укажи HEROES_API_BASE.'); return; }
         var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
-        if (!initData) {
-          alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.');
-          return;
-        }
+        if (!initData) { alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.'); return; }
         payload.initData = initData;
-        
         goToPage('loadingPage');
         try {
-          var response = await fetch(apiBase + '/api/submit-request', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
-            body: JSON.stringify(payload)
-          });
+          var response = await fetch(apiBase + '/api/submit-request', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData }, body: JSON.stringify(payload) });
           var result = await response.json().catch(function() { return {}; });
-          
           if (response.ok && result.ok && result.requestId) {
-            console.log('[MiniApp] Заявка отправлена на API, requestId:', result.requestId);
             var sp = document.getElementById('songPreviewText');
-            if (sp) sp.textContent = '✨ ' + payload.name + ', Вселенная услышала твой запрос.\n\nТвой звуковой ключ формируется. Когда он будет готов — придёт в этот чат.';
+            if (sp) {
+              if (mode === 'single') sp.textContent = '✨ ' + name1 + ', Вселенная услышала твой запрос.\n\nТвой звуковой ключ формируется. Через 2-3 минуты он придёт в этот чат.';
+              else if (mode === 'couple') sp.textContent = '✨ ' + name1 + ' и ' + payload.person2.name + ', Вселенная услышала ваш запрос.\n\nВаш звуковой ключ формируется. Через 2-3 минуты он придёт в этот чат.';
+              else sp.textContent = '✨ ' + name1 + ', Вселенная услышала твой запрос.\n\nЗвуковой ключ Энергии Дня формируется. Через 2-3 минуты он придёт в этот чат.';
+            }
             if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
             goToPage('successPage');
-          } else {
-            throw new Error(result.error || 'HTTP ' + response.status);
-          }
+            console.log('[MiniApp] Заявка отправлена, requestId:', result.requestId);
+          } else throw new Error(result.error || 'HTTP ' + response.status);
         } catch (error) {
-          console.error('[MiniApp] Ошибка отправки заявки:', error);
-          alert('Не удалось отправить заявку. Проверь интернет и открой приложение из чата с ботом, затем попробуй снова.');
+          console.error('[MiniApp] Ошибка:', error);
+          alert('❌ Не удалось отправить заявку. Проверь интернет и попробуй снова.');
           goToPage('paymentPage');
         }
       });

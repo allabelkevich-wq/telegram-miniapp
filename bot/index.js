@@ -73,6 +73,17 @@ async function saveRequest(data) {
     language: emptyToNull(data.language),
     request: emptyToNull(data.request),
     status: "pending",
+    mode: (data.mode === "couple" || data.mode === "transit") ? data.mode : "single",
+    person2_name: emptyToNull(data.person2_name),
+    person2_birthdate: emptyToNull(data.person2_birthdate),
+    person2_birthplace: emptyToNull(data.person2_birthplace),
+    person2_birthtime: emptyToNull(data.person2_birthtime),
+    person2_birthtime_unknown: !!data.person2_birthtime_unknown,
+    person2_gender: emptyToNull(data.person2_gender),
+    transit_date: emptyToNull(data.transit_date),
+    transit_time: emptyToNull(data.transit_time),
+    transit_location: emptyToNull(data.transit_location),
+    transit_intent: emptyToNull(data.transit_intent),
   };
   if (data.client_id && supabase) {
     const { data: client, error: clientErr } = await supabase.from("clients").select("name, birth_date, birth_time, birth_place, birthtime_unknown, gender").eq("id", data.client_id).maybeSingle();
@@ -710,22 +721,41 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
     // #endregion
     return res.status(401).json({ error: "Неверные или устаревшие данные. Открой приложение из чата с ботом и попробуй снова." });
   }
-  const {
-    name,
-    birthdate,
-    birthplace,
-    birthtime,
-    birthtimeUnknown,
-    gender,
-    language,
-    request: userRequest,
-    clientId,
-    birthplaceLat,
-    birthplaceLon,
-  } = req.body || {};
+  const body = req.body || {};
+  const isNewFormat = body.person1 != null;
+  let name, birthdate, birthplace, birthtime, birthtimeUnknown, gender, language, userRequest, clientId, birthplaceLat, birthplaceLon;
+  if (isNewFormat) {
+    const { mode, person1, person2, request: reqText, language: lang } = body;
+    if (!person1?.name || !person1?.birthdate || !person1?.birthplace || !reqText) {
+      return res.status(400).json({ error: "Не все обязательные поля заполнены (person1.name, birthdate, birthplace, request)" });
+    }
+    name = person1.name;
+    birthdate = person1.birthdate;
+    birthplace = person1.birthplace;
+    birthtime = person1.birthtimeUnknown ? null : person1.birthtime;
+    birthtimeUnknown = !!person1.birthtimeUnknown;
+    gender = person1.gender || "";
+    language = lang || "ru";
+    userRequest = reqText;
+    clientId = null;
+    birthplaceLat = person1.birthplaceLat ?? null;
+    birthplaceLon = person1.birthplaceLon ?? null;
+  } else {
+    name = body.name;
+    birthdate = body.birthdate;
+    birthplace = body.birthplace;
+    birthtime = body.birthtime;
+    birthtimeUnknown = !!body.birthtimeUnknown;
+    gender = body.gender || "";
+    language = body.language;
+    userRequest = body.request;
+    clientId = body.clientId;
+    birthplaceLat = body.birthplaceLat;
+    birthplaceLon = body.birthplaceLon;
+  }
   let requestId;
   try {
-    requestId = await saveRequest({
+    const saveData = {
       telegram_user_id: telegramUserId,
       name: name || "",
       birthdate: birthdate || "",
@@ -736,7 +766,27 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
       language: language || null,
       request: userRequest || "",
       client_id: clientId || null,
-    });
+      mode: isNewFormat && (body.mode === "couple" || body.mode === "transit") ? body.mode : "single",
+    };
+    if (saveData.mode === "couple" && body.person2) {
+      saveData.person2_name = body.person2.name || null;
+      saveData.person2_birthdate = body.person2.birthdate || null;
+      saveData.person2_birthplace = body.person2.birthplace || null;
+      saveData.person2_birthtime = body.person2.birthtimeUnknown ? null : (body.person2.birthtime || null);
+      saveData.person2_birthtime_unknown = !!body.person2.birthtimeUnknown;
+      saveData.person2_gender = body.person2.gender || null;
+    }
+    if ((saveData.mode === "transit" || body.transit) && body.transit) {
+      saveData.transit_date = body.transit.date || null;
+      saveData.transit_time = body.transit.time || null;
+      saveData.transit_location = body.transit.location || null;
+      saveData.transit_intent = body.transit.intent || null;
+    }
+    if (birthplaceLat != null && birthplaceLon != null) {
+      saveData.birthplaceLat = birthplaceLat;
+      saveData.birthplaceLon = birthplaceLon;
+    }
+    requestId = await saveRequest(saveData);
   } catch (err) {
     console.error("[submit-request] saveRequest:", err?.message || err);
     return res.status(500).json({ error: "Ошибка сохранения заявки" });
@@ -747,7 +797,8 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   // #region agent log
   fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:submit-request',message:'request accepted',data:{requestId,telegramUserId},hypothesisId:'H5',timestamp:Date.now()})}).catch(()=>{});
   // #endregion
-  console.log(`[API] Заявка ${requestId} сохранена — ГЕНЕРИРУЕМ ПЕСНЮ БЕСПЛАТНО`);
+  const mode = body.person1 && body.mode === "couple" ? "couple" : "single";
+  console.log(`[API] Заявка ${requestId} сохранена — ГЕНЕРИРУЕМ ПЕСНЮ БЕСПЛАТНО (режим: ${mode})`);
   const successText =
     "✨ Твой звуковой ключ создаётся! Первый трек — в подарок 🎁\n\nЧерез 2–3 минуты он придёт в этот чат.";
   bot.api.sendMessage(telegramUserId, successText).catch((e) => console.warn("[submit-request] sendMessage:", e?.message));
@@ -755,13 +806,14 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
     const requestPreview = (userRequest || "").trim().slice(0, 150);
     const adminText =
       "🔔 Новая заявка (через API)\n\n" +
-      `Имя: ${name || "—"}\nЯзык: ${language || "—"}\nДата: ${birthdate || "—"} · Место: ${(birthplace || "—").slice(0, 40)}${(birthplace || "").length > 40 ? "…" : ""}\n` +
+      `Имя: ${name || "—"}${mode === "couple" && body.person2?.name ? ` и ${body.person2.name}` : ""}\nЯзык: ${language || "—"}\nДата: ${birthdate || "—"} · Место: ${(birthplace || "—").slice(0, 40)}${(birthplace || "").length > 40 ? "…" : ""}\n` +
       `Запрос: ${requestPreview}${(userRequest || "").length > 150 ? "…" : ""}\n\nID: ${requestId}\nTG: ${telegramUserId}`;
     for (const adminId of ADMIN_IDS) {
       bot.api.sendMessage(adminId, adminText).catch((e) => console.warn("[Уведомление админу]", adminId, e.message));
     }
   }
-  if (supabase && birthdate && birthplace) {
+  const hasPerson1Data = birthdate && birthplace;
+  if (supabase && hasPerson1Data) {
     // ЗАПУСКАЕМ ГЕНЕРАЦИЮ СРАЗУ (без оплаты)
     import("./workerSoundKey.js")
       .then(({ generateSoundKey }) => {

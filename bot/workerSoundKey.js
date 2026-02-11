@@ -7,6 +7,8 @@
 import "dotenv/config";
 import { createClient } from '@supabase/supabase-js';
 import { computeAndSaveAstroSnapshot } from "./workerAstro.js";
+import { getAstroSnapshot } from "./astroLib.js";
+import { geocode } from "./geocode.js";
 import { chatCompletion } from "./deepseek.js";
 import { generateMusic, pollMusicResult } from "./suno.js";
 
@@ -185,9 +187,14 @@ function parseResponse(text) {
   const titleMatch = text.match(/«([^»]+)»/);
   if (titleMatch) title = titleMatch[1].trim();
   
-  // Стиль из [style: ...]
+  // Стиль, вокал, настроение из блока для Suno ([style:] [vocal:] [mood:])
   const styleMatch = text.match(/\[style:\s*([^\]]+)\]/i);
   if (styleMatch) style = styleMatch[1].trim().slice(0, 500);
+  const vocalMatch = text.match(/\[vocal:\s*([^\]]+)\]/i);
+  const vocal = vocalMatch ? vocalMatch[1].trim().slice(0, 300) : "";
+  const moodMatch = text.match(/\[mood:\s*([^\]]+)\]/i);
+  const mood = moodMatch ? moodMatch[1].trim().slice(0, 300) : "";
+  const styleFull = [style, vocal, mood].filter(Boolean).join(" | ");
   
   // Лирика - всё от [intro] или [verse 1] до MUSIC PROMPT или конца
   const lyricsStart = text.search(/\[(?:intro|verse\s*1|chorus|bridge)\]/i);
@@ -204,7 +211,7 @@ function parseResponse(text) {
     detailed_analysis: detailed_analysis || null,
     title: title.slice(0, 100),
     lyrics: lyrics.slice(0, 5000),
-    style: style.slice(0, 1000),
+    style: styleFull.slice(0, 1000),
   };
 }
 
@@ -279,6 +286,7 @@ export async function generateSoundKey(requestId) {
       .eq("track_request_id", requestId)
       .maybeSingle();
     
+    const astroTextFull = snapshotRow?.snapshot_text || "[Натальная карта не найдена]";
     const snapshot = snapshotRow?.snapshot_json && typeof snapshotRow.snapshot_json === "object" ? snapshotRow.snapshot_json : null;
     const pos = snapshot?.positions ?? [];
     const posBy = (name) => pos.find((p) => p.name === name);
@@ -286,21 +294,99 @@ export async function generateSoundKey(requestId) {
     const moon = posBy("Луна");
     const aspectsStr = (snapshot?.aspects ?? []).slice(0, 3).map((a) => `${a.p1}-${a.p2}: ${a.aspect}`).join(", ") || "—";
     
-    // Шаг 4: Формируем запрос с данными карты (без астрологических терминов в финальном ответе ИИ)
+    let astroTextPerson2 = null;
+    if (request.mode === "couple" && request.person2_name && request.person2_birthdate && request.person2_birthplace) {
+      const coords2 = await geocode(request.person2_birthplace || "");
+      if (coords2) {
+        const m2 = String(request.person2_birthdate).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (m2) {
+          let hour2 = 12, minute2 = 0;
+          if (!request.person2_birthtime_unknown && request.person2_birthtime) {
+            const t2 = String(request.person2_birthtime).trim().match(/^(\d{1,2}):(\d{2})/);
+            if (t2) { hour2 = parseInt(t2[1], 10); minute2 = parseInt(t2[2], 10); }
+          }
+          const snap2 = getAstroSnapshot({
+            year: parseInt(m2[1], 10),
+            month: parseInt(m2[2], 10),
+            day: parseInt(m2[3], 10),
+            hour: hour2,
+            minute: minute2,
+            latitude: coords2.lat,
+            longitude: coords2.lon,
+            timeUnknown: !!request.person2_birthtime_unknown,
+          });
+          if (snap2 && !snap2.error) astroTextPerson2 = snap2.snapshot_text;
+        }
+      }
+      if (!astroTextPerson2) astroTextPerson2 = "[Натальная карта второго человека не рассчитана — недостаточно данных или геокодинг не удался]";
+    }
+    
+    // Шаг 4: Формируем запрос — для одного или для двоих (полные натальные карты); в ответе ИИ НЕ упоминать термины
     const langLabel = request.language || "русский";
-    const userRequest = `ЭТО ${request.name} (${request.gender || "—"})
+    let userRequest;
+    if (request.mode === "couple" && request.person2_name && astroTextPerson2) {
+      userRequest = `ЭТО ПАРА: ${request.name} и ${request.person2_name}
+
+ПЕРВЫЙ ЧЕЛОВЕК:
+Имя: ${request.name} (${request.gender || "—"})
+Дата рождения: ${request.birthdate}
+Место рождения: ${request.birthplace}
+Время рождения: ${request.birthtime_unknown ? "неизвестно" : request.birthtime}
+
+ВТОРОЙ ЧЕЛОВЕК:
+Имя: ${request.person2_name} (${request.person2_gender || "—"})
+Дата рождения: ${request.person2_birthdate}
+Место рождения: ${request.person2_birthplace}
+Время рождения: ${request.person2_birthtime_unknown ? "неизвестно" : request.person2_birthtime}
+
+ЗАПРОС ОТ ПАРЫ: "${request.request || "создать песню"}"
+
+ЗАДАЧА: Проанализируй ОБЕ натальные карты и их связь. Создай песню, которая отражает союз, взаимодополнение и общий путь пары. В ответе НЕ используй астрологические термины — только метафоры.
+
+ПОЛНАЯ НАТАЛЬНАЯ КАРТА ПЕРВОГО ЧЕЛОВЕКА:
+${astroTextFull}
+
+ПОЛНАЯ НАТАЛЬНАЯ КАРТА ВТОРОГО ЧЕЛОВЕКА:
+${astroTextPerson2}
+
+Язык песни и расшифровки: ${langLabel}`;
+    } else if (request.mode === "transit" && (request.transit_date || request.transit_location)) {
+      userRequest = `ЭТО ${request.name} (${request.gender || "—"}) — режим ЭНЕРГИЯ ДНЯ
+
+НАТАЛЬНАЯ КАРТА (постоянная основа):
+Имя: ${request.name}
+Дата рождения: ${request.birthdate}
+Место рождения: ${request.birthplace}
+Время рождения: ${request.birthtime_unknown ? "неизвестно" : request.birthtime}
+
+ТРАНЗИТЫ (энергия момента):
+Дата транзита: ${request.transit_date || "—"}
+Время транзита: ${request.transit_time || "не указано"}
+Локация транзита: ${request.transit_location || "—"}
+Намерение: ${request.transit_intent || "общий запрос"}
+
+ЗАПРОС: "${request.request || "создать песню"}"
+
+ЗАДАЧА: Проанализируй натальную карту и контекст указанной даты/времени/локации. Создай песню, которая отражает ЭНЕРГИЮ ЭТОГО МОМЕНТА — какие возможности открываются, какие вызовы возникают, как использовать эту энергию. В ответе НЕ используй астрологические термины — только метафоры.
+
+ПОЛНАЯ НАТАЛЬНАЯ КАРТА:
+${astroTextFull}
+
+Язык песни и расшифровки: ${langLabel}`;
+    } else {
+      userRequest = `ЭТО ${request.name} (${request.gender || "—"})
 Дата рождения: ${request.birthdate}
 Место рождения: ${request.birthplace}
 Время рождения: ${request.birthtime_unknown ? "неизвестно" : request.birthtime}
 Запрос: "${request.request || "создать песню"}"
 
-НАТАЛЬНАЯ КАРТА (используй для анализа, но НЕ упоминай термины в ответе):
-Атмакарака: ${snapshot?.atmakaraka ?? "—"}
-Солнце: ${sun ? `${sun.sign} в доме ${sun.house}` : "—"}
-Луна: ${moon ? `${moon.sign} в доме ${moon.house}` : "—"}
-Ключевые аспекты: ${aspectsStr}
+Краткая выжимка (для ориентира): Атмакарака ${snapshot?.atmakaraka ?? "—"}, Солнце ${sun ? `${sun.sign} дом ${sun.house}` : "—"}, Луна ${moon ? `${moon.sign} дом ${moon.house}` : "—"}, аспекты: ${aspectsStr}
+
+ПОЛНАЯ НАТАЛЬНАЯ КАРТА (все данные — используй для анализа; в своём ответе НЕ упоминай астрологические термины, только метафоры):
+${astroTextFull}
 
 Язык песни и расшифровки: ${langLabel}`;
+    }
     
     // Шаг 5: Отправить в DeepSeek (используем существующий модуль)
     console.log(`[Воркер] Отправляю запрос в DeepSeek для ${request.name}`);

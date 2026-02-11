@@ -108,3 +108,18 @@ alter table track_requests add column if not exists deepseek_response text;
 alter table track_requests add column if not exists request_type text default 'general';
 create index if not exists idx_track_requests_generation_status on track_requests (generation_status);
 create index if not exists idx_track_requests_created_at on track_requests (created_at desc);
+
+-- 5. Режим «Для двоих» и «Энергия дня»
+alter table track_requests add column if not exists mode text default 'single';
+alter table track_requests drop constraint if exists track_requests_mode_check;
+alter table track_requests add constraint track_requests_mode_check check (mode in ('single', 'couple', 'transit'));
+alter table track_requests add column if not exists person2_name text;
+alter table track_requests add column if not exists person2_birthdate text;
+alter table track_requests add column if not exists person2_birthplace text;
+alter table track_requests add column if not exists person2_birthtime text;
+alter table track_requests add column if not exists person2_birthtime_unknown boolean default false;
+alter table track_requests add column if not exists person2_gender text;
+alter table track_requests add column if not exists transit_date text;
+alter table track_requests add column if not exists transit_time text;
+alter table track_requests add column if not exists transit_location text;
+alter table track_requests add column if not exists transit_intent text;
