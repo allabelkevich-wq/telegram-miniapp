@@ -14,6 +14,7 @@
     "worker:full": "node runFullPipeline.js",
     "worker:loop": "node worker-loop.js",
     "worker:start": "WORKER_INTERVAL_MS=60000 node worker-loop.js",
+    "start:all": "./start-all.sh",
     "check-env": "node check-env.js",
     "verify": "node verify-full-cycle.js",
     "ensure-db-url": "node ensure-database-url.js",

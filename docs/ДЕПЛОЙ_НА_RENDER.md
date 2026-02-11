@@ -37,7 +37,9 @@
 
 ## Шаг 3. Переменные окружения (Environment Variables)
 
-В том же экране найди блок **Environment Variables** и добавь переменные по одной (кнопка **Add Environment Variable**). Имена и значения возьми из своего **`bot/.env`**:
+**Если сервис уже создан:** новый проект создавать не нужно. В **Dashboard** (https://dashboard.render.com) кликни по **названию своего сервиса** (того, где крутится бот — например `yupsoul-bot`). В левой колонке выбери **Environment** → под блоком "Environment Variables" нажми **+ Add Environment Variable** (или "Add Environment Variable"). Введи Key и Value → сохрани (при желании выбери "Save and deploy", чтобы перезапустить бота с новой переменной).
+
+**Если создаёшь сервис впервые:** в том же экране создания найди блок **Environment Variables** и добавь переменные по одной (кнопка **Add Environment Variable**). Имена и значения возьми из своего **`bot/.env`**:
 
 | Key | Откуда взять значение |
 |-----|------------------------|

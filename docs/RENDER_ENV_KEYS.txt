@@ -14,6 +14,7 @@ SUPABASE_SERVICE_KEY
 
 Key №4:
 ADMIN_TELEGRAM_IDS
+(Value: твой Telegram ID, например 619065619 — без кавычек)
 
 Key №5:
 MINI_APP_URL

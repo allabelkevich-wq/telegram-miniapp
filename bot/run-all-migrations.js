@@ -17,6 +17,7 @@ const MIGRATIONS = [
   "supabase-migration-astro-and-columns.sql",
   "supabase-migration-detailed-analysis.sql",
   "supabase-migration-prompt-templates.sql",
+  "supabase-migration-generation-status.sql",
 ];
 
 const DATABASE_URL = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL;

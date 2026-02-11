@@ -366,6 +366,132 @@ async function sendAnalysisIfPaid(ctx) {
 bot.command("get_analysis", sendAnalysisIfPaid);
 bot.hears(/^(расшифровка|получить расшифровку|детальный анализ)$/i, sendAnalysisIfPaid);
 
+// Команда для админа: просмотр натальной карты по request_id
+bot.command("astro", async (ctx) => {
+  const userId = ctx.from?.id;
+  if (!isAdmin(userId)) {
+    await ctx.reply("🔒 Эта команда доступна только администраторам.");
+    return;
+  }
+  const args = ctx.message?.text?.trim()?.split(/\s+/)?.slice(1) || [];
+  if (args.length === 0) {
+    await ctx.reply("Использование: /astro <request_id>\nПример: /astro abc123-def456");
+    return;
+  }
+  const requestId = args[0];
+  if (!supabase) {
+    await ctx.reply("❌ База данных не настроена.");
+    return;
+  }
+  try {
+    const { data: row, error: reqErr } = await supabase
+      .from("track_requests")
+      .select("*")
+      .eq("id", requestId)
+      .maybeSingle();
+    if (reqErr || !row) {
+      await ctx.reply(`❌ Заявка с ID ${requestId} не найдена.`);
+      return;
+    }
+    let message = `🌌 НАТАЛЬНАЯ КАРТА для заявки ${requestId}\n\n`;
+    message += `👤 Имя: ${row.name || "—"}\n`;
+    message += `⚧️ Пол: ${row.gender === "male" ? "Мужской" : row.gender === "female" ? "Женский" : row.gender || "—"}\n`;
+    message += `📅 Дата рождения: ${row.birthdate || "—"}\n`;
+    message += `📍 Место: ${row.birthplace || "—"}\n`;
+    message += `🕐 Время: ${row.birthtime_unknown ? "неизвестно" : row.birthtime || "—"}\n\n`;
+    if (row.astro_snapshot_id) {
+      const { data: snapshot, error: snapErr } = await supabase
+        .from("astro_snapshots")
+        .select("snapshot_text, snapshot_json, birth_lat, birth_lon, birth_utc")
+        .eq("id", row.astro_snapshot_id)
+        .maybeSingle();
+      if (!snapErr && snapshot) {
+        message += `✨ ТЕКСТОВЫЙ АНАЛИЗ:\n${snapshot.snapshot_text || "—"}\n\n`;
+        if (snapshot.snapshot_json && typeof snapshot.snapshot_json === "object") {
+          const j = snapshot.snapshot_json;
+          message += `📊 СТРУКТУРИРОВАННЫЕ ДАННЫЕ:\n`;
+          message += `• Солнце: ${j.sun_sign ?? "—"} (дом ${j.sun_house ?? "—"})\n`;
+          message += `• Луна: ${j.moon_sign ?? "—"} (дом ${j.moon_house ?? "—"})\n`;
+          message += `• Асцендент: ${j.ascendant_sign ?? "—"}\n`;
+          message += `• Доминантные планеты: ${Array.isArray(j.dominant_planets) ? j.dominant_planets.join(", ") : "—"}\n`;
+          if (snapshot.birth_lat != null && snapshot.birth_lon != null) {
+            message += `• Координаты: ${Number(snapshot.birth_lat).toFixed(4)}, ${Number(snapshot.birth_lon).toFixed(4)}\n`;
+          }
+          if (snapshot.birth_utc) message += `• UTC время: ${snapshot.birth_utc}\n`;
+        }
+      } else {
+        message += `⚠️ Астро-снапшот не найден (возможно, расчёт ещё не завершён).\n`;
+      }
+    } else {
+      message += `⚠️ Астро-снапшот не привязан к заявке (расчёт не запускался).\n`;
+    }
+    const chunks = message.match(/[\s\S]{1,4000}/g) || [message];
+    for (const chunk of chunks) await ctx.reply(chunk);
+  } catch (err) {
+    console.error("[/astro] Ошибка:", err);
+    await ctx.reply(`❌ Ошибка: ${err?.message || err}`);
+  }
+});
+
+// Команда для админа: полный анализ и текст песни по request_id
+bot.command("full_analysis", async (ctx) => {
+  const userId = ctx.from?.id;
+  if (!isAdmin(userId)) {
+    await ctx.reply("🔒 Эта команда доступна только администраторам.");
+    return;
+  }
+  const args = ctx.message?.text?.trim()?.split(/\s+/)?.slice(1) || [];
+  if (args.length === 0) {
+    await ctx.reply("Использование: /full_analysis <request_id>\nПример: /full_analysis abc123-def456");
+    return;
+  }
+  const requestId = args[0];
+  if (!supabase) {
+    await ctx.reply("❌ База данных не настроена.");
+    return;
+  }
+  try {
+    const { data: row, error } = await supabase
+      .from("track_requests")
+      .select("*")
+      .eq("id", requestId)
+      .maybeSingle();
+    if (error || !row) {
+      await ctx.reply(`❌ Заявка с ID ${requestId} не найдена.`);
+      return;
+    }
+    let message = `📄 ПОЛНЫЙ АНАЛИЗ для заявки ${requestId}\n\n`;
+    message += `👤 ${row.name || "—"} | 🌍 ${row.birthplace || "—"}\n`;
+    message += `🎯 Запрос: "${(row.request || "").slice(0, 200)}${(row.request || "").length > 200 ? "…" : ""}"\n\n`;
+    if (row.detailed_analysis) {
+      message += `🔍 ГЛУБОКИЙ АНАЛИЗ:\n${row.detailed_analysis}\n\n`;
+    } else {
+      message += `⚠️ Полный анализ ещё не сгенерирован\n\n`;
+    }
+    if (row.lyrics) {
+      message += `🎵 ТЕКСТ ПЕСНИ:\n${row.lyrics}\n\n`;
+    } else {
+      message += `⚠️ Текст песни ещё не сгенерирован\n\n`;
+    }
+    message += `📊 Статус генерации: ${row.generation_status || row.status || "pending"}\n`;
+    message += `🔤 Язык: ${row.language || "ru"}\n`;
+    message += `🎵 Название: ${row.title || "—"}\n`;
+    if (row.audio_url) message += `🎧 Аудио: ${row.audio_url}\n`;
+    const chunks = message.match(/[\s\S]{1,4000}/g) || [message];
+    for (const chunk of chunks) await ctx.reply(chunk);
+    if (row.audio_url) {
+      try {
+        await ctx.replyWithAudio({ url: row.audio_url });
+      } catch (e) {
+        console.warn("[/full_analysis] Не удалось отправить аудио:", e?.message);
+      }
+    }
+  } catch (err) {
+    console.error("[/full_analysis] Ошибка:", err);
+    await ctx.reply(`❌ Ошибка: ${err?.message || err}`);
+  }
+});
+
 // Любая неизвестная команда — подсказка (чтобы не было «пустого» отклика)
 bot.on("message:text", async (ctx, next) => {
   const text = (ctx.message?.text || "").trim();
