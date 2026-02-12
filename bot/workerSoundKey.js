@@ -282,7 +282,7 @@ export async function generateSoundKey(requestId) {
     if (!requestId || !UUID_REGEX.test(String(requestId))) {
       throw new Error(`Неверный ID заявки: нужен полный UUID с дефисами, получено: ${requestId}`);
     }
-    console.log(`[Воркер] 🔥 НАЧИНАЮ ГЕНЕРАЦИЮ для заявки ${requestId}`);
+    console.log(`[Воркер] НАЧИНАЮ генерацию для ${requestId}`);
     const { data: request, error: reqError } = await supabase
       .from('track_requests')
       .select('*')
@@ -701,5 +701,3 @@ if (import.meta.url === `file://${process.argv[1]}` && process.argv[2]) {
     process.exit(1);
   });
 }
-
-export { generateSoundKey };

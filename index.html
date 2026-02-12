@@ -342,10 +342,6 @@
           </div>
           <div id="birthplaceSummary" class="field-summary birthplace-summary" style="display:none; margin-top:8px; padding:12px 14px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
           <div id="placeCoords" class="place-coords" style="display:none; margin-top:6px; padding:10px 14px; background:rgba(94,234,212,.1); border-radius:10px; font-size:.9rem; color:#0d9488;"></div>
-          <div class="checkbox" style="margin-top:10px">
-            <input type="checkbox" id="placeConfirmed">
-            <label for="placeConfirmed">Подтверждаю, что место рождения указано верно</label>
-          </div>
         </div>
         
         <div class="field">
@@ -393,10 +389,6 @@
             <label for="birthplace2">Место рождения</label>
             <input type="text" id="birthplace2" class="location-input" placeholder="Начни вводить город..." maxlength="100" autocomplete="off">
             <div id="birthplaceSuggestions2" class="location-suggestions"></div>
-            <div class="checkbox-group" style="margin-top: 10px;">
-              <input type="checkbox" id="placeConfirmed2">
-              <label for="placeConfirmed2">Подтверждаю, что место рождения указано верно</label>
-            </div>
           </div>
           <div class="field">
             <label>Время рождения</label>
@@ -858,7 +850,7 @@
           birthplace2Input.addEventListener('input', function() {
             var self = this;
             clearTimeout(debounce2);
-            debounce2 = setTimeout(function() { showLocationSuggestions(self, 'birthplaceSuggestions2', 'placeConfirmed2'); }, 320);
+            debounce2 = setTimeout(function() { showLocationSuggestions(self, 'birthplaceSuggestions2', null); }, 320);
           });
         }
         var transitLocationInput = document.getElementById('transitLocation');
@@ -1007,8 +999,6 @@
         if (name1.length < 2) { alert('✨ Имя должно содержать минимум 2 символа'); return; }
         if (!birthdate1) { alert('✨ Выбери дату рождения'); return; }
         if (birthplace1.length < 3) { alert('✨ Место рождения должно содержать минимум 3 символа'); return; }
-        var placeConfirmedEl = document.getElementById('placeConfirmed');
-        if (placeConfirmedEl && !placeConfirmedEl.checked) { alert('✨ Подтверди, что место рождения указано верно'); return; }
         if (!birthtimeUnknown1 && !birthtime1) { alert('✨ Укажи время рождения или отметь "Не знаю"'); return; }
         if (!gender1) { alert('✨ Выбери свой путь'); return; }
         if (requestText.length < 15) { alert('✨ Расскажи Вселенной подробнее (минимум 15 символов)'); return; }
@@ -1035,7 +1025,6 @@
           if (name2.length < 2) { alert('✨ Имя второго человека должно содержать минимум 2 символа'); return; }
           if (!birthdate2) { alert('✨ Выбери дату рождения второго человека'); return; }
           if (birthplace2.length < 3) { alert('✨ Место рождения второго человека должно содержать минимум 3 символа'); return; }
-          if (!(document.getElementById('placeConfirmed2') && document.getElementById('placeConfirmed2').checked)) { alert('✨ Подтверди, что место рождения второго человека указано верно'); return; }
           if (!birthtimeUnknown2 && !birthtime2) { alert('✨ Укажи время рождения второго человека'); return; }
           if (!gender2) { alert('✨ Выбери пол второго человека'); return; }
           payload.person2 = { name: name2, birthdate: birthdate2, birthplace: birthplace2, birthtime: birthtimeUnknown2 ? null : birthtime2, birthtimeUnknown: birthtimeUnknown2, gender: gender2 };

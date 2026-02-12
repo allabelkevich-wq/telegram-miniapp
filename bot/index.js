@@ -270,7 +270,7 @@ bot.on("message:web_app_data", async (ctx) => {
   console.log("[Заявка] Сохранена успешно, ID:", requestId, { name, birthdate, birthplace, gender, language, request: (userRequest || "").slice(0, 50), hasCoords: !!(birthplaceLat && birthplaceLon) });
 
   if (supabase && birthdate && birthplace) {
-    console.log(`[API] Заявка ${requestId} сохранена — ЗАПУСКАЮ ВОРКЕР`);
+    console.log(`[API] ЗАПУСКАЮ ВОРКЕР для ${requestId}`);
     (async () => {
       try {
         const module = await import("./workerSoundKey.js");
@@ -977,7 +977,7 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   }
   const hasPerson1Data = birthdate && birthplace;
   if (supabase && hasPerson1Data) {
-    console.log(`[API] Заявка ${requestId} сохранена — ЗАПУСКАЮ ВОРКЕР`);
+    console.log(`[API] ЗАПУСКАЮ ВОРКЕР для ${requestId}`);
     (async () => {
       try {
         const module = await import("./workerSoundKey.js");
@@ -985,7 +985,7 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
           throw new Error("Функция generateSoundKey не экспортирована");
         }
         await module.generateSoundKey(requestId);
-        console.log(`[Воркер] Успешно завершён для ${requestId}`);
+        console.log(`[Воркер] УСПЕШНО завершён для ${requestId}`);
       } catch (error) {
         console.error(`[ВОРКЕР] КРИТИЧЕСКАЯ ОШИБКА для ${requestId}:`, error);
         await supabase.from("track_requests").update({
@@ -994,6 +994,8 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
         }).eq("id", requestId);
       }
     })();
+  } else {
+    console.log(`[API] Воркер НЕ запущен для ${requestId}: ${!supabase ? "Supabase не подключен" : "нет даты/места рождения"}`);
   }
   return res.status(200).json({
     ok: true,
