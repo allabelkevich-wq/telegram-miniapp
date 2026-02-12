@@ -130,3 +130,7 @@ alter table track_requests add column if not exists suno_style_sent text;
 comment on column track_requests.deepseek_response is 'Полный сырой ответ DeepSeek (до парсинга)';
 comment on column track_requests.llm_truncated is 'true если ответ обрезан по max_tokens (песня могла остаться недоделанной)';
 comment on column track_requests.suno_style_sent is 'Точная строка style, отправленная в Suno (для сверки)';
+
+-- 7. Обложка к генерации (URL от Suno Cover API, отправляется пользователю вместе с аудио)
+alter table track_requests add column if not exists cover_url text;
+comment on column track_requests.cover_url is 'URL обложки от Suno Cover API; отправляется в Telegram вместе с песней';

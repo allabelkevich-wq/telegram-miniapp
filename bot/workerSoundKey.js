@@ -10,7 +10,7 @@ import { computeAndSaveAstroSnapshot } from "./workerAstro.js";
 import { getAstroSnapshot } from "./astroLib.js";
 import { geocode } from "./geocode.js";
 import { chatCompletion } from "./deepseek.js";
-import { generateMusic, pollMusicResult } from "./suno.js";
+import { generateMusic, pollMusicResult, generateCover, pollCoverResult } from "./suno.js";
 
 // ============================================================================
 // КОНФИГУРАЦИЯ
@@ -226,6 +226,24 @@ function parseResponse(text) {
 // ============================================================================
 // ОТПРАВКА АУДИО ПОЛЬЗОВАТЕЛЮ
 // ============================================================================
+
+async function sendPhotoToUser(telegramUserId, photoUrl, caption) {
+  if (!BOT_TOKEN || !telegramUserId) return { ok: false, error: "Нет BOT_TOKEN или chat_id" };
+  const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
+  const body = new URLSearchParams({
+    chat_id: String(telegramUserId),
+    photo: photoUrl,
+    caption: caption || "",
+  });
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: body.toString(),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!data.ok) return { ok: false, error: data.description || "Telegram API error" };
+  return { ok: true };
+}
 
 async function sendAudioToUser(telegramUserId, audioUrl, caption) {
   if (!BOT_TOKEN || !telegramUserId) return { ok: false, error: "Нет BOT_TOKEN или chat_id" };
@@ -523,25 +541,45 @@ ${astroTextFull}
     
     const audioUrl = sunoResult.audioUrl;
     console.log(`[Воркер] ЭТАП 3 — Suno: музыка готова, audio_url=${audioUrl}`);
-    
-    // Шаг 10: Обновить статус заявки и сохранить поля песни в БД
+
+    // Обложка: запрос + поллинг (не блокируем отправку песни при ошибке)
+    let coverUrl = null;
+    const coverStart = await generateCover(sunoStart.taskId);
+    if (coverStart.ok && coverStart.coverTaskId) {
+      const coverResult = await pollCoverResult(coverStart.coverTaskId);
+      if (coverResult.ok && coverResult.coverUrl) {
+        coverUrl = coverResult.coverUrl;
+        console.log(`[Воркер] Обложка готова: ${coverUrl}`);
+      } else {
+        console.warn(`[Воркер] Обложка не получена: ${coverResult?.error || "—"}`);
+      }
+    } else {
+      console.warn(`[Воркер] Запрос обложки не выполнен: ${coverStart?.error || "—"}`);
+    }
+
+    // Шаг 10: Обновить статус заявки и сохранить поля песни в БД (cover_url при наличии)
+    const updatePayload = {
+      status: 'completed',
+      audio_url: audioUrl,
+      detailed_analysis: fullResponse,
+      lyrics: lyricsForSuno,
+      title: parsed.title,
+      language: 'ru',
+      generation_status: 'completed',
+      error_message: null,
+      updated_at: new Date().toISOString()
+    };
+    if (coverUrl) updatePayload.cover_url = coverUrl;
     await supabase
       .from('track_requests')
-      .update({
-        status: 'completed',
-        audio_url: audioUrl,
-        detailed_analysis: fullResponse,
-        lyrics: lyricsForSuno,
-        title: parsed.title,
-        language: 'ru',
-        generation_status: 'completed',
-        error_message: null,
-        updated_at: new Date().toISOString()
-      })
+      .update(updatePayload)
       .eq('id', requestId);
-    
-    // Шаг 11: Отправить аудио пользователю
+
+    // Шаг 11: Сначала обложка (если есть), затем аудио
     const caption = `🗝️ ${request.name}, твой звуковой ключ готов!\n\nЭто твоё персональное звуковое лекарство. Слушай каждое утро в тишине с закрытыми глазами.\n\nСлушай сердцем ❤️\n— YupSoul`;
+    if (coverUrl) {
+      await sendPhotoToUser(request.telegram_user_id, coverUrl, `Обложка твоей песни · ${parsed.title || "Звуковой ключ"}`).catch((e) => console.warn("[Воркер] Ошибка отправки обложки:", e?.message));
+    }
     const send = await sendAudioToUser(request.telegram_user_id, audioUrl, caption);
     
     if (!send.ok) {

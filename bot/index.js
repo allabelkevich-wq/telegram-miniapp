@@ -41,10 +41,6 @@ bot.use(async (ctx, next) => {
   const msg = ctx.message;
   const fromId = ctx.from?.id;
   if (msg?.text) console.log("[TG] msg from", fromId, ":", msg.text.slice(0, 80) + (msg.text.length > 80 ? "…" : ""));
-  // #region agent log
-  const hasWebAppData = !!(msg?.web_app_data);
-  fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:bot.use',message:'incoming update',data:{updateId:ctx.update?.update_id,hasWebAppData,fromId},hypothesisId:'H3',timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   const chatId = ctx.chat?.id;
   if (chatId) ctx.api.sendChatAction(chatId, "typing").catch(() => {});
   return next();
@@ -202,9 +198,6 @@ bot.on("message", (ctx, next) => {
 
 // Данные из Mini App (кнопка «Отправить заявку» → sendData)
 bot.on("message:web_app_data", async (ctx) => {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:web_app_data',message:'handler entered',data:{rawLen:(ctx.message?.web_app_data?.data||'').length},hypothesisId:'H4',timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   console.log("[Заявка] ⚠️ ОБРАБОТЧИК АКТИВИРОВАН! message:", ctx.message ? "есть" : "нет", "web_app_data:", ctx.message?.web_app_data ? "есть" : "нет");
   const raw = ctx.message.web_app_data?.data;
   console.log("[Заявка] Обработка web_app_data, длина:", raw?.length || 0, "тип:", typeof raw);
@@ -274,9 +267,6 @@ bot.on("message:web_app_data", async (ctx) => {
     return;
   }
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:web_app_data_saved',message:'request saved',data:{requestId},hypothesisId:'H4',timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   console.log("[Заявка] Сохранена успешно, ID:", requestId, { name, birthdate, birthplace, gender, language, request: (userRequest || "").slice(0, 50), hasCoords: !!(birthplaceLat && birthplaceLon) });
 
   if (supabase && birthdate && birthplace) {
@@ -592,10 +582,26 @@ bot.command("admin", async (ctx) => {
     if (targetId) bot.api.sendMessage(targetId, text).catch((e) => console.error("[admin] replyAny:", e?.message));
   };
 
+  const getAdminUrl = () => {
+    if (!BOT_PUBLIC_URL) return null;
+    const path = "/admin-simple";
+    const token = ADMIN_SECRET ? "?token=" + encodeURIComponent(ADMIN_SECRET) : "";
+    return BOT_PUBLIC_URL + path + token;
+  };
+
   const sendAdminLink = () => {
-    if (BOT_PUBLIC_URL && targetId) {
-      const url = BOT_PUBLIC_URL + "/admin-simple";
-      bot.api.sendMessage(targetId, "👑 Веб-админка (заявки, этапы, перезапуск):\n" + url).catch(() => {});
+    if (!targetId) return;
+    const url = getAdminUrl();
+    if (url) {
+      bot.api.sendMessage(
+        targetId,
+        "👑 Веб-админка — нажми ссылку (токен уже подставлен, вводить ничего не нужно):\n\n" + url
+      ).catch(() => {});
+    } else {
+      bot.api.sendMessage(
+        targetId,
+        "👑 Ссылка на админку не пришла: не задан BOT_PUBLIC_URL.\n\nВ Render → Environment добавь:\nBOT_PUBLIC_URL=https://твой-сервис.onrender.com\n(без слэша в конце, без /webhook). Перезапусти сервис и снова напиши /admin."
+      ).catch(() => {});
     }
   };
 
@@ -616,7 +622,11 @@ bot.command("admin", async (ctx) => {
       return;
     }
 
-    await reply("Проверяю заявки…");
+    const adminUrl = getAdminUrl();
+    const adminLinkLine = adminUrl
+      ? `\n\n👑 Админка (нажми — откроется, вводить токен не нужно):\n${adminUrl}`
+      : "\n\n👑 Ссылка на админку: задай BOT_PUBLIC_URL и ADMIN_SECRET в Render (Environment), перезапусти и снова /admin.";
+    await reply("Проверяю заявки…" + adminLinkLine);
 
     const { requests, dbError } = await getRequestsForAdmin(30);
 
@@ -739,11 +749,15 @@ app.get("/api/admin/stats", async (req, res) => {
   const auth = resolveAdminAuth(req);
   if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
-  const { data: rows, error } = await supabase.from("track_requests").select("generation_status");
-  if (error) return res.status(500).json({ success: false, error: error.message });
-  const stats = { total: rows?.length || 0, pending: 0, astro_calculated: 0, lyrics_generated: 0, suno_processing: 0, completed: 0, failed: 0 };
-  (rows || []).forEach((r) => {
-    const s = r.generation_status || "pending";
+  let result = await supabase.from("track_requests").select("generation_status");
+  if (result.error && /does not exist|column/i.test(result.error.message)) {
+    result = await supabase.from("track_requests").select("status");
+  }
+  if (result.error) return res.status(500).json({ success: false, error: result.error.message });
+  const rows = result.data || [];
+  const stats = { total: rows.length, pending: 0, astro_calculated: 0, lyrics_generated: 0, suno_processing: 0, completed: 0, failed: 0 };
+  rows.forEach((r) => {
+    const s = (r.generation_status ?? r.status) || "pending";
     if (s === "completed") stats.completed++;
     else if (s === "failed") stats.failed++;
     else if (s === "suno_processing") stats.suno_processing++;
@@ -760,31 +774,36 @@ app.get("/api/admin/requests", async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const limit = Math.min(parseInt(req.query?.limit, 10) || 50, 100);
   const statusFilter = req.query?.status || "all";
-  let q = supabase
-    .from("track_requests")
-    .select("id, name, person2_name, status, generation_status, created_at, llm_truncated, audio_url, mode, request")
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  const fullSelect = "id, name, person2_name, status, generation_status, created_at, audio_url, mode, request";
+  let q = supabase.from("track_requests").select(fullSelect).order("created_at", { ascending: false }).limit(limit);
   if (statusFilter === "pending") q = q.in("generation_status", ["pending", "astro_calculated", "lyrics_generated", "suno_processing"]);
   else if (statusFilter === "completed") q = q.eq("generation_status", "completed");
   else if (statusFilter === "failed") q = q.eq("generation_status", "failed");
-  const { data, error } = await q;
-  if (error) return res.status(500).json({ success: false, error: error.message });
-  return res.json({ success: true, data: data || [] });
+  let result = await q;
+  if (result.error && /does not exist|column/i.test(result.error.message)) {
+    const minSelect = "id, name, status, created_at, request, telegram_user_id";
+    let q2 = supabase.from("track_requests").select(minSelect).order("created_at", { ascending: false }).limit(limit);
+    if (statusFilter === "completed") q2 = q2.eq("status", "completed");
+    else if (statusFilter === "failed") q2 = q2.eq("status", "failed");
+    result = await q2;
+  }
+  if (result.error) return res.status(500).json({ success: false, error: result.error.message });
+  return res.json({ success: true, data: result.data || [] });
 });
 
 app.get("/api/admin/requests/:id", async (req, res) => {
   const auth = resolveAdminAuth(req);
   if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
-  const { data, error } = await supabase
-    .from("track_requests")
-    .select("*")
-    .eq("id", req.params.id)
-    .maybeSingle();
-  if (error) return res.status(500).json({ success: false, error: error.message });
-  if (!data) return res.status(404).json({ success: false, error: "Заявка не найдена" });
-  return res.json({ success: true, data });
+  const fullCols = "id,name,person2_name,gender,birthdate,birthplace,deepseek_response,lyrics,audio_url,request,created_at,status";
+  let result = await supabase.from("track_requests").select(fullCols).eq("id", req.params.id).maybeSingle();
+  if (result.error && /does not exist|column/i.test(result.error.message)) {
+    const minCols = "id,name,gender,birthdate,birthplace,request,created_at,status,telegram_user_id";
+    result = await supabase.from("track_requests").select(minCols).eq("id", req.params.id).maybeSingle();
+  }
+  if (result.error) return res.status(500).json({ success: false, error: result.error.message });
+  if (!result.data) return res.status(404).json({ success: false, error: "Заявка не найдена" });
+  return res.json({ success: true, data: result.data });
 });
 
 app.post("/api/admin/requests/:id/restart", async (req, res) => {
@@ -830,14 +849,8 @@ app.post("/suno-callback", express.json(), (req, res) => {
 // Запасной приём заявок: Mini App шлёт POST с initData + форма (если sendData в TG не срабатывает).
 app.post("/api/submit-request", express.json(), async (req, res) => {
   const initData = req.body?.initData || req.headers["x-telegram-init"];
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:submit-request',message:'POST hit',data:{hasInitData:!!initData,initDataLen:(initData||'').length},hypothesisId:'H5',timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   const telegramUserId = validateInitData(initData, BOT_TOKEN);
   if (telegramUserId == null) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:submit-request',message:'validateInitData failed',data:{},hypothesisId:'H2',timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     return res.status(401).json({ error: "Неверные или устаревшие данные. Открой приложение из чата с ботом и попробуй снова." });
   }
   const body = req.body || {};
@@ -913,9 +926,6 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   if (!requestId) {
     return res.status(500).json({ error: "Не удалось сохранить заявку" });
   }
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:submit-request',message:'request accepted',data:{requestId,telegramUserId},hypothesisId:'H5',timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   const mode = body.person1 && body.mode === "couple" ? "couple" : "single";
   console.log(`[API] Заявка ${requestId} сохранена — ГЕНЕРИРУЕМ ПЕСНЮ БЕСПЛАТНО (режим: ${mode})`);
   const successText =

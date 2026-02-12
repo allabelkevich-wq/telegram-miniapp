@@ -133,3 +133,84 @@ export async function pollMusicResult(taskId) {
   }
   return { ok: false, error: "Таймаут ожидания Suno" };
 }
+
+// ============================================================================
+// ОБЛОЖКИ (Cover API)
+// ============================================================================
+
+const COVER_POLL_INTERVAL_MS = 10000;
+const COVER_POLL_MAX_ATTEMPTS = 6; // до ~1 мин
+
+/**
+ * Запуск генерации обложки для уже сгенерированной музыки.
+ * @param {string} musicTaskId — ID задачи генерации музыки (sunoStart.taskId).
+ * @returns {Promise<{ ok: boolean, coverTaskId?: string, error?: string }>}
+ */
+export async function generateCover(musicTaskId) {
+  const apiKey = process.env.SUNO_API_KEY;
+  if (!apiKey) return { ok: false, error: "SUNO_API_KEY не задан" };
+  const callBackUrl =
+    process.env.SUNO_COVER_CALLBACK_URL ||
+    (process.env.BACKEND_URL ? `${process.env.BACKEND_URL.replace(/\/$/, "")}/suno-cover-callback` : null) ||
+    "https://example.com/suno-cover-callback";
+
+  try {
+    const res = await fetch(`${SUNO_BASE}/suno/cover/generate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({ taskId: musicTaskId, callBackUrl }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data.code !== 200) {
+      return { ok: false, error: data.msg || `Suno Cover ${res.status}` };
+    }
+    const coverTaskId = data.data?.taskId;
+    if (!coverTaskId) return { ok: false, error: "Нет taskId в ответе Suno Cover" };
+    return { ok: true, coverTaskId };
+  } catch (e) {
+    return { ok: false, error: e?.message || String(e) };
+  }
+}
+
+/**
+ * Поллинг результата обложки. Возвращает первый URL из data.response.images.
+ * @param {string} coverTaskId
+ * @returns {Promise<{ ok: boolean, coverUrl?: string, error?: string }>}
+ */
+export async function pollCoverResult(coverTaskId) {
+  const apiKey = process.env.SUNO_API_KEY;
+  if (!apiKey) return { ok: false, error: "SUNO_API_KEY не задан" };
+
+  const url = `${SUNO_BASE}/suno/cover/record-info?taskId=${encodeURIComponent(coverTaskId)}`;
+  for (let i = 0; i < COVER_POLL_MAX_ATTEMPTS; i++) {
+    try {
+      const res = await fetch(url, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.code !== 200) {
+        return { ok: false, error: data.msg || `Suno Cover ${res.status}` };
+      }
+      const d = data.data || {};
+      const successFlag = d.successFlag;
+      if (successFlag === 1) {
+        const images = d.response?.images;
+        const first = Array.isArray(images) && images[0];
+        if (first && typeof first === "string") return { ok: true, coverUrl: first };
+        if (first && typeof first === "object" && first.url) return { ok: true, coverUrl: first.url };
+        return { ok: false, error: "Нет images в ответе Suno Cover" };
+      }
+      if (successFlag === 2) {
+        return { ok: false, error: d.errorMessage || "Cover generation failed" };
+      }
+    } catch (e) {
+      if (i === COVER_POLL_MAX_ATTEMPTS - 1) return { ok: false, error: e?.message || String(e) };
+    }
+    await new Promise((r) => setTimeout(r, COVER_POLL_INTERVAL_MS));
+  }
+  return { ok: false, error: "Таймаут ожидания обложки Suno" };
+}
