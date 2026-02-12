@@ -116,6 +116,10 @@
       const t = getToken();
       return t ? '&token=' + encodeURIComponent(t) : '';
     }
+    function authQueryFromPath() {
+      const t = getToken();
+      return t ? '?token=' + encodeURIComponent(t) : '';
+    }
 
     async function fetchJson(url, opts) {
       const res = await fetch(url, opts);
@@ -251,7 +255,7 @@
     });
 
     async function showDetails(id) {
-      const url = API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + authQuery();
+      const url = API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + authQueryFromPath();
       let json, res;
       try {
         const result = await fetchJson(url, { headers: authHeaders() });
@@ -291,7 +295,7 @@
     async function restart(id) {
       if (!confirm('Перезапустить генерацию? / Restart generation?')) return;
       try {
-        const result = await fetchJson(API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + '/restart' + authQuery(), { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() } });
+        const result = await fetchJson(API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + '/restart' + authQueryFromPath(), { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() } });
         const json = result.json;
         const res = result.res;
         if (json.success) { alert('✅ Генерация перезапущена / Generation restarted'); loadAdminData(); }

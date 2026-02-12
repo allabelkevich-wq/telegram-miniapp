@@ -119,8 +119,9 @@
       document.getElementById('root').innerHTML = '<div class="denied"><p><strong>Сервер не ответил за 1,5 минуты.</strong></p><p>На Render бесплатный сервис «засыпает» без трафика. Первый запрос его будит — это может занять до 1–2 минут.</p><p>Обнови страницу (F5) и подожди ещё раз, либо открой сначала главную <a href="/">главную</a>, подожди загрузки, затем снова открой /admin.</p></div>';
     }
     function renderList(requests) {
+      const list = Array.isArray(requests) ? requests : [];
       const html = '<h1>Заявки — контроль этапов генерации</h1><div class="list"><table><thead><tr><th>Дата</th><th>Имя</th><th>Режим</th><th>Статус</th><th>Обрезка LLM</th><th>Аудио</th></tr></thead><tbody>' +
-        requests.map(r => {
+        list.map(r => {
           const date = r.created_at ? new Date(r.created_at).toLocaleString('ru-RU') : '—';
           const badge = r.llm_truncated ? '<span class="badge truncated">обрезка</span>' : (r.status === 'completed' ? '<span class="badge completed">OK</span>' : '<span class="badge pending">' + (r.status || 'pending') + '</span>');
           const audio = r.audio_url ? '<a href="' + r.audio_url + '" target="_blank">слушать</a>' : '—';
@@ -136,8 +137,8 @@
       const wrap = document.getElementById('detailWrap');
       if (!wrap) return;
       wrap.innerHTML = '<p>Загрузка…</p>';
-      loadDetail(id).then(req => {
-        const d = req;
+      loadDetail(id).then(res => {
+        const d = res.data != null ? res.data : res;
         const tabs = [
           { id: 'raw', label: 'Сырой ответ DeepSeek', key: 'deepseek_response', note: 'Полный ответ до парсинга. Обрезка: ' + (d.llm_truncated ? 'да' : 'нет') },
           { id: 'lyrics', label: 'Лирика в Suno', key: 'lyrics', note: 'Точно это отправлено в Suno' },
@@ -169,7 +170,7 @@
             wrap.querySelector('.block[data-tab="' + btn.getAttribute('data-tab') + '"]')?.classList.add('active');
           });
         });
-        document.getElementById('backToList')?.addEventListener('click', () => { wrap.innerHTML = ''; loadList().then(data => renderList(data.requests)); });
+        document.getElementById('backToList')?.addEventListener('click', () => { wrap.innerHTML = ''; loadList().then(data => renderList(data.data)); });
       }).catch(e => { wrap.innerHTML = '<p style="color:#f87171">' + e.message + '</p>'; });
     }
     function escapeHtml(s) {
@@ -186,7 +187,7 @@
         if (ok) {
           root.innerHTML = '<p>Загрузка списка…</p>';
           const data = await loadList();
-          renderList(data.requests);
+          renderList(data.data);
         } else renderDenied();
       } catch (e) {
         if (e.name === 'AbortError') renderTimeout();
@@ -202,7 +203,7 @@
         if (ok) {
           setStatus('Загрузка списка заявок…');
           const data = await loadList();
-          renderList(data.requests);
+          renderList(data.data);
         } else renderDenied();
       } catch (e) {
         if (e.name === 'AbortError') renderTimeout();

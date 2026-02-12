@@ -791,15 +791,22 @@ app.get("/api/admin/requests", async (req, res) => {
   return res.json({ success: true, data: result.data || [] });
 });
 
+function sanitizeRequestId(paramId) {
+  const s = typeof paramId === "string" ? paramId.split("&")[0].trim() : "";
+  return s || null;
+}
+
 app.get("/api/admin/requests/:id", async (req, res) => {
   const auth = resolveAdminAuth(req);
   if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const id = sanitizeRequestId(req.params.id);
+  if (!id) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
   const fullCols = "id,name,person2_name,gender,birthdate,birthplace,deepseek_response,lyrics,audio_url,request,created_at,status";
-  let result = await supabase.from("track_requests").select(fullCols).eq("id", req.params.id).maybeSingle();
+  let result = await supabase.from("track_requests").select(fullCols).eq("id", id).maybeSingle();
   if (result.error && /does not exist|column/i.test(result.error.message)) {
     const minCols = "id,name,gender,birthdate,birthplace,request,created_at,status,telegram_user_id";
-    result = await supabase.from("track_requests").select(minCols).eq("id", req.params.id).maybeSingle();
+    result = await supabase.from("track_requests").select(minCols).eq("id", id).maybeSingle();
   }
   if (result.error) return res.status(500).json({ success: false, error: result.error.message });
   if (!result.data) return res.status(404).json({ success: false, error: "Заявка не найдена" });
@@ -810,7 +817,8 @@ app.post("/api/admin/requests/:id/restart", async (req, res) => {
   const auth = resolveAdminAuth(req);
   if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
-  const id = req.params.id;
+  const id = sanitizeRequestId(req.params.id);
+  if (!id) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
   const { error: updateError } = await supabase
     .from("track_requests")
     .update({ status: "pending", generation_status: "pending", error_message: null, updated_at: new Date().toISOString() })
