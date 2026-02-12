@@ -5,6 +5,7 @@
  */
 
 import "dotenv/config";
+console.log("[workerSoundKey] Модуль загружен. Готов к генерации.");
 import { createClient } from '@supabase/supabase-js';
 import { computeAndSaveAstroSnapshot } from "./workerAstro.js";
 import { getAstroSnapshot } from "./astroLib.js";
@@ -263,13 +264,25 @@ async function sendAudioToUser(telegramUserId, audioUrl, caption) {
   return { ok: true };
 }
 
+// Обновление логов этапов для админки (цепочка в окне заявки)
+async function updateStepLog(requestId, steps) {
+  try {
+    await supabase.from('track_requests').update({ generation_steps: steps, updated_at: new Date().toISOString() }).eq('id', requestId);
+  } catch (_) { /* колонка generation_steps может отсутствовать до миграции */ }
+}
+
 // ============================================================================
 // ОСНОВНАЯ ФУНКЦИЯ ГЕНЕРАЦИИ
 // ============================================================================
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export async function generateSoundKey(requestId) {
+  const stepLog = {}; // логи этапов для админки
   try {
-    // Шаг 1: Получить данные заявки из БД
+    if (!requestId || !UUID_REGEX.test(String(requestId))) {
+      throw new Error(`Неверный ID заявки: нужен полный UUID с дефисами, получено: ${requestId}`);
+    }
+    console.log(`[Воркер] 🔥 НАЧИНАЮ ГЕНЕРАЦИЮ для заявки ${requestId}`);
     const { data: request, error: reqError } = await supabase
       .from('track_requests')
       .select('*')
@@ -280,8 +293,16 @@ export async function generateSoundKey(requestId) {
       throw new Error(`Заявка ${requestId} не найдена: ${reqError?.message}`);
     }
 
-    console.log(`[Воркер] Запуск генерации для ${request.name}`);
+    console.log(`[Воркер] Заявка получена: ${request.name}, режим: ${request.mode || "single"}`);
     console.log(`[Воркер] Запрос: "${(request.request || "").substring(0, 50)}..."`);
+    
+    // Сразу «забираем» заявку, чтобы workerGenerate (cron) не обработал её своим промптом из БД
+    await supabase
+      .from('track_requests')
+      .update({ status: 'processing', generation_status: 'processing', updated_at: new Date().toISOString() })
+      .eq('id', requestId);
+    stepLog['1'] = 'Данные получены, воркер запущен';
+    await updateStepLog(requestId, stepLog);
     
     // Шаг 2: Проверяем/создаём натальную карту (КРИТИЧНО!)
     if (!request.astro_snapshot_id) {
@@ -312,6 +333,7 @@ export async function generateSoundKey(requestId) {
       .eq("track_request_id", requestId)
       .maybeSingle();
     
+    console.log(`[Воркер] Астро-данные получены для ${requestId}`);
     const astroTextFull = snapshotRow?.snapshot_text || "[Натальная карта не найдена]";
     const snapshot = snapshotRow?.snapshot_json && typeof snapshotRow.snapshot_json === "object" ? snapshotRow.snapshot_json : null;
     const pos = snapshot?.positions ?? [];
@@ -365,9 +387,11 @@ export async function generateSoundKey(requestId) {
 Место рождения: ${request.person2_birthplace}
 Время рождения: ${request.person2_birthtime_unknown ? "неизвестно" : request.person2_birthtime}
 
+КОНФИГУРАЦИЯ ПОЛОВ: ${(request.gender || "—")}+${(request.person2_gender || "—")}
+
 ЗАПРОС ОТ ПАРЫ: "${request.request || "создать песню"}"
 
-ЗАДАЧА: Проанализируй ОБЕ натальные карты и их связь. Создай песню, которая отражает союз, взаимодополнение и общий путь пары. В ответе НЕ используй астрологические термины — только метафоры.
+ЗАДАЧА: Проанализируй ОБЕ натальные карты и их связь с учётом половой конфигурации (${(request.gender || "—")}+${(request.person2_gender || "—")}). Создай песню, которая отражает союз, взаимодополнение и общий путь пары. В ответе НЕ используй астрологические термины — только метафоры.
 
 ПОЛНАЯ НАТАЛЬНАЯ КАРТА ПЕРВОГО ЧЕЛОВЕКА:
 ${astroTextFull}
@@ -422,7 +446,7 @@ ${astroTextFull}
     
     // ========== ЭТАП 1: DEEPSEEK ==========
     const MAX_TOKENS_LLM = 4000;
-    console.log(`[Воркер] ЭТАП 1 — DeepSeek: отправляю запрос для ${request.name} (max_tokens=${MAX_TOKENS_LLM})`);
+    console.log(`[Воркер] 🤖 Отправляю запрос в DeepSeek (max_tokens=${MAX_TOKENS_LLM})...`);
     
     const llm = await chatCompletion(SYSTEM_PROMPT, userRequest, {
       max_tokens: MAX_TOKENS_LLM,
@@ -436,15 +460,15 @@ ${astroTextFull}
     const fullResponse = llm.text;
     const finishReason = llm.finish_reason || null;
     const llmTruncated = finishReason === "length";
-    console.log(`[Воркер] Получен анализ от DeepSeek (длина: ${fullResponse.length}), finish_reason: ${finishReason || "—"}${llm.usage ? `, completion_tokens: ${llm.usage.completion_tokens}` : ""}`);
+    console.log(`[Воркер] ✅ DeepSeek ответил (длина: ${fullResponse.length}), finish_reason: ${finishReason || "—"}${llm.usage ? `, completion_tokens: ${llm.usage.completion_tokens}` : ""}`);
+    stepLog['2'] = `DeepSeek ответил, ${fullResponse.length} симв.${llmTruncated ? ' (обрезано)' : ''}`;
+    await updateStepLog(requestId, stepLog);
     if (llmTruncated) {
       console.warn(`[Воркер] ⚠️ ОТВЕТ ОБРЕЗАН! Увеличьте max_tokens или сократите системный промпт.`);
-    } else {
-      console.log(`[Воркер] ЭТАП 1 — DeepSeek: ответ полный, finish_reason=${finishReason || "—"}`);
     }
     
-    // === ПРОВЕРКА КАЧЕСТВА ОТВЕТА ===
-    const MIN_RESPONSE_LENGTH = 2500;
+    // === ПРОВЕРКА КАЧЕСТВА ОТВЕТА (только лог, не блокируем — лирику проверим при парсинге) ===
+    const MIN_RESPONSE_LENGTH = 1500;
     const REQUIRED_SECTIONS = [
       "СУТЬ ДУШИ",
       "ЭВОЛЮЦИОННЫЙ УРОВЕНЬ",
@@ -452,15 +476,12 @@ ${astroTextFull}
       "СИЛА И ТЕНЬ",
       "ПРАКТИЧЕСКИЕ РЕКОМЕНДАЦИИ",
     ];
-    let isQualityResponse = true;
     if (fullResponse.length < MIN_RESPONSE_LENGTH) {
-      console.warn(`[Воркер] Ответ слишком короткий (${fullResponse.length} < ${MIN_RESPONSE_LENGTH})`);
-      isQualityResponse = false;
+      console.warn(`[Воркер] Ответ короткий (${fullResponse.length} символов) — продолжаем парсинг`);
     }
     for (const section of REQUIRED_SECTIONS) {
       if (!fullResponse.includes(section)) {
-        console.warn(`[Воркер] Отсутствует раздел: ${section}`);
-        isQualityResponse = false;
+        console.warn(`[Воркер] В ответе нет раздела «${section}» — продолжаем`);
       }
     }
     const astroTerms = [
@@ -472,13 +493,8 @@ ${astroTextFull}
     const responseLower = fullResponse.toLowerCase();
     for (const term of astroTerms) {
       if (responseLower.includes(term)) {
-        console.warn(`[Воркер] Найден астрологический термин: ${term}`);
-        isQualityResponse = false;
+        console.warn(`[Воркер] В ответе есть термин «${term}» — желательно переформулировать в промпте`);
       }
-    }
-    if (!isQualityResponse) {
-      console.error("[Воркер] Ответ не соответствует требованиям промпта (длина/разделы/запрет терминов)");
-      throw new Error("Плохой ответ от DeepSeek: ответ слишком короткий, отсутствуют обязательные разделы или содержатся астрологические термины");
     }
     
     // ========== ЭТАП 2: ПАРСИНГ ОТВЕТА ==========
@@ -492,6 +508,8 @@ ${astroTextFull}
     if (lineCount < 32) {
       throw new Error(`Песня слишком короткая (${lineCount} строк, нужно минимум 32)`);
     }
+    stepLog['3'] = `Лирика: ${lineCount} строк, «${(parsed.title || "Sound Key").slice(0, 30)}»`;
+    await updateStepLog(requestId, stepLog);
     
     // Сохраняем сырой ответ DeepSeek и аудит (контроль этапа 1)
     await supabase
@@ -542,6 +560,8 @@ ${astroTextFull}
     
     const audioUrl = sunoResult.audioUrl;
     console.log(`[Воркер] ЭТАП 3 — Suno: музыка готова, audio_url=${audioUrl}`);
+    stepLog['4'] = 'Аудио готово';
+    await updateStepLog(requestId, stepLog);
 
     // Обложка: запрос + поллинг (не блокируем отправку песни при ошибке)
     let coverUrl = null;
@@ -551,6 +571,8 @@ ${astroTextFull}
       if (coverResult.ok && coverResult.coverUrl) {
         coverUrl = coverResult.coverUrl;
         console.log(`[Воркер] Обложка готова: ${coverUrl}`);
+        stepLog['4'] = 'Аудио и обложка готовы';
+        await updateStepLog(requestId, stepLog);
       } else {
         console.warn(`[Воркер] Обложка не получена: ${coverResult?.error || "—"}`);
       }
@@ -625,12 +647,16 @@ ${astroTextFull}
     
   } catch (error) {
     console.error(`[Воркер] Ошибка генерации для заявки ${requestId}:`, error.message);
-    
-    // Обновляем статус на failed
+    if (typeof stepLog !== 'undefined') {
+      stepLog['error'] = error.message?.slice(0, 200) || String(error);
+      try { await updateStepLog(requestId, stepLog); } catch (_) {}
+    }
+    // Обновляем статус на failed (чтобы админка и другой воркер видели корректное состояние)
     await supabase
       .from('track_requests')
       .update({
         status: 'failed',
+        generation_status: 'failed',
         error_message: error.message?.slice(0, 500),
         updated_at: new Date().toISOString()
       })
@@ -675,3 +701,5 @@ if (import.meta.url === `file://${process.argv[1]}` && process.argv[2]) {
     process.exit(1);
   });
 }
+
+export { generateSoundKey };

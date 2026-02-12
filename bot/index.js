@@ -270,16 +270,23 @@ bot.on("message:web_app_data", async (ctx) => {
   console.log("[Заявка] Сохранена успешно, ID:", requestId, { name, birthdate, birthplace, gender, language, request: (userRequest || "").slice(0, 50), hasCoords: !!(birthplaceLat && birthplaceLon) });
 
   if (supabase && birthdate && birthplace) {
-    // Сначала сохраняем координаты места рождения (если есть) для последующего расчёта астро
-    if (birthplaceLat != null && birthplaceLon != null) {
-      // Координаты уже переданы в saveRequest, они будут использованы в workerAstro
-    }
-    // Воркер запускается только из POST /api/submit-request (Mini App шлёт заявки через fetch)
-    // import("./workerSoundKey.js").then(({ generateSoundKey }) => {
-    //   generateSoundKey(requestId)
-    //     .then(r => console.log(`[Воркер] Результат:`, r))
-    //     .catch(e => console.error(`[Воркер] Ошибка:`, e));
-    // });
+    console.log(`[API] Заявка ${requestId} сохранена — ЗАПУСКАЮ ВОРКЕР`);
+    (async () => {
+      try {
+        const module = await import("./workerSoundKey.js");
+        if (typeof module.generateSoundKey !== "function") {
+          throw new Error("Функция generateSoundKey не экспортирована");
+        }
+        await module.generateSoundKey(requestId);
+        console.log(`[Воркер] Успешно завершён для ${requestId}`);
+      } catch (error) {
+        console.error(`[ВОРКЕР] КРИТИЧЕСКАЯ ОШИБКА для ${requestId}:`, error);
+        await supabase.from("track_requests").update({
+          generation_status: "failed",
+          error_message: error?.message || String(error),
+        }).eq("id", requestId);
+      }
+    })();
   }
 
   await ctx.reply(
@@ -703,7 +710,7 @@ app.use(express.json());
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Telegram-Init, Authorization");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Telegram-Init, X-Admin-Token, Authorization");
   if (req.method === "OPTIONS") return res.sendStatus(204);
   next();
 });
@@ -778,7 +785,7 @@ app.get("/api/admin/requests", async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const limit = Math.min(parseInt(req.query?.limit, 10) || 50, 100);
   const statusFilter = req.query?.status || "all";
-  const fullSelect = "id, name, person2_name, status, generation_status, created_at, audio_url, mode, request";
+  const fullSelect = "id, name, person2_name, status, generation_status, created_at, audio_url, mode, request, generation_steps";
   let q = supabase.from("track_requests").select(fullSelect).order("created_at", { ascending: false }).limit(limit);
   if (statusFilter === "pending") q = q.in("generation_status", ["pending", "astro_calculated", "lyrics_generated", "suno_processing"]);
   else if (statusFilter === "completed") q = q.eq("generation_status", "completed");
@@ -795,9 +802,16 @@ app.get("/api/admin/requests", async (req, res) => {
   return res.json({ success: true, data: result.data || [] });
 });
 
+// Убираем token из query, если попал в path (например /requests/xxx&token=yyy)
 function sanitizeRequestId(paramId) {
   const s = typeof paramId === "string" ? paramId.split("&")[0].trim() : "";
   return s || null;
+}
+
+// Проверка полного UUID (с дефисами) — запросы с обрезанным ID вызывают "invalid input syntax for type uuid"
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isValidRequestId(id) {
+  return typeof id === "string" && UUID_REGEX.test(id);
 }
 
 app.get("/api/admin/requests/:id", async (req, res) => {
@@ -806,7 +820,8 @@ app.get("/api/admin/requests/:id", async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const id = sanitizeRequestId(req.params.id);
   if (!id) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
-  const fullCols = "id,name,person2_name,gender,birthdate,birthplace,deepseek_response,lyrics,audio_url,request,created_at,status";
+  if (!isValidRequestId(id)) return res.status(400).json({ success: false, error: "Используйте полный UUID заявки (с дефисами), не обрезанный ID" });
+  const fullCols = "id,name,person2_name,gender,birthdate,birthplace,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message,llm_truncated,generation_steps";
   let result = await supabase.from("track_requests").select(fullCols).eq("id", id).maybeSingle();
   if (result.error && /does not exist|column/i.test(result.error.message)) {
     const minCols = "id,name,gender,birthdate,birthplace,request,created_at,status,telegram_user_id";
@@ -823,9 +838,16 @@ app.post("/api/admin/requests/:id/restart", async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const id = sanitizeRequestId(req.params.id);
   if (!id) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
+  if (!isValidRequestId(id)) return res.status(400).json({ success: false, error: "Используйте полный UUID заявки (с дефисами), не обрезанный ID" });
   const { error: updateError } = await supabase
     .from("track_requests")
-    .update({ status: "pending", generation_status: "pending", error_message: null, updated_at: new Date().toISOString() })
+    .update({
+      status: "pending",
+      generation_status: "pending",
+      error_message: null,
+      generation_steps: {},
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", id);
   if (updateError) return res.status(500).json({ success: false, error: updateError.message });
   import("./workerSoundKey.js").then(({ generateSoundKey }) => {
@@ -955,17 +977,23 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   }
   const hasPerson1Data = birthdate && birthplace;
   if (supabase && hasPerson1Data) {
-    // ЗАПУСКАЕМ ГЕНЕРАЦИЮ СРАЗУ (без оплаты)
-    import("./workerSoundKey.js")
-      .then(({ generateSoundKey }) => {
-        generateSoundKey(requestId)
-          .then(r => {
-            if (r?.ok) console.log(`[Воркер] Заявка ${requestId} завершена`);
-            else console.warn(`[Воркер] Ошибка для заявки ${requestId}:`, r?.error);
-          })
-          .catch(e => console.error(`[Воркер] Исключение для заявки ${requestId}:`, e?.message));
-      })
-      .catch(e => console.error("[Воркер] Не удалось импортировать:", e?.message));
+    console.log(`[API] Заявка ${requestId} сохранена — ЗАПУСКАЮ ВОРКЕР`);
+    (async () => {
+      try {
+        const module = await import("./workerSoundKey.js");
+        if (typeof module.generateSoundKey !== "function") {
+          throw new Error("Функция generateSoundKey не экспортирована");
+        }
+        await module.generateSoundKey(requestId);
+        console.log(`[Воркер] Успешно завершён для ${requestId}`);
+      } catch (error) {
+        console.error(`[ВОРКЕР] КРИТИЧЕСКАЯ ОШИБКА для ${requestId}:`, error);
+        await supabase.from("track_requests").update({
+          generation_status: "failed",
+          error_message: error?.message || String(error),
+        }).eq("id", requestId);
+      }
+    })();
   }
   return res.status(200).json({
     ok: true,

@@ -42,6 +42,8 @@
     .step.current .step-circle { background: #667eea; border-color: #667eea; color: #fff; transform: scale(1.1); }
     .step-label.ru { display: block; font-size: 13px; color: #fff; margin-top: 4px; }
     .step-label.en { display: block; font-size: 11px; color: #94a3b8; }
+    .step-log { font-size: 11px; color: #64748b; margin-top: 4px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .step.done .step-log { color: #86efac; }
     .actions { display: flex; gap: 12px; margin-top: 25px; flex-wrap: wrap; }
     .btn { padding: 12px 25px; border: none; border-radius: 8px; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; min-width: 160px; justify-content: center; }
     .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); }
@@ -189,15 +191,21 @@
         document.getElementById('requests').innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8">📭 Нет заявок / No requests</div>';
         return;
       }
+      function stepMsg(steps, key) {
+        if (!steps || typeof steps !== 'object') return '';
+        const v = steps[key];
+        return (v && String(v).trim()) ? escapeHtml(String(v).slice(0, 120)) : '';
+      }
       document.getElementById('requests').innerHTML = data.map(r => {
         const gs = r.generation_status || r.status || 'pending';
         const order = getStatusOrder(gs);
+        const steps = r.generation_steps && typeof r.generation_steps === 'object' ? r.generation_steps : (typeof r.generation_steps === 'string' ? (() => { try { return JSON.parse(r.generation_steps); } catch (e) { return {}; } })() : {});
         return `
         <div class="request-card">
           <div class="request-header">
             <div>
               <div class="request-name">${escapeHtml(r.name || '')}${r.person2_name ? ' & ' + escapeHtml(r.person2_name) : ''}</div>
-              <div class="request-id">ID: ${(r.id || '').substring(0,8)} • ${r.created_at ? new Date(r.created_at).toLocaleDateString('ru-RU') : '—'}</div>
+              <div class="request-id" title="Полный UUID: ${escapeHtml((r.id || ''))}">ID: ${(r.id || '').substring(0,8)} • ${r.created_at ? new Date(r.created_at).toLocaleDateString('ru-RU') : '—'}</div>
             </div>
             <div class="request-status ${statusClass(gs)}">${statusLabel(gs)}</div>
           </div>
@@ -208,23 +216,28 @@
                 <div class="step-circle">${order >= 1 ? '✓' : '1'}</div>
                 <div class="step-label ru">Данные получены</div>
                 <div class="step-label en">Data received</div>
+                ${stepMsg(steps, '1') ? '<div class="step-log" title="' + stepMsg(steps, '1') + '">' + stepMsg(steps, '1') + '</div>' : ''}
               </div>
               <div class="step ${order >= 2 ? 'done' : ''} ${order === 2 ? 'current' : ''}">
                 <div class="step-circle">${order >= 2 ? '✓' : '2'}</div>
                 <div class="step-label ru">Анализ ИИ</div>
                 <div class="step-label en">AI analysis</div>
+                ${stepMsg(steps, '2') ? '<div class="step-log" title="' + stepMsg(steps, '2') + '">' + stepMsg(steps, '2') + '</div>' : ''}
               </div>
               <div class="step ${order >= 3 ? 'done' : ''} ${order === 3 ? 'current' : ''}">
                 <div class="step-circle">${order >= 3 ? '✓' : '3'}</div>
                 <div class="step-label ru">Текст песни</div>
                 <div class="step-label en">Song lyrics</div>
+                ${stepMsg(steps, '3') ? '<div class="step-log" title="' + stepMsg(steps, '3') + '">' + stepMsg(steps, '3') + '</div>' : ''}
               </div>
               <div class="step ${order >= 4 ? 'done' : ''} ${order === 4 ? 'current' : ''}">
                 <div class="step-circle">${order >= 4 ? '✓' : '4'}</div>
                 <div class="step-label ru">Аудио</div>
                 <div class="step-label en">Audio</div>
+                ${stepMsg(steps, '4') ? '<div class="step-log" title="' + stepMsg(steps, '4') + '">' + stepMsg(steps, '4') + '</div>' : ''}
               </div>
             </div>
+            ${steps.error ? '<div class="details-section" style="margin-top:12px;"><div class="section-title" style="color:#e74c3c;">❌ Ошибка этапа</div><div class="content-text" style="font-size:12px;">' + stepMsg(steps, 'error') + '</div></div>' : ''}
           </div>
           <div class="details-section">
             <div class="section-title">💬 Запрос / Request</div>
@@ -262,7 +275,11 @@
         res = result.res;
         json = result.json;
       } catch (e) {
-        alert('❌ ' + (e && e.message ? e.message : 'Ошибка загрузки. Откройте админку по ссылке из бота (/admin).'));
+        const msg = (e && e.message ? e.message : 'Ошибка загрузки');
+        const hint = msg === 'Failed to fetch'
+          ? 'Сервер не ответил (сеть или холодный старт Render). Подождите 30 сек и нажмите «Подробнее» снова.'
+          : 'Откройте админку по ссылке из бота (/admin).';
+        alert('❌ ' + msg + '\n\n' + hint);
         return;
       }
       if (!json.success || !json.data) {

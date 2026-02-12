@@ -254,10 +254,12 @@ async function runOnce() {
     console.error("[Worker] Нет Supabase");
     return;
   }
+  // Не трогаем заявки, которые уже обрабатывает workerSoundKey (ваш промпт из кода)
   const { data: rows, error } = await supabase
     .from("track_requests")
     .select("id, telegram_user_id, name, birthdate, birthplace, birthtime, birthtime_unknown, request, language, astro_snapshot_id")
     .eq("status", "pending")
+    .or("generation_status.is.null,generation_status.eq.pending")
     .not("astro_snapshot_id", "is", null)
     .order("created_at", { ascending: true })
     .limit(1);
@@ -280,10 +282,12 @@ async function runOnceWithAstro() {
     console.error("[Worker] Нет Supabase");
     return;
   }
+  // Не трогаем заявки, которые уже обрабатывает workerSoundKey (ваш промпт из кода)
   const { data: rows, error } = await supabase
     .from("track_requests")
     .select("id, telegram_user_id, name, birthdate, birthplace, birthtime, birthtime_unknown, request, language, astro_snapshot_id")
     .eq("status", "pending")
+    .or("generation_status.is.null,generation_status.eq.pending")
     .order("created_at", { ascending: true })
     .limit(1);
   if (error) {
@@ -291,7 +295,7 @@ async function runOnceWithAstro() {
     return;
   }
   if (!rows?.length) {
-    console.log("[Worker] Нет заявок pending. Отправь заявку из Mini App — при следующем запуске воркер её обработает.");
+    console.log("[Worker] Нет заявок pending (без processing). Новые заявки обрабатывает workerSoundKey в боте.");
     return;
   }
   let row = rows[0];

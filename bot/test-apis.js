@@ -15,10 +15,17 @@ async function main() {
     "Напиши одну строку: «DeepSeek работает» и текущую дату."
   );
   if (deepseek.ok) {
-    console.log("DeepSeek: OK");
+    console.log("DeepSeek: OK — API отвечает, ключ действует.");
     console.log("Ответ (первые 200 символов):", (deepseek.text || "").slice(0, 200));
+    if (deepseek.usage) {
+      console.log("Обратная связь API: usage =", deepseek.usage, "(total_tokens, completion_tokens)");
+    }
+    if (deepseek.finish_reason) {
+      console.log("finish_reason:", deepseek.finish_reason, deepseek.finish_reason === "length" ? "(ответ обрезан по лимиту токенов)" : "");
+    }
   } else {
-    console.log("DeepSeek: ОШИБКА:", deepseek.error);
+    console.log("DeepSeek: ОШИБКА (обратный сигнал от API):", deepseek.error);
+    console.log("Типичные коды: 401 — неверный ключ, 402 — нет баланса, 429 — лимит запросов.");
   }
 
   console.log("\n=== Тест Suno (только старт задачи) ===\n");
