@@ -622,11 +622,15 @@ bot.command("admin", async (ctx) => {
       return;
     }
 
+    sendAdminLink();
+
     const adminUrl = getAdminUrl();
     const adminLinkLine = adminUrl
       ? `\n\n👑 Админка (нажми — откроется, вводить токен не нужно):\n${adminUrl}`
       : "\n\n👑 Ссылка на админку: задай BOT_PUBLIC_URL и ADMIN_SECRET в Render (Environment), перезапусти и снова /admin.";
-    await reply("Проверяю заявки…" + adminLinkLine);
+    reply("Проверяю заявки…" + adminLinkLine).catch(() => {
+      if (targetId) bot.api.sendMessage(targetId, "👑 Админка: " + (adminUrl || "задай BOT_PUBLIC_URL в Render")).catch(() => {});
+    });
 
     const { requests, dbError } = await getRequestsForAdmin(30);
 
