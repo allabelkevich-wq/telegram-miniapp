@@ -421,7 +421,7 @@ ${astroTextFull}
     }
     
     // ========== ЭТАП 1: DEEPSEEK ==========
-    const MAX_TOKENS_LLM = 3500;
+    const MAX_TOKENS_LLM = 4000;
     console.log(`[Воркер] ЭТАП 1 — DeepSeek: отправляю запрос для ${request.name} (max_tokens=${MAX_TOKENS_LLM})`);
     
     const llm = await chatCompletion(SYSTEM_PROMPT, userRequest, {
@@ -436,10 +436,11 @@ ${astroTextFull}
     const fullResponse = llm.text;
     const finishReason = llm.finish_reason || null;
     const llmTruncated = finishReason === "length";
+    console.log(`[Воркер] Получен анализ от DeepSeek (длина: ${fullResponse.length}), finish_reason: ${finishReason || "—"}${llm.usage ? `, completion_tokens: ${llm.usage.completion_tokens}` : ""}`);
     if (llmTruncated) {
-      console.warn(`[Воркер] ЭТАП 1 — DeepSeek: ВНИМАНИЕ — ответ обрезан по лимиту (finish_reason=length). Песня могла остаться недоделанной. Длина: ${fullResponse.length}`);
+      console.warn(`[Воркер] ⚠️ ОТВЕТ ОБРЕЗАН! Увеличьте max_tokens или сократите системный промпт.`);
     } else {
-      console.log(`[Воркер] ЭТАП 1 — DeepSeek: ответ получен, длина ${fullResponse.length} символов, finish_reason=${finishReason || "—"}${llm.usage ? `, токенов: ${llm.usage.completion_tokens}` : ""}`);
+      console.log(`[Воркер] ЭТАП 1 — DeepSeek: ответ полный, finish_reason=${finishReason || "—"}`);
     }
     
     // === ПРОВЕРКА КАЧЕСТВА ОТВЕТА ===
