@@ -49,6 +49,7 @@
 <body>
   <h1 style="margin-bottom:8px">YupSoul — Админка</h1>
   <p class="intro">Проверка этапов генерации: сырой ответ DeepSeek, лирика и style в Suno, обрезка по токенам.</p>
+  <p class="intro" style="margin-bottom:16px"><strong>Удобная версия:</strong> <a href="/admin-simple">/admin-simple</a> — карточки заявок, этапы, перезапуск. Рекомендуется открывать из бота (/admin) или из приложения (кнопка «Админка»).</p>
 
   <div class="instructions">
     <strong>Вход из браузера (Render):</strong>
@@ -65,11 +66,19 @@
     <button type="button" class="btn" id="authBtn">Войти</button>
   </div>
   <div id="root">
-    <p>Проверка доступа…</p>
+    <p id="statusText">Проверка доступа…</p>
+    <p class="intro" style="margin-top:8px;font-size:13px">Если висит больше минуты — сервер на Render мог «уснуть». Подожди или обнови страницу (F5).</p>
   </div>
 
   <script>
     const API_BASE = window.location.origin;
+    const FETCH_TIMEOUT_MS = 90000;
+
+    function fetchWithTimeout(url, opts) {
+      const ctrl = new AbortController();
+      const to = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+      return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(to));
+    }
     function getAuth() {
       const tg = window.Telegram?.WebApp?.initData;
       if (tg) return { type: 'init', value: tg };
@@ -84,23 +93,30 @@
       return { 'Authorization': 'Bearer ' + a.value };
     }
     async function checkAdmin() {
-      const r = await fetch(API_BASE + '/api/admin/me', { headers: authHeaders() });
+      const r = await fetchWithTimeout(API_BASE + '/api/admin/me', { headers: authHeaders() });
       const j = await r.json().catch(() => ({}));
       return r.ok && j.admin === true;
     }
     async function loadList() {
-      const r = await fetch(API_BASE + '/api/admin/requests?limit=50', { headers: authHeaders() });
+      const r = await fetchWithTimeout(API_BASE + '/api/admin/requests?limit=50', { headers: authHeaders() });
       if (!r.ok) throw new Error('Ошибка загрузки списка');
       return r.json();
     }
     async function loadDetail(id) {
-      const r = await fetch(API_BASE + '/api/admin/requests/' + id, { headers: authHeaders() });
+      const r = await fetchWithTimeout(API_BASE + '/api/admin/requests/' + id, { headers: authHeaders() });
       if (!r.ok) throw new Error('Ошибка загрузки заявки');
       return r.json();
+    }
+    function setStatus(msg) {
+      const el = document.getElementById('statusText');
+      if (el) el.textContent = msg;
     }
 
     function renderDenied() {
       document.getElementById('root').innerHTML = '<div class="denied"><p><strong>Доступ запрещён.</strong></p><p>Если заходишь из браузера: задай в Render переменную <strong>ADMIN_SECRET</strong> (Environment), сохрани, затем вставь тот же токен выше и нажми «Войти».</p><p>Или открой страницу с параметром: <code>/admin?token=ТВОЙ_СЕКРЕТ</code>.</p></div>';
+    }
+    function renderTimeout() {
+      document.getElementById('root').innerHTML = '<div class="denied"><p><strong>Сервер не ответил за 1,5 минуты.</strong></p><p>На Render бесплатный сервис «засыпает» без трафика. Первый запрос его будит — это может занять до 1–2 минут.</p><p>Обнови страницу (F5) и подожди ещё раз, либо открой сначала главную <a href="/">главную</a>, подожди загрузки, затем снова открой /admin.</p></div>';
     }
     function renderList(requests) {
       const html = '<h1>Заявки — контроль этапов генерации</h1><div class="list"><table><thead><tr><th>Дата</th><th>Имя</th><th>Режим</th><th>Статус</th><th>Обрезка LLM</th><th>Аудио</th></tr></thead><tbody>' +
@@ -163,20 +179,35 @@
     }
 
     document.getElementById('authBtn').addEventListener('click', async () => {
-      const ok = await checkAdmin();
-      if (ok) {
-        const data = await loadList();
-        renderList(data.requests);
-      } else renderDenied();
+      const root = document.getElementById('root');
+      root.innerHTML = '<p>Проверка доступа…</p>';
+      try {
+        const ok = await checkAdmin();
+        if (ok) {
+          root.innerHTML = '<p>Загрузка списка…</p>';
+          const data = await loadList();
+          renderList(data.requests);
+        } else renderDenied();
+      } catch (e) {
+        if (e.name === 'AbortError') renderTimeout();
+        else root.innerHTML = '<div class="denied"><p>Ошибка: ' + (e.message || e) + '</p></div>';
+      }
     });
     (async () => {
       const urlToken = new URLSearchParams(location.search).get('token');
       if (urlToken) document.getElementById('tokenInput').value = urlToken;
-      const ok = await checkAdmin();
-      if (ok) {
-        const data = await loadList();
-        renderList(data.requests);
-      } else renderDenied();
+      try {
+        setStatus('Проверка доступа… (при первом открытии сервер может просыпаться до 1–2 мин)');
+        const ok = await checkAdmin();
+        if (ok) {
+          setStatus('Загрузка списка заявок…');
+          const data = await loadList();
+          renderList(data.requests);
+        } else renderDenied();
+      } catch (e) {
+        if (e.name === 'AbortError') renderTimeout();
+        else document.getElementById('root').innerHTML = '<div class="denied"><p><strong>Ошибка:</strong> ' + (e.message || e) + '</p><p>Проверь интернет и обнови страницу.</p></div>';
+      }
     })();
   </script>
 </body>

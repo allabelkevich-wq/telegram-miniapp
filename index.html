@@ -244,6 +244,9 @@
         <div id="masterNav" style="display:none; margin-top:20px">
           <button class="secondary" id="goHeroesBtn">👥 Мои герои</button>
         </div>
+        <div id="adminLinkWrap" style="display:none; margin-top:16px; text-align:center">
+          <a href="#" id="adminLinkBtn" class="secondary" style="display:inline-block;padding:10px 20px;text-decoration:none;color:inherit;border-radius:8px;border:2px solid var(--tg-theme-button-color,#8b5cf6);color:var(--tg-theme-button-color,#8b5cf6)">👑 Админка</a>
+        </div>
       </div>
       
       <footer>
@@ -1249,6 +1252,28 @@
           goToPage(pageMap[button.getAttribute('data-page')] || 'homePage');
         });
       });
+
+      (function checkAdminAndShowLink() {
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
+        if (!apiBase || !initData) return;
+        fetch(apiBase + '/api/admin/me', { headers: { 'X-Telegram-Init': initData } })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (!data || !data.admin) return;
+            var wrap = document.getElementById('adminLinkWrap');
+            var btn = document.getElementById('adminLinkBtn');
+            if (!wrap || !btn) return;
+            wrap.style.display = 'block';
+            btn.addEventListener('click', function(e) {
+              e.preventDefault();
+              var url = apiBase + '/admin-simple';
+              if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) window.Telegram.WebApp.openLink(url);
+              else window.open(url, '_blank');
+            });
+          })
+          .catch(function() {});
+      })();
         } catch (e) {
           console.warn('App init error:', e);
         }

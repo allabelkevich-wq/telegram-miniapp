@@ -592,6 +592,13 @@ bot.command("admin", async (ctx) => {
     if (targetId) bot.api.sendMessage(targetId, text).catch((e) => console.error("[admin] replyAny:", e?.message));
   };
 
+  const sendAdminLink = () => {
+    if (BOT_PUBLIC_URL && targetId) {
+      const url = BOT_PUBLIC_URL + "/admin-simple";
+      bot.api.sendMessage(targetId, "👑 Веб-админка (заявки, этапы, перезапуск):\n" + url).catch(() => {});
+    }
+  };
+
   try {
     if (!ctx?.chat && !ctx?.from) {
       console.warn("[admin] Нет ctx.chat и ctx.from");
@@ -601,6 +608,7 @@ bot.command("admin", async (ctx) => {
 
     if (!ADMIN_IDS.length) {
       await reply("В Render (Environment) не задан ADMIN_TELEGRAM_IDS. Добавь: ADMIN_TELEGRAM_IDS=твой_Telegram_ID (узнать ID: @userinfobot), затем перезапусти сервис.");
+      sendAdminLink();
       return;
     }
     if (!isAdmin(userId)) {
@@ -616,6 +624,7 @@ bot.command("admin", async (ctx) => {
       await reply(
         "Не удалось загрузить заявки из базы (таймаут или ошибка Supabase).\n\nКоманда /admin_check — проверка подключения к базе."
       );
+      sendAdminLink();
       return;
     }
     if (!requests.length) {
@@ -623,6 +632,7 @@ bot.command("admin", async (ctx) => {
         ? "Заявок пока нет.\n\nОтправь заявку из приложения (кнопка меню → форма → «Отправить заявку»). Затем снова /admin или /admin_check."
         : "Заявок пока нет. Supabase не подключён — заявки только в памяти.";
       await reply(hint);
+      sendAdminLink();
       return;
     }
     let text = "📋 Последние заявки:\n\n";
@@ -645,9 +655,11 @@ bot.command("admin", async (ctx) => {
       console.error("[admin] sendLongMessage:", e?.message || e);
       await reply("Не удалось отправить список (ошибка Telegram). Попробуй /admin ещё раз.");
     });
+    sendAdminLink();
   } catch (err) {
     console.error("[admin] Ошибка:", err?.message || err);
     replyAny("Ошибка при выполнении /admin. Попробуй /admin_check или подожди минуту (сервер мог проснуться) и напиши /admin снова.");
+    sendAdminLink();
   }
 });
 
@@ -669,6 +681,7 @@ bot.api.setMyCommands(commands, { language_code: "ru" }).catch(() => {});
 const app = express();
 // Вебхук — до express.json(), чтобы получать raw body (нужно для grammY)
 const WEBHOOK_URL = (process.env.WEBHOOK_URL || "").replace(/\/$/, "");
+const BOT_PUBLIC_URL = (process.env.BOT_PUBLIC_URL || process.env.WEBHOOK_URL || "").replace(/\/webhook\/?$/i, "").replace(/\/$/, "");
 if (WEBHOOK_URL) {
   app.use("/webhook", express.raw({ type: "application/json" }), webhookCallback(bot, "express"));
 }
@@ -682,13 +695,13 @@ app.use((req, res, next) => {
 });
 // Health check: и для Render, и для «пробуждения» в браузере — показываем страницу, а не пустой/серый экран
 const healthHtml =
-  "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"><title>YupSoul Bot</title><style>body{font-family:sans-serif;padding:2rem;max-width:32rem;margin:0 auto;}</style></head><body><h1>Сервис работает</h1><p>Бот пробуждён — можно писать ему в Telegram.</p><p><a href=\"/\">Главная</a></p></body></html>";
+  "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"><title>YupSoul Bot</title><style>body{font-family:sans-serif;padding:2rem;max-width:32rem;margin:0 auto;} a{margin:0 .25rem}</style></head><body><h1>Сервис работает</h1><p>Бот пробуждён — можно писать ему в Telegram.</p><p><a href=\"/\">Главная</a> · <a href=\"/admin-simple\">Админка</a></p></body></html>";
 app.get("/healthz", (_req, res) =>
   res.status(200).set("Content-Type", "text/html; charset=utf-8").send(healthHtml)
 );
 app.get("/", (_req, res) =>
   res.status(200).set("Content-Type", "text/html; charset=utf-8").send(
-    "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>YupSoul Bot</title></head><body><p>YupSoul Bot работает.</p><p>Проверка: <a href=\"/healthz\">/healthz</a></p><p>Статус webhook: <a href=\"/healthz?webhook=1\">/healthz?webhook=1</a> — если бот не видит команды.</p><p>Приложение открывай из Telegram — кнопка меню бота.</p></body></html>"
+    "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>YupSoul Bot</title></head><body><p>YupSoul Bot работает.</p><p>Проверка: <a href=\"/healthz\">/healthz</a></p><p>Админка: <a href=\"/admin\">/admin</a> · <a href=\"/admin-simple\">/admin-simple</a></p><p>Статус webhook: <a href=\"/healthz?webhook=1\">/healthz?webhook=1</a> — если бот не видит команды.</p><p>Приложение открывай из Telegram — кнопка меню бота.</p></body></html>"
   )
 );
 // Обработчик /api/me (чтобы не было 500 ошибки)
@@ -700,7 +713,7 @@ function resolveAdminAuth(req) {
   const initData = req.headers["x-telegram-init"] || req.query?.initData || req.body?.initData;
   const telegramUserId = validateInitData(initData, BOT_TOKEN);
   if (telegramUserId != null && isAdmin(telegramUserId)) return { admin: true, userId: telegramUserId };
-  const token = req.headers.authorization?.replace(/^Bearer\s+/i, "") || req.query?.token;
+  const token = req.headers["x-admin-token"] || req.headers.authorization?.replace(/^Bearer\s+/i, "") || req.query?.token;
   if (ADMIN_SECRET && token === ADMIN_SECRET) return { admin: true, userId: "token" };
   return null;
 }
@@ -722,32 +735,78 @@ app.get("/api/admin/me", (req, res) => {
   return res.json({ admin: true, userId: auth.userId });
 });
 
+app.get("/api/admin/stats", async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const { data: rows, error } = await supabase.from("track_requests").select("generation_status");
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  const stats = { total: rows?.length || 0, pending: 0, astro_calculated: 0, lyrics_generated: 0, suno_processing: 0, completed: 0, failed: 0 };
+  (rows || []).forEach((r) => {
+    const s = r.generation_status || "pending";
+    if (s === "completed") stats.completed++;
+    else if (s === "failed") stats.failed++;
+    else if (s === "suno_processing") stats.suno_processing++;
+    else if (s === "lyrics_generated") stats.lyrics_generated++;
+    else if (s === "astro_calculated") stats.astro_calculated++;
+    else stats.pending++;
+  });
+  return res.json({ success: true, stats });
+});
+
 app.get("/api/admin/requests", async (req, res) => {
   const auth = resolveAdminAuth(req);
-  if (!auth) return res.status(403).json({ error: "Доступ только для админа" });
-  if (!supabase) return res.status(503).json({ error: "Supabase недоступен" });
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const limit = Math.min(parseInt(req.query?.limit, 10) || 50, 100);
-  const { data, error } = await supabase
+  const statusFilter = req.query?.status || "all";
+  let q = supabase
     .from("track_requests")
-    .select("id, name, status, created_at, llm_truncated, audio_url, mode, request")
+    .select("id, name, person2_name, status, generation_status, created_at, llm_truncated, audio_url, mode, request")
     .order("created_at", { ascending: false })
     .limit(limit);
-  if (error) return res.status(500).json({ error: error.message });
-  return res.json({ requests: data || [] });
+  if (statusFilter === "pending") q = q.in("generation_status", ["pending", "astro_calculated", "lyrics_generated", "suno_processing"]);
+  else if (statusFilter === "completed") q = q.eq("generation_status", "completed");
+  else if (statusFilter === "failed") q = q.eq("generation_status", "failed");
+  const { data, error } = await q;
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  return res.json({ success: true, data: data || [] });
 });
 
 app.get("/api/admin/requests/:id", async (req, res) => {
   const auth = resolveAdminAuth(req);
-  if (!auth) return res.status(403).json({ error: "Доступ только для админа" });
-  if (!supabase) return res.status(503).json({ error: "Supabase недоступен" });
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const { data, error } = await supabase
     .from("track_requests")
     .select("*")
     .eq("id", req.params.id)
     .maybeSingle();
-  if (error) return res.status(500).json({ error: error.message });
-  if (!data) return res.status(404).json({ error: "Заявка не найдена" });
-  return res.json(data);
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  if (!data) return res.status(404).json({ success: false, error: "Заявка не найдена" });
+  return res.json({ success: true, data });
+});
+
+app.post("/api/admin/requests/:id/restart", async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const id = req.params.id;
+  const { error: updateError } = await supabase
+    .from("track_requests")
+    .update({ status: "pending", generation_status: "pending", error_message: null, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (updateError) return res.status(500).json({ success: false, error: updateError.message });
+  import("./workerSoundKey.js").then(({ generateSoundKey }) => {
+    generateSoundKey(id).catch((err) => console.error("[admin] restart generateSoundKey:", err?.message || err));
+  }).catch((err) => console.error("[admin] restart import workerSoundKey:", err?.message || err));
+  return res.json({ success: true, message: "Перезапущено" });
+});
+
+app.get(["/admin-simple", "/admin-simple/"], (req, res) => {
+  res.type("html").sendFile(path.join(__dirname, "admin-simple.html"), (err) => {
+    if (err) res.status(500).send("<!DOCTYPE html><html><head><meta charset='utf-8'></head><body style='background:#0f0f1b;color:#fff;font-family:sans-serif;padding:40px;'><h1>Ошибка</h1><p>admin-simple.html не найден</p><a href='/admin' style='color:#667eea'>Админка</a></body></html>");
+  });
 });
 
 app.get(["/webhook-info", "/webhook-info/"], async (_req, res) => {
