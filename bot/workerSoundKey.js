@@ -268,6 +268,8 @@ function parseResponse(text) {
     const markers = [
       /\[Verse\s*1\s*:?\]/i, /\[Verse\s*2\s*:?\]/i, /\[Chorus\s*:?\]/i, /\[Bridge\s*:?\]/i,
       /Verse\s*1\s*:?\s*$/im, /Chorus\s*:?\s*$/im, /Куплет\s*1/im, /Припев\s*:/im,
+      /^\s*\*\*Verse\s*1\*\*/im, /^\s*\(\s*Verse\s*1\s*\)/im, /^\s*#\s*Verse\s*1/im,
+      /^\s*Verse\s*1\s*:?\s*$/im, /^\s*Chorus\s*:?\s*$/im, /^\s*Intro\s*:?\s*$/im,
     ];
     let start = -1;
     for (const re of markers) {
@@ -277,6 +279,25 @@ function parseResponse(text) {
     if (start >= 0) {
       const block = beforeStyle.slice(start).trim();
       if (block.length > 200) lyrics = block;
+    }
+  }
+  // Маркдаун-блок кода (``` ... ```) — модель могла обернуть лирику в код
+  if (!lyrics && /```/.test(text)) {
+    const codeBlock = text.match(/```(?:[\w]*)\n?([\s\S]*?)```/);
+    if (codeBlock && codeBlock[1]) {
+      const block = codeBlock[1].trim();
+      if (block.length > 200 && block.split(/\n/).filter((l) => l.trim()).length >= 5) lyrics = block;
+    }
+  }
+  // Отдельная строка "Текст песни" / "Song lyrics" / "LYRICS" (с двоеточием или без)
+  if (!lyrics) {
+    const labelMatch = text.match(/\n\s*(Текст песни|Song lyrics?|LYRICS?)\s*:?\s*[\r\n]/i);
+    if (labelMatch) {
+      const pos = text.indexOf(labelMatch[0]) + labelMatch[0].length;
+      const afterLabel = text.slice(pos);
+      const endMark = afterLabel.search(/\n\s*\[style:\s*|\n\s*MUSIC PROMPT|```/i);
+      const block = (endMark >= 0 ? afterLabel.slice(0, endMark) : afterLabel).trim();
+      if (block.length > 150) lyrics = block;
     }
   }
   // Последний запасной: от "ПЕСНЯ ДЛЯ" или "ЭТАП 3" до [style:] (весь блок песни)
@@ -302,7 +323,7 @@ function parseResponse(text) {
   if (!lyrics && text.length > 500) {
     const tail = text.slice(-4000).trim();
     const lines = tail.split(/\n/).filter((l) => l.trim()).length;
-    if (lines >= 8) lyrics = tail;
+    if (lines >= 5) lyrics = tail;
   }
   // Запасной: после анализа (или после названия «») до конца — если нет [style:], считаем что лирика идёт до конца
   if (!lyrics && text.length > 800) {
@@ -321,7 +342,15 @@ function parseResponse(text) {
     const lines = tail.split(/\n/).filter((l) => l.trim()).length;
     if (tail.length >= 400 && lines >= 5) lyrics = tail;
   }
-  
+  // Ответ без [style:]: от «название» или "ПЕСНЯ ДЛЯ" до конца — весь оставшийся текст как лирика
+  if (!lyrics && text.length > 600 && !text.includes("[style:")) {
+    const afterTitle = text.indexOf("»") >= 0 ? text.slice(text.indexOf("»") + 1) : text;
+    const songStart = afterTitle.search(/(ПЕСНЯ ДЛЯ|ЭТАП 3|СТРУКТУРА ЛИРИКИ|Verse\s*1|Chorus|Куплет|Припев)/i);
+    const start = songStart >= 0 ? songStart : 0;
+    const block = afterTitle.slice(start).trim();
+    if (block.length > 300 && block.split(/\n/).filter((l) => l.trim()).length >= 5) lyrics = block;
+  }
+
   if (!title && lyrics) title = "Sound Key";
   if (!lyrics) return null;
   
@@ -565,9 +594,11 @@ ${astroTextFull}
       const { data: row } = await supabase.from("app_settings").select("value").eq("key", "deepseek_max_tokens").maybeSingle();
       if (row?.value != null) settingsMaxTokens = Math.max(1, Number(row.value));
     } catch (_) {}
-    const MAX_TOKENS_LLM = process.env.DEEPSEEK_MAX_TOKENS != null
+    // API DeepSeek возвращает 400 при max_tokens > 8192 — ограничиваем перед отправкой
+    const rawMax = process.env.DEEPSEEK_MAX_TOKENS != null
       ? Number(process.env.DEEPSEEK_MAX_TOKENS)
       : (settingsMaxTokens ?? maxFromContext);
+    const MAX_TOKENS_LLM = Math.min(8192, Math.max(1, Number(rawMax) || 8192));
     const TEMPERATURE = process.env.DEEPSEEK_TEMPERATURE != null ? Number(process.env.DEEPSEEK_TEMPERATURE) : 1.5;
     const withSearch = !!SERPER_API_KEY;
     console.log(`[Воркер] 🤖 Отправляю запрос в DeepSeek (model=${LLM_MODEL}, max_tokens=${MAX_TOKENS_LLM}, temperature=${TEMPERATURE}, вход ~${estimatedInputTokens} ток.${withSearch ? ", поиск при генерации" : ""})...`);

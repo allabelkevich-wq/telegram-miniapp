@@ -99,7 +99,7 @@
     </div>
     <div class="details-section" style="margin-bottom:20px;">
       <div class="section-title">⚙️ Настройки генерации</div>
-      <p style="font-size:14px;color:#94a3b8;margin-bottom:12px;">Макс. токенов ответа DeepSeek (минимум 1). По доке API: deepseek-chat — макс. 8K, deepseek-reasoner — макс. 64K. Сохранённое значение применяется к новым заявкам.</p>
+      <p style="font-size:14px;color:#94a3b8;margin-bottom:12px;">Макс. токенов ответа DeepSeek (1–8192). Текущий эндпоинт API принимает только до 8192; при большем значении запрос обрежется до 8192. Сохранённое значение — для новых заявок.</p>
       <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
         <label style="display:flex;align-items:center;gap:8px;">
           <span style="min-width:120px;">max_tokens:</span>
@@ -120,7 +120,12 @@
     let currentFilter = 'all';
 
     function getToken() {
-      return new URLSearchParams(window.location.search).get('token') || localStorage.getItem('adminToken');
+      const fromUrl = new URLSearchParams(window.location.search).get('token');
+      if (fromUrl) {
+        try { localStorage.setItem('adminToken', fromUrl); } catch (e) {}
+        return fromUrl;
+      }
+      return localStorage.getItem('adminToken');
     }
     function authHeaders() {
       const t = getToken();
@@ -139,12 +144,15 @@
       const res = await fetch(url, opts);
       const text = await res.text();
       if (text.trim().startsWith('<')) {
-        throw new Error('Сервер вернул HTML вместо данных. Откройте админку по ссылке из бота (команда /admin) — тот же домен, что и бот.');
+        if (res.status === 502 || res.status === 503) {
+          throw new Error('Сервер просыпается (502/503). Подождите 30–60 сек и обновите страницу (F5).');
+        }
+        throw new Error('Сервер вернул HTML вместо данных. Код ответа: ' + res.status + '. Откройте админку по ссылке из бота (команда /admin) — тот же домен, что и бот. Сейчас открыто: ' + window.location.origin);
       }
       try {
         return { res, json: JSON.parse(text) };
       } catch (e) {
-        throw new Error('Ответ не JSON (возможно, сервер недоступен или не тот адрес). Откройте админку по ссылке из бота.');
+        throw new Error('Ответ не JSON (сервер недоступен или не тот адрес). Откройте по ссылке из бота (/admin).');
       }
     }
 

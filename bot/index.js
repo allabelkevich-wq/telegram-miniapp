@@ -10,9 +10,19 @@ import { createClient } from "@supabase/supabase-js";
 import { createHeroesRouter, getOrCreateAppUser, validateInitData } from "./heroesApi.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import fs from "node:fs";
 import "dotenv/config";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DEBUG_LOG_PATH = path.join(process.cwd(), ".cursor", "debug.log");
+function debugLog(payload) {
+  const line = JSON.stringify({ ...payload, timestamp: payload.timestamp || Date.now() });
+  console.log("[debug]", line);
+  try {
+    fs.mkdirSync(path.dirname(DEBUG_LOG_PATH), { recursive: true });
+    fs.appendFileSync(DEBUG_LOG_PATH, line + "\n");
+  } catch (_) {}
+}
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const MINI_APP_BASE = (process.env.MINI_APP_URL || "https://telegram-miniapp-six-teal.vercel.app").replace(/\?.*$/, "").replace(/\/$/, "");
@@ -40,7 +50,16 @@ const bot = new Bot(BOT_TOKEN);
 bot.use(async (ctx, next) => {
   const msg = ctx.message;
   const fromId = ctx.from?.id;
-  if (msg?.text) console.log("[TG] msg from", fromId, ":", msg.text.slice(0, 80) + (msg.text.length > 80 ? "…" : ""));
+  if (msg?.text) {
+    console.log("[TG] msg from", fromId, ":", msg.text.slice(0, 80) + (msg.text.length > 80 ? "…" : ""));
+    // #region agent log
+    if (msg.text.trim().toLowerCase().startsWith("/admin")) {
+      const p = { location: "index.js:middleware", message: "TG update with /admin received", data: { fromId, chatId: ctx.chat?.id, hasChat: !!ctx.chat, hasFrom: !!ctx.from }, timestamp: Date.now(), hypothesisId: "H1" };
+      debugLog(p);
+      fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p) }).catch(() => {});
+    }
+    // #endregion
+  }
   const chatId = ctx.chat?.id;
   if (chatId) ctx.api.sendChatAction(chatId, "typing").catch(() => {});
   return next();
@@ -572,9 +591,15 @@ function sendLongMessage(ctx, text) {
 }
 
 bot.command("admin", async (ctx) => {
-  const userId = ctx?.from?.id;
-  const chatId = ctx?.chat?.id ?? userId;
+  const msg = ctx.update?.message;
+  const userId = ctx?.from?.id ?? msg?.from?.id;
+  const chatId = ctx?.chat?.id ?? msg?.chat?.id ?? userId;
   const targetId = chatId || userId;
+  // #region agent log
+  const p1 = { location: "index.js:admin-cmd", message: "admin command handler entered", data: { userId, chatId, hasChat: !!ctx.chat, hasFrom: !!ctx.from, adminIdsLength: ADMIN_IDS.length, isAdmin: !!userId && ADMIN_IDS.includes(Number(userId)) }, timestamp: Date.now(), hypothesisId: "H2,H3,H4" };
+  debugLog(p1);
+  fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p1) }).catch(() => {});
+  // #endregion
 
   const reply = async (text) => {
     try {
@@ -607,39 +632,64 @@ bot.command("admin", async (ctx) => {
     } else {
       bot.api.sendMessage(
         targetId,
-        "👑 Ссылка на админку не пришла: не задан BOT_PUBLIC_URL.\n\nВ Render → Environment добавь:\nBOT_PUBLIC_URL=https://твой-сервис.onrender.com\n(без слэша в конце, без /webhook). Перезапусти сервис и снова напиши /admin."
+        "👑 Ссылка на админку не пришла: не задан базовый URL.\n\nВ Render → Environment добавь одну из переменных:\nBOT_PUBLIC_URL или HEROES_API_BASE = https://твой-сервис.onrender.com\n(без слэша в конце). Перезапусти сервис и снова напиши /admin."
       ).catch(() => {});
     }
   };
 
   try {
-    if (!ctx?.chat && !ctx?.from) {
-      console.warn("[admin] Нет ctx.chat и ctx.from");
+    if (!targetId) {
+      // #region agent log
+      const p4 = { location: "index.js:admin-cmd", message: "admin early return: no targetId (no chat/from)", data: {}, timestamp: Date.now(), hypothesisId: "H4" };
+      debugLog(p4);
+      fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p4) }).catch(() => {});
+      // #endregion
+      console.warn("[admin] Нет chat/from в апдейте");
       return;
     }
     console.log("[admin] chatId=" + chatId + " userId=" + userId + " isAdmin=" + isAdmin(userId) + " ADMIN_IDS=" + JSON.stringify(ADMIN_IDS));
 
     if (!ADMIN_IDS.length) {
+      // #region agent log
+      const p2 = { location: "index.js:admin-cmd", message: "admin branch: ADMIN_IDS empty", data: {}, timestamp: Date.now(), hypothesisId: "H2" };
+      debugLog(p2);
+      fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p2) }).catch(() => {});
+      // #endregion
       await reply("В Render (Environment) не задан ADMIN_TELEGRAM_IDS. Добавь: ADMIN_TELEGRAM_IDS=твой_Telegram_ID (узнать ID: @userinfobot), затем перезапусти сервис.");
       sendAdminLink();
       return;
     }
     if (!isAdmin(userId)) {
+      // #region agent log
+      const p2b = { location: "index.js:admin-cmd", message: "admin branch: user not admin", data: { userId, adminIds: ADMIN_IDS }, timestamp: Date.now(), hypothesisId: "H2" };
+      debugLog(p2b);
+      fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p2b) }).catch(() => {});
+      // #endregion
       await reply("Нет доступа к админке. Твой Telegram ID: " + (userId ?? "?") + ". Добавь в Render → Environment: ADMIN_TELEGRAM_IDS=" + (userId ?? "ТВОЙ_ID") + " и перезапусти бота.");
       return;
     }
 
+    // #region agent log
+    const p5 = { location: "index.js:admin-cmd", message: "admin passed checks, sending link and fetching requests", data: { hasBotPublicUrl: !!process.env.BOT_PUBLIC_URL }, timestamp: Date.now(), hypothesisId: "H5" };
+    debugLog(p5);
+    fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p5) }).catch(() => {});
+    // #endregion
     sendAdminLink();
 
     const adminUrl = getAdminUrl();
     const adminLinkLine = adminUrl
       ? `\n\n👑 Админка (нажми — откроется, вводить токен не нужно):\n${adminUrl}`
-      : "\n\n👑 Ссылка на админку: задай BOT_PUBLIC_URL и ADMIN_SECRET в Render (Environment), перезапусти и снова /admin.";
+      : "\n\n👑 Ссылка на админку: задай BOT_PUBLIC_URL (или HEROES_API_BASE) и ADMIN_SECRET в Render (Environment), перезапусти и снова /admin.";
     reply("Проверяю заявки…" + adminLinkLine).catch(() => {
-      if (targetId) bot.api.sendMessage(targetId, "👑 Админка: " + (adminUrl || "задай BOT_PUBLIC_URL в Render")).catch(() => {});
+      if (targetId) bot.api.sendMessage(targetId, "👑 Админка: " + (adminUrl || "задай BOT_PUBLIC_URL или HEROES_API_BASE в Render")).catch(() => {});
     });
 
     const { requests, dbError } = await getRequestsForAdmin(30);
+    // #region agent log
+    const p5b = { location: "index.js:admin-cmd", message: "getRequestsForAdmin returned", data: { dbError, requestsLength: (requests || []).length }, timestamp: Date.now(), hypothesisId: "H5" };
+    debugLog(p5b);
+    fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p5b) }).catch(() => {});
+    // #endregion
 
     if (dbError) {
       await reply(
@@ -678,6 +728,11 @@ bot.command("admin", async (ctx) => {
     });
     sendAdminLink();
   } catch (err) {
+    // #region agent log
+    const p5c = { location: "index.js:admin-cmd", message: "admin handler catch", data: { errorMessage: err?.message || String(err) }, timestamp: Date.now(), hypothesisId: "H5" };
+    debugLog(p5c);
+    fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p5c) }).catch(() => {});
+    // #endregion
     console.error("[admin] Ошибка:", err?.message || err);
     replyAny("Ошибка при выполнении /admin. Попробуй /admin_check или подожди минуту (сервер мог проснуться) и напиши /admin снова.");
     sendAdminLink();
@@ -702,7 +757,8 @@ bot.api.setMyCommands(commands, { language_code: "ru" }).catch(() => {});
 const app = express();
 // Вебхук — до express.json(), чтобы получать raw body (нужно для grammY)
 const WEBHOOK_URL = (process.env.WEBHOOK_URL || "").replace(/\/$/, "");
-const BOT_PUBLIC_URL = (process.env.BOT_PUBLIC_URL || process.env.WEBHOOK_URL || "").replace(/\/webhook\/?$/i, "").replace(/\/$/, "");
+// Базовый URL для ссылки на админку: BOT_PUBLIC_URL, WEBHOOK_URL или HEROES_API_BASE (как в инструкции Render)
+const BOT_PUBLIC_URL = (process.env.BOT_PUBLIC_URL || process.env.WEBHOOK_URL || process.env.HEROES_API_BASE || "").replace(/\/webhook\/?$/i, "").replace(/\/$/, "");
 if (WEBHOOK_URL) {
   app.use("/webhook", express.raw({ type: "application/json" }), webhookCallback(bot, "express"));
 }
@@ -739,6 +795,10 @@ function resolveAdminAuth(req) {
   return null;
 }
 
+function asyncApi(fn) {
+  return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+}
+
 app.get("/admin", (req, res) => {
   const adminPath = path.join(__dirname, "admin.html");
   res.type("html");
@@ -750,13 +810,20 @@ app.get("/admin", (req, res) => {
   });
 });
 
+// #region agent log
+app.use("/api/admin", (req, res, next) => {
+  debugLog({ location: "index.js:api-admin", message: "admin API request", data: { path: req.path, method: req.method }, timestamp: Date.now(), hypothesisId: "admin-html" });
+  next();
+});
+// #endregion
+
 app.get("/api/admin/me", (req, res) => {
   const auth = resolveAdminAuth(req);
   if (!auth) return res.status(403).json({ error: "Доступ только для админа", admin: false });
   return res.json({ admin: true, userId: auth.userId });
 });
 
-app.get("/api/admin/stats", async (req, res) => {
+app.get("/api/admin/stats", asyncApi(async (req, res) => {
   const auth = resolveAdminAuth(req);
   if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
@@ -777,9 +844,9 @@ app.get("/api/admin/stats", async (req, res) => {
     else stats.pending++;
   });
   return res.json({ success: true, stats });
-});
+}));
 
-app.get("/api/admin/requests", async (req, res) => {
+app.get("/api/admin/requests", asyncApi(async (req, res) => {
   const auth = resolveAdminAuth(req);
   if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
@@ -800,7 +867,7 @@ app.get("/api/admin/requests", async (req, res) => {
   }
   if (result.error) return res.status(500).json({ success: false, error: result.error.message });
   return res.json({ success: true, data: result.data || [] });
-});
+}));
 
 // Убираем token из query, если попал в path (например /requests/xxx&token=yyy)
 function sanitizeRequestId(paramId) {
@@ -814,7 +881,7 @@ function isValidRequestId(id) {
   return typeof id === "string" && UUID_REGEX.test(id);
 }
 
-app.get("/api/admin/requests/:id", async (req, res) => {
+app.get("/api/admin/requests/:id", asyncApi(async (req, res) => {
   const auth = resolveAdminAuth(req);
   if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
@@ -830,9 +897,9 @@ app.get("/api/admin/requests/:id", async (req, res) => {
   if (result.error) return res.status(500).json({ success: false, error: result.error.message });
   if (!result.data) return res.status(404).json({ success: false, error: "Заявка не найдена" });
   return res.json({ success: true, data: result.data });
-});
+}));
 
-app.post("/api/admin/requests/:id/restart", async (req, res) => {
+app.post("/api/admin/requests/:id/restart", asyncApi(async (req, res) => {
   const auth = resolveAdminAuth(req);
   if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
@@ -853,9 +920,9 @@ app.post("/api/admin/requests/:id/restart", async (req, res) => {
     generateSoundKey(id).catch((err) => console.error("[admin] restart generateSoundKey:", err?.message || err));
   }).catch((err) => console.error("[admin] restart import workerSoundKey:", err?.message || err));
   return res.json({ success: true, message: "Перезапущено" });
-});
+}));
 
-app.get("/api/admin/settings", async (req, res) => {
+app.get("/api/admin/settings", asyncApi(async (req, res) => {
   const auth = resolveAdminAuth(req);
   if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
@@ -868,9 +935,9 @@ app.get("/api/admin/settings", async (req, res) => {
   (data || []).forEach((row) => { settings[row.key] = row.value; });
   const deepseek_max_tokens = settings.deepseek_max_tokens != null ? Math.max(1, Number(settings.deepseek_max_tokens)) : null;
   return res.json({ success: true, settings: { ...settings, deepseek_max_tokens: deepseek_max_tokens ?? undefined } });
-});
+}));
 
-app.put("/api/admin/settings", express.json(), async (req, res) => {
+app.put("/api/admin/settings", express.json(), asyncApi(async (req, res) => {
   const auth = resolveAdminAuth(req);
   if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
@@ -884,6 +951,11 @@ app.put("/api/admin/settings", express.json(), async (req, res) => {
     if (upsertErr) return res.status(500).json({ success: false, error: upsertErr.message });
   }
   return res.json({ success: true, message: "Настройки сохранены" });
+}));
+
+app.use("/api", (err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  res.status(500).json({ success: false, error: err?.message || "Ошибка сервера" });
 });
 
 app.get(["/admin-simple", "/admin-simple/"], (req, res) => {
@@ -1036,6 +1108,11 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
 
 async function onBotStart(info) {
   console.log("Бот запущен:", info.username);
+  // #region agent log
+  const p0 = { location: "index.js:onBotStart", message: "bot started", data: { adminIdsLength: ADMIN_IDS.length, hasWebhookUrl: !!process.env.WEBHOOK_URL }, timestamp: Date.now(), hypothesisId: "H1" };
+  debugLog(p0);
+  fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p0) }).catch(() => {});
+  // #endregion
   if (ADMIN_IDS.length) console.log("Админы (ID):", ADMIN_IDS.join(", "));
   else console.warn("ADMIN_TELEGRAM_IDS не задан — команда /admin недоступна.");
   if (supabase) {
