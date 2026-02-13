@@ -133,7 +133,7 @@ async function processOneRequest(row) {
 
   const userMessage = "По данным выше выполни полный алгоритм: Этап 1 (анализ), при необходимости Этап 2, затем Этап 3 (песня). В конце обязательно укажи название песни в кавычках «» и блок ЛИРИКА с текстом песни и разметкой [verse 1], [chorus] и т.д., затем MUSIC PROMPT для Suno со [style: ...] на английском.";
 
-  const llm = await chatCompletion(systemPrompt, userMessage, { max_tokens: 8192 });
+  const llm = await chatCompletion(systemPrompt, userMessage, {});
   if (!llm.ok) {
     await supabase.from("track_requests").update({
       status: "failed",

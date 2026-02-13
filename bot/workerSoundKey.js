@@ -272,7 +272,13 @@ function parseResponse(text) {
     })();
     const block = afterTitle.trim();
     const lineCount = block.split(/\n/).filter((l) => l.trim()).length;
-    if (block.length > 300 && lineCount >= 10) lyrics = block.slice(0, 5000);
+    if (block.length > 300 && (lineCount >= 10 || (lineCount >= 5 && block.length > 500))) lyrics = block.slice(0, 5000);
+  }
+  // Для длинных ответов без явных маркеров: берём хвост как лирику при мягких условиях (мало переносов строк)
+  if (!lyrics && text.length > 2000) {
+    const tail = text.slice(-3500).trim();
+    const lines = tail.split(/\n/).filter((l) => l.trim()).length;
+    if (tail.length >= 400 && lines >= 5) lyrics = tail.slice(0, 5000);
   }
   
   if (!title && lyrics) title = "Sound Key";
@@ -507,9 +513,9 @@ ${astroTextFull}
     }
     
     // ========== ЭТАП 1: DEEPSEEK ==========
-    // Модель с контекстом 16K, max_tokens 8000 — полный ответ без обрезки (ТЗ)
+    // Без ограничения по токенам: API сам ограничит по модели (chat 8K, reasoner 64K)
     const LLM_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-coder-33b-instruct";
-    const MAX_TOKENS_LLM = 8000;
+    const MAX_TOKENS_LLM = 65536;
     console.log(`[Воркер] 🤖 Отправляю запрос в DeepSeek (model=${LLM_MODEL}, max_tokens=${MAX_TOKENS_LLM})...`);
     
     const llm = await chatCompletion(SYSTEM_PROMPT, userRequest, {
@@ -532,13 +538,18 @@ ${astroTextFull}
     stepLog['2'] = `DeepSeek ответил, ${fullResponse.length} симв.${llmTruncated ? ' (обрезано)' : ''}`;
     await updateStepLog(requestId, stepLog);
     // Сразу сохраняем сырой ответ в БД (для диагностики и админки), даже если парсинг потом упадёт
+    console.log(`[Воркер] 💾 Сохраняю сырой ответ в БД для ${requestId} (${fullResponse.length} симв.)...`);
     const { error: saveRawErr } = await supabase.from("track_requests").update({
       deepseek_response: fullResponse,
       detailed_analysis: fullResponse,
       llm_truncated: llmTruncated,
       updated_at: new Date().toISOString(),
     }).eq("id", requestId);
-    if (saveRawErr) console.warn("[Воркер] Не удалось сохранить сырой ответ DeepSeek:", saveRawErr.message);
+    if (saveRawErr) {
+      console.error(`[Воркер] ❌ Не удалось сохранить deepseek_response для ${requestId}:`, saveRawErr.message, saveRawErr.code);
+    } else {
+      console.log(`[Воркер] 💾 deepseek_response сохранён в БД для ${requestId}`);
+    }
     if (llmTruncated) {
       console.warn(`[Воркер] ⚠️ ОТВЕТ ОБРЕЗАН! Увеличьте max_tokens или сократите системный промпт.`);
     }
