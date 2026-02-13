@@ -59,7 +59,9 @@ export async function chatCompletion(systemPrompt, userMessage, opts = {}) {
   }
 
   const model = opts.model || DEFAULT_MODEL;
-  const max_tokens = Math.max(1, Number(opts.max_tokens) || 8192);
+  // API возвращает 400 при max_tokens > 8192 или нечисловом значении. Жёстко ограничиваем и приводим к целому.
+  const requested = Number(opts.max_tokens);
+  const max_tokens = Math.floor(Math.min(8192, Math.max(1, Number.isFinite(requested) ? requested : 8192)));
   const temperature = opts.temperature ?? DEFAULT_TEMPERATURE;
   const tools = opts.tools;
   const executeTool = opts.executeTool;

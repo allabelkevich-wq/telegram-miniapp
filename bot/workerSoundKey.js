@@ -594,11 +594,16 @@ ${astroTextFull}
       const { data: row } = await supabase.from("app_settings").select("value").eq("key", "deepseek_max_tokens").maybeSingle();
       if (row?.value != null) settingsMaxTokens = Math.max(1, Number(row.value));
     } catch (_) {}
-    // API DeepSeek возвращает 400 при max_tokens > 8192 — ограничиваем перед отправкой
+    // API DeepSeek возвращает 400 при max_tokens > 8192 — ограничиваем перед отправкой.
+    // Минимум 4096 для этого воркера: нужны анализ + лирика, иначе ответ обрезается и парсинг падает.
+    const MIN_MAX_TOKENS = 4096;
     const rawMax = process.env.DEEPSEEK_MAX_TOKENS != null
       ? Number(process.env.DEEPSEEK_MAX_TOKENS)
       : (settingsMaxTokens ?? maxFromContext);
-    const MAX_TOKENS_LLM = Math.min(8192, Math.max(1, Number(rawMax) || 8192));
+    const MAX_TOKENS_LLM = Math.min(8192, Math.max(MIN_MAX_TOKENS, Math.max(1, Number(rawMax) || 8192)));
+    if (rawMax != null && Number(rawMax) < MIN_MAX_TOKENS) {
+      console.log(`[Воркер] 📌 max_tokens из настроек (${rawMax}) ниже минимума для генерации песни — использую ${MAX_TOKENS_LLM}`);
+    }
     const TEMPERATURE = process.env.DEEPSEEK_TEMPERATURE != null ? Number(process.env.DEEPSEEK_TEMPERATURE) : 1.5;
     const withSearch = !!SERPER_API_KEY;
     console.log(`[Воркер] 🤖 Отправляю запрос в DeepSeek (model=${LLM_MODEL}, max_tokens=${MAX_TOKENS_LLM}, temperature=${TEMPERATURE}, вход ~${estimatedInputTokens} ток.${withSearch ? ", поиск при генерации" : ""})...`);

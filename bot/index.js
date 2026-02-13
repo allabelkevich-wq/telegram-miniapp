@@ -637,6 +637,16 @@ bot.command("admin", async (ctx) => {
     }
   };
 
+  /** Сначала гарантированно отправить ссылку одним сообщением (await), потом уже список заявок */
+  const sendLinkFirst = async () => {
+    if (!targetId) return;
+    const url = getAdminUrl();
+    const text = url
+      ? "👑 Ссылка на админку (нажми — откроется, токен уже в ссылке):\n\n" + url
+      : "👑 Не задан BOT_PUBLIC_URL или HEROES_API_BASE в Render → Environment. Добавь переменную и перезапусти сервис.";
+    await bot.api.sendMessage(targetId, text).catch((e) => console.error("[admin] sendLinkFirst:", e?.message || e));
+  };
+
   try {
     if (!targetId) {
       // #region agent log
@@ -674,14 +684,16 @@ bot.command("admin", async (ctx) => {
     debugLog(p5);
     fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p5) }).catch(() => {});
     // #endregion
-    sendAdminLink();
+
+    // Сначала обязательно отправляем ссылку — чтобы пользователь получил её даже если дальше что-то упадёт
+    await sendLinkFirst();
 
     const adminUrl = getAdminUrl();
     const adminLinkLine = adminUrl
-      ? `\n\n👑 Админка (нажми — откроется, вводить токен не нужно):\n${adminUrl}`
-      : "\n\n👑 Ссылка на админку: задай BOT_PUBLIC_URL (или HEROES_API_BASE) и ADMIN_SECRET в Render (Environment), перезапусти и снова /admin.";
+      ? `\n\n👑 Админка (ещё раз):\n${adminUrl}`
+      : "";
     reply("Проверяю заявки…" + adminLinkLine).catch(() => {
-      if (targetId) bot.api.sendMessage(targetId, "👑 Админка: " + (adminUrl || "задай BOT_PUBLIC_URL или HEROES_API_BASE в Render")).catch(() => {});
+      if (targetId) bot.api.sendMessage(targetId, "Проверяю заявки…").catch(() => {});
     });
 
     const { requests, dbError } = await getRequestsForAdmin(30);
@@ -726,7 +738,6 @@ bot.command("admin", async (ctx) => {
       console.error("[admin] sendLongMessage:", e?.message || e);
       await reply("Не удалось отправить список (ошибка Telegram). Попробуй /admin ещё раз.");
     });
-    sendAdminLink();
   } catch (err) {
     // #region agent log
     const p5c = { location: "index.js:admin-cmd", message: "admin handler catch", data: { errorMessage: err?.message || String(err) }, timestamp: Date.now(), hypothesisId: "H5" };
@@ -744,7 +755,7 @@ const commands = [
   { command: "start", description: "Начать / открыть приложение" },
   { command: "ping", description: "Проверка связи с ботом" },
   { command: "get_analysis", description: "Расшифровка карты (после оплаты)" },
-  { command: "admin", description: "Админ: список заявок" },
+  { command: "admin", description: "Админ: ссылка на админку и список заявок" },
   { command: "admin_check", description: "Админ: проверка базы" },
 ];
 bot.api.setMyCommands(commands).catch(() => {});
