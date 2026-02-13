@@ -3,12 +3,13 @@
  * Документация: base_url https://api.deepseek.com, Chat API: POST /v1/chat/completions.
  * Альтернатива: официальный SDK — npm install openai, baseURL: 'https://api.deepseek.com', apiKey: process.env.DEEPSEEK_API_KEY.
  *
- * Модели и лимиты (Models & Pricing):
- *   deepseek-chat    — DeepSeek-V3.2, non-thinking. Context 128K, max output DEFAULT 4K / MAX 8K. Поддержка Thinking in Tool-Use: api-docs.deepseek.com/guides/thinking_mode
- *   deepseek-reasoner — V3.2, thinking.     Context 128K, max output DEFAULT 32K / MAX 64K.
- *   deepseek-coder-33b-instruct — код/текст, context 16K, max_tokens до 8K (передаётся через opts.model в chatCompletion).
- *   V3.2-Speciale    — макс. рассуждения, API-only; base_url https://api.deepseek.com/v3.2_speciale_expires_on_20251215 (до 15 дек 2025 UTC), без tool calls, те же цены.
- * Цены: за 1M токенов (input cache hit $0.028, miss $0.28, output $0.42). Расчёт по input+output.
+ * Модели (DeepSeek-V3.2, контекст 128K; версия API отличается от приложения/веб):
+ *   deepseek-chat    — режим без обдумывания. Выход: по умолчанию 4K, максимум 8K.
+ *   deepseek-reasoner — режим размышления. Выход: по умолчанию 32K, максимум 64K.
+ *   deepseek-coder-33b-instruct — код/текст, context 16K, max_tokens до 8K.
+ *   V3.2-Speciale    — base_url https://api.deepseek.com/v3.2_speciale_expires_on_20251215 (до 15 дек 2025 UTC), без tool calls.
+ * Функции: JSON, вызовы инструментов, автодополнение префиксов чата (бета). FIM (бета) только у chat.
+ * Цены: 1M вход (cache hit) $0.028, (miss) $0.28; 1M выход $0.42. Списание с пополненного/предоставленного баланса.
  *
  * Token & Token Usage: токены — единицы биллинга (characters/words). Примерно: 1 English character ≈ 0.3 token, 1 Chinese character ≈ 0.6 token; соотношения зависят от модели. Фактическое число токенов — в ответе API (usage). Офлайн-расчёт: демо в deepseek_tokenizer.zip.
  *
@@ -30,7 +31,8 @@
 
 const DEEPSEEK_BASE = (process.env.DEEPSEEK_API_BASE_URL || "https://api.deepseek.com").replace(/\/$/, "");
 const DEEPSEEK_API_URL = `${DEEPSEEK_BASE}/v1/chat/completions`;
-const DEFAULT_MODEL = "deepseek-chat";
+/** Модель с меньшими ограничениями по выходу (64K vs 8K у chat) */
+const DEFAULT_MODEL = "deepseek-reasoner";
 /** Creative Writing / Poetry — анализ + лирика песни */
 const DEFAULT_TEMPERATURE = 1.5;
 

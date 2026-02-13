@@ -554,7 +554,7 @@ ${astroTextFull}
     }
     
     // ========== ЭТАП 1: DEEPSEEK ==========
-    // max_tokens: приоритет — .env > настройки из админки > расчёт по контексту. Верхний лимит только в промпте и у API.
+    // Модель с меньшими ограничениями: deepseek-reasoner (макс. выход 64K; chat — 8K). max_tokens: .env > админка > контекст.
     const LLM_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-reasoner";
     const CONTEXT_LIMIT = 128000;
     const SAFETY_BUFFER = 2000;
