@@ -231,7 +231,7 @@ function parseResponse(text) {
   if (analysisEnd > 0) {
     detailed_analysis = text.slice(0, analysisEnd).trim();
   }
-  if (detailed_analysis.length > 50000) detailed_analysis = detailed_analysis.slice(0, 50000);
+  // Объём анализа и лирики задаётся только промптом, не обрезаем.
   
   // Название из кавычек
   const titleMatch = text.match(/«([^»]+)»/);
@@ -239,11 +239,11 @@ function parseResponse(text) {
   
   // Стиль, вокал, настроение из блока для Suno ([style:] [vocal:] [mood:])
   const styleMatch = text.match(/\[style:\s*([^\]]+)\]/i);
-  if (styleMatch) style = styleMatch[1].trim().slice(0, 500);
+  if (styleMatch) style = styleMatch[1].trim();
   const vocalMatch = text.match(/\[vocal:\s*([^\]]+)\]/i);
-  const vocal = vocalMatch ? vocalMatch[1].trim().slice(0, 300) : "";
+  const vocal = vocalMatch ? vocalMatch[1].trim() : "";
   const moodMatch = text.match(/\[mood:\s*([^\]]+)\]/i);
-  const mood = moodMatch ? moodMatch[1].trim().slice(0, 300) : "";
+  const mood = moodMatch ? moodMatch[1].trim() : "";
   const styleFull = [style, vocal, mood].filter(Boolean).join(" | ");
   
   // Лирика — от любого блока [Verse 1], [Verse 1:], [Chorus], [Intro] и т.д. до MUSIC PROMPT или [style:]
@@ -313,13 +313,13 @@ function parseResponse(text) {
     })();
     const block = afterTitle.trim();
     const lineCount = block.split(/\n/).filter((l) => l.trim()).length;
-    if (block.length > 300 && (lineCount >= 10 || (lineCount >= 5 && block.length > 500))) lyrics = block.slice(0, 5000);
+    if (block.length > 300 && (lineCount >= 10 || (lineCount >= 5 && block.length > 500))) lyrics = block;
   }
   // Для длинных ответов без явных маркеров: берём хвост как лирику при мягких условиях (мало переносов строк)
   if (!lyrics && text.length > 2000) {
     const tail = text.slice(-3500).trim();
     const lines = tail.split(/\n/).filter((l) => l.trim()).length;
-    if (tail.length >= 400 && lines >= 5) lyrics = tail.slice(0, 5000);
+    if (tail.length >= 400 && lines >= 5) lyrics = tail;
   }
   
   if (!title && lyrics) title = "Sound Key";
@@ -327,9 +327,9 @@ function parseResponse(text) {
   
   return {
     detailed_analysis: detailed_analysis || null,
-    title: title.slice(0, 100),
-    lyrics: lyrics.slice(0, 5000),
-    style: styleFull.slice(0, 1000),
+    title: title || "",
+    lyrics: lyrics,
+    style: styleFull,
   };
 }
 
@@ -554,16 +554,16 @@ ${astroTextFull}
     }
     
     // ========== ЭТАП 1: DEEPSEEK ==========
-    // max_tokens: приоритет — .env > настройки из админки (app_settings) > расчёт по контексту. Лимит задаёт API; у нас разумный потолок 65536.
+    // max_tokens: приоритет — .env > настройки из админки > расчёт по контексту. Верхний лимит только в промпте и у API.
     const LLM_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-reasoner";
     const CONTEXT_LIMIT = 128000;
     const SAFETY_BUFFER = 2000;
     const estimatedInputTokens = Math.ceil((SYSTEM_PROMPT.length + userRequest.length) * 0.4);
-    const maxFromContext = Math.max(1000, Math.min(65536, CONTEXT_LIMIT - estimatedInputTokens - SAFETY_BUFFER));
+    const maxFromContext = Math.max(1000, CONTEXT_LIMIT - estimatedInputTokens - SAFETY_BUFFER);
     let settingsMaxTokens = null;
     try {
       const { data: row } = await supabase.from("app_settings").select("value").eq("key", "deepseek_max_tokens").maybeSingle();
-      if (row?.value != null) settingsMaxTokens = Math.max(1, Math.min(65536, Number(row.value)));
+      if (row?.value != null) settingsMaxTokens = Math.max(1, Number(row.value));
     } catch (_) {}
     const MAX_TOKENS_LLM = process.env.DEEPSEEK_MAX_TOKENS != null
       ? Number(process.env.DEEPSEEK_MAX_TOKENS)

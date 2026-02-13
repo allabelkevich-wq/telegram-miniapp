@@ -866,7 +866,7 @@ app.get("/api/admin/settings", async (req, res) => {
   }
   const settings = {};
   (data || []).forEach((row) => { settings[row.key] = row.value; });
-  const deepseek_max_tokens = settings.deepseek_max_tokens != null ? Math.max(1, Math.min(65536, Number(settings.deepseek_max_tokens))) : null;
+  const deepseek_max_tokens = settings.deepseek_max_tokens != null ? Math.max(1, Number(settings.deepseek_max_tokens)) : null;
   return res.json({ success: true, settings: { ...settings, deepseek_max_tokens: deepseek_max_tokens ?? undefined } });
 });
 
@@ -876,7 +876,7 @@ app.put("/api/admin/settings", express.json(), async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const { deepseek_max_tokens } = req.body || {};
   if (deepseek_max_tokens !== undefined) {
-    const val = Math.max(1, Math.min(65536, Number(deepseek_max_tokens)));
+    const val = Math.max(1, Number(deepseek_max_tokens));
     const { error: upsertErr } = await supabase.from("app_settings").upsert(
       { key: "deepseek_max_tokens", value: String(val), updated_at: new Date().toISOString() },
       { onConflict: "key" }

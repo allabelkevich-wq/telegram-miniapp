@@ -99,11 +99,11 @@
     </div>
     <div class="details-section" style="margin-bottom:20px;">
       <div class="section-title">⚙️ Настройки генерации</div>
-      <p style="font-size:14px;color:#94a3b8;margin-bottom:12px;">Макс. токенов ответа DeepSeek (1–65536). Лимит зависит от модели и тарифа API. Сохранённое значение применяется к новым заявкам.</p>
+      <p style="font-size:14px;color:#94a3b8;margin-bottom:12px;">Макс. токенов ответа DeepSeek (минимум 1). Верхний лимит задаётся только твоим промптом и API. Сохранённое значение применяется к новым заявкам.</p>
       <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
         <label style="display:flex;align-items:center;gap:8px;">
           <span style="min-width:120px;">max_tokens:</span>
-          <input type="number" id="settings-max-tokens" min="1" max="65536" value="8192" step="1" style="width:100px;padding:10px;border-radius:8px;border:2px solid #4a5568;background:#1a1a2e;color:#fff;font-size:16px;">
+          <input type="number" id="settings-max-tokens" min="1" value="8192" step="1" style="width:100px;padding:10px;border-radius:8px;border:2px solid #4a5568;background:#1a1a2e;color:#fff;font-size:16px;">
         </label>
         <button type="button" class="btn btn-primary" id="settings-save-btn" style="min-width:140px;">💾 Сохранить</button>
         <span id="settings-save-status" style="font-size:14px;color:#86efac;"></span>
@@ -181,7 +181,7 @@
         if (settingsJson.success && settingsJson.settings) {
           const mt = settingsJson.settings.deepseek_max_tokens;
           const inputEl = document.getElementById('settings-max-tokens');
-          if (inputEl && (mt === 0 || mt > 0)) inputEl.value = Math.min(65536, Math.max(1, Number(mt))) || 8192;
+          if (inputEl && (mt === 0 || mt > 0)) inputEl.value = Math.max(1, Number(mt)) || 8192;
         }
       } catch (e) {
         const msg = (e && e.message) || String(e);
@@ -290,7 +290,7 @@
       const input = document.getElementById('settings-max-tokens');
       const statusEl = document.getElementById('settings-save-status');
       if (!input || !statusEl) return;
-      const val = Math.min(65536, Math.max(1, Number(input.value) || 8192));
+      const val = Math.max(1, Number(input.value) || 8192);
       input.value = val;
       statusEl.textContent = 'Сохранение…';
       statusEl.style.color = '#94a3b8';
