@@ -6,6 +6,7 @@
  * Модели и лимиты (Models & Pricing):
  *   deepseek-chat    — DeepSeek-V3.2, non-thinking. Context 128K, max output DEFAULT 4K / MAX 8K. Поддержка Thinking in Tool-Use: api-docs.deepseek.com/guides/thinking_mode
  *   deepseek-reasoner — V3.2, thinking.     Context 128K, max output DEFAULT 32K / MAX 64K.
+ *   deepseek-coder-33b-instruct — код/текст, context 16K, max_tokens до 8K (передаётся через opts.model в chatCompletion).
  *   V3.2-Speciale    — макс. рассуждения, API-only; base_url https://api.deepseek.com/v3.2_speciale_expires_on_20251215 (до 15 дек 2025 UTC), без tool calls, те же цены.
  * Цены: за 1M токенов (input cache hit $0.028, miss $0.28, output $0.42). Расчёт по input+output.
  *

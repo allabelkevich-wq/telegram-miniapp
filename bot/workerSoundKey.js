@@ -445,12 +445,15 @@ ${astroTextFull}
     }
     
     // ========== ЭТАП 1: DEEPSEEK ==========
-    const MAX_TOKENS_LLM = 4000;
-    console.log(`[Воркер] 🤖 Отправляю запрос в DeepSeek (max_tokens=${MAX_TOKENS_LLM})...`);
+    // Модель с контекстом 16K, max_tokens 8000 — полный ответ без обрезки (ТЗ)
+    const LLM_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-coder-33b-instruct";
+    const MAX_TOKENS_LLM = 8000;
+    console.log(`[Воркер] 🤖 Отправляю запрос в DeepSeek (model=${LLM_MODEL}, max_tokens=${MAX_TOKENS_LLM})...`);
     
     const llm = await chatCompletion(SYSTEM_PROMPT, userRequest, {
+      model: LLM_MODEL,
       max_tokens: MAX_TOKENS_LLM,
-      temperature: 0.72,
+      temperature: 0.85,
     });
     
     if (!llm.ok) {
@@ -652,7 +655,7 @@ ${astroTextFull}
       try { await updateStepLog(requestId, stepLog); } catch (_) {}
     }
     // Обновляем статус на failed (чтобы админка и другой воркер видели корректное состояние)
-    await supabase
+    const { error: updateErr } = await supabase
       .from('track_requests')
       .update({
         status: 'failed',
@@ -660,8 +663,8 @@ ${astroTextFull}
         error_message: error.message?.slice(0, 500),
         updated_at: new Date().toISOString()
       })
-      .eq('id', requestId)
-      .catch(() => {});
+      .eq('id', requestId);
+    if (updateErr) console.error('[Воркер] Не удалось обновить статус на failed:', updateErr.message);
     
     // Уведомить админа об ошибке
     if (process.env.ADMIN_TELEGRAM_IDS && BOT_TOKEN) {
