@@ -845,7 +845,6 @@ app.post("/api/admin/requests/:id/restart", async (req, res) => {
       status: "pending",
       generation_status: "pending",
       error_message: null,
-      generation_steps: {},
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);
