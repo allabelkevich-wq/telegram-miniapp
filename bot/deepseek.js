@@ -10,36 +10,44 @@
  *   V3.2-Speciale    — макс. рассуждения, API-only; base_url https://api.deepseek.com/v3.2_speciale_expires_on_20251215 (до 15 дек 2025 UTC), без tool calls, те же цены.
  * Цены: за 1M токенов (input cache hit $0.028, miss $0.28, output $0.42). Расчёт по input+output.
  *
- * Token & Token Usage: токены — единицы биллинга; ~1 англ. символ ≈ 0.3 токена, ~1 китайский ≈ 0.6. Фактическое число токенов возвращает API в usage; офлайн-расчёт — демо в deepseek_tokenizer.zip (документация Token & Token Usage).
+ * Token & Token Usage: токены — единицы биллинга (characters/words). Примерно: 1 English character ≈ 0.3 token, 1 Chinese character ≈ 0.6 token; соотношения зависят от модели. Фактическое число токенов — в ответе API (usage). Офлайн-расчёт: демо в deepseek_tokenizer.zip.
  *
- * Rate Limit: лимитов по частоте запросов нет; при высокой нагрузке ответ может задерживаться, соединение держится открытым. Нестриминг: сервер может присылать пустые строки до JSON. Если инференс не начался в течение 10 минут, сервер закрывает соединение.
+ * Rate Limit: лимитов по частоте запросов нет; при высокой нагрузке ответ может задерживаться, соединение держится открытым. Нестриминг: сервер может присылать пустые строки до JSON — парсим body как text и извлекаем JSON. Если инференс не начался в течение 10 минут, сервер закрывает соединение.
  *
- * Temperature (рекомендации DeepSeek): Coding/Math 0, Data 1.0, Conversation/Translation 1.3, Creative Writing/Poetry 1.5. Default API 1.0.
+ * Temperature: default API 1.0. Рекомендации — Coding/Math 0.0, Data 1.0, Conversation/Translation 1.3, Creative Writing/Poetry 1.5.
  *
- * Error Codes: 400 Invalid Format, 401 Authentication Fails, 402 Insufficient Balance, 422 Invalid Parameters, 429 Rate Limit Reached, 500 Server Error, 503 Server Overloaded (ретрай после паузы для 500/503).
+ * Error Codes (DeepSeek API):
+ *   400 Invalid Format       — invalid request body; fix format per error message / API Docs
+ *   401 Authentication Fails — wrong API key; check or create key
+ *   402 Insufficient Balance — out of balance; Top up
+ *   422 Invalid Parameters   — invalid params; fix per error message / API Docs
+ *   429 Rate Limit Reached   — too many requests; pace requests or use alternative LLM
+ *   500 Server Error         — server issue; retry after a brief wait
+ *   503 Server Overloaded    — high traffic; retry after a brief wait
  *
- * Переменные: DEEPSEEK_API_KEY в .env
+ * Переменные: DEEPSEEK_API_KEY в .env. Опционально: DEEPSEEK_API_BASE_URL (например https://api-global.deepseek.com при проблемах с гео).
  */
 
-const DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions";
+const DEEPSEEK_BASE = (process.env.DEEPSEEK_API_BASE_URL || "https://api.deepseek.com").replace(/\/$/, "");
+const DEEPSEEK_API_URL = `${DEEPSEEK_BASE}/v1/chat/completions`;
 const DEFAULT_MODEL = "deepseek-chat";
 /** Creative Writing / Poetry — анализ + лирика песни */
 const DEFAULT_TEMPERATURE = 1.5;
 
 const ERROR_CODES = {
-  400: "Invalid Format — проверь тело запроса",
-  401: "Authentication Fails — проверь API key",
-  402: "Insufficient Balance — пополни баланс",
-  422: "Invalid Parameters — проверь параметры",
-  429: "Rate Limit Reached — снизь частоту запросов",
-  500: "Server Error — повтори запрос позже",
-  503: "Server Overloaded — повтори запрос позже",
+  400: "Invalid Format — проверь тело запроса (API Docs)",
+  401: "Authentication Fails — проверь или создай API key",
+  402: "Insufficient Balance — пополни баланс (Top up)",
+  422: "Invalid Parameters — исправь параметры по подсказке в ответе",
+  429: "Rate Limit Reached — снизь частоту или используй другой LLM",
+  500: "Server Error — повтори запрос через некоторое время",
+  503: "Server Overloaded — повтори запрос через некоторое время",
 };
 
 /**
  * @param {string} systemPrompt — системный промпт (роль + инструкции)
  * @param {string} userMessage — сообщение пользователя (контекст/запрос)
- * @param {{ model?: string, max_tokens?: number, temperature?: number }} [opts]
+ * @param {{ model?: string, max_tokens?: number, temperature?: number, tools?: object[], executeTool?: (name: string, args: object) => Promise<string> }} [opts]
  * @returns {Promise<{ ok: boolean, text?: string, error?: string }>}
  */
 export async function chatCompletion(systemPrompt, userMessage, opts = {}) {
@@ -49,62 +57,127 @@ export async function chatCompletion(systemPrompt, userMessage, opts = {}) {
   }
 
   const model = opts.model || DEFAULT_MODEL;
-  const max_tokens = opts.max_tokens ?? 8192;
+  const max_tokens = Math.max(1, Number(opts.max_tokens) || 8192);
   const temperature = opts.temperature ?? DEFAULT_TEMPERATURE;
+  const tools = opts.tools;
+  const executeTool = opts.executeTool;
+  const maxToolRounds = 5;
 
-  const body = {
-    model,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userMessage },
-    ],
-    max_tokens,
-    temperature,
-  };
+  let messages = [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: userMessage },
+  ];
 
   const maxAttempts = 3;
   const retryStatuses = [500, 503];
   let lastError = null;
+  let lastUsage = null;
+
+  async function oneRound(bodyToSend) {
+    const res = await fetch(DEEPSEEK_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(bodyToSend),
+    });
+
+    const raw = await res.text();
+    const data = (() => {
+      try {
+        return JSON.parse(raw.trim());
+      } catch {
+        const start = raw.indexOf("{");
+        if (start >= 0) {
+          const end = raw.lastIndexOf("}") + 1;
+          if (end > start) try { return JSON.parse(raw.slice(start, end)); } catch (_) {}
+        }
+        return {};
+      }
+    })();
+    if (!res.ok) {
+      const hint = ERROR_CODES[res.status] || res.statusText;
+      const errMsg = data.error?.message || data.message || hint;
+      if (res.status === 400 || res.status === 422) {
+        console.error("[DeepSeek] Ответ API при ошибке:", JSON.stringify(data).slice(0, 500));
+      }
+      throw new Error(`DeepSeek API ${res.status} (${hint}): ${errMsg}`);
+    }
+    return data;
+  }
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      const res = await fetch(DEEPSEEK_API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(body),
-      });
+      let round = 0;
+      let currentMessages = [...messages];
 
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const hint = ERROR_CODES[res.status] || res.statusText;
-        const errMsg = data.error?.message || data.message || hint;
-        lastError = `DeepSeek API ${res.status} (${hint}): ${errMsg}`;
-        if (retryStatuses.includes(res.status) && attempt < maxAttempts) {
-          await new Promise((r) => setTimeout(r, 5000));
+      while (round < maxToolRounds) {
+        const body = {
+          model,
+          messages: currentMessages,
+          max_tokens,
+          temperature,
+          ...(tools && tools.length ? { tools } : {}),
+        };
+
+        const data = await oneRound(body);
+        lastUsage = data.usage || null;
+        const choice = data.choices?.[0];
+        const msg = choice?.message;
+        const toolCalls = msg?.tool_calls;
+
+        if (toolCalls?.length && executeTool) {
+          currentMessages.push({
+            role: "assistant",
+            content: msg.content || null,
+            tool_calls: toolCalls,
+          });
+          for (const tc of toolCalls) {
+            const name = tc.function?.name;
+            let args = {};
+            try {
+              if (tc.function?.arguments) args = JSON.parse(tc.function.arguments);
+            } catch (_) {}
+            let result;
+            try {
+              result = await executeTool(name, args);
+            } catch (e) {
+              result = String(e?.message || e);
+            }
+            currentMessages.push({
+              role: "tool",
+              tool_call_id: tc.id,
+              content: typeof result === "string" ? result : JSON.stringify(result),
+            });
+          }
+          round++;
           continue;
         }
-        return { ok: false, error: lastError };
-      }
 
-      const choice = data.choices?.[0];
-      const content = choice?.message?.content;
-      if (content == null) {
+        const content = msg?.content;
+        if (content != null) {
+          return {
+            ok: true,
+            text: String(content).trim(),
+            finish_reason: choice?.finish_reason || null,
+            usage: lastUsage ? { total_tokens: lastUsage.total_tokens, completion_tokens: lastUsage.completion_tokens } : null,
+          };
+        }
+        if (toolCalls?.length && !executeTool) {
+          return { ok: false, error: "Ответ содержит tool_calls, но executeTool не передан" };
+        }
         return { ok: false, error: "Пустой ответ DeepSeek" };
       }
-      const finishReason = choice?.finish_reason || null;
-      const usage = data.usage || null;
-      return {
-        ok: true,
-        text: String(content).trim(),
-        finish_reason: finishReason,
-        usage: usage ? { total_tokens: usage.total_tokens, completion_tokens: usage.completion_tokens } : null,
-      };
+
+      return { ok: false, error: "Превышено число раундов вызова инструментов" };
     } catch (e) {
       lastError = e?.message || String(e);
-      if (attempt < maxAttempts) await new Promise((r) => setTimeout(r, 5000));
+      if (retryStatuses.some((s) => lastError.includes(String(s))) && attempt < maxAttempts) {
+        await new Promise((r) => setTimeout(r, 5000));
+        continue;
+      }
+      return { ok: false, error: lastError };
     }
   }
   return { ok: false, error: lastError || "Ошибка DeepSeek" };

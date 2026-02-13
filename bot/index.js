@@ -855,6 +855,37 @@ app.post("/api/admin/requests/:id/restart", async (req, res) => {
   return res.json({ success: true, message: "Перезапущено" });
 });
 
+app.get("/api/admin/settings", async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const { data, error } = await supabase.from("app_settings").select("key, value");
+  if (error) {
+    if (/does not exist/i.test(error.message)) return res.json({ success: true, settings: {} });
+    return res.status(500).json({ success: false, error: error.message });
+  }
+  const settings = {};
+  (data || []).forEach((row) => { settings[row.key] = row.value; });
+  const deepseek_max_tokens = settings.deepseek_max_tokens != null ? Math.max(1, Math.min(65536, Number(settings.deepseek_max_tokens))) : null;
+  return res.json({ success: true, settings: { ...settings, deepseek_max_tokens: deepseek_max_tokens ?? undefined } });
+});
+
+app.put("/api/admin/settings", express.json(), async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const { deepseek_max_tokens } = req.body || {};
+  if (deepseek_max_tokens !== undefined) {
+    const val = Math.max(1, Math.min(65536, Number(deepseek_max_tokens)));
+    const { error: upsertErr } = await supabase.from("app_settings").upsert(
+      { key: "deepseek_max_tokens", value: String(val), updated_at: new Date().toISOString() },
+      { onConflict: "key" }
+    );
+    if (upsertErr) return res.status(500).json({ success: false, error: upsertErr.message });
+  }
+  return res.json({ success: true, message: "Настройки сохранены" });
+});
+
 app.get(["/admin-simple", "/admin-simple/"], (req, res) => {
   res.type("html").sendFile(path.join(__dirname, "admin-simple.html"), (err) => {
     if (err) res.status(500).send("<!DOCTYPE html><html><head><meta charset='utf-8'></head><body style='background:#0f0f1b;color:#fff;font-family:sans-serif;padding:40px;'><h1>Ошибка</h1><p>admin-simple.html не найден</p><a href='/admin' style='color:#667eea'>Админка</a></body></html>");

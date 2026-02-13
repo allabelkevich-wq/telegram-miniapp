@@ -20,7 +20,41 @@ import { generateMusic, pollMusicResult, generateCover, pollCoverResult } from "
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const BOT_TOKEN = process.env.BOT_TOKEN;
+const SERPER_API_KEY = process.env.SERPER_API_KEY;
 // Примечание: DEEPSEEK_API_KEY и SUNO_API_KEY используются через модули deepseek.js и suno.js
+
+/** Веб-поиск через Serper (при генерации модель может вызывать web_search). Ключ: serper.dev */
+async function runWebSearch(query) {
+  if (!SERPER_API_KEY || !query) return "Поиск недоступен или запрос пуст.";
+  try {
+    const res = await fetch("https://google.serper.dev/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-API-KEY": SERPER_API_KEY },
+      body: JSON.stringify({ q: String(query).slice(0, 200), num: 5 }),
+    });
+    const data = await res.json().catch(() => ({}));
+    const organic = data.organic || [];
+    if (organic.length === 0) return "Результатов не найдено.";
+    return organic.slice(0, 5).map((o, i) => `${i + 1}. ${o.title || ""}\n${o.snippet || ""}\n${o.link || ""}`).join("\n\n");
+  } catch (e) {
+    return `Ошибка поиска: ${e?.message || e}`;
+  }
+}
+
+const TOOLS_WITH_SEARCH = [
+  {
+    type: "function",
+    function: {
+      name: "web_search",
+      description: "Search the web for current information. Use when you need facts, references, or up-to-date context for analysis or lyrics.",
+      parameters: {
+        type: "object",
+        properties: { query: { type: "string", description: "Search query in the user's language or English" } },
+        required: ["query"],
+      },
+    },
+  },
+];
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error("[workerSoundKey] SUPABASE_URL и SUPABASE_SERVICE_KEY обязательны");
@@ -33,10 +67,11 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 // СИСТЕМНЫЙ ПРОМПТ (встроен в код)
 // ============================================================================
 
-const SYSTEM_PROMPT = `Ты — мудрый астролог-поэт и музыкальный психолог с опытом в 10 000 жизней. Твоя задача — Объединить два типа запросов: 1) Глубокий анализ натальных карт, 2) Создание песен на основе этого анализа.
-ТРИГГЕР: Получив натальную карту и запрос (на анализ или песню), ты выполняешь следующий алгоритм в одном ответе, без разделений:
+const SYSTEM_PROMPT = `Ты — мудрый астролог-поэт и музыкальный психолог с опытом в 10 000 жизней. Твоя задача — объединить два типа запросов: 1) Глубокий анализ натальных карт, 2) Создание песен на основе этого анализа.
 
-ЭТАП 1: ПРИОРИТЕТНЫЙ АНАЛИЗ (Всегда выполняется первым)
+ТРИГГЕР: Получив натальную карту и запрос (на анализ или песню), выполняй следующий алгоритм в одном ответе, без лишних разделений:
+
+ЭТАП 1: ПРИОРИТЕТНЫЙ АНАЛИЗ (всегда первым)
 
 **Когда я даю натальную карту, анализируй её по этой схеме:**
 
@@ -140,6 +175,12 @@ MUSIC PROMPT для Suno/AI (Формируется автоматически �
 (Текст должен быть заранее подготовлен: с соблюдением рифмы и ритма. ВСЕ указания для Suno внутри текста — ТОЛЬКО в квадратных скобках []).
 
 Песня должна быть 4-5 минут, НЕ БОЛЕЕ!
+
+СОПРОВОДИТЕЛЬНОЕ ПИСЬМО ДЛЯ [ИМЯ]:
+После лирики и MUSIC PROMPT обязательно выведи блок «Сопроводительное письмо для [Имя]». В нём:
+- Инструкция: как слушать эту песню, когда и с каким намерением.
+- Намёк: один мягкий, личный совет или образ из анализа, который человек может держать в голове, слушая песню (не разжёвывая астрологию, только метафора и поддержка).
+Пиши обращением на «ты», тёплым и точным тоном. Без астрологических терминов.
 
 КЛЮЧЕВЫЕ ПРИНЦИПЫ, КОТОРЫЕ Я БУДУ СОБЛЮДАТЬ:
 - Видеть душу, а не гороскоп
@@ -513,15 +554,37 @@ ${astroTextFull}
     }
     
     // ========== ЭТАП 1: DEEPSEEK ==========
-    // API принимает max_tokens только [1, 8192] — ставим 8192
-    const LLM_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-chat";
-    const MAX_TOKENS_LLM = 8192;
-    console.log(`[Воркер] 🤖 Отправляю запрос в DeepSeek (model=${LLM_MODEL}, max_tokens=${MAX_TOKENS_LLM})...`);
-    
+    // max_tokens: приоритет — .env > настройки из админки (app_settings) > расчёт по контексту. Лимит задаёт API; у нас разумный потолок 65536.
+    const LLM_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-reasoner";
+    const CONTEXT_LIMIT = 128000;
+    const SAFETY_BUFFER = 2000;
+    const estimatedInputTokens = Math.ceil((SYSTEM_PROMPT.length + userRequest.length) * 0.4);
+    const maxFromContext = Math.max(1000, Math.min(65536, CONTEXT_LIMIT - estimatedInputTokens - SAFETY_BUFFER));
+    let settingsMaxTokens = null;
+    try {
+      const { data: row } = await supabase.from("app_settings").select("value").eq("key", "deepseek_max_tokens").maybeSingle();
+      if (row?.value != null) settingsMaxTokens = Math.max(1, Math.min(65536, Number(row.value)));
+    } catch (_) {}
+    const MAX_TOKENS_LLM = process.env.DEEPSEEK_MAX_TOKENS != null
+      ? Number(process.env.DEEPSEEK_MAX_TOKENS)
+      : (settingsMaxTokens ?? maxFromContext);
+    const TEMPERATURE = process.env.DEEPSEEK_TEMPERATURE != null ? Number(process.env.DEEPSEEK_TEMPERATURE) : 1.5;
+    const withSearch = !!SERPER_API_KEY;
+    console.log(`[Воркер] 🤖 Отправляю запрос в DeepSeek (model=${LLM_MODEL}, max_tokens=${MAX_TOKENS_LLM}, temperature=${TEMPERATURE}, вход ~${estimatedInputTokens} ток.${withSearch ? ", поиск при генерации" : ""})...`);
+
     const llm = await chatCompletion(SYSTEM_PROMPT, userRequest, {
       model: LLM_MODEL,
       max_tokens: MAX_TOKENS_LLM,
-      temperature: 0.85,
+      temperature: TEMPERATURE,
+      ...(withSearch
+        ? {
+            tools: TOOLS_WITH_SEARCH,
+            executeTool: async (name, args) => {
+              if (name === "web_search") return await runWebSearch(args.query);
+              return "Неизвестный инструмент";
+            },
+          }
+        : {}),
     });
     
     if (!llm.ok) {
