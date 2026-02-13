@@ -205,12 +205,74 @@ function parseResponse(text) {
   const mood = moodMatch ? moodMatch[1].trim().slice(0, 300) : "";
   const styleFull = [style, vocal, mood].filter(Boolean).join(" | ");
   
-  // Лирика - всё от [intro] или [verse 1] до MUSIC PROMPT или конца
-  const lyricsStart = text.search(/\[(?:intro|verse\s*1|chorus|bridge)\]/i);
+  // Лирика — от любого блока [Verse 1], [Verse 1:], [Chorus], [Intro] и т.д. до MUSIC PROMPT или [style:]
+  const lyricsStart = text.search(/\[(?:intro|verse\s*1|verse\s*2|pre-chorus|chorus|bridge|final\s*chorus|outro)\s*:?\]/i);
   if (lyricsStart >= 0) {
     const afterStart = text.slice(lyricsStart);
-    const endMark = afterStart.search(/\n\s*MUSIC PROMPT|КЛЮЧЕВЫЕ ПРИНЦИПЫ|\[style:\s*[^\]]+\]\s*\[vocal:/i);
+    const endMark = afterStart.search(/\n\s*MUSIC PROMPT|КЛЮЧЕВЫЕ ПРИНЦИПЫ|\[style:\s*[^\]]+\]|\[vocal:\s*[^\]]+\]/i);
     lyrics = (endMark >= 0 ? afterStart.slice(0, endMark) : afterStart).trim();
+  }
+  // Запасной вариант: после "ЛИРИКА:" или "Лирика:" до [style:] или MUSIC PROMPT
+  if (!lyrics && /ЛИРИКА\s*:\s*|Lyrics?\s*:\s*/i.test(text)) {
+    const afterLabel = text.replace(/^[\s\S]*?(ЛИРИКА|Lyrics?)\s*:\s*/i, "");
+    const endMark = afterLabel.search(/\n\s*MUSIC PROMPT|\[style:\s*|\[vocal:\s*/i);
+    const block = endMark >= 0 ? afterLabel.slice(0, endMark) : afterLabel;
+    if (block.trim().length > 100) lyrics = block.trim();
+  }
+  // Запасной: всё перед [style:] или MUSIC PROMPT, начиная с последнего вхождения Verse/Chorus/Куплет/Припев
+  if (!lyrics) {
+    const styleIdx = text.indexOf("[style:");
+    const endIdx = styleIdx >= 0 ? styleIdx : text.length;
+    const beforeStyle = text.slice(0, endIdx);
+    const markers = [
+      /\[Verse\s*1\s*:?\]/i, /\[Verse\s*2\s*:?\]/i, /\[Chorus\s*:?\]/i, /\[Bridge\s*:?\]/i,
+      /Verse\s*1\s*:?\s*$/im, /Chorus\s*:?\s*$/im, /Куплет\s*1/im, /Припев\s*:/im,
+    ];
+    let start = -1;
+    for (const re of markers) {
+      const m = beforeStyle.match(re);
+      if (m) start = Math.max(start, beforeStyle.indexOf(m[0]));
+    }
+    if (start >= 0) {
+      const block = beforeStyle.slice(start).trim();
+      if (block.length > 200) lyrics = block;
+    }
+  }
+  // Последний запасной: от "ПЕСНЯ ДЛЯ" или "ЭТАП 3" до [style:] (весь блок песни)
+  if (!lyrics) {
+    const styleIdx = text.indexOf("[style:");
+    const songStart = text.search(/\n\s*(ПЕСНЯ ДЛЯ|ЭТАП 3\s*:?|СТРУКТУРА ЛИРИКИ)/i);
+    if (styleIdx > 0 && songStart >= 0 && styleIdx - songStart > 300) {
+      const block = text.slice(songStart, styleIdx).trim();
+      if (block.length > 200) lyrics = block;
+    }
+  }
+  // Ещё запасной: от последнего «название» до [style:] (лирика часто идёт сразу после названия)
+  if (!lyrics) {
+    const styleIdx = text.indexOf("[style:");
+    const end = styleIdx > 0 ? styleIdx : text.length;
+    const lastGuillemet = text.lastIndexOf("»");
+    if (lastGuillemet >= 0 && end - lastGuillemet > 250) {
+      const block = text.slice(lastGuillemet + 1, end).trim();
+      if (block.length > 200 && block.split(/\n/).filter((l) => l.trim()).length >= 5) lyrics = block;
+    }
+  }
+  // Если [style:] нет в ответе (обрезка/другая модель): берём последние 4000 символов как возможную лирику
+  if (!lyrics && text.length > 500) {
+    const tail = text.slice(-4000).trim();
+    const lines = tail.split(/\n/).filter((l) => l.trim()).length;
+    if (lines >= 8) lyrics = tail;
+  }
+  // Запасной: после анализа (или после названия «») до конца — если нет [style:], считаем что лирика идёт до конца
+  if (!lyrics && text.length > 800) {
+    const afterAnalysis = analysisEnd > 0 ? text.slice(analysisEnd) : text;
+    const afterTitle = (() => {
+      const q = afterAnalysis.indexOf("»");
+      return q >= 0 ? afterAnalysis.slice(q + 1) : afterAnalysis;
+    })();
+    const block = afterTitle.trim();
+    const lineCount = block.split(/\n/).filter((l) => l.trim()).length;
+    if (block.length > 300 && lineCount >= 10) lyrics = block.slice(0, 5000);
   }
   
   if (!title && lyrics) title = "Sound Key";
@@ -463,9 +525,20 @@ ${astroTextFull}
     const fullResponse = llm.text;
     const finishReason = llm.finish_reason || null;
     const llmTruncated = finishReason === "length";
+    console.log(`[Воркер] 💾 СЫРОЙ ОТВЕТ DEEPSEEK (первые 500 символов):`);
+    console.log(fullResponse.substring(0, 500));
+    console.log(`[Воркер] 💾 ДЛИНА ОТВЕТА: ${fullResponse.length} символов`);
     console.log(`[Воркер] ✅ DeepSeek ответил (длина: ${fullResponse.length}), finish_reason: ${finishReason || "—"}${llm.usage ? `, completion_tokens: ${llm.usage.completion_tokens}` : ""}`);
     stepLog['2'] = `DeepSeek ответил, ${fullResponse.length} симв.${llmTruncated ? ' (обрезано)' : ''}`;
     await updateStepLog(requestId, stepLog);
+    // Сразу сохраняем сырой ответ в БД (для диагностики и админки), даже если парсинг потом упадёт
+    const { error: saveRawErr } = await supabase.from("track_requests").update({
+      deepseek_response: fullResponse,
+      detailed_analysis: fullResponse,
+      llm_truncated: llmTruncated,
+      updated_at: new Date().toISOString(),
+    }).eq("id", requestId);
+    if (saveRawErr) console.warn("[Воркер] Не удалось сохранить сырой ответ DeepSeek:", saveRawErr.message);
     if (llmTruncated) {
       console.warn(`[Воркер] ⚠️ ОТВЕТ ОБРЕЗАН! Увеличьте max_tokens или сократите системный промпт.`);
     }
@@ -503,7 +576,10 @@ ${astroTextFull}
     // ========== ЭТАП 2: ПАРСИНГ ОТВЕТА ==========
     const parsed = parseResponse(fullResponse);
     if (!parsed || !parsed.lyrics) {
-      throw new Error('Не удалось извлечь лирику из ответа LLM');
+      const snippet = fullResponse.slice(0, 800).replace(/\n/g, " ");
+      console.error(`[Воркер] Парсинг лирики: не найден блок [Verse 1] / [Chorus] / ЛИРИКА:. Начало ответа: ${snippet}...`);
+      await supabase.from("track_requests").update({ deepseek_response: fullResponse, generation_status: "failed", error_message: "Не удалось извлечь лирику из ответа LLM", updated_at: new Date().toISOString() }).eq("id", requestId);
+      throw new Error('Не удалось извлечь лирику из ответа LLM. Ответ сохранён в заявке — открой «Подробнее» в админке и проверь формат.');
     }
     let lyricsForSuno = sanitizeSongText(parsed.lyrics);
     const lineCount = lyricsForSuno.split(/\n/).filter((l) => l.trim()).length;
