@@ -49,7 +49,7 @@ export async function chatCompletion(systemPrompt, userMessage, opts = {}) {
   }
 
   const model = opts.model || DEFAULT_MODEL;
-  const max_tokens = opts.max_tokens ?? 65536;
+  const max_tokens = opts.max_tokens ?? 8192;
   const temperature = opts.temperature ?? DEFAULT_TEMPERATURE;
 
   const body = {

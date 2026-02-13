@@ -513,9 +513,9 @@ ${astroTextFull}
     }
     
     // ========== ЭТАП 1: DEEPSEEK ==========
-    // Без ограничения по токенам: API сам ограничит по модели (chat 8K, reasoner 64K)
-    const LLM_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-coder-33b-instruct";
-    const MAX_TOKENS_LLM = 65536;
+    // Безлимитный вход/выход: deepseek-reasoner — 128K контекст, до 64K токенов вывода; chat/coder — до 8K
+    const LLM_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-reasoner";
+    const MAX_TOKENS_LLM = /reasoner/i.test(LLM_MODEL) ? 64000 : 8192;
     console.log(`[Воркер] 🤖 Отправляю запрос в DeepSeek (model=${LLM_MODEL}, max_tokens=${MAX_TOKENS_LLM})...`);
     
     const llm = await chatCompletion(SYSTEM_PROMPT, userRequest, {
