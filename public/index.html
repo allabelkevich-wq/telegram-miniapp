@@ -1067,7 +1067,11 @@
           // #region agent log
           fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:payBtn',message:'submit request catch',data:{errorMessage:(error&&error.message)?error.message:String(error),apiBase:apiBase,hasInitData:!!initData},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H1,H3,H4'})}).catch(()=>{});
           // #endregion
-          alert('❌ Не удалось отправить заявку. Проверь интернет и попробуй снова.');
+          var msg = (error && error.message) ? String(error.message) : '';
+          if (!msg || /^HTTP\s+\d+$/i.test(msg)) {
+            msg = 'Не удалось отправить заявку. Попробуй открыть Mini App заново из чата с ботом и отправить ещё раз.';
+          }
+          alert('❌ ' + msg);
           goToPage('paymentPage');
         }
       });
