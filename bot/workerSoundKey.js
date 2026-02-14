@@ -207,6 +207,30 @@ const SYSTEM_PROMPT = (() => {
   return SYSTEM_PROMPT_FALLBACK;
 })();
 
+const PROMPT_EXTENSION = `
+
+### ДОПОЛНИТЕЛЬНЫЕ ИСТОЧНИКИ ДАННЫХ (используй при анализе):
+- Если доступна Навамша (D-9) — анализируй отношения через неё.
+- Если доступна Дашамша (D-10) — опирайся на неё в вопросах призвания.
+- Если известны периоды (Даши) — укажи, какой жизненный сезон сейчас.
+- Для пар — сравни обе натальные карты и их дробные карты.
+- Никогда не называй источники ("по D-9..."), просто используй их содержание.
+
+НИКАКИХ общих мотивационных фраз вроде "ты справишься", "всё будет хорошо", "поверь в себя".
+Каждая строчка должна быть уникальной для этой души, основанной ТОЛЬКО на её карте.
+Если в карте нет данных по теме — не придумывай.
+
+Песня — это зеркало анализа.
+Припев = мантра из рекомендаций.
+Бридж = решение ключевого противоречия.
+Куплеты = образы только из разделов "Суть души" и "Сила и тень".
+Если в анализе нет темы — её не должно быть в песне.
+
+НИКАКИХ упоминаний реальных людей, фильмов, книг, песен, брендов, городов (кроме места рождения).
+Не сравнивай с другими душами.
+`;
+const EFFECTIVE_SYSTEM_PROMPT = `${SYSTEM_PROMPT}\n${PROMPT_EXTENSION}`.trim();
+
 // ============================================================================
 // ОЧИСТКА ТЕКСТА ПЕСНИ ОТ ЗАПРЕЩЁННЫХ ТЕРМИНОВ
 // ============================================================================
@@ -511,8 +535,19 @@ export async function generateSoundKey(requestId) {
     
     let astroTextPerson2 = null;
     if (request.mode === "couple" && request.person2_name && request.person2_birthdate && request.person2_birthplace) {
+      const person2FromSnapshot = snapshot?.person2_snapshot && typeof snapshot.person2_snapshot === "object"
+        ? snapshot.person2_snapshot
+        : null;
+      if (person2FromSnapshot?.snapshot_text) {
+        astroTextPerson2 = String(person2FromSnapshot.snapshot_text);
+      }
+      if (!astroTextPerson2 && person2FromSnapshot?.snapshot_json && typeof person2FromSnapshot.snapshot_json === "object") {
+        try {
+          astroTextPerson2 = JSON.stringify(person2FromSnapshot.snapshot_json, null, 2);
+        } catch (_) {}
+      }
       const coords2 = await geocode(request.person2_birthplace || "");
-      if (coords2) {
+      if (!astroTextPerson2 && coords2) {
         const m2 = String(request.person2_birthdate).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
         if (m2) {
           let hour2 = 12, minute2 = 0;
@@ -626,11 +661,11 @@ ${astroTextFull}
     // Модель/temperature/max_tokens: приоритет app_settings (админка) > .env > дефолты.
     const CONTEXT_LIMIT = 128000;
     const SAFETY_BUFFER = 2000;
-    const promptHash = crypto.createHash("sha256").update(SYSTEM_PROMPT).digest("hex");
+    const promptHash = crypto.createHash("sha256").update(EFFECTIVE_SYSTEM_PROMPT).digest("hex");
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/workerSoundKey.js:llm-start',message:'locked system prompt in use',data:{requestId:String(requestId||''),promptPath:LOCKED_PROMPT_PATH,promptLength:SYSTEM_PROMPT.length,promptHash:promptHash.slice(0,16)},timestamp:Date.now(),runId:'prompt-lock-debug',hypothesisId:'H1,H2'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/workerSoundKey.js:llm-start',message:'locked system prompt with extension in use',data:{requestId:String(requestId||''),promptPath:LOCKED_PROMPT_PATH,promptLength:EFFECTIVE_SYSTEM_PROMPT.length,promptHash:promptHash.slice(0,16)},timestamp:Date.now(),runId:'prompt-lock-debug',hypothesisId:'H1,H2'})}).catch(()=>{});
     // #endregion
-    const estimatedInputTokens = Math.ceil((SYSTEM_PROMPT.length + userRequest.length) * 0.4);
+    const estimatedInputTokens = Math.ceil((EFFECTIVE_SYSTEM_PROMPT.length + userRequest.length) * 0.4);
     const maxFromContext = Math.max(1000, CONTEXT_LIMIT - estimatedInputTokens - SAFETY_BUFFER);
     let settingsMaxTokens = null;
     let settingsModel = null;
@@ -663,10 +698,13 @@ ${astroTextFull}
     const TEMPERATURE = settingsTemperature != null
       ? Number(settingsTemperature)
       : (process.env.DEEPSEEK_TEMPERATURE != null ? Number(process.env.DEEPSEEK_TEMPERATURE) : 1.5);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/workerSoundKey.js:llm-config',message:'resolved llm config before deepseek call',data:{requestId:String(requestId||''),settingsMaxTokens:settingsMaxTokens,envMaxTokens:process.env.DEEPSEEK_MAX_TOKENS||null,rawMax:Number.isFinite(Number(rawMax))?Number(rawMax):String(rawMax),maxTokensFinal:MAX_TOKENS_LLM,maxTokensFinalType:typeof MAX_TOKENS_LLM,modelRaw:rawModel,modelFinal:LLM_MODEL,temperatureFinal:TEMPERATURE},timestamp:Date.now(),runId:'deepseek-max-debug',hypothesisId:'H1,H2,H3'})}).catch(()=>{});
+    // #endregion
     const withSearch = !!SERPER_API_KEY;
     console.log(`[Воркер] 🤖 Отправляю запрос в DeepSeek (model=${LLM_MODEL}, max_tokens=${MAX_TOKENS_LLM}, temperature=${TEMPERATURE}, вход ~${estimatedInputTokens} ток.${withSearch ? ", поиск при генерации" : ""})...`);
 
-    let llm = await chatCompletion(SYSTEM_PROMPT, userRequest, {
+    let llm = await chatCompletion(EFFECTIVE_SYSTEM_PROMPT, userRequest, {
       model: LLM_MODEL,
       max_tokens: MAX_TOKENS_LLM,
       temperature: TEMPERATURE,
@@ -682,7 +720,7 @@ ${astroTextFull}
     });
     if (!llm.ok && /Model Not Exist|model.*not.*exist/i.test(llm.error || "") && LLM_MODEL !== "deepseek-reasoner") {
       console.warn(`[Воркер] ⚠️ Модель "${LLM_MODEL}" недоступна (${llm.error}). Повтор с deepseek-reasoner...`);
-      llm = await chatCompletion(SYSTEM_PROMPT, userRequest, {
+      llm = await chatCompletion(EFFECTIVE_SYSTEM_PROMPT, userRequest, {
         model: "deepseek-reasoner",
         max_tokens: MAX_TOKENS_LLM,
         temperature: TEMPERATURE,
@@ -868,7 +906,11 @@ ${astroTextFull}
       .eq('id', requestId);
 
     // Шаг 11: Сначала обложка (если есть), затем аудио
-    const caption = `🗝️ ${request.name}, твой звуковой ключ готов!\n\nЭто твоё персональное звуковое лекарство. Слушай каждое утро в тишине с закрытыми глазами.\n\nСлушай сердцем ❤️\n— YupSoul`;
+    const requestLower = String(request.request || "").toLowerCase();
+    const introCaption = (requestLower.includes("целительство") || requestLower.includes("исцеление"))
+      ? `🗝️ ${request.name}, твоё звуковое лекарство готово...`
+      : `🗝️ ${request.name}, твой звуковой ключ от новой двери в реальность готов...`;
+    const caption = `${introCaption}\n\nЭто не просто песня — это твой персональный ключ к игре жизни. Слушай, когда захочешь вспомнить, кто ты.\n\nСлушай сердцем ❤️\n— YupSoul`;
     if (coverUrl) {
       await sendPhotoToUser(request.telegram_user_id, coverUrl, `Обложка твоей песни · ${parsed.title || "Звуковой ключ"}`).catch((e) => console.warn("[Воркер] Ошибка отправки обложки:", e?.message));
     }

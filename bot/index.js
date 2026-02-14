@@ -8,6 +8,7 @@ import { Bot, webhookCallback } from "grammy";
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
 import { createHeroesRouter, getOrCreateAppUser, validateInitData } from "./heroesApi.js";
+import { chatCompletion } from "./deepseek.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import fs from "node:fs";
@@ -71,9 +72,76 @@ const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
   : null;
 
 const memoryRequests = [];
+const pendingSoulChatByUser = new Map();
 
 function isAdmin(telegramId) {
   return telegramId && ADMIN_IDS.includes(Number(telegramId));
+}
+
+async function getRequestForSoulChat(requestId) {
+  if (!supabase) return { error: "Supabase недоступен" };
+  const { data: row, error } = await supabase
+    .from("track_requests")
+    .select("id,telegram_user_id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,request,person2_name,person2_gender,person2_birthdate,person2_birthplace,transit_date,transit_time,transit_location,transit_intent")
+    .eq("id", requestId)
+    .maybeSingle();
+  if (error || !row) return { error: error?.message || "Заявка не найдена" };
+
+  const { data: astro } = await supabase
+    .from("astro_snapshots")
+    .select("snapshot_text,snapshot_json")
+    .eq("track_request_id", requestId)
+    .maybeSingle();
+  return { row, astro: astro || null };
+}
+
+function buildSoulChatPrompt(row, astro, question) {
+  const astroText = astro?.snapshot_text || "Нет астро-данных.";
+  const astroJson = astro?.snapshot_json && typeof astro.snapshot_json === "object"
+    ? JSON.stringify(astro.snapshot_json).slice(0, 12000)
+    : "";
+  return [
+    `Ты — голос души ${row.name || "человека"}.`,
+    "Ты знаешь натальную карту, даши, транзиты и контекст запроса.",
+    "Отвечай коротко и тепло как внутренний друг.",
+    "Без инструкций, без морализаторства, без астрологических терминов.",
+    "Никаких общих фраз. Только персональный ответ по данным ниже.",
+    "",
+    `Профиль: ${row.name || "—"} (${row.gender || "—"}), ${row.birthdate || "—"}, ${row.birthplace || "—"}, режим: ${row.mode || "single"}.`,
+    row.person2_name ? `Пара: ${row.name || "—"} + ${row.person2_name} (${row.person2_gender || "—"}).` : "",
+    row.transit_date || row.transit_location ? `Транзит: ${row.transit_date || "—"} ${row.transit_time || ""}, ${row.transit_location || "—"}, намерение: ${row.transit_intent || "—"}.` : "",
+    `Исходный запрос: ${row.request || "—"}`,
+    "",
+    "Астро-снимок (текст):",
+    astroText,
+    astroJson ? `\nАстро-снимок (json): ${astroJson}` : "",
+    "",
+    `Вопрос: "${question}"`,
+  ].filter(Boolean).join("\n");
+}
+
+async function runSoulChat({ requestId, question, telegramUserId, isAdminCaller = false }) {
+  const rid = String(requestId || "").trim();
+  if (!rid || !UUID_REGEX.test(rid)) return { ok: false, error: "Неверный request_id (нужен полный UUID)" };
+  const q = String(question || "").trim();
+  if (!q) return { ok: false, error: "Пустой вопрос" };
+
+  const loaded = await getRequestForSoulChat(rid);
+  if (loaded.error) return { ok: false, error: loaded.error };
+  const { row, astro } = loaded;
+
+  if (!isAdminCaller && Number(row.telegram_user_id) !== Number(telegramUserId)) {
+    return { ok: false, error: "Нет доступа к этой заявке" };
+  }
+
+  const soulPrompt = buildSoulChatPrompt(row, astro, q);
+  const llm = await chatCompletion(
+    "Ты этичный и тёплый собеседник. Отвечай 3-6 предложениями, конкретно и бережно. Не используй астрологические термины.",
+    soulPrompt,
+    { model: process.env.DEEPSEEK_MODEL || "deepseek-reasoner", max_tokens: 1200, temperature: 1.1 }
+  );
+  if (!llm.ok) return { ok: false, error: llm.error || "Ошибка генерации soul-chat" };
+  return { ok: true, answer: String(llm.text || "").trim(), request: row };
 }
 
 // Сохранение заявки: в Supabase и/или в память (для админки). Поддержка client_id (тариф Мастер).
@@ -525,13 +593,65 @@ bot.command("full_analysis", async (ctx) => {
   }
 });
 
+bot.command("soulchat", async (ctx) => {
+  const userId = ctx.from?.id;
+  if (!userId) {
+    await ctx.reply("Не удалось определить пользователя.");
+    return;
+  }
+  const args = ctx.message?.text?.trim()?.split(/\s+/)?.slice(1) || [];
+  if (!args.length) {
+    await ctx.reply("Использование: /soulchat <request_id>\nПример: /soulchat 00000000-0000-0000-0000-000000000000");
+    return;
+  }
+  if (!supabase) {
+    await ctx.reply("❌ База данных недоступна.");
+    return;
+  }
+  const requestId = String(args[0] || "").trim();
+  const loaded = await getRequestForSoulChat(requestId);
+  if (loaded.error) {
+    await ctx.reply(`❌ ${loaded.error}`);
+    return;
+  }
+  if (!isAdmin(userId) && Number(loaded.row.telegram_user_id) !== Number(userId)) {
+    await ctx.reply("🚫 Эта заявка принадлежит другому пользователю.");
+    return;
+  }
+  pendingSoulChatByUser.set(Number(userId), { requestId, startedAt: Date.now() });
+  const req = loaded.row;
+  await ctx.reply(`🫂 Режим «разговор по душам» включён для заявки ${requestId.slice(0, 8)}.\nНапиши один вопрос текстом следующим сообщением.\n\nПрофиль: ${req.name || "—"}${req.person2_name ? ` + ${req.person2_name}` : ""}.`);
+});
+
+bot.on("message:text", async (ctx, next) => {
+  const userId = Number(ctx.from?.id || 0);
+  const text = (ctx.message?.text || "").trim();
+  if (!userId || !pendingSoulChatByUser.has(userId)) return next();
+  if (!text || text.startsWith("/")) return next();
+
+  const pending = pendingSoulChatByUser.get(userId);
+  pendingSoulChatByUser.delete(userId);
+  await ctx.reply("🧘 Слушаю душу... готовлю ответ.");
+  const result = await runSoulChat({
+    requestId: pending.requestId,
+    question: text,
+    telegramUserId: userId,
+    isAdminCaller: isAdmin(userId),
+  });
+  if (!result.ok) {
+    await ctx.reply(`❌ ${result.error}`);
+    return;
+  }
+  await ctx.reply(`💬 Ответ души для ${result.request?.name || "тебя"}:\n\n${result.answer}`);
+});
+
 // Любая неизвестная команда — подсказка (чтобы не было «пустого» отклика)
 bot.on("message:text", async (ctx, next) => {
   const text = (ctx.message?.text || "").trim();
   if (!text.startsWith("/")) return next();
   const cmd = text.split(/\s/)[0].toLowerCase();
-  if (["/start", "/ping", "/get_analysis", "/admin", "/admin_check", "/astro", "/full_analysis"].includes(cmd)) return next();
-  await ctx.reply("Неизвестная команда. Доступны: /start — открыть приложение, /get_analysis — расшифровка после оплаты. Админам: /admin, /admin_check, /astro <id>, /full_analysis <id>. Проверка связи: /ping.");
+  if (["/start", "/ping", "/get_analysis", "/admin", "/admin_check", "/astro", "/full_analysis", "/soulchat"].includes(cmd)) return next();
+  await ctx.reply("Неизвестная команда. Доступны: /start, /ping, /get_analysis, /soulchat <id>. Админам: /admin, /admin_check, /astro <id>, /full_analysis <id>.");
 });
 
 bot.command("admin_check", async (ctx) => {
@@ -769,6 +889,7 @@ const commands = [
   { command: "start", description: "Начать / открыть приложение" },
   { command: "ping", description: "Проверка связи с ботом" },
   { command: "get_analysis", description: "Расшифровка карты (после оплаты)" },
+  { command: "soulchat", description: "Разговор по душам по заявке" },
   { command: "admin", description: "Админ: ссылка на админку и список заявок" },
   { command: "admin_check", description: "Админ: проверка базы" },
 ];
@@ -906,7 +1027,7 @@ app.get("/api/admin/requests", asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const limit = Math.min(parseInt(req.query?.limit, 10) || 50, 100);
   const statusFilter = req.query?.status || "all";
-  const fullSelect = "id, name, person2_name, status, generation_status, created_at, audio_url, mode, request, generation_steps";
+  const fullSelect = "id,name,gender,birthdate,birthplace,person2_name,person2_gender,person2_birthdate,person2_birthplace,status,generation_status,created_at,audio_url,mode,request,generation_steps";
   let q = supabase.from("track_requests").select(fullSelect).order("created_at", { ascending: false }).limit(limit);
   if (statusFilter === "pending") q = q.in("generation_status", ["pending", "astro_calculated", "lyrics_generated", "suno_processing"]);
   else if (statusFilter === "completed") q = q.eq("generation_status", "completed");
@@ -942,8 +1063,8 @@ app.get("/api/admin/requests/:id", asyncApi(async (req, res) => {
   const id = sanitizeRequestId(req.params.id);
   if (!id) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
   if (!isValidRequestId(id)) return res.status(400).json({ success: false, error: "Используйте полный UUID заявки (с дефисами), не обрезанный ID" });
-  const fullCols = "id,name,person2_name,gender,birthdate,birthplace,mode,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message,llm_truncated,generation_steps";
-  const coreCols = "id,name,person2_name,gender,birthdate,birthplace,mode,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message";
+  const fullCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message,llm_truncated,generation_steps";
+  const coreCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message";
   const minCols = "id,name,gender,birthdate,birthplace,request,created_at,status,telegram_user_id";
   let usedFallbackCols = false;
   let result = await supabase.from("track_requests").select(fullCols).eq("id", id).maybeSingle();
@@ -1074,6 +1195,29 @@ app.put("/api/admin/settings", express.json(), asyncApi(async (req, res) => {
     if (upsertErr) return res.status(500).json({ success: false, error: upsertErr.message });
   }
   return res.json({ success: true, message: "Настройки сохранены" });
+}));
+
+app.post("/api/soul-chat", express.json(), asyncApi(async (req, res) => {
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const body = req.body || {};
+  const requestId = String(body.request_id || "").trim();
+  const question = String(body.question || "").trim();
+  const telegramUserId = Number(body.telegram_user_id || 0);
+  const adminToken = String(body.admin_token || "");
+  const isAdminCaller = !!ADMIN_SECRET && adminToken === ADMIN_SECRET;
+  if (!isAdminCaller && !telegramUserId) {
+    return res.status(403).json({ success: false, error: "Нужен admin_token или telegram_user_id" });
+  }
+  const result = await runSoulChat({ requestId, question, telegramUserId, isAdminCaller });
+  if (!result.ok) return res.status(400).json({ success: false, error: result.error });
+  return res.json({
+    success: true,
+    data: {
+      request_id: result.request.id,
+      name: result.request.name,
+      answer: result.answer,
+    },
+  });
 }));
 
 app.use("/api", (err, req, res, next) => {

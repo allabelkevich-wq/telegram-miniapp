@@ -43,7 +43,7 @@ export async function computeAndSaveAstroSnapshot(supabase, trackRequestId, prov
 
   const { data: req, error: fetchErr } = await supabase
     .from("track_requests")
-    .select("id, birthdate, birthplace, birthtime, birthtime_unknown")
+    .select("id, mode, birthdate, birthplace, birthtime, birthtime_unknown, person2_name, person2_birthdate, person2_birthplace, person2_birthtime, person2_birthtime_unknown")
     .eq("id", trackRequestId)
     .single();
 
@@ -84,6 +84,37 @@ export async function computeAndSaveAstroSnapshot(supabase, trackRequestId, prov
     return { ok: false, error: snapshot.error };
   }
 
+  let snapshotJsonToSave = snapshot.snapshot_json;
+  if (req.mode === "couple" && req.person2_name && req.person2_birthdate && req.person2_birthplace) {
+    const coords2 = await geocode(req.person2_birthplace || "");
+    const dt2 = parseBirthDateTime(req.person2_birthdate, req.person2_birthtime, req.person2_birthtime_unknown);
+    if (coords2 && dt2) {
+      const snapshot2 = getAstroSnapshot({
+        year: dt2.year,
+        month: dt2.month,
+        day: dt2.day,
+        hour: dt2.hour,
+        minute: dt2.minute,
+        latitude: coords2.lat,
+        longitude: coords2.lon,
+        timeUnknown: !!req.person2_birthtime_unknown,
+      });
+      if (!snapshot2.error) {
+        snapshotJsonToSave = {
+          ...snapshot.snapshot_json,
+          person1_snapshot: {
+            snapshot_text: snapshot.snapshot_text,
+            snapshot_json: snapshot.snapshot_json,
+          },
+          person2_snapshot: {
+            snapshot_text: snapshot2.snapshot_text,
+            snapshot_json: snapshot2.snapshot_json,
+          },
+        };
+      }
+    }
+  }
+
   const birthUtc = req.birthdate && (req.birthtime || req.birthtime_unknown)
     ? new Date(`${req.birthdate}T${req.birthtime || "12:00"}Z`).toISOString()
     : null;
@@ -93,7 +124,7 @@ export async function computeAndSaveAstroSnapshot(supabase, trackRequestId, prov
     .insert({
       track_request_id: trackRequestId,
       snapshot_text: snapshot.snapshot_text,
-      snapshot_json: snapshot.snapshot_json,
+      snapshot_json: snapshotJsonToSave,
       birth_lat: coords.lat,
       birth_lon: coords.lon,
       birth_utc: birthUtc,

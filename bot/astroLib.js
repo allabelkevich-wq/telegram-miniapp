@@ -88,6 +88,30 @@ const ASPECTS = [
 const SIGN_LORD_NAMES = ["Марс", "Венера", "Меркурий", "Луна", "Солнце", "Меркурий", "Венера", "Марс", "Юпитер", "Сатурн", "Сатурн", "Юпитер"];
 
 const CHARA_KARAKA_NAMES = ["Атмакарака", "Аматьякарака", "Бхратрикарака", "Матрикарака", "Питрикарака", "Гьянакарака", "Дааракарака"];
+const DIVISIONAL_FACTORS = [4, 7, 9, 10, 30];
+const VIMSHOTTARI_LORDS = ["Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury"];
+const VIMSHOTTARI_LORDS_RU = {
+  Ketu: "Кету",
+  Venus: "Венера",
+  Sun: "Солнце",
+  Moon: "Луна",
+  Mars: "Марс",
+  Rahu: "Раху",
+  Jupiter: "Юпитер",
+  Saturn: "Сатурн",
+  Mercury: "Меркурий",
+};
+const VIMSHOTTARI_YEARS = {
+  Ketu: 7,
+  Venus: 20,
+  Sun: 6,
+  Moon: 10,
+  Mars: 7,
+  Rahu: 18,
+  Jupiter: 16,
+  Saturn: 19,
+  Mercury: 17,
+};
 
 function norm360(lon) {
   let x = lon % 360;
@@ -108,6 +132,103 @@ function getNakshatra(longitude) {
   const pada = Math.floor((L % NAKSHATRA_DEG) / PADA_DEG) + 1;
   const n = NAKSHATRAS_27[idx];
   return { ...n, index: idx, pada, nakshatra: n.name };
+}
+
+function formatDateUtc(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return null;
+  return date.toISOString().replace("T", " ").slice(0, 19) + " UTC";
+}
+
+function addYearsUtc(date, years) {
+  return new Date(date.getTime() + years * 365.2425 * 24 * 60 * 60 * 1000);
+}
+
+function computeDivisionalCharts(positionsWithHouses, ascLongitude) {
+  const asc = norm360(ascLongitude);
+  const result = {};
+  for (const factor of DIVISIONAL_FACTORS) {
+    const ascDiv = norm360(asc * factor);
+    const ascSignIndex = Math.floor(ascDiv / 30) % 12;
+    const chart = positionsWithHouses
+      .filter((p) => typeof p.longitude === "number")
+      .map((p) => {
+        const divLon = norm360(p.longitude * factor);
+        const { signIndex, degreeInSign, signName } = lonToSignDegree(divLon);
+        const house = ((signIndex - ascSignIndex + 12) % 12) + 1;
+        return {
+          name: p.name,
+          sign: signName,
+          signIndex,
+          degree: Math.round(degreeInSign * 10) / 10,
+          longitude: Math.round(divLon * 100) / 100,
+          house,
+        };
+      });
+    result[`D${factor}`] = {
+      ascendant_sign: SIGNS_RU[ascSignIndex],
+      positions: chart,
+    };
+  }
+  return result;
+}
+
+function computeVimshottariDashas(moonLongitude, birthDate, nowDate = new Date()) {
+  if (!(birthDate instanceof Date) || Number.isNaN(birthDate.getTime())) return null;
+  const moonLon = norm360(moonLongitude);
+  const nakIdx = Math.floor(moonLon / NAKSHATRA_DEG) % 27;
+  const lordIdx = nakIdx % 9;
+  const currentLord = VIMSHOTTARI_LORDS[lordIdx];
+  const currentLordYears = VIMSHOTTARI_YEARS[currentLord];
+  const progressInNakshatra = (moonLon % NAKSHATRA_DEG) / NAKSHATRA_DEG;
+  const elapsedYearsAtBirth = progressInNakshatra * currentLordYears;
+  const remainingYearsAtBirth = Math.max(0, currentLordYears - elapsedYearsAtBirth);
+
+  let mahaStart = addYearsUtc(birthDate, -elapsedYearsAtBirth);
+  let mahaLordIdx = lordIdx;
+  let mahaEnd = addYearsUtc(mahaStart, VIMSHOTTARI_YEARS[VIMSHOTTARI_LORDS[mahaLordIdx]]);
+  const maxGuard = 200;
+  let guard = 0;
+  while (nowDate >= mahaEnd && guard < maxGuard) {
+    mahaStart = mahaEnd;
+    mahaLordIdx = (mahaLordIdx + 1) % 9;
+    mahaEnd = addYearsUtc(mahaStart, VIMSHOTTARI_YEARS[VIMSHOTTARI_LORDS[mahaLordIdx]]);
+    guard++;
+  }
+
+  const mahaLord = VIMSHOTTARI_LORDS[mahaLordIdx];
+  const mahaYears = VIMSHOTTARI_YEARS[mahaLord];
+  let antarStart = mahaStart;
+  let antarLordIdx = mahaLordIdx;
+  let antarEnd = mahaEnd;
+  for (let i = 0; i < 9; i++) {
+    const idx = (mahaLordIdx + i) % 9;
+    const lord = VIMSHOTTARI_LORDS[idx];
+    const antarYears = (mahaYears * VIMSHOTTARI_YEARS[lord]) / 120;
+    const end = addYearsUtc(antarStart, antarYears);
+    if (nowDate < end) {
+      antarLordIdx = idx;
+      antarEnd = end;
+      break;
+    }
+    antarStart = end;
+    antarLordIdx = idx;
+    antarEnd = end;
+  }
+
+  const antarLord = VIMSHOTTARI_LORDS[antarLordIdx];
+  return {
+    current_mahadasha: VIMSHOTTARI_LORDS_RU[mahaLord] || mahaLord,
+    current_antardasha: VIMSHOTTARI_LORDS_RU[antarLord] || antarLord,
+    mahadasha_period: {
+      starts_at_utc: formatDateUtc(mahaStart),
+      ends_at_utc: formatDateUtc(mahaEnd),
+    },
+    antardasha_period: {
+      starts_at_utc: formatDateUtc(antarStart),
+      ends_at_utc: formatDateUtc(antarEnd),
+    },
+    birth_balance_years: Number(remainingYearsAtBirth.toFixed(2)),
+  };
 }
 
 /**
@@ -315,6 +436,18 @@ export function getAstroSnapshot(opts) {
       retrograde.length ? `Ретроградные планеты: ${retrograde.join(", ")}.` : "Ретроградных планет нет.",
     ].filter(Boolean);
 
+    const divisionalCharts = computeDivisionalCharts(positionsWithHouses, asc);
+    const birthDateUtc = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+    const dashas = computeVimshottariDashas(moonLon, birthDateUtc);
+
+    lines.push("");
+    lines.push("Дробные карты (кратко):");
+    lines.push(...Object.keys(divisionalCharts).map((k) => `  ${k}: добавлено в snapshot_json.divisional_charts`));
+    if (dashas) {
+      lines.push("");
+      lines.push(`Вимшоттари Даши (текущий сезон): ${dashas.current_mahadasha} / ${dashas.current_antardasha}`);
+    }
+
     const snapshot_text = lines.join("\n");
     const snapshot_json = {
       system: "sidereal_lahiri",
@@ -329,6 +462,8 @@ export function getAstroSnapshot(opts) {
       arudha_lagna: arudhaLagna,
       aspects: aspectsList,
       retrograde,
+      divisional_charts: divisionalCharts,
+      dashas,
     };
 
     return { snapshot_text, snapshot_json, error: null };

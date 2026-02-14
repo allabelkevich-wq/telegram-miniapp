@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>👑 Админка Yup Soul — Контроль генерации</title>
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #0f0f1b; color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; line-height: 1.6; }
+    body { background: #0f0f1b; color: #fff; font-family: 'Comfortaa', system-ui, sans-serif; padding: 20px; line-height: 1.6; }
     .container { max-width: 1200px; margin: 0 auto; }
     .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 15px; margin-bottom: 30px; text-align: center; }
     .header h1 { font-size: 32px; font-weight: bold; margin-bottom: 10px; }
@@ -67,7 +68,7 @@
     }
   </style>
 </head>
-<body style="background:#0f0f1b;color:#fff;">
+<body style="background:#0f0f1b;color:#fff;font-family:'Comfortaa',system-ui,sans-serif;">
   <div class="container">
     <div class="header">
       <h1>👑 АДМИНКА YUP SOUL</h1>
@@ -272,7 +273,12 @@
           <div class="request-header">
             <div>
               <div class="request-name">${escapeHtml(r.name || '')}${r.person2_name ? ' & ' + escapeHtml(r.person2_name) : ''}</div>
+              ${r.person2_name ? '<div style="font-size:12px;color:#94a3b8;margin-top:4px;">' +
+                escapeHtml(r.gender || '—') + ' / ' + escapeHtml(r.person2_gender || '—') +
+                (r.person2_birthdate ? (' · ' + escapeHtml(r.person2_birthdate)) : '') +
+                '</div>' : ''}
               <div class="request-id" title="Полный UUID: ${escapeHtml((r.id || ''))}">ID: ${(r.id || '').substring(0,8)} • ${r.created_at ? new Date(r.created_at).toLocaleDateString('ru-RU') : '—'}</div>
+              <div class="request-id">Режим: ${escapeHtml(r.mode || 'single')}${r.person2_name ? ' · Пара: ' + escapeHtml((r.person2_gender || '—')) : ''}</div>
             </div>
             <div class="request-status ${statusClass(gs)}">${statusLabel(gs)}</div>
           </div>
@@ -440,7 +446,7 @@
           ${deepseekBlock}
           <div class="details-section">
             <div class="section-title">👤 Персональные данные</div>
-            <div class="content-text">Имя: ${escapeHtml(r.name || '—')}<br>${r.person2_name ? 'Партнёр: ' + escapeHtml(r.person2_name) + '<br>' : ''}Пол: ${r.gender || '—'}<br>Дата рождения: ${r.birthdate || '—'}<br>Место: ${escapeHtml(r.birthplace || '—')}</div>
+            <div class="content-text">Имя: ${escapeHtml(r.name || '—')}<br>Пол: ${escapeHtml(r.gender || '—')}<br>Дата рождения: ${escapeHtml(r.birthdate || '—')}<br>Время рождения: ${r.birthtime_unknown ? 'неизвестно' : escapeHtml(r.birthtime || '—')}<br>Место: ${escapeHtml(r.birthplace || '—')}${r.person2_name ? ('<hr style="border:0;border-top:1px solid #334155;margin:10px 0;">Партнёр: ' + escapeHtml(r.person2_name) + '<br>Пол партнёра: ' + escapeHtml(r.person2_gender || '—') + '<br>Дата рождения партнёра: ' + escapeHtml(r.person2_birthdate || '—') + '<br>Время рождения партнёра: ' + (r.person2_birthtime_unknown ? 'неизвестно' : escapeHtml(r.person2_birthtime || '—')) + '<br>Место рождения партнёра: ' + escapeHtml(r.person2_birthplace || '—')) : ''}</div>
           </div>
           ${r.lyrics ? '<div class="details-section"><div class="section-title">🎵 Текст песни</div><div class="content-text" style="white-space:pre-wrap;">' + escapeHtml(r.lyrics) + '</div></div>' : ''}
           ${r.audio_url ? '<div class="details-section"><div class="section-title">🔊 Аудио</div><audio class="audio-player" controls src="' + escapeHtml(r.audio_url) + '"></audio><br><a href="' + escapeHtml(r.audio_url) + '" download><button class="btn btn-success" style="width:auto;">⬇️ Скачать</button></a></div>' : ''}
