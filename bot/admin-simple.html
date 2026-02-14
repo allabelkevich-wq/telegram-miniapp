@@ -72,6 +72,7 @@
     <div class="header">
       <h1>👑 АДМИНКА YUP SOUL</h1>
       <p>Полный контроль генерации звуковых ключей / Full control of sound key generation</p>
+      <p id="url-info" style="font-size:12px;color:#64748b;margin-top:8px;word-break:break-all;"></p>
     </div>
     <div class="stats">
       <div class="stat-card">
@@ -135,7 +136,13 @@
   </div>
 
   <script>
-    const API_BASE = window.location.origin;
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var apiOrigin = params.get('api_origin');
+      window.API_BASE = (apiOrigin && apiOrigin.startsWith('http')) ? apiOrigin.replace(/\/$/, '') : window.location.origin;
+      var el = document.getElementById('url-info');
+      if (el) el.textContent = 'Страница: ' + window.location.origin + ' · Запросы к API: ' + window.API_BASE;
+    })();
     let currentFilter = 'all';
 
     function getToken() {
@@ -166,7 +173,7 @@
         if (res.status === 502 || res.status === 503) {
           throw new Error('Сервер просыпается (502/503). Подождите 30–60 сек и обновите страницу (F5).');
         }
-        throw new Error('Сервер вернул HTML вместо данных. Код ответа: ' + res.status + '. Откройте админку по ссылке из бота (команда /admin) — тот же домен, что и бот. Сейчас открыто: ' + window.location.origin);
+        throw new Error('Сервер вернул HTML вместо данных. Код ответа: ' + res.status + '. Если открыли по ссылке из бота: в Render сервис «' + window.location.host + '» может быть Static Site, а API отдаёт Web Service с ботом. Задайте BOT_PUBLIC_URL = URL именно Web Service с ботом (Dashboard → Web Service → URL), перезапустите бота и откройте новую ссылку из /admin. Сейчас открыто: ' + window.location.origin);
       }
       try {
         return { res, json: JSON.parse(text) };

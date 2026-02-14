@@ -617,8 +617,11 @@ bot.command("admin", async (ctx) => {
 
   const getAdminUrl = () => {
     if (!BOT_PUBLIC_URL) return null;
-    const token = ADMIN_SECRET ? "?token=" + encodeURIComponent(ADMIN_SECRET) : "";
-    return BOT_PUBLIC_URL + "/admin" + token;
+    const sep = "?";
+    const token = ADMIN_SECRET ? "token=" + encodeURIComponent(ADMIN_SECRET) : "";
+    const apiOrigin = "api_origin=" + encodeURIComponent(BOT_PUBLIC_URL);
+    const query = [token, apiOrigin].filter(Boolean).join("&");
+    return BOT_PUBLIC_URL + "/admin" + (query ? sep + query : "");
   };
 
   const sendAdminLink = () => {
