@@ -943,14 +943,34 @@ app.get("/api/admin/requests/:id", asyncApi(async (req, res) => {
   if (!id) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
   if (!isValidRequestId(id)) return res.status(400).json({ success: false, error: "Используйте полный UUID заявки (с дефисами), не обрезанный ID" });
   const fullCols = "id,name,person2_name,gender,birthdate,birthplace,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message,llm_truncated,generation_steps";
+  let usedFallbackCols = false;
   let result = await supabase.from("track_requests").select(fullCols).eq("id", id).maybeSingle();
   if (result.error && /does not exist|column/i.test(result.error.message)) {
     const minCols = "id,name,gender,birthdate,birthplace,request,created_at,status,telegram_user_id";
     result = await supabase.from("track_requests").select(minCols).eq("id", id).maybeSingle();
+    usedFallbackCols = true;
   }
   if (result.error) return res.status(500).json({ success: false, error: result.error.message });
   if (!result.data) return res.status(404).json({ success: false, error: "Заявка не найдена" });
-  return res.json({ success: true, data: result.data });
+  const row = result.data;
+  const deepseekText = typeof row.deepseek_response === "string" ? row.deepseek_response.trim() : "";
+  const hasDeepseekResponse = deepseekText.length > 0;
+  const gs = row.generation_status || row.status || "pending";
+  let deepseekMissingReason = null;
+  if (!hasDeepseekResponse) {
+    if (usedFallbackCols) deepseekMissingReason = "column_missing_or_old_schema";
+    else if (gs === "failed") deepseekMissingReason = "generation_failed";
+    else if (["pending", "processing", "astro_calculated", "lyrics_generated", "suno_processing"].includes(gs)) deepseekMissingReason = "generation_in_progress";
+    else deepseekMissingReason = "not_generated";
+  }
+  return res.json({
+    success: true,
+    data: {
+      ...row,
+      has_deepseek_response: hasDeepseekResponse,
+      deepseek_missing_reason: deepseekMissingReason,
+    },
+  });
 }));
 
 app.post("/api/admin/requests/:id/restart", asyncApi(async (req, res) => {

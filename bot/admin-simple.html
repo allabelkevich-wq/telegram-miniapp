@@ -116,7 +116,7 @@
         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
           <label style="display:flex;align-items:center;gap:8px;">
             <span style="min-width:100px;">max_tokens:</span>
-            <input type="number" id="settings-max-tokens" min="4096" max="65536" value="8192" step="1" style="width:100px;padding:10px;border-radius:8px;border:2px solid #4a5568;background:#1a1a2e;color:#fff;font-size:16px;">
+            <input type="number" id="settings-max-tokens" min="4096" max="128000" value="8192" step="1" style="width:100px;padding:10px;border-radius:8px;border:2px solid #4a5568;background:#1a1a2e;color:#fff;font-size:16px;">
           </label>
           <label style="display:flex;align-items:center;gap:8px;">
             <span style="min-width:100px;">temperature:</span>
@@ -387,11 +387,24 @@
       const modal = document.createElement('div');
       modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;';
       const deepseekFull = (r.deepseek_response || '').trim();
-      const deepseekBlock = deepseekFull
-        ? '<div class="details-section" style="margin-bottom:24px;"><div class="section-title" style="color:#a78bfa;">🤖 Ответ DeepSeek — контроль генерации</div>' +
-          (r.llm_truncated ? '<div style="color:#f39c12;margin-bottom:8px;font-weight:bold">⚠️ Обрезано по лимиту токенов</div>' : '') +
-          '<div class="content-text" style="max-height:50vh;overflow-y:auto;white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.5;background:#0f0f1b;padding:16px;border-radius:8px;border:1px solid #333;">' + escapeHtml(deepseekFull) + '</div></div>'
-        : '<div class="details-section"><div class="section-title">🤖 Ответ DeepSeek</div><div class="content-text" style="color:#94a3b8;">Ещё не сгенерирован или заявка без этапа ИИ.</div></div>';
+      const genStatus = r.generation_status || r.status || 'pending';
+      const genError = (r.error_message || '').trim();
+      const dsReason = r.deepseek_missing_reason || '';
+      let deepseekBlock;
+      if (deepseekFull) {
+        deepseekBlock = '<div class="details-section" style="margin-bottom:24px;"><div class="section-title" style="color:#a78bfa;">🤖 Ответ DeepSeek</div>' +
+          (r.llm_truncated ? '<div style="color:#f39c12;margin-bottom:8px;font-weight:bold">⚠️ Ответ обрезан по лимиту токенов</div>' : '') +
+          '<div class="content-text" style="max-height:50vh;overflow-y:auto;white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.5;background:#0f0f1b;padding:16px;border-radius:8px;border:1px solid #333;">' + escapeHtml(deepseekFull) + '</div></div>';
+      } else if (genStatus === 'failed') {
+        deepseekBlock = '<div class="details-section"><div class="section-title">🤖 Ответ DeepSeek</div><div class="content-text" style="color:#fca5a5;">Ответ не получен. Ошибка генерации: ' + escapeHtml(genError || 'неизвестная ошибка') + '</div></div>';
+      } else {
+        const reasonHint = dsReason === 'column_missing_or_old_schema'
+          ? 'Причина: в БД нет нужных колонок (нужна миграция).'
+          : (dsReason === 'generation_in_progress'
+            ? 'Причина: генерация ещё выполняется.'
+            : (dsReason === 'not_generated' ? 'Причина: этап DeepSeek ещё не запускался.' : ''));
+        deepseekBlock = '<div class="details-section"><div class="section-title">🤖 Ответ DeepSeek</div><div class="content-text" style="color:#94a3b8;">Ответ ещё не получен. Статус: ' + escapeHtml(genStatus) + '. ' + escapeHtml(reasonHint) + ' Если долго не меняется, нажми «Перезапустить генерацию».</div></div>';
+      }
       modal.innerHTML = `
         <div style="background:#1a1a2e;border-radius:15px;width:100%;max-width:900px;max-height:90vh;overflow-y:auto;padding:30px;position:relative;">
           <button onclick="this.closest('div').parentElement.remove()" style="position:absolute;top:15px;right:15px;background:#e74c3c;border:none;width:36px;height:36px;border-radius:50%;color:#fff;font-size:24px;cursor:pointer;line-height:1;">×</button>
