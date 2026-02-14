@@ -215,7 +215,7 @@
           const err = listJson.error || listRes.status || 'Ошибка загрузки';
           document.getElementById('requests').innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c">Ошибка загрузки: ' + escapeHtml(String(err)) + '<br>Проверьте токен / Check token</div>';
         }
-        const settingsResult = await fetchJson(API_BASE + '/api/admin/settings' + authQuery(), { headers: authHeaders() });
+        const settingsResult = await fetchJson(API_BASE + '/api/admin/settings' + authQueryFromPath(), { headers: authHeaders() });
         const settingsJson = settingsResult.json;
         if (settingsJson.success && settingsJson.settings) {
           const st = settingsJson.settings;
