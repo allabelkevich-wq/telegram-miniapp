@@ -614,14 +614,18 @@ ${astroTextFull}
     const rawModel = settingsModel || process.env.DEEPSEEK_MODEL || "deepseek-reasoner";
     const KNOWN_MODELS = ["deepseek-chat", "deepseek-reasoner", "deepseek-coder"];
     const LLM_MODEL = KNOWN_MODELS.includes(rawModel) ? rawModel : "deepseek-reasoner";
-    // Минимум 4096 для этого воркера (анализ + лирика). Верхняя граница зависит от модели (chat — 8K, coder/reasoner — больше); при 400 от API уменьшите в админке.
+    // Минимум 4096 для этого воркера (анализ + лирика). API DeepSeek валидирует max_tokens в диапазоне [1, 65536].
     const MIN_MAX_TOKENS = 4096;
+    const API_MAX_TOKENS = 65536;
     const rawMax = settingsMaxTokens != null
       ? Number(settingsMaxTokens)
       : (process.env.DEEPSEEK_MAX_TOKENS != null ? Number(process.env.DEEPSEEK_MAX_TOKENS) : maxFromContext);
-    const MAX_TOKENS_LLM = Math.max(MIN_MAX_TOKENS, Math.max(1, Number(rawMax) || 8192));
+    const MAX_TOKENS_LLM = Math.min(API_MAX_TOKENS, Math.max(MIN_MAX_TOKENS, Math.max(1, Number(rawMax) || 8192)));
     if (rawMax != null && Number(rawMax) < MIN_MAX_TOKENS) {
       console.log(`[Воркер] 📌 max_tokens из настроек (${rawMax}) ниже минимума для генерации песни — использую ${MAX_TOKENS_LLM}`);
+    }
+    if (rawMax != null && Number(rawMax) > API_MAX_TOKENS) {
+      console.log(`[Воркер] 📌 max_tokens из настроек (${rawMax}) выше лимита API ${API_MAX_TOKENS} — использую ${MAX_TOKENS_LLM}`);
     }
     const TEMPERATURE = settingsTemperature != null
       ? Number(settingsTemperature)

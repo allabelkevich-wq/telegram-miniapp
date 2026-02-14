@@ -59,9 +59,9 @@ export async function chatCompletion(systemPrompt, userMessage, opts = {}) {
   }
 
   const model = opts.model || DEFAULT_MODEL;
-  // Приводим к целому; верхняя граница зависит от модели (некоторые API принимают > 8192). При 400 от API уменьшите max_tokens в админке.
+  // DeepSeek API сейчас валидирует диапазон max_tokens как [1, 65536].
   const requested = Number(opts.max_tokens);
-  const max_tokens = Math.floor(Math.max(1, Number.isFinite(requested) ? requested : 8192));
+  const max_tokens = Math.floor(Math.min(65536, Math.max(1, Number.isFinite(requested) ? requested : 8192)));
   const temperature = opts.temperature ?? DEFAULT_TEMPERATURE;
   const tools = opts.tools;
   const executeTool = opts.executeTool;

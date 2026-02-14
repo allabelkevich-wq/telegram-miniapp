@@ -116,7 +116,7 @@
         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
           <label style="display:flex;align-items:center;gap:8px;">
             <span style="min-width:100px;">max_tokens:</span>
-            <input type="number" id="settings-max-tokens" min="4096" max="128000" value="8192" step="1" style="width:100px;padding:10px;border-radius:8px;border:2px solid #4a5568;background:#1a1a2e;color:#fff;font-size:16px;">
+            <input type="number" id="settings-max-tokens" min="4096" max="65536" value="8192" step="1" title="Лимит DeepSeek API: 1..65536" style="width:100px;padding:10px;border-radius:8px;border:2px solid #4a5568;background:#1a1a2e;color:#fff;font-size:16px;">
           </label>
           <label style="display:flex;align-items:center;gap:8px;">
             <span style="min-width:100px;">temperature:</span>
@@ -340,7 +340,7 @@
       const tempEl = document.getElementById('settings-temperature');
       const statusEl = document.getElementById('settings-save-status');
       if (!input || !statusEl) return;
-      const val = Math.max(4096, Number(input.value) || 8192);
+      const val = Math.min(65536, Math.max(4096, Number(input.value) || 8192));
       input.value = val;
       const modelVal = (modelEl && modelEl.value) ? modelEl.value.trim() : '';
       const tempVal = (tempEl && tempEl.value !== '') ? Math.max(0, Math.min(2, Number(tempEl.value))) : 1.5;
