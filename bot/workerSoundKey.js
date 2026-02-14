@@ -511,6 +511,16 @@ export async function generateSoundKey(requestId) {
     const langLabel = request.language || "русский";
     let userRequest;
     if (request.mode === "couple" && request.person2_name && astroTextPerson2) {
+      const g1 = (request.gender || "").toLowerCase();
+      const g2 = (request.person2_gender || "").toLowerCase();
+      let pairType = "нейтральный союз";
+      if ((g1 === "male" && g2 === "female") || (g1 === "female" && g2 === "male") || (g1 === "м" && g2 === "ж") || (g1 === "ж" && g2 === "м")) {
+        pairType = "семейная пара / влюблённые";
+      } else if ((g1 === "female" && g2 === "female") || (g1 === "ж" && g2 === "ж")) {
+        pairType = "подруги";
+      } else if ((g1 === "male" && g2 === "male") || (g1 === "м" && g2 === "м")) {
+        pairType = "друзья";
+      }
       userRequest = `ЭТО ПАРА: ${request.name} и ${request.person2_name}
 
 ПЕРВЫЙ ЧЕЛОВЕК:
@@ -526,10 +536,11 @@ export async function generateSoundKey(requestId) {
 Время рождения: ${request.person2_birthtime_unknown ? "неизвестно" : request.person2_birthtime}
 
 КОНФИГУРАЦИЯ ПОЛОВ: ${(request.gender || "—")}+${(request.person2_gender || "—")}
+ТИП СОЮЗА: ${pairType}
 
 ЗАПРОС ОТ ПАРЫ: "${request.request || "создать песню"}"
 
-ЗАДАЧА: Проанализируй ОБЕ натальные карты и их связь с учётом половой конфигурации (${(request.gender || "—")}+${(request.person2_gender || "—")}). Создай песню, которая отражает союз, взаимодополнение и общий путь пары. В ответе НЕ используй астрологические термины — только метафоры.
+ЗАДАЧА: Проанализируй ОБЕ натальные карты и их связь с учётом половой конфигурации. Создай песню, которая отражает их союз как ${pairType} — взаимодополнение и общий путь. В ответе НЕ используй астрологические термины — только метафоры.
 
 ПОЛНАЯ НАТАЛЬНАЯ КАРТА ПЕРВОГО ЧЕЛОВЕКА:
 ${astroTextFull}
