@@ -6,6 +6,10 @@
 
 import "dotenv/config";
 console.log("[workerSoundKey] Модуль загружен. Готов к генерации.");
+import fs from "node:fs";
+import path from "node:path";
+import crypto from "node:crypto";
+import { fileURLToPath } from "node:url";
 import { createClient } from '@supabase/supabase-js';
 import { computeAndSaveAstroSnapshot } from "./workerAstro.js";
 import { getAstroSnapshot } from "./astroLib.js";
@@ -63,11 +67,16 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const LOCKED_PROMPT_PATH = path.join(__dirname, "prompts", "ideally-tuned-system-prompt.txt");
+
 // ============================================================================
-// СИСТЕМНЫЙ ПРОМПТ (встроен в код)
+// СИСТЕМНЫЙ ПРОМПТ
+// Источник истины: bot/prompts/ideally-tuned-system-prompt.txt
 // ============================================================================
 
-const SYSTEM_PROMPT = `Ты — мудрый астролог-поэт и музыкальный психолог с опытом в 10 000 жизней. Твоя задача — объединить два типа запросов: 1) Глубокий анализ натальных карт, 2) Создание песен на основе этого анализа.
+const SYSTEM_PROMPT_FALLBACK = `Ты — мудрый астролог-поэт и музыкальный психолог с опытом в 10 000 жизней. Твоя задача — объединить два типа запросов: 1) Глубокий анализ натальных карт, 2) Создание песен на основе этого анализа.
 
 ТРИГГЕР: Получив натальную карту и запрос (на анализ или песню), выполняй следующий алгоритм в одном ответе, без лишних разделений:
 
@@ -189,6 +198,15 @@ MUSIC PROMPT для Suno/AI (Формируется автоматически �
 - Создавать не просто песни, а звуковые лекарства
 - Помнить, что каждая карта — это история героя`;
 
+const SYSTEM_PROMPT = (() => {
+  try {
+    if (fs.existsSync(LOCKED_PROMPT_PATH)) {
+      return fs.readFileSync(LOCKED_PROMPT_PATH, "utf8");
+    }
+  } catch (_) {}
+  return SYSTEM_PROMPT_FALLBACK;
+})();
+
 // ============================================================================
 // ОЧИСТКА ТЕКСТА ПЕСНИ ОТ ЗАПРЕЩЁННЫХ ТЕРМИНОВ
 // ============================================================================
@@ -212,6 +230,17 @@ function sanitizeSongText(text) {
     cleaned = cleaned.replace(re, "сила");
   });
   return cleaned;
+}
+
+function countUppercaseChars(text) {
+  if (!text || typeof text !== "string") return 0;
+  const m = text.match(/[A-ZА-ЯЁ]/g);
+  return m ? m.length : 0;
+}
+
+function forceLyricsLowercase(text) {
+  if (!text || typeof text !== "string") return text;
+  return text.toLocaleLowerCase("ru-RU");
 }
 
 // ============================================================================
@@ -597,6 +626,10 @@ ${astroTextFull}
     // Модель/temperature/max_tokens: приоритет app_settings (админка) > .env > дефолты.
     const CONTEXT_LIMIT = 128000;
     const SAFETY_BUFFER = 2000;
+    const promptHash = crypto.createHash("sha256").update(SYSTEM_PROMPT).digest("hex");
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/workerSoundKey.js:llm-start',message:'locked system prompt in use',data:{requestId:String(requestId||''),promptPath:LOCKED_PROMPT_PATH,promptLength:SYSTEM_PROMPT.length,promptHash:promptHash.slice(0,16)},timestamp:Date.now(),runId:'prompt-lock-debug',hypothesisId:'H1,H2'})}).catch(()=>{});
+    // #endregion
     const estimatedInputTokens = Math.ceil((SYSTEM_PROMPT.length + userRequest.length) * 0.4);
     const maxFromContext = Math.max(1000, CONTEXT_LIMIT - estimatedInputTokens - SAFETY_BUFFER);
     let settingsMaxTokens = null;
@@ -733,6 +766,12 @@ ${astroTextFull}
       throw new Error('Не удалось извлечь лирику из ответа LLM. Ответ сохранён в заявке — открой «Подробнее» в админке и проверь формат.');
     }
     let lyricsForSuno = sanitizeSongText(parsed.lyrics);
+    const uppercaseBefore = countUppercaseChars(lyricsForSuno);
+    lyricsForSuno = forceLyricsLowercase(lyricsForSuno);
+    const uppercaseAfter = countUppercaseChars(lyricsForSuno);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/workerSoundKey.js:lyrics-normalize',message:'lyrics lower-case normalization',data:{requestId:String(requestId||''),uppercaseBefore:uppercaseBefore,uppercaseAfter:uppercaseAfter,changed:uppercaseBefore!==uppercaseAfter},timestamp:Date.now(),runId:'lyrics-case-debug',hypothesisId:'H3'})}).catch(()=>{});
+    // #endregion
     const lineCount = lyricsForSuno.split(/\n/).filter((l) => l.trim()).length;
     console.log(`[Воркер] ЭТАП 2 — Парсинг: лирика ${lyricsForSuno.length} символов, ${lineCount} строк; title="${parsed.title || ""}"; style длина=${(parsed.style || "").length}`);
     if (lineCount < 32) {
