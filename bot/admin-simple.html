@@ -398,6 +398,22 @@
       const genStatus = r.generation_status || r.status || 'pending';
       const genError = (r.error_message || '').trim();
       const dsReason = r.deepseek_missing_reason || '';
+      const steps = r.generation_steps && typeof r.generation_steps === 'object'
+        ? r.generation_steps
+        : (typeof r.generation_steps === 'string' ? (() => { try { return JSON.parse(r.generation_steps); } catch (e) { return {}; } })() : {});
+      const isTransitMode = r.mode === 'transit' || !!(r.transit_date || r.transit_location || r.transit_intent);
+      const transitBlock = isTransitMode
+        ? '<div class="details-section" style="margin-bottom:24px;"><div class="section-title" style="color:#f9a8d4;">🌙 Контроль калькулятора транзитов (Энергия дня)</div>' +
+          '<div class="content-text" style="line-height:1.6;">' +
+            'Режим: <b>transit / Энергия дня</b><br>' +
+            'Дата транзита: ' + escapeHtml(r.transit_date || '—') + '<br>' +
+            'Время транзита: ' + escapeHtml(r.transit_time || 'не указано') + '<br>' +
+            'Локация транзита: ' + escapeHtml(r.transit_location || '—') + '<br>' +
+            'Намерение: ' + escapeHtml(r.transit_intent || '—') + '<br>' +
+            'Статус генерации: ' + escapeHtml(genStatus || '—') + '<br>' +
+            (steps && Object.keys(steps).length ? ('Логи этапов: ' + escapeHtml(JSON.stringify(steps))) : 'Логи этапов: —') +
+          '</div></div>'
+        : '';
       let deepseekBlock;
       if (deepseekFull) {
         deepseekBlock = '<div class="details-section" style="margin-bottom:24px;"><div class="section-title" style="color:#a78bfa;">🤖 Ответ DeepSeek</div>' +
@@ -419,6 +435,7 @@
         <div style="background:#1a1a2e;border-radius:15px;width:100%;max-width:900px;max-height:90vh;overflow-y:auto;padding:30px;position:relative;">
           <button onclick="this.closest('div').parentElement.remove()" style="position:absolute;top:15px;right:15px;background:#e74c3c;border:none;width:36px;height:36px;border-radius:50%;color:#fff;font-size:24px;cursor:pointer;line-height:1;">×</button>
           <h2 style="color:#fff;font-size:24px;margin-bottom:20px;">📋 Заявка #${(r.id || '').substring(0,8)}</h2>
+          ${transitBlock}
           ${astroBlock}
           ${deepseekBlock}
           <div class="details-section">

@@ -1046,8 +1046,14 @@
         payload.initData = initData;
         goToPage('loadingPage');
         try {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:payBtn',message:'submit request attempt',data:{apiBase:apiBase,mode:mode,hasInitData:!!initData,initDataLen:(initData||'').length,hasBirthplaceSelection:!!(birthplaceField&&birthplaceField.getAttribute('data-place-selected'))},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H1,H2'})}).catch(()=>{});
+          // #endregion
           var response = await fetch(apiBase + '/api/submit-request', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData }, body: JSON.stringify(payload) });
           var result = await response.json().catch(function() { return {}; });
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:payBtn',message:'submit response received',data:{status:response.status,ok:response.ok,resultOk:!!result.ok,error:result.error||null,hasRequestId:!!result.requestId},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H2,H3'})}).catch(()=>{});
+          // #endregion
           if (response.ok && result.ok && result.requestId) {
             var sp = document.getElementById('songPreviewText');
             if (sp) {
@@ -1061,6 +1067,9 @@
           } else throw new Error(result.error || 'HTTP ' + response.status);
         } catch (error) {
           console.error('[MiniApp] Ошибка:', error);
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:payBtn',message:'submit request catch',data:{errorMessage:(error&&error.message)?error.message:String(error),apiBase:apiBase,hasInitData:!!initData},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H1,H3,H4'})}).catch(()=>{});
+          // #endregion
           alert('❌ Не удалось отправить заявку. Проверь интернет и попробуй снова.');
           goToPage('paymentPage');
         }

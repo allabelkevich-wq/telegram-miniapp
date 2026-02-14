@@ -942,8 +942,8 @@ app.get("/api/admin/requests/:id", asyncApi(async (req, res) => {
   const id = sanitizeRequestId(req.params.id);
   if (!id) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
   if (!isValidRequestId(id)) return res.status(400).json({ success: false, error: "Используйте полный UUID заявки (с дефисами), не обрезанный ID" });
-  const fullCols = "id,name,person2_name,gender,birthdate,birthplace,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message,llm_truncated,generation_steps";
-  const coreCols = "id,name,person2_name,gender,birthdate,birthplace,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message";
+  const fullCols = "id,name,person2_name,gender,birthdate,birthplace,mode,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message,llm_truncated,generation_steps";
+  const coreCols = "id,name,person2_name,gender,birthdate,birthplace,mode,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message";
   const minCols = "id,name,gender,birthdate,birthplace,request,created_at,status,telegram_user_id";
   let usedFallbackCols = false;
   let result = await supabase.from("track_requests").select(fullCols).eq("id", id).maybeSingle();
@@ -1114,8 +1114,14 @@ app.post("/suno-callback", express.json(), (req, res) => {
 // Запасной приём заявок: Mini App шлёт POST с initData + форма (если sendData в TG не срабатывает).
 app.post("/api/submit-request", express.json(), async (req, res) => {
   const initData = req.body?.initData || req.headers["x-telegram-init"];
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:/api/submit-request',message:'submit-request entry',data:{hasBodyInitData:!!req.body?.initData,hasHeaderInitData:!!req.headers["x-telegram-init"],bodyKeys:Object.keys(req.body||{}),hasPerson1:!!req.body?.person1,mode:req.body?.mode||null},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H1,H2'})}).catch(()=>{});
+  // #endregion
   const telegramUserId = validateInitData(initData, BOT_TOKEN);
   if (telegramUserId == null) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:/api/submit-request',message:'submit-request auth failed',data:{reason:'validateInitData returned null',hasInitData:!!initData,initDataLength:(initData||'').length},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H1'})}).catch(()=>{});
+    // #endregion
     return res.status(401).json({ error: "Неверные или устаревшие данные. Открой приложение из чата с ботом и попробуй снова." });
   }
   const body = req.body || {};
@@ -1124,6 +1130,9 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   if (isNewFormat) {
     const { mode, person1, person2, request: reqText, language: lang } = body;
     if (!person1?.name || !person1?.birthdate || !person1?.birthplace || !reqText) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:/api/submit-request',message:'submit-request validation failed',data:{missingName:!person1?.name,missingBirthdate:!person1?.birthdate,missingBirthplace:!person1?.birthplace,missingRequest:!reqText,mode:mode||null,hasPerson2:!!person2},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H2'})}).catch(()=>{});
+      // #endregion
       return res.status(400).json({ error: "Не все обязательные поля заполнены (person1.name, birthdate, birthplace, request)" });
     }
     name = person1.name;
@@ -1186,11 +1195,20 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
     requestId = await saveRequest(saveData);
   } catch (err) {
     console.error("[submit-request] saveRequest:", err?.message || err);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:/api/submit-request',message:'submit-request saveRequest failed',data:{errorMessage:err?.message||String(err)},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H3'})}).catch(()=>{});
+    // #endregion
     return res.status(500).json({ error: "Ошибка сохранения заявки" });
   }
   if (!requestId) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:/api/submit-request',message:'submit-request empty requestId',data:{requestId:requestId||null},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H3'})}).catch(()=>{});
+    // #endregion
     return res.status(500).json({ error: "Не удалось сохранить заявку" });
   }
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:/api/submit-request',message:'submit-request success',data:{requestId:requestId,telegramUserId:!!telegramUserId,mode:body.mode||'single'},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H3,H4'})}).catch(()=>{});
+  // #endregion
   const mode = body.person1 && body.mode === "couple" ? "couple" : "single";
   console.log(`[API] Заявка ${requestId} сохранена — ГЕНЕРИРУЕМ ПЕСНЮ БЕСПЛАТНО (режим: ${mode})`);
   const successText =
