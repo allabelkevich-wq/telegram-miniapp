@@ -402,7 +402,9 @@
           ? 'Причина: в БД нет нужных колонок (нужна миграция).'
           : (dsReason === 'generation_in_progress'
             ? 'Причина: генерация ещё выполняется.'
-            : (dsReason === 'not_generated' ? 'Причина: этап DeepSeek ещё не запускался.' : ''));
+            : (dsReason === 'completed_without_deepseek_response'
+              ? 'Причина: генерация завершена, но raw-ответ DeepSeek не сохранён в этой записи.'
+              : (dsReason === 'not_generated' ? 'Причина: этап DeepSeek ещё не запускался.' : '')));
         deepseekBlock = '<div class="details-section"><div class="section-title">🤖 Ответ DeepSeek</div><div class="content-text" style="color:#94a3b8;">Ответ ещё не получен. Статус: ' + escapeHtml(genStatus) + '. ' + escapeHtml(reasonHint) + ' Если долго не меняется, нажми «Перезапустить генерацию».</div></div>';
       }
       modal.innerHTML = `

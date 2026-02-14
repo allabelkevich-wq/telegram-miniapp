@@ -943,10 +943,17 @@ app.get("/api/admin/requests/:id", asyncApi(async (req, res) => {
   if (!id) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
   if (!isValidRequestId(id)) return res.status(400).json({ success: false, error: "Используйте полный UUID заявки (с дефисами), не обрезанный ID" });
   const fullCols = "id,name,person2_name,gender,birthdate,birthplace,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message,llm_truncated,generation_steps";
+  const coreCols = "id,name,person2_name,gender,birthdate,birthplace,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message";
+  const minCols = "id,name,gender,birthdate,birthplace,request,created_at,status,telegram_user_id";
   let usedFallbackCols = false;
   let result = await supabase.from("track_requests").select(fullCols).eq("id", id).maybeSingle();
+  // Если отсутствуют "новые" колонки (например generation_steps), пробуем "core" набор, где есть deepseek_response.
   if (result.error && /does not exist|column/i.test(result.error.message)) {
-    const minCols = "id,name,gender,birthdate,birthplace,request,created_at,status,telegram_user_id";
+    result = await supabase.from("track_requests").select(coreCols).eq("id", id).maybeSingle();
+    usedFallbackCols = true;
+  }
+  // Только если и core не читается — падаем до минимального набора (без deepseek_response).
+  if (result.error && /does not exist|column/i.test(result.error.message)) {
     result = await supabase.from("track_requests").select(minCols).eq("id", id).maybeSingle();
     usedFallbackCols = true;
   }
@@ -958,9 +965,10 @@ app.get("/api/admin/requests/:id", asyncApi(async (req, res) => {
   const gs = row.generation_status || row.status || "pending";
   let deepseekMissingReason = null;
   if (!hasDeepseekResponse) {
-    if (usedFallbackCols) deepseekMissingReason = "column_missing_or_old_schema";
+    if (usedFallbackCols && (row.deepseek_response === undefined || row.deepseek_response === null)) deepseekMissingReason = "column_missing_or_old_schema";
     else if (gs === "failed") deepseekMissingReason = "generation_failed";
     else if (["pending", "processing", "astro_calculated", "lyrics_generated", "suno_processing"].includes(gs)) deepseekMissingReason = "generation_in_progress";
+    else if (gs === "completed") deepseekMissingReason = "completed_without_deepseek_response";
     else deepseekMissingReason = "not_generated";
   }
   return res.json({
