@@ -782,7 +782,7 @@ bot.api.setMyCommands(commands, { language_code: "ru" }).catch(() => {});
 const app = express();
 // Вебхук — до express.json(), чтобы получать raw body (нужно для grammY)
 const WEBHOOK_URL = (process.env.WEBHOOK_URL || "").replace(/\/$/, "");
-// Базовый URL для ссылки на админку: BOT_PUBLIC_URL, WEBHOOK_URL или HEROES_API_BASE (как в инструкции Render)
+// Базовый URL для ссылки на админку. Одинаковое значение с WEBHOOK_URL — нормально (один сервис = один URL).
 const BOT_PUBLIC_URL = (process.env.BOT_PUBLIC_URL || process.env.WEBHOOK_URL || process.env.HEROES_API_BASE || "").replace(/\/webhook\/?$/i, "").replace(/\/$/, "");
 // #region agent log — H1: апдейты доходят до сервера?
 if (WEBHOOK_URL) {
@@ -1036,6 +1036,12 @@ app.put("/api/admin/settings", express.json(), asyncApi(async (req, res) => {
 app.use("/api", (err, req, res, next) => {
   if (res.headersSent) return next(err);
   res.status(500).json({ success: false, error: err?.message || "Ошибка сервера" });
+});
+
+// Чтобы админка не получала HTML при 404: любой необработанный /api/* → JSON
+app.use("/api", (req, res, next) => {
+  if (res.headersSent) return next();
+  res.status(404).json({ success: false, error: "Not found", path: req.path });
 });
 
 app.get(["/admin-simple", "/admin-simple/"], (req, res) => {
