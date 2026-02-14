@@ -14,7 +14,8 @@ import fs from "node:fs";
 import "dotenv/config";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DEBUG_LOG_PATH = path.join(process.cwd(), ".cursor", "debug.log");
+// Лог всегда в корне проекта (workspace), чтобы его можно было прочитать при любом cwd
+const DEBUG_LOG_PATH = path.join(__dirname, "..", ".cursor", "debug.log");
 function debugLog(payload) {
   const line = JSON.stringify({ ...payload, timestamp: payload.timestamp || Date.now() });
   console.log("[debug]", line);
@@ -616,9 +617,8 @@ bot.command("admin", async (ctx) => {
 
   const getAdminUrl = () => {
     if (!BOT_PUBLIC_URL) return null;
-    const path = "/admin-simple";
     const token = ADMIN_SECRET ? "?token=" + encodeURIComponent(ADMIN_SECRET) : "";
-    return BOT_PUBLIC_URL + path + token;
+    return BOT_PUBLIC_URL + "/admin" + token;
   };
 
   const sendAdminLink = () => {
@@ -650,11 +650,14 @@ bot.command("admin", async (ctx) => {
   try {
     if (!targetId) {
       // #region agent log
-      const p4 = { location: "index.js:admin-cmd", message: "admin early return: no targetId (no chat/from)", data: {}, timestamp: Date.now(), hypothesisId: "H4" };
+      const p4 = { location: "index.js:admin-cmd", message: "admin early return: no targetId (no chat/from)", data: { hasMsg: !!ctx.update?.message, chatId, userId }, timestamp: Date.now(), hypothesisId: "H3" };
       debugLog(p4);
       fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p4) }).catch(() => {});
       // #endregion
       console.warn("[admin] Нет chat/from в апдейте");
+      try {
+        await ctx.reply("Не удалось определить чат. Напиши /admin в личку боту (открой чат с ботом и отправь команду там).");
+      } catch (_) {}
       return;
     }
     console.log("[admin] chatId=" + chatId + " userId=" + userId + " isAdmin=" + isAdmin(userId) + " ADMIN_IDS=" + JSON.stringify(ADMIN_IDS));
@@ -667,6 +670,7 @@ bot.command("admin", async (ctx) => {
       // #endregion
       await reply("В Render (Environment) не задан ADMIN_TELEGRAM_IDS. Добавь: ADMIN_TELEGRAM_IDS=твой_Telegram_ID (узнать ID: @userinfobot), затем перезапусти сервис.");
       sendAdminLink();
+      fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "index.js:admin-cmd", message: "after reply ADMIN_IDS empty", timestamp: Date.now(), hypothesisId: "H2" }) }).catch(() => {});
       return;
     }
     if (!isAdmin(userId)) {
@@ -676,17 +680,24 @@ bot.command("admin", async (ctx) => {
       fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p2b) }).catch(() => {});
       // #endregion
       await reply("Нет доступа к админке. Твой Telegram ID: " + (userId ?? "?") + ". Добавь в Render → Environment: ADMIN_TELEGRAM_IDS=" + (userId ?? "ТВОЙ_ID") + " и перезапусти бота.");
+      fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "index.js:admin-cmd", message: "after reply user not admin", timestamp: Date.now(), hypothesisId: "H2" }) }).catch(() => {});
       return;
     }
 
     // #region agent log
-    const p5 = { location: "index.js:admin-cmd", message: "admin passed checks, sending link and fetching requests", data: { hasBotPublicUrl: !!process.env.BOT_PUBLIC_URL }, timestamp: Date.now(), hypothesisId: "H5" };
+    const p5 = { location: "index.js:admin-cmd", message: "admin passed checks, sending link and fetching requests", data: { hasBotPublicUrl: !!process.env.BOT_PUBLIC_URL, targetId }, timestamp: Date.now(), hypothesisId: "H5" };
     debugLog(p5);
     fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p5) }).catch(() => {});
     // #endregion
 
     // Сначала обязательно отправляем ссылку — чтобы пользователь получил её даже если дальше что-то упадёт
+    // #region agent log H4
+    fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "index.js:admin-cmd", message: "before sendLinkFirst", data: { targetId }, timestamp: Date.now(), hypothesisId: "H4" }) }).catch(() => {});
+    // #endregion
     await sendLinkFirst();
+    // #region agent log H4
+    fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "index.js:admin-cmd", message: "after sendLinkFirst", data: {}, timestamp: Date.now(), hypothesisId: "H4" }) }).catch(() => {});
+    // #endregion
 
     const adminUrl = getAdminUrl();
     const adminLinkLine = adminUrl
@@ -770,9 +781,40 @@ const app = express();
 const WEBHOOK_URL = (process.env.WEBHOOK_URL || "").replace(/\/$/, "");
 // Базовый URL для ссылки на админку: BOT_PUBLIC_URL, WEBHOOK_URL или HEROES_API_BASE (как в инструкции Render)
 const BOT_PUBLIC_URL = (process.env.BOT_PUBLIC_URL || process.env.WEBHOOK_URL || process.env.HEROES_API_BASE || "").replace(/\/webhook\/?$/i, "").replace(/\/$/, "");
+// #region agent log — H1: апдейты доходят до сервера?
 if (WEBHOOK_URL) {
-  app.use("/webhook", express.raw({ type: "application/json" }), webhookCallback(bot, "express"));
+  // Отвечаем 200 сразу, обработка в фоне — иначе при холодном старте Render Telegram таймаутит и пользователь не получает ответ
+  app.use("/webhook", express.raw({ type: "application/json" }), (req, res) => {
+    const bodyLen = req.body && Buffer.isBuffer(req.body) ? req.body.length : (req.body ? String(req.body).length : 0);
+    const pl = { location: "index.js:webhook", message: "webhook POST received", data: { method: req.method, bodyLength: bodyLen }, timestamp: Date.now(), hypothesisId: "WH1" };
+    debugLog(pl);
+    fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(pl) }).catch(() => {});
+    let update;
+    try {
+      const raw = req.body && Buffer.isBuffer(req.body) ? req.body.toString("utf8") : (req.body ? String(req.body) : "{}");
+      update = raw ? JSON.parse(raw) : {};
+    } catch (_) {
+      update = {};
+    }
+    res.status(200).end();
+    setImmediate(async () => {
+      try {
+        if (!bot.isInited()) await bot.init();
+      } catch (e) {
+        console.error("[webhook] bot.init:", e?.message || e);
+      }
+      await bot.handleUpdate(update).catch((e) => console.error("[webhook] handleUpdate error:", e?.message || e));
+    });
+  });
+} else {
+  const origStart = bot.start.bind(bot);
+  bot.start = function (opts) {
+    debugLog({ location: "index.js:polling", message: "polling start", data: {}, timestamp: Date.now(), hypothesisId: "WH1" });
+    fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "index.js:polling", message: "polling start", timestamp: Date.now(), hypothesisId: "WH1" }) }).catch(() => {});
+    return origStart(opts);
+  };
 }
+// #endregion
 app.use(express.json());
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -783,13 +825,13 @@ app.use((req, res, next) => {
 });
 // Health check: и для Render, и для «пробуждения» в браузере — показываем страницу, а не пустой/серый экран
 const healthHtml =
-  "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"><title>YupSoul Bot</title><style>body{font-family:sans-serif;padding:2rem;max-width:32rem;margin:0 auto;} a{margin:0 .25rem}</style></head><body><h1>Сервис работает</h1><p>Бот пробуждён — можно писать ему в Telegram.</p><p><a href=\"/\">Главная</a> · <a href=\"/admin-simple\">Админка</a></p></body></html>";
+  "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"><title>YupSoul Bot</title><style>body{font-family:sans-serif;padding:2rem;max-width:32rem;margin:0 auto;} a{margin:0 .25rem}</style></head><body><h1>Сервис работает</h1><p>Бот пробуждён — можно писать ему в Telegram.</p><p><a href=\"/\">Главная</a> · <a href=\"/admin\">Админка</a></p></body></html>";
 app.get("/healthz", (_req, res) =>
   res.status(200).set("Content-Type", "text/html; charset=utf-8").send(healthHtml)
 );
 app.get("/", (_req, res) =>
   res.status(200).set("Content-Type", "text/html; charset=utf-8").send(
-    "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>YupSoul Bot</title></head><body><p>YupSoul Bot работает.</p><p>Проверка: <a href=\"/healthz\">/healthz</a></p><p>Админка: <a href=\"/admin\">/admin</a> · <a href=\"/admin-simple\">/admin-simple</a></p><p>Статус webhook: <a href=\"/healthz?webhook=1\">/healthz?webhook=1</a> — если бот не видит команды.</p><p>Приложение открывай из Telegram — кнопка меню бота.</p></body></html>"
+    "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>YupSoul Bot</title></head><body><p>YupSoul Bot работает.</p><p>Проверка: <a href=\"/healthz\">/healthz</a></p><p>Админка: <a href=\"/admin\">/admin</a></p><p>Статус webhook: <a href=\"/healthz?webhook=1\">/healthz?webhook=1</a> — если бот не видит команды.</p><p>Приложение открывай из Telegram — кнопка меню бота.</p></body></html>"
   )
 );
 // Обработчик /api/me (чтобы не было 500 ошибки)
@@ -810,13 +852,11 @@ function asyncApi(fn) {
   return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 }
 
-app.get("/admin", (req, res) => {
-  const adminPath = path.join(__dirname, "admin.html");
-  res.type("html");
-  res.sendFile(adminPath, (err) => {
+app.get(["/admin", "/admin/"], (req, res) => {
+  res.type("html").sendFile(path.join(__dirname, "admin-simple.html"), (err) => {
     if (err) {
       console.error("[admin] sendFile error:", err.message);
-      res.status(500).send("<!DOCTYPE html><html><head><meta charset='utf-8'><title>Ошибка</title></head><body><p>Файл админки не найден. Проверь, что admin.html задеплоен вместе с ботом (папка bot).</p><p><a href='/'>На главную</a></p></body></html>");
+      res.status(500).send("<!DOCTYPE html><html><head><meta charset='utf-8'><title>Ошибка</title></head><body style='background:#0f0f1b;color:#fff;font-family:sans-serif;padding:40px;'><p>Файл админки не найден.</p><p><a href='/'>На главную</a></p></body></html>");
     }
   });
 });
@@ -945,18 +985,44 @@ app.get("/api/admin/settings", asyncApi(async (req, res) => {
   const settings = {};
   (data || []).forEach((row) => { settings[row.key] = row.value; });
   const deepseek_max_tokens = settings.deepseek_max_tokens != null ? Math.max(1, Number(settings.deepseek_max_tokens)) : null;
-  return res.json({ success: true, settings: { ...settings, deepseek_max_tokens: deepseek_max_tokens ?? undefined } });
+  const deepseek_temperature = settings.deepseek_temperature != null ? Number(settings.deepseek_temperature) : null;
+  return res.json({
+    success: true,
+    settings: {
+      ...settings,
+      deepseek_max_tokens: deepseek_max_tokens ?? undefined,
+      deepseek_model: settings.deepseek_model ?? undefined,
+      deepseek_temperature: (deepseek_temperature != null && Number.isFinite(deepseek_temperature)) ? deepseek_temperature : undefined,
+    },
+  });
 }));
 
 app.put("/api/admin/settings", express.json(), asyncApi(async (req, res) => {
   const auth = resolveAdminAuth(req);
   if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
-  const { deepseek_max_tokens } = req.body || {};
+  const { deepseek_max_tokens, deepseek_model, deepseek_temperature } = req.body || {};
   if (deepseek_max_tokens !== undefined) {
     const val = Math.max(1, Number(deepseek_max_tokens));
     const { error: upsertErr } = await supabase.from("app_settings").upsert(
       { key: "deepseek_max_tokens", value: String(val), updated_at: new Date().toISOString() },
+      { onConflict: "key" }
+    );
+    if (upsertErr) return res.status(500).json({ success: false, error: upsertErr.message });
+  }
+  if (deepseek_model !== undefined) {
+    const val = String(deepseek_model).trim() || null;
+    const { error: upsertErr } = await supabase.from("app_settings").upsert(
+      { key: "deepseek_model", value: val || "", updated_at: new Date().toISOString() },
+      { onConflict: "key" }
+    );
+    if (upsertErr) return res.status(500).json({ success: false, error: upsertErr.message });
+  }
+  if (deepseek_temperature !== undefined) {
+    const num = Number(deepseek_temperature);
+    const val = (Number.isFinite(num) && num >= 0 && num <= 2) ? String(num) : "1.5";
+    const { error: upsertErr } = await supabase.from("app_settings").upsert(
+      { key: "deepseek_temperature", value: val, updated_at: new Date().toISOString() },
       { onConflict: "key" }
     );
     if (upsertErr) return res.status(500).json({ success: false, error: upsertErr.message });

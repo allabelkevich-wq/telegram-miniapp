@@ -594,17 +594,23 @@ ${astroTextFull}
     }
     
     // ========== ЭТАП 1: DEEPSEEK ==========
-    // Модель: DEEPSEEK_MODEL в .env (по умолчанию deepseek-coder-33b-instruct). max_tokens: .env > админка > контекст.
-    const LLM_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-coder-33b-instruct";
+    // Модель/temperature/max_tokens: приоритет .env > app_settings (админка) > дефолты.
     const CONTEXT_LIMIT = 128000;
     const SAFETY_BUFFER = 2000;
     const estimatedInputTokens = Math.ceil((SYSTEM_PROMPT.length + userRequest.length) * 0.4);
     const maxFromContext = Math.max(1000, CONTEXT_LIMIT - estimatedInputTokens - SAFETY_BUFFER);
     let settingsMaxTokens = null;
+    let settingsModel = null;
+    let settingsTemperature = null;
     try {
-      const { data: row } = await supabase.from("app_settings").select("value").eq("key", "deepseek_max_tokens").maybeSingle();
-      if (row?.value != null) settingsMaxTokens = Math.max(1, Number(row.value));
+      const { data: rows } = await supabase.from("app_settings").select("key, value").in("key", ["deepseek_max_tokens", "deepseek_model", "deepseek_temperature"]);
+      (rows || []).forEach((r) => {
+        if (r.key === "deepseek_max_tokens" && r.value != null) settingsMaxTokens = Math.max(1, Number(r.value));
+        if (r.key === "deepseek_model" && String(r.value).trim()) settingsModel = String(r.value).trim();
+        if (r.key === "deepseek_temperature" && r.value != null) { const t = Number(r.value); if (Number.isFinite(t)) settingsTemperature = t; }
+      });
     } catch (_) {}
+    const LLM_MODEL = process.env.DEEPSEEK_MODEL || settingsModel || "deepseek-coder-33b-instruct";
     // Минимум 4096 для этого воркера (анализ + лирика). Верхняя граница зависит от модели (chat — 8K, coder/reasoner — больше); при 400 от API уменьшите в админке.
     const MIN_MAX_TOKENS = 4096;
     const rawMax = process.env.DEEPSEEK_MAX_TOKENS != null
@@ -614,7 +620,9 @@ ${astroTextFull}
     if (rawMax != null && Number(rawMax) < MIN_MAX_TOKENS) {
       console.log(`[Воркер] 📌 max_tokens из настроек (${rawMax}) ниже минимума для генерации песни — использую ${MAX_TOKENS_LLM}`);
     }
-    const TEMPERATURE = process.env.DEEPSEEK_TEMPERATURE != null ? Number(process.env.DEEPSEEK_TEMPERATURE) : 1.5;
+    const TEMPERATURE = process.env.DEEPSEEK_TEMPERATURE != null
+      ? Number(process.env.DEEPSEEK_TEMPERATURE)
+      : (settingsTemperature != null ? settingsTemperature : 1.5);
     const withSearch = !!SERPER_API_KEY;
     console.log(`[Воркер] 🤖 Отправляю запрос в DeepSeek (model=${LLM_MODEL}, max_tokens=${MAX_TOKENS_LLM}, temperature=${TEMPERATURE}, вход ~${estimatedInputTokens} ток.${withSearch ? ", поиск при генерации" : ""})...`);
 

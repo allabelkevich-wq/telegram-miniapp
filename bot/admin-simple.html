@@ -99,14 +99,33 @@
     </div>
     <div class="details-section" style="margin-bottom:20px;">
       <div class="section-title">⚙️ Настройки генерации</div>
-      <p style="font-size:14px;color:#94a3b8;margin-bottom:12px;">Макс. токенов ответа DeepSeek. Рекомендуется 8192–12000 (модель deepseek-coder-33b-instruct). Минимум в воркере — 4096. Сохранённое значение — для новых заявок.</p>
-      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-        <label style="display:flex;align-items:center;gap:8px;">
-          <span style="min-width:120px;">max_tokens:</span>
-          <input type="number" id="settings-max-tokens" min="4096" max="32768" value="8192" step="1" style="width:100px;padding:10px;border-radius:8px;border:2px solid #4a5568;background:#1a1a2e;color:#fff;font-size:16px;">
-        </label>
-        <button type="button" class="btn btn-primary" id="settings-save-btn" style="min-width:140px;">💾 Сохранить</button>
-        <span id="settings-save-status" style="font-size:14px;color:#86efac;"></span>
+      <p style="font-size:14px;color:#94a3b8;margin-bottom:12px;">Параметры DeepSeek для новых заявок. Приоритет: .env на сервере &gt; эти настройки.</p>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:8px;">
+            <span style="min-width:100px;">Модель:</span>
+            <select id="settings-model" style="min-width:220px;padding:10px;border-radius:8px;border:2px solid #4a5568;background:#1a1a2e;color:#fff;font-size:14px;">
+              <option value="deepseek-coder-33b-instruct">deepseek-coder-33b-instruct</option>
+              <option value="deepseek-chat">deepseek-chat</option>
+              <option value="deepseek-reasoner">deepseek-reasoner</option>
+              <option value="">— как в .env —</option>
+            </select>
+          </label>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:8px;">
+            <span style="min-width:100px;">max_tokens:</span>
+            <input type="number" id="settings-max-tokens" min="4096" max="32768" value="8192" step="1" style="width:100px;padding:10px;border-radius:8px;border:2px solid #4a5568;background:#1a1a2e;color:#fff;font-size:16px;">
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;">
+            <span style="min-width:100px;">temperature:</span>
+            <input type="number" id="settings-temperature" min="0" max="2" step="0.1" value="1.5" style="width:80px;padding:10px;border-radius:8px;border:2px solid #4a5568;background:#1a1a2e;color:#fff;font-size:16px;" title="0 = детерминированно, 1.5 = креатив (по умолчанию)">
+          </label>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="btn btn-primary" id="settings-save-btn" style="min-width:140px;">💾 Сохранить</button>
+          <span id="settings-save-status" style="font-size:14px;color:#86efac;"></span>
+        </div>
       </div>
     </div>
     <div id="requests" class="loading">
@@ -192,9 +211,18 @@
         const settingsResult = await fetchJson(API_BASE + '/api/admin/settings' + authQuery(), { headers: authHeaders() });
         const settingsJson = settingsResult.json;
         if (settingsJson.success && settingsJson.settings) {
-          const mt = settingsJson.settings.deepseek_max_tokens;
+          const st = settingsJson.settings;
+          const mt = st.deepseek_max_tokens;
           const inputEl = document.getElementById('settings-max-tokens');
           if (inputEl && (mt === 0 || mt > 0)) inputEl.value = Math.max(4096, Number(mt)) || 8192;
+          const modelEl = document.getElementById('settings-model');
+          if (modelEl && st.deepseek_model) {
+            const opt = Array.from(modelEl.options).find(o => o.value === st.deepseek_model);
+            if (opt) modelEl.value = st.deepseek_model;
+            else { const o = new Option(st.deepseek_model, st.deepseek_model); modelEl.appendChild(o); modelEl.value = st.deepseek_model; }
+          }
+          const tempEl = document.getElementById('settings-temperature');
+          if (tempEl && st.deepseek_temperature != null && Number.isFinite(Number(st.deepseek_temperature))) tempEl.value = Math.max(0, Math.min(2, Number(st.deepseek_temperature)));
         }
       } catch (e) {
         const msg = (e && e.message) || String(e);
@@ -301,17 +329,24 @@
 
     document.getElementById('settings-save-btn')?.addEventListener('click', async function() {
       const input = document.getElementById('settings-max-tokens');
+      const modelEl = document.getElementById('settings-model');
+      const tempEl = document.getElementById('settings-temperature');
       const statusEl = document.getElementById('settings-save-status');
       if (!input || !statusEl) return;
       const val = Math.max(4096, Number(input.value) || 8192);
       input.value = val;
+      const modelVal = (modelEl && modelEl.value) ? modelEl.value.trim() : '';
+      const tempVal = (tempEl && tempEl.value !== '') ? Math.max(0, Math.min(2, Number(tempEl.value))) : 1.5;
+      if (tempEl) tempEl.value = tempVal;
       statusEl.textContent = 'Сохранение…';
       statusEl.style.color = '#94a3b8';
       try {
+        const body = { deepseek_max_tokens: val, deepseek_temperature: tempVal };
+        if (modelVal) body.deepseek_model = modelVal;
         const result = await fetchJson(API_BASE + '/api/admin/settings' + authQueryFromPath(), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({ deepseek_max_tokens: val })
+          body: JSON.stringify(body)
         });
         const json = result.json;
         if (json.success) { statusEl.textContent = '✅ Сохранено'; statusEl.style.color = '#86efac'; setTimeout(() => { statusEl.textContent = ''; }, 3000); }

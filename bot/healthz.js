@@ -82,7 +82,7 @@ server.listen(PORT, "0.0.0.0", () => {
     .then(() => {
       expressApp = globalThis.__EXPRESS_APP__;
       if (expressApp) {
-        console.log("[healthz] Бот и API подключены. Запросы к /api и /admin-simple теперь обрабатывает Express.");
+        console.log("[healthz] Бот и API подключены. Запросы к /api и /admin теперь обрабатывает Express.");
       } else {
         console.error("[healthz] ВНИМАНИЕ: index.js не установил __EXPRESS_APP__. Проверь логи выше на ошибки загрузки.");
       }

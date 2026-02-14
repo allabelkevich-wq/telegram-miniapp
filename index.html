@@ -570,14 +570,14 @@
       var tg = null;
       function initApp() {
         try {
-          if (window.Telegram && window.Telegram.WebApp) {
+      if (window.Telegram && window.Telegram.WebApp) {
             tg = window.Telegram.WebApp;
-            tg.ready();
+        tg.ready();
             tg.expand();
             if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
             if (tg.themeParams) {
-              document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#f9f7ff');
-              document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#2d2d2d');
+        document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#f9f7ff');
+        document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#2d2d2d');
             }
             return true;
           }
@@ -689,13 +689,13 @@
           var today = new Date();
           birthdateEl.max = today.toISOString().split('T')[0];
           var minDate = new Date();
-          minDate.setFullYear(minDate.getFullYear() - 100);
+      minDate.setFullYear(minDate.getFullYear() - 100);
           birthdateEl.min = minDate.toISOString().split('T')[0];
         }
         var unknown = document.getElementById('unknown');
         var birthtime = document.getElementById('birthtime');
         if (unknown && birthtime) unknown.addEventListener('change', function() {
-          birthtime.required = !unknown.checked;
+        birthtime.required = !unknown.checked;
         });
         var birthdateSummary = document.getElementById('birthdateSummary');
         var birthdateInput = document.getElementById('birthdate');
@@ -1056,7 +1056,7 @@
               else sp.textContent = '✨ ' + name1 + ', Вселенная услышала твой запрос.\n\nЗвуковой ключ Энергии Дня формируется. Через 2-3 минуты он придёт в этот чат.';
             }
             if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
-            goToPage('successPage');
+          goToPage('successPage');
             console.log('[MiniApp] Заявка отправлена, requestId:', result.requestId);
           } else throw new Error(result.error || 'HTTP ' + response.status);
         } catch (error) {
@@ -1241,7 +1241,7 @@
           goToPage(pageMap[button.getAttribute('data-page')] || 'homePage');
         });
       });
-
+      
       (function checkAdminAndShowLink() {
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
@@ -1256,7 +1256,7 @@
             wrap.style.display = 'block';
             btn.addEventListener('click', function(e) {
               e.preventDefault();
-              var url = apiBase + '/admin-simple';
+              var url = apiBase + '/admin';
               if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) window.Telegram.WebApp.openLink(url);
               else window.open(url, '_blank');
             });
