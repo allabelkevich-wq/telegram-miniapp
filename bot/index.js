@@ -960,6 +960,19 @@ app.get("/api/admin/requests/:id", asyncApi(async (req, res) => {
   if (result.error) return res.status(500).json({ success: false, error: result.error.message });
   if (!result.data) return res.status(404).json({ success: false, error: "Заявка не найдена" });
   const row = result.data;
+  let astroSnapshotText = null;
+  let astroSnapshotJson = null;
+  try {
+    const astro = await supabase
+      .from("astro_snapshots")
+      .select("snapshot_text,snapshot_json")
+      .eq("track_request_id", id)
+      .maybeSingle();
+    if (!astro.error && astro.data) {
+      astroSnapshotText = astro.data.snapshot_text || null;
+      astroSnapshotJson = astro.data.snapshot_json || null;
+    }
+  } catch (_) {}
   const deepseekText = typeof row.deepseek_response === "string" ? row.deepseek_response.trim() : "";
   const hasDeepseekResponse = deepseekText.length > 0;
   const gs = row.generation_status || row.status || "pending";
@@ -975,6 +988,8 @@ app.get("/api/admin/requests/:id", asyncApi(async (req, res) => {
     success: true,
     data: {
       ...row,
+      astro_snapshot_text: astroSnapshotText,
+      astro_snapshot_json: astroSnapshotJson,
       has_deepseek_response: hasDeepseekResponse,
       deepseek_missing_reason: deepseekMissingReason,
     },
