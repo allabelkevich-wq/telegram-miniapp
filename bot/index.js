@@ -1081,11 +1081,11 @@ app.use("/api", (err, req, res, next) => {
   res.status(500).json({ success: false, error: err?.message || "Ошибка сервера" });
 });
 
-// Чтобы админка не получала HTML при 404: любой необработанный /api/* → JSON
-app.use("/api", (req, res, next) => {
+// Чтобы админка/mini app не получали HTML при 404: любой необработанный /api/* → JSON.
+function apiNotFoundJson(req, res, next) {
   if (res.headersSent) return next();
   res.status(404).json({ success: false, error: "Not found", path: req.path });
-});
+}
 
 app.get(["/admin-simple", "/admin-simple/"], (req, res) => {
   res.type("html").sendFile(path.join(__dirname, "admin-simple.html"), (err) => {
@@ -1311,6 +1311,7 @@ async function startBotWithWebhook() {
 
 if (process.env.RENDER_HEALTHZ_FIRST) {
   app.use("/api", createHeroesRouter(supabase, BOT_TOKEN));
+  app.use("/api", apiNotFoundJson);
   globalThis.__EXPRESS_APP__ = app;
   if (WEBHOOK_URL) {
     startBotWithWebhook();
@@ -1320,6 +1321,7 @@ if (process.env.RENDER_HEALTHZ_FIRST) {
 } else {
   console.log("[HTTP] Слушаю порт", HEROES_API_PORT);
   app.use("/api", createHeroesRouter(supabase, BOT_TOKEN));
+  app.use("/api", apiNotFoundJson);
   app.listen(HEROES_API_PORT, "0.0.0.0", () => {
     console.log("[HTTP] Порт открыт:", HEROES_API_PORT);
     if (WEBHOOK_URL) {
