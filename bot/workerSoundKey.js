@@ -583,8 +583,8 @@ ${astroTextFull}
     }
     
     // ========== ЭТАП 1: DEEPSEEK ==========
-    // Модель с меньшими ограничениями: deepseek-reasoner (макс. выход 64K; chat — 8K). max_tokens: .env > админка > контекст.
-    const LLM_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-reasoner";
+    // Модель: DEEPSEEK_MODEL в .env (по умолчанию deepseek-coder-33b-instruct). max_tokens: .env > админка > контекст.
+    const LLM_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-coder-33b-instruct";
     const CONTEXT_LIMIT = 128000;
     const SAFETY_BUFFER = 2000;
     const estimatedInputTokens = Math.ceil((SYSTEM_PROMPT.length + userRequest.length) * 0.4);
@@ -594,13 +594,12 @@ ${astroTextFull}
       const { data: row } = await supabase.from("app_settings").select("value").eq("key", "deepseek_max_tokens").maybeSingle();
       if (row?.value != null) settingsMaxTokens = Math.max(1, Number(row.value));
     } catch (_) {}
-    // API DeepSeek возвращает 400 при max_tokens > 8192 — ограничиваем перед отправкой.
-    // Минимум 4096 для этого воркера: нужны анализ + лирика, иначе ответ обрезается и парсинг падает.
+    // Минимум 4096 для этого воркера (анализ + лирика). Верхняя граница зависит от модели (chat — 8K, coder/reasoner — больше); при 400 от API уменьшите в админке.
     const MIN_MAX_TOKENS = 4096;
     const rawMax = process.env.DEEPSEEK_MAX_TOKENS != null
       ? Number(process.env.DEEPSEEK_MAX_TOKENS)
       : (settingsMaxTokens ?? maxFromContext);
-    const MAX_TOKENS_LLM = Math.min(8192, Math.max(MIN_MAX_TOKENS, Math.max(1, Number(rawMax) || 8192)));
+    const MAX_TOKENS_LLM = Math.max(MIN_MAX_TOKENS, Math.max(1, Number(rawMax) || 8192));
     if (rawMax != null && Number(rawMax) < MIN_MAX_TOKENS) {
       console.log(`[Воркер] 📌 max_tokens из настроек (${rawMax}) ниже минимума для генерации песни — использую ${MAX_TOKENS_LLM}`);
     }

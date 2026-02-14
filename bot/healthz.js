@@ -53,9 +53,15 @@ const server = createServer(async (req, res) => {
     expressApp(req, res);
     return;
   }
-  if (url === "/") {
+  // Пока index.js не загрузился — не отдаём 404 для /api и админки, иначе админка думает «не тот домен»
+  if (url === "/" || url.startsWith("/admin")) {
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    res.end(page("YupSoul Bot", "<h1>Запуск…</h1><p>Бот загружается. Подожди 10–20 сек и обнови страницу.</p><p>Если долго не грузится — смотри Render → Logs (возможна ошибка при старте).</p><p><a href=\"/healthz\">/healthz</a></p>"));
+    res.end(page("YupSoul Bot", "<h1>Запуск…</h1><p>Бот загружается. Подожди 10–20 сек и обнови страницу (F5).</p><p>Если долго не грузится — смотри Render → Logs.</p><p><a href=\"/healthz\">/healthz</a></p>"));
+    return;
+  }
+  if (url.startsWith("/api")) {
+    res.writeHead(503, { "Content-Type": "application/json; charset=utf-8" });
+    res.end(JSON.stringify({ success: false, error: "Сервис запускается. Подожди 20–30 сек и обнови страницу (F5)." }));
     return;
   }
   res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
@@ -75,7 +81,11 @@ server.listen(PORT, "0.0.0.0", () => {
   import("./index.js")
     .then(() => {
       expressApp = globalThis.__EXPRESS_APP__;
-      if (expressApp) console.log("[healthz] Бот и API подключены");
+      if (expressApp) {
+        console.log("[healthz] Бот и API подключены. Запросы к /api и /admin-simple теперь обрабатывает Express.");
+      } else {
+        console.error("[healthz] ВНИМАНИЕ: index.js не установил __EXPRESS_APP__. Проверь логи выше на ошибки загрузки.");
+      }
     })
     .catch((e) => console.error("[healthz] Ошибка загрузки бота:", e?.message || e));
 });

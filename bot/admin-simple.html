@@ -168,6 +168,11 @@
       }
       try {
         const statsResult = await fetchJson(API_BASE + '/api/admin/stats?' + new URLSearchParams({ token }).toString(), { headers: authHeaders() });
+        if (statsResult.res.status === 503) {
+          const msg = (statsResult.json && statsResult.json.error) || 'Сервис запускается';
+          document.getElementById('requests').innerHTML = '<div style="text-align:center;padding:40px;color:#f39c12">⏳ ' + escapeHtml(msg) + '<br><br>Обновите страницу через 20–30 сек (F5).</div>';
+          return;
+        }
         const statsJson = statsResult.json;
         if (statsJson.success && statsJson.stats) {
           const s = statsJson.stats;

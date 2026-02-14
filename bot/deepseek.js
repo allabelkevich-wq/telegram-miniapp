@@ -3,10 +3,10 @@
  * Документация: base_url https://api.deepseek.com, Chat API: POST /v1/chat/completions.
  * Альтернатива: официальный SDK — npm install openai, baseURL: 'https://api.deepseek.com', apiKey: process.env.DEEPSEEK_API_KEY.
  *
- * Модели (DeepSeek-V3.2, контекст 128K; версия API отличается от приложения/веб):
- *   deepseek-chat    — режим без обдумывания. Выход: по умолчанию 4K, максимум 8K.
- *   deepseek-reasoner — режим размышления. Выход: по умолчанию 32K, максимум 64K.
- *   deepseek-coder-33b-instruct — код/текст, context 16K, max_tokens до 8K.
+ * Модели (актуальные названия и лимиты — в документации API):
+ *   deepseek-chat — чат, выход обычно до 8K; надёжный дефолт.
+ *   deepseek-coder-33b-instruct — код/текст, контекст 16K; для длинного выхода задай DEEPSEEK_MODEL и DEEPSEEK_MAX_TOKENS.
+ *   deepseek-reasoner — если доступен в твоём эндпоинте, допускает больший вывод.
  *   V3.2-Speciale    — base_url https://api.deepseek.com/v3.2_speciale_expires_on_20251215 (до 15 дек 2025 UTC), без tool calls.
  * Функции: JSON, вызовы инструментов, автодополнение префиксов чата (бета). FIM (бета) только у chat.
  * Цены: 1M вход (cache hit) $0.028, (miss) $0.28; 1M выход $0.42. Списание с пополненного/предоставленного баланса.
@@ -31,8 +31,8 @@
 
 const DEEPSEEK_BASE = (process.env.DEEPSEEK_API_BASE_URL || "https://api.deepseek.com").replace(/\/$/, "");
 const DEEPSEEK_API_URL = `${DEEPSEEK_BASE}/v1/chat/completions`;
-/** Модель с меньшими ограничениями по выходу (64K vs 8K у chat) */
-const DEFAULT_MODEL = "deepseek-reasoner";
+/** По умолчанию coder; при необходимости задай DEEPSEEK_MODEL в .env */
+const DEFAULT_MODEL = "deepseek-coder-33b-instruct";
 /** Creative Writing / Poetry — анализ + лирика песни */
 const DEFAULT_TEMPERATURE = 1.5;
 
@@ -59,9 +59,9 @@ export async function chatCompletion(systemPrompt, userMessage, opts = {}) {
   }
 
   const model = opts.model || DEFAULT_MODEL;
-  // API возвращает 400 при max_tokens > 8192 или нечисловом значении. Жёстко ограничиваем и приводим к целому.
+  // Приводим к целому; верхняя граница зависит от модели (некоторые API принимают > 8192). При 400 от API уменьшите max_tokens в админке.
   const requested = Number(opts.max_tokens);
-  const max_tokens = Math.floor(Math.min(8192, Math.max(1, Number.isFinite(requested) ? requested : 8192)));
+  const max_tokens = Math.floor(Math.max(1, Number.isFinite(requested) ? requested : 8192));
   const temperature = opts.temperature ?? DEFAULT_TEMPERATURE;
   const tools = opts.tools;
   const executeTool = opts.executeTool;

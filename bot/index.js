@@ -1165,7 +1165,7 @@ async function startBotWithWebhook() {
   try {
     const url = WEBHOOK_URL + "/webhook";
     await bot.api.setWebhook(url);
-    console.log("[Bot] Вебхук установлен:", url);
+    console.log("[Bot] Вебхук установлен:", url, "— убедись, что WEBHOOK_URL в Render совпадает с URL этого сервиса (Dashboard → сервис → URL).");
     const me = await bot.api.getMe();
     await onBotStart(me);
   } catch (err) {
