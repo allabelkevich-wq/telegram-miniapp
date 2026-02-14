@@ -31,8 +31,8 @@
 
 const DEEPSEEK_BASE = (process.env.DEEPSEEK_API_BASE_URL || "https://api.deepseek.com").replace(/\/$/, "");
 const DEEPSEEK_API_URL = `${DEEPSEEK_BASE}/v1/chat/completions`;
-/** По умолчанию coder; при необходимости задай DEEPSEEK_MODEL в .env */
-const DEFAULT_MODEL = "deepseek-coder-33b-instruct";
+/** По умолчанию reasoner (V3.2, 128K, thinking) — лучше для длинного креатива (анализ + лирика) */
+const DEFAULT_MODEL = "deepseek-reasoner";
 /** Creative Writing / Poetry — анализ + лирика песни */
 const DEFAULT_TEMPERATURE = 1.5;
 

@@ -610,7 +610,9 @@ ${astroTextFull}
         if (r.key === "deepseek_temperature" && r.value != null) { const t = Number(r.value); if (Number.isFinite(t)) settingsTemperature = t; }
       });
     } catch (_) {}
-    const LLM_MODEL = process.env.DEEPSEEK_MODEL || settingsModel || "deepseek-coder-33b-instruct";
+    const rawModel = process.env.DEEPSEEK_MODEL || settingsModel || "deepseek-reasoner";
+    const KNOWN_MODELS = ["deepseek-chat", "deepseek-reasoner", "deepseek-coder"];
+    const LLM_MODEL = KNOWN_MODELS.includes(rawModel) ? rawModel : "deepseek-reasoner";
     // Минимум 4096 для этого воркера (анализ + лирика). Верхняя граница зависит от модели (chat — 8K, coder/reasoner — больше); при 400 от API уменьшите в админке.
     const MIN_MAX_TOKENS = 4096;
     const rawMax = process.env.DEEPSEEK_MAX_TOKENS != null
@@ -626,7 +628,7 @@ ${astroTextFull}
     const withSearch = !!SERPER_API_KEY;
     console.log(`[Воркер] 🤖 Отправляю запрос в DeepSeek (model=${LLM_MODEL}, max_tokens=${MAX_TOKENS_LLM}, temperature=${TEMPERATURE}, вход ~${estimatedInputTokens} ток.${withSearch ? ", поиск при генерации" : ""})...`);
 
-    const llm = await chatCompletion(SYSTEM_PROMPT, userRequest, {
+    let llm = await chatCompletion(SYSTEM_PROMPT, userRequest, {
       model: LLM_MODEL,
       max_tokens: MAX_TOKENS_LLM,
       temperature: TEMPERATURE,
@@ -640,7 +642,23 @@ ${astroTextFull}
           }
         : {}),
     });
-    
+    if (!llm.ok && /Model Not Exist|model.*not.*exist/i.test(llm.error || "") && LLM_MODEL !== "deepseek-reasoner") {
+      console.warn(`[Воркер] ⚠️ Модель "${LLM_MODEL}" недоступна (${llm.error}). Повтор с deepseek-reasoner...`);
+      llm = await chatCompletion(SYSTEM_PROMPT, userRequest, {
+        model: "deepseek-reasoner",
+        max_tokens: MAX_TOKENS_LLM,
+        temperature: TEMPERATURE,
+        ...(withSearch
+          ? {
+              tools: TOOLS_WITH_SEARCH,
+              executeTool: async (name, args) => {
+                if (name === "web_search") return await runWebSearch(args.query);
+                return "Неизвестный инструмент";
+              },
+            }
+          : {}),
+      });
+    }
     if (!llm.ok) {
       throw new Error(`DeepSeek ошибка: ${llm.error}`);
     }
