@@ -152,6 +152,20 @@
     select{appearance:none;background:url("image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23a78bfa' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 16px center;background-size:20px;padding-right:48px}
     textarea{min-height:140px;line-height:1.6;resize:vertical}
     .request-label{font-size:1.3rem;text-align:center;margin-bottom:15px;color:#a78bfa;font-weight:700;letter-spacing:-0.5px}
+    .request-help-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .request-help-row .request-label{margin-bottom:0;text-align:left;font-size:1.08rem;letter-spacing:-0.2px}
+    .request-help-toggle{width:auto;min-height:auto;margin:0;padding:10px 14px;border-radius:14px;background:rgba(167,139,250,.14);color:#7c3aed;border:1px solid rgba(167,139,250,.45);box-shadow:none;text-transform:none;letter-spacing:0;font-size:.92rem;font-weight:700}
+    .request-help-toggle::after{display:none}
+    .request-help-toggle:hover{transform:none;background:rgba(167,139,250,.2);box-shadow:none}
+    .request-examples{display:none;margin:10px 0 0 0;padding:10px;background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.22);border-radius:14px}
+    .request-examples.open{display:block}
+    .request-examples h3{font-size:.95rem;margin:0 0 8px 0;color:#7c3aed}
+    .examples-grid{display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;overflow-y:hidden;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+    .examples-grid::-webkit-scrollbar{height:6px}
+    .examples-grid::-webkit-scrollbar-thumb{background:rgba(167,139,250,.35);border-radius:8px}
+    .example-btn{width:auto;min-width:190px;max-width:260px;white-space:normal;text-transform:none;letter-spacing:0;font-size:.88rem;font-weight:600;padding:10px 12px;margin:0;min-height:auto;border-radius:12px;box-shadow:none}
+    .example-btn::after{display:none}
+    .example-btn:hover{transform:none;box-shadow:none}
     button{background:linear-gradient(90deg,#a78bfa,#f9a8d4);color:white;border:none;padding:18px 30px;font-size:1.25rem;border-radius:20px;width:100%;font-weight:700;cursor:pointer;transition:all .3s ease;box-shadow:0 6px 20px rgba(167,139,250,.25);margin-top:10px;letter-spacing:1px;text-transform:uppercase;min-height:64px;position:relative;overflow:hidden}
     button::after{content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);transform:rotate(30deg);transition:all .8s}
     button:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(167,139,250,.35)}
@@ -438,8 +452,12 @@
         </div>
         
         <div class="field">
-          <div class="request-label">Отправь запрос во Вселенную</div>
-          <div class="request-examples">
+          <div class="request-help-row">
+            <div class="request-label">Отправь запрос во Вселенную</div>
+            <button type="button" id="requestHintToggle" class="request-help-toggle" aria-expanded="false">✨ Подсказки</button>
+          </div>
+          <textarea id="request" placeholder="Что ты хочешь изменить в своей жизни? О чём просишь Вселенную?"></textarea>
+          <div class="request-examples" id="requestExamplesPanel">
             <h3>✨ Вдохновение для запроса</h3>
             <div class="examples-grid">
               <button type="button" class="example-btn" data-text="хочу найти гармонию в отношениях и научиться любить себя">Гармония в отношениях</button>
@@ -459,7 +477,6 @@
               <button type="button" class="example-btn special" data-text="НАСТРОЕНИЕ НЕЖНОСТИ И ЗАБОТЫ: создай тёплую песню о моей способности любить и заботиться">💖 Нежность и забота</button>
             </div>
           </div>
-          <textarea id="request" placeholder="Что ты хочешь изменить в своей жизни? О чём просишь Вселенную?"></textarea>
         </div>
         
         <div class="btn-group">
@@ -913,12 +930,37 @@
           toggleFormsByMode(currentMode);
         });
       });
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:request-hints:init',message:'request hints baseline elements',data:{path:window.location.pathname,hasRequestExamples:!!document.querySelector('.request-examples'),exampleButtonsCount:document.querySelectorAll('.example-btn').length,hasRequestField:!!document.getElementById('request')},timestamp:Date.now(),runId:'hint-toggle-debug',hypothesisId:'H1,H2,H3'})}).catch(()=>{});
+      // #endregion
+      var requestHintToggle = document.getElementById('requestHintToggle');
+      var requestExamplesPanel = document.getElementById('requestExamplesPanel');
+      if (requestHintToggle && requestExamplesPanel) {
+        requestHintToggle.addEventListener('click', function() {
+          var isOpen = requestExamplesPanel.classList.toggle('open');
+          this.setAttribute('aria-expanded', String(isOpen));
+          this.textContent = isOpen ? '✖ Скрыть' : '✨ Подсказки';
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:request-hints:toggle',message:'request hints toggled',data:{path:window.location.pathname,isOpen:isOpen},timestamp:Date.now(),runId:'hint-toggle-debug',hypothesisId:'H1,H3'})}).catch(()=>{});
+          // #endregion
+        });
+      }
       document.querySelectorAll('.example-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
           var requestField = document.getElementById('request');
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:request-hints:example-click',message:'example button clicked',data:{path:window.location.pathname,textLen:(this.getAttribute('data-text')||'').length,isSpecial:this.classList.contains('special')},timestamp:Date.now(),runId:'hint-toggle-debug',hypothesisId:'H2,H4'})}).catch(()=>{});
+          // #endregion
           if (requestField) {
             requestField.value = this.getAttribute('data-text') || '';
             requestField.focus();
+          }
+          if (requestExamplesPanel) {
+            requestExamplesPanel.classList.remove('open');
+            if (requestHintToggle) {
+              requestHintToggle.setAttribute('aria-expanded', 'false');
+              requestHintToggle.textContent = '✨ Подсказки';
+            }
           }
           document.querySelectorAll('.example-btn').forEach(function(b) {
             b.style.borderColor = b.classList.contains('special') ? 'rgba(59,130,246,0.3)' : 'rgba(167,139,250,0.3)';

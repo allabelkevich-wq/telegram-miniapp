@@ -469,6 +469,15 @@ async function updateStepLog(requestId, steps) {
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export async function generateSoundKey(requestId) {
   const stepLog = {}; // логи этапов для админки
+  const setStep = async (key, value) => {
+    stepLog[key] = value;
+    await updateStepLog(requestId, stepLog);
+  };
+  const setStepCompat = async (legacyKey, value, namedKey = null) => {
+    stepLog[legacyKey] = value;
+    if (namedKey) stepLog[namedKey] = value;
+    await updateStepLog(requestId, stepLog);
+  };
   try {
     if (!requestId || !UUID_REGEX.test(String(requestId))) {
       throw new Error(`Неверный ID заявки: нужен полный UUID с дефисами, получено: ${requestId}`);
@@ -492,8 +501,9 @@ export async function generateSoundKey(requestId) {
       .from('track_requests')
       .update({ status: 'processing', generation_status: 'processing', updated_at: new Date().toISOString() })
       .eq('id', requestId);
-    stepLog['1'] = 'Данные получены, воркер запущен';
-    await updateStepLog(requestId, stepLog);
+    await setStepCompat('1', 'Данные получены, воркер запущен', 'request_loaded');
+    await setStep('pipeline_mode', request.mode || 'single');
+    await setStep('astro_start', 'Запущен расчёт астроблока');
     
     // Шаг 2: Проверяем/создаём натальную карту (КРИТИЧНО!)
     if (!request.astro_snapshot_id) {
@@ -515,6 +525,9 @@ export async function generateSoundKey(requestId) {
         .eq('id', requestId)
         .single();
       if (updated) Object.assign(request, updated);
+      await setStep('astro_snapshot_saved', `Снапшот сохранён: ${astroResult.astro_snapshot_id}`);
+    } else {
+      await setStep('astro_snapshot_saved', `Снапшот уже был: ${request.astro_snapshot_id}`);
     }
     
     // Шаг 3: Получаем астро-снапшот из БД (по track_request_id)
@@ -532,6 +545,9 @@ export async function generateSoundKey(requestId) {
     const sun = posBy("Солнце");
     const moon = posBy("Луна");
     const aspectsStr = (snapshot?.aspects ?? []).slice(0, 3).map((a) => `${a.p1}-${a.p2}: ${a.aspect}`).join(", ") || "—";
+    const hasDivisional = !!(snapshot?.divisional_charts && typeof snapshot.divisional_charts === "object");
+    const hasDashas = !!(snapshot?.dashas && typeof snapshot.dashas === "object");
+    await setStep('astro_extensions', `D-карты: ${hasDivisional ? 'ok' : 'нет'} · Даши: ${hasDashas ? 'ok' : 'нет'}`);
     
     let astroTextPerson2 = null;
     if (request.mode === "couple" && request.person2_name && request.person2_birthdate && request.person2_birthplace) {
@@ -569,6 +585,9 @@ export async function generateSoundKey(requestId) {
         }
       }
       if (!astroTextPerson2) astroTextPerson2 = "[Натальная карта второго человека не рассчитана — недостаточно данных или геокодинг не удался]";
+      await setStep('couple_second_snapshot', astroTextPerson2.startsWith("[")
+        ? 'Второй снапшот: fallback/нет'
+        : 'Второй снапшот: ok');
     }
     
     // Шаг 4: Формируем запрос — для одного или для двоих (полные натальные карты); в ответе ИИ НЕ упоминать термины
@@ -657,6 +676,8 @@ ${astroTextFull}
 Язык песни и расшифровки: ${langLabel}`;
     }
     
+    await setStep('prompt_compiled', 'Промт собран с расширенными правилами');
+
     // ========== ЭТАП 1: DEEPSEEK ==========
     // Модель/temperature/max_tokens: приоритет app_settings (админка) > .env > дефолты.
     const CONTEXT_LIMIT = 128000;
@@ -704,6 +725,7 @@ ${astroTextFull}
     const withSearch = !!SERPER_API_KEY;
     console.log(`[Воркер] 🤖 Отправляю запрос в DeepSeek (model=${LLM_MODEL}, max_tokens=${MAX_TOKENS_LLM}, temperature=${TEMPERATURE}, вход ~${estimatedInputTokens} ток.${withSearch ? ", поиск при генерации" : ""})...`);
 
+    await setStep('llm_request_start', `DeepSeek запрос: model=${LLM_MODEL}, max_tokens=${MAX_TOKENS_LLM}, temperature=${TEMPERATURE}`);
     let llm = await chatCompletion(EFFECTIVE_SYSTEM_PROMPT, userRequest, {
       model: LLM_MODEL,
       max_tokens: MAX_TOKENS_LLM,
@@ -746,8 +768,7 @@ ${astroTextFull}
     console.log(fullResponse.substring(0, 500));
     console.log(`[Воркер] 💾 ДЛИНА ОТВЕТА: ${fullResponse.length} символов`);
     console.log(`[Воркер] ✅ DeepSeek ответил (длина: ${fullResponse.length}), finish_reason: ${finishReason || "—"}${llm.usage ? `, completion_tokens: ${llm.usage.completion_tokens}` : ""}`);
-    stepLog['2'] = `DeepSeek ответил, ${fullResponse.length} симв.${llmTruncated ? ' (обрезано)' : ''}`;
-    await updateStepLog(requestId, stepLog);
+    await setStepCompat('2', `DeepSeek ответил, ${fullResponse.length} симв.${llmTruncated ? ' (обрезано)' : ''}`, 'llm_response_ready');
     // Сразу сохраняем сырой ответ в БД (для диагностики и админки), даже если парсинг потом упадёт
     console.log(`[Воркер] 💾 Сохраняю сырой ответ в БД для ${requestId} (${fullResponse.length} симв.)...`);
     const { error: saveRawErr } = await supabase.from("track_requests").update({
@@ -758,8 +779,10 @@ ${astroTextFull}
     }).eq("id", requestId);
     if (saveRawErr) {
       console.error(`[Воркер] ❌ Не удалось сохранить deepseek_response для ${requestId}:`, saveRawErr.message, saveRawErr.code);
+      await setStep('llm_response_saved', `Ошибка сохранения DeepSeek: ${saveRawErr.message}`);
     } else {
       console.log(`[Воркер] 💾 deepseek_response сохранён в БД для ${requestId}`);
+      await setStep('llm_response_saved', 'DeepSeek raw-ответ сохранён в БД');
     }
     if (llmTruncated) {
       console.warn(`[Воркер] ⚠️ ОТВЕТ ОБРЕЗАН! Увеличьте max_tokens или сократите системный промпт.`);
@@ -815,8 +838,7 @@ ${astroTextFull}
     if (lineCount < 32) {
       throw new Error(`Песня слишком короткая (${lineCount} строк, нужно минимум 32)`);
     }
-    stepLog['3'] = `Лирика: ${lineCount} строк, «${(parsed.title || "Sound Key").slice(0, 30)}»`;
-    await updateStepLog(requestId, stepLog);
+    await setStepCompat('3', `Лирика: ${lineCount} строк, «${(parsed.title || "Sound Key").slice(0, 30)}»`, 'lyrics_ready');
     
     // Сохраняем сырой ответ DeepSeek и аудит (контроль этапа 1)
     await supabase
@@ -844,12 +866,14 @@ ${astroTextFull}
     if (process.env.SUNO_MODEL) sunoParams.model = process.env.SUNO_MODEL;
     if (process.env.SUNO_VOCAL_GENDER === "m" || process.env.SUNO_VOCAL_GENDER === "f") sunoParams.vocalGender = process.env.SUNO_VOCAL_GENDER;
 
+    await setStep('suno_start', 'Отправка задачи в Suno');
     const sunoStart = await generateMusic(sunoParams);
     if (!sunoStart.ok) {
       throw new Error(`Suno start ошибка: ${sunoStart.error}`);
     }
     
     console.log(`[Воркер] Задача в SUNO создана, taskId: ${sunoStart.taskId}`);
+    await setStep('suno_task_created', `Suno taskId: ${sunoStart.taskId}`);
     
     await supabase
       .from('track_requests')
@@ -867,24 +891,25 @@ ${astroTextFull}
     
     const audioUrl = sunoResult.audioUrl;
     console.log(`[Воркер] ЭТАП 3 — Suno: музыка готова, audio_url=${audioUrl}`);
-    stepLog['4'] = 'Аудио готово';
-    await updateStepLog(requestId, stepLog);
+    await setStepCompat('4', 'Аудио готово', 'audio_ready');
 
     // Обложка: запрос + поллинг (не блокируем отправку песни при ошибке)
     let coverUrl = null;
+    await setStep('cover_start', 'Запрос обложки запущен');
     const coverStart = await generateCover(sunoStart.taskId);
     if (coverStart.ok && coverStart.coverTaskId) {
       const coverResult = await pollCoverResult(coverStart.coverTaskId);
       if (coverResult.ok && coverResult.coverUrl) {
         coverUrl = coverResult.coverUrl;
         console.log(`[Воркер] Обложка готова: ${coverUrl}`);
-        stepLog['4'] = 'Аудио и обложка готовы';
-        await updateStepLog(requestId, stepLog);
+        await setStepCompat('4', 'Аудио и обложка готовы', 'cover_ready');
       } else {
         console.warn(`[Воркер] Обложка не получена: ${coverResult?.error || "—"}`);
+        await setStep('cover_ready', `Обложка не получена: ${coverResult?.error || "—"}`);
       }
     } else {
       console.warn(`[Воркер] Запрос обложки не выполнен: ${coverStart?.error || "—"}`);
+      await setStep('cover_ready', `Запрос обложки не выполнен: ${coverStart?.error || "—"}`);
     }
 
     // Шаг 10: Обновить статус заявки и сохранить поля песни в БД (cover_url при наличии)
@@ -911,6 +936,7 @@ ${astroTextFull}
       ? `🗝️ ${request.name}, твоё звуковое лекарство готово...`
       : `🗝️ ${request.name}, твой звуковой ключ от новой двери в реальность готов...`;
     const caption = `${introCaption}\n\nЭто не просто песня — это твой персональный ключ к игре жизни. Слушай, когда захочешь вспомнить, кто ты.\n\nСлушай сердцем ❤️\n— YupSoul`;
+    await setStep('delivery_start', 'Отправка пользователю (обложка/аудио)');
     if (coverUrl) {
       await sendPhotoToUser(request.telegram_user_id, coverUrl, `Обложка твоей песни · ${parsed.title || "Звуковой ключ"}`).catch((e) => console.warn("[Воркер] Ошибка отправки обложки:", e?.message));
     }
@@ -931,6 +957,7 @@ ${astroTextFull}
       } catch (e) {
         console.error('[Воркер] Не удалось отправить резервное сообщение:', e.message);
       }
+      await setStep('delivery_done', `Доставка с fallback: ${send.error}`);
     } else {
       console.log(`[Воркер] ✅ Заявка ${requestId} завершена для ${request.name}`);
       // Сообщение с опциональной поддержкой (реквизиты как на странице донатов)
@@ -952,7 +979,9 @@ ${astroTextFull}
       } catch (e) {
         console.warn("[Воркер] Не удалось отправить сообщение о донате:", e?.message);
       }
+      await setStep('delivery_done', 'Доставка пользователю успешна');
     }
+    await setStep('pipeline_done', 'Генерация полностью завершена');
     
     return { ok: true, audioUrl };
     
@@ -960,6 +989,7 @@ ${astroTextFull}
     console.error(`[Воркер] Ошибка генерации для заявки ${requestId}:`, error.message);
     if (typeof stepLog !== 'undefined') {
       stepLog['error'] = error.message?.slice(0, 200) || String(error);
+      stepLog['pipeline_done'] = 'Завершено с ошибкой';
       try { await updateStepLog(requestId, stepLog); } catch (_) {}
     }
     // Обновляем статус на failed (чтобы админка и другой воркер видели корректное состояние)

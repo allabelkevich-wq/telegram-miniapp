@@ -259,15 +259,31 @@
         document.getElementById('requests').innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8">📭 Нет заявок / No requests</div>';
         return;
       }
+      function normalizeSteps(raw) {
+        if (raw && typeof raw === 'object') return raw;
+        if (typeof raw === 'string') {
+          try { return JSON.parse(raw); } catch (e) { return {}; }
+        }
+        return {};
+      }
       function stepMsg(steps, key) {
         if (!steps || typeof steps !== 'object') return '';
         const v = steps[key];
         return (v && String(v).trim()) ? escapeHtml(String(v).slice(0, 120)) : '';
       }
+      function stepsDigest(steps) {
+        const s = normalizeSteps(steps);
+        const checks = [];
+        if (s.astro_extensions) checks.push('астро+: ' + escapeHtml(String(s.astro_extensions)));
+        if (s.llm_response_saved) checks.push('deepseek: ' + escapeHtml(String(s.llm_response_saved)));
+        if (s.cover_ready) checks.push('cover: ' + escapeHtml(String(s.cover_ready)));
+        if (s.delivery_done) checks.push('delivery: ' + escapeHtml(String(s.delivery_done)));
+        return checks.join(' · ');
+      }
       document.getElementById('requests').innerHTML = data.map(r => {
         const gs = r.generation_status || r.status || 'pending';
         const order = getStatusOrder(gs);
-        const steps = r.generation_steps && typeof r.generation_steps === 'object' ? r.generation_steps : (typeof r.generation_steps === 'string' ? (() => { try { return JSON.parse(r.generation_steps); } catch (e) { return {}; } })() : {});
+        const steps = normalizeSteps(r.generation_steps);
         return `
         <div class="request-card">
           <div class="request-header">
@@ -316,6 +332,7 @@
             <div class="section-title">💬 Запрос / Request</div>
             <div class="content-text">${escapeHtml((r.request || '—').substring(0, 500))}${(r.request || '').length > 500 ? '…' : ''}</div>
           </div>
+          ${stepsDigest(steps) ? '<div class="details-section"><div class="section-title">🧭 Контроль новых этапов</div><div class="content-text" style="font-size:12px;">' + stepsDigest(steps) + '</div></div>' : ''}
           <div class="actions">
             <button class="btn btn-primary" onclick="showDetails('${(r.id || '').replace(/'/g, "\\'")}')">📋 Подробнее / Details</button>
             ${gs !== 'completed' ? '<button class="btn btn-warning" onclick="restart(\'' + (r.id || '').replace(/'/g, "\\'") + '\')">🔄 Перезапустить / Restart</button>' : ''}
@@ -404,9 +421,35 @@
       const genStatus = r.generation_status || r.status || 'pending';
       const genError = (r.error_message || '').trim();
       const dsReason = r.deepseek_missing_reason || '';
-      const steps = r.generation_steps && typeof r.generation_steps === 'object'
-        ? r.generation_steps
-        : (typeof r.generation_steps === 'string' ? (() => { try { return JSON.parse(r.generation_steps); } catch (e) { return {}; } })() : {});
+      const steps = normalizeSteps(r.generation_steps);
+      const stepMap = [
+        ['request_loaded', 'Заявка принята'],
+        ['astro_start', 'Старт астроблока'],
+        ['astro_snapshot_saved', 'Сохранение снапшота'],
+        ['astro_extensions', 'D-карты и Даши'],
+        ['couple_second_snapshot', 'Второй снапшот (пара)'],
+        ['prompt_compiled', 'Промт собран'],
+        ['llm_request_start', 'Запрос в DeepSeek'],
+        ['llm_response_ready', 'Ответ DeepSeek'],
+        ['llm_response_saved', 'Сохранение DeepSeek'],
+        ['lyrics_ready', 'Лирика готова'],
+        ['suno_start', 'Старт Suno'],
+        ['suno_task_created', 'Suno task'],
+        ['audio_ready', 'Аудио готово'],
+        ['cover_start', 'Старт cover'],
+        ['cover_ready', 'Cover статус'],
+        ['delivery_start', 'Старт доставки'],
+        ['delivery_done', 'Доставка'],
+        ['pipeline_done', 'Финальный статус'],
+      ];
+      const allStepsBlock = '<div class="details-section" style="margin-bottom:24px;"><div class="section-title" style="color:#fbbf24;">🧭 Контроль всех этапов расчёта</div><div class="content-text" style="font-size:12px;line-height:1.7;">' +
+        stepMap.map(function (pair) {
+          var k = pair[0], label = pair[1];
+          var v = steps[k];
+          return '<b>' + escapeHtml(label) + '</b>: ' + (v ? escapeHtml(String(v)) : '<span style="color:#64748b;">—</span>');
+        }).join('<br>') +
+        (steps.error ? '<br><br><b style="color:#fca5a5;">Ошибка</b>: ' + escapeHtml(String(steps.error)) : '') +
+        '</div></div>';
       const isTransitMode = r.mode === 'transit' || !!(r.transit_date || r.transit_location || r.transit_intent);
       const transitBlock = isTransitMode
         ? '<div class="details-section" style="margin-bottom:24px;"><div class="section-title" style="color:#f9a8d4;">🌙 Контроль калькулятора транзитов (Энергия дня)</div>' +
@@ -444,6 +487,7 @@
           ${transitBlock}
           ${astroBlock}
           ${deepseekBlock}
+          ${allStepsBlock}
           <div class="details-section">
             <div class="section-title">👤 Персональные данные</div>
             <div class="content-text">Имя: ${escapeHtml(r.name || '—')}<br>Пол: ${escapeHtml(r.gender || '—')}<br>Дата рождения: ${escapeHtml(r.birthdate || '—')}<br>Время рождения: ${r.birthtime_unknown ? 'неизвестно' : escapeHtml(r.birthtime || '—')}<br>Место: ${escapeHtml(r.birthplace || '—')}${r.person2_name ? ('<hr style="border:0;border-top:1px solid #334155;margin:10px 0;">Партнёр: ' + escapeHtml(r.person2_name) + '<br>Пол партнёра: ' + escapeHtml(r.person2_gender || '—') + '<br>Дата рождения партнёра: ' + escapeHtml(r.person2_birthdate || '—') + '<br>Время рождения партнёра: ' + (r.person2_birthtime_unknown ? 'неизвестно' : escapeHtml(r.person2_birthtime || '—')) + '<br>Место рождения партнёра: ' + escapeHtml(r.person2_birthplace || '—')) : ''}</div>
