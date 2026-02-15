@@ -688,9 +688,6 @@ ${astroTextFull}
     const CONTEXT_LIMIT = 128000;
     const SAFETY_BUFFER = 2000;
     const promptHash = crypto.createHash("sha256").update(EFFECTIVE_SYSTEM_PROMPT).digest("hex");
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/workerSoundKey.js:llm-start',message:'locked system prompt with extension in use',data:{requestId:String(requestId||''),promptPath:LOCKED_PROMPT_PATH,promptLength:EFFECTIVE_SYSTEM_PROMPT.length,promptHash:promptHash.slice(0,16)},timestamp:Date.now(),runId:'prompt-lock-debug',hypothesisId:'H1,H2'})}).catch(()=>{});
-    // #endregion
     const estimatedInputTokens = Math.ceil((EFFECTIVE_SYSTEM_PROMPT.length + userRequest.length) * 0.4);
     const maxFromContext = Math.max(1000, CONTEXT_LIMIT - estimatedInputTokens - SAFETY_BUFFER);
     let settingsMaxTokens = null;
@@ -724,9 +721,6 @@ ${astroTextFull}
     const TEMPERATURE = settingsTemperature != null
       ? Number(settingsTemperature)
       : (process.env.DEEPSEEK_TEMPERATURE != null ? Number(process.env.DEEPSEEK_TEMPERATURE) : 1.5);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/workerSoundKey.js:llm-config',message:'resolved llm config before deepseek call',data:{requestId:String(requestId||''),settingsMaxTokens:settingsMaxTokens,envMaxTokens:process.env.DEEPSEEK_MAX_TOKENS||null,rawMax:Number.isFinite(Number(rawMax))?Number(rawMax):String(rawMax),maxTokensFinal:MAX_TOKENS_LLM,maxTokensFinalType:typeof MAX_TOKENS_LLM,modelRaw:rawModel,modelFinal:LLM_MODEL,temperatureFinal:TEMPERATURE},timestamp:Date.now(),runId:'deepseek-max-debug',hypothesisId:'H1,H2,H3'})}).catch(()=>{});
-    // #endregion
     const withSearch = !!SERPER_API_KEY;
     console.log(`[Воркер] 🤖 Отправляю запрос в DeepSeek (model=${LLM_MODEL}, max_tokens=${MAX_TOKENS_LLM}, temperature=${TEMPERATURE}, вход ~${estimatedInputTokens} ток.${withSearch ? ", поиск при генерации" : ""})...`);
 
@@ -835,9 +829,6 @@ ${astroTextFull}
     const uppercaseBefore = countUppercaseChars(lyricsForSuno);
     lyricsForSuno = forceLyricsLowercase(lyricsForSuno);
     const uppercaseAfter = countUppercaseChars(lyricsForSuno);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/workerSoundKey.js:lyrics-normalize',message:'lyrics lower-case normalization',data:{requestId:String(requestId||''),uppercaseBefore:uppercaseBefore,uppercaseAfter:uppercaseAfter,changed:uppercaseBefore!==uppercaseAfter},timestamp:Date.now(),runId:'lyrics-case-debug',hypothesisId:'H3'})}).catch(()=>{});
-    // #endregion
     const lineCount = lyricsForSuno.split(/\n/).filter((l) => l.trim()).length;
     console.log(`[Воркер] ЭТАП 2 — Парсинг: лирика ${lyricsForSuno.length} символов, ${lineCount} строк; title="${parsed.title || ""}"; style длина=${(parsed.style || "").length}`);
     if (lineCount < 32) {

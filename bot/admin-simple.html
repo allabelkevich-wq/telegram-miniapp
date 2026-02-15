@@ -681,7 +681,7 @@
       loadMonetizationData();
     });
 
-    async function showDetails(id) {
+    window.showDetails = async function showDetails(id) {
       const url = API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + authQueryFromPath();
       let json, res;
       try {
@@ -796,7 +796,7 @@
       document.body.appendChild(modal);
     }
 
-    async function restart(id) {
+    window.restart = async function restart(id) {
       if (!confirm('Перезапустить генерацию? / Restart generation?')) return;
       try {
         const result = await fetchJson(API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + '/restart' + authQueryFromPath(), { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() } });

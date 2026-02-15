@@ -11,21 +11,11 @@ import { createHeroesRouter, getOrCreateAppUser, validateInitData } from "./hero
 import { chatCompletion } from "./deepseek.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import fs from "node:fs";
 import crypto from "node:crypto";
 import "dotenv/config";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Лог всегда в корне проекта (workspace), чтобы его можно было прочитать при любом cwd
-const DEBUG_LOG_PATH = path.join(__dirname, "..", ".cursor", "debug.log");
-function debugLog(payload) {
-  const line = JSON.stringify({ ...payload, timestamp: payload.timestamp || Date.now() });
-  console.log("[debug]", line);
-  try {
-    fs.mkdirSync(path.dirname(DEBUG_LOG_PATH), { recursive: true });
-    fs.appendFileSync(DEBUG_LOG_PATH, line + "\n");
-  } catch (_) {}
-}
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const MINI_APP_BASE = (process.env.MINI_APP_URL || "https://telegram-miniapp-six-teal.vercel.app").replace(/\?.*$/, "").replace(/\/$/, "");
@@ -58,13 +48,6 @@ bot.use(async (ctx, next) => {
   const fromId = ctx.from?.id;
   if (msg?.text) {
     console.log("[TG] msg from", fromId, ":", msg.text.slice(0, 80) + (msg.text.length > 80 ? "…" : ""));
-    // #region agent log
-    if (msg.text.trim().toLowerCase().startsWith("/admin")) {
-      const p = { location: "index.js:middleware", message: "TG update with /admin received", data: { fromId, chatId: ctx.chat?.id, hasChat: !!ctx.chat, hasFrom: !!ctx.from }, timestamp: Date.now(), hypothesisId: "H1" };
-      debugLog(p);
-      fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p) }).catch(() => {});
-    }
-    // #endregion
   }
   const chatId = ctx.chat?.id;
   if (chatId) ctx.api.sendChatAction(chatId, "typing").catch(() => {});
@@ -1030,11 +1013,6 @@ bot.command("admin", async (ctx) => {
   const userId = ctx?.from?.id ?? msg?.from?.id;
   const chatId = ctx?.chat?.id ?? msg?.chat?.id ?? userId;
   const targetId = chatId || userId;
-  // #region agent log
-  const p1 = { location: "index.js:admin-cmd", message: "admin command handler entered", data: { userId, chatId, hasChat: !!ctx.chat, hasFrom: !!ctx.from, adminIdsLength: ADMIN_IDS.length, isAdmin: !!userId && ADMIN_IDS.includes(Number(userId)) }, timestamp: Date.now(), hypothesisId: "H2,H3,H4" };
-  debugLog(p1);
-  fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p1) }).catch(() => {});
-  // #endregion
 
   const reply = async (text) => {
     try {
@@ -1086,11 +1064,6 @@ bot.command("admin", async (ctx) => {
 
   try {
     if (!targetId) {
-      // #region agent log
-      const p4 = { location: "index.js:admin-cmd", message: "admin early return: no targetId (no chat/from)", data: { hasMsg: !!ctx.update?.message, chatId, userId }, timestamp: Date.now(), hypothesisId: "H3" };
-      debugLog(p4);
-      fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p4) }).catch(() => {});
-      // #endregion
       console.warn("[admin] Нет chat/from в апдейте");
       try {
         await ctx.reply("Не удалось определить чат. Напиши /admin в личку боту (открой чат с ботом и отправь команду там).");
@@ -1100,41 +1073,17 @@ bot.command("admin", async (ctx) => {
     console.log("[admin] chatId=" + chatId + " userId=" + userId + " isAdmin=" + isAdmin(userId) + " ADMIN_IDS=" + JSON.stringify(ADMIN_IDS));
 
     if (!ADMIN_IDS.length) {
-      // #region agent log
-      const p2 = { location: "index.js:admin-cmd", message: "admin branch: ADMIN_IDS empty", data: {}, timestamp: Date.now(), hypothesisId: "H2" };
-      debugLog(p2);
-      fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p2) }).catch(() => {});
-      // #endregion
       await reply("В Render (Environment) не задан ADMIN_TELEGRAM_IDS. Добавь: ADMIN_TELEGRAM_IDS=твой_Telegram_ID (узнать ID: @userinfobot), затем перезапусти сервис.");
       sendAdminLink();
-      fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "index.js:admin-cmd", message: "after reply ADMIN_IDS empty", timestamp: Date.now(), hypothesisId: "H2" }) }).catch(() => {});
       return;
     }
     if (!isAdmin(userId)) {
-      // #region agent log
-      const p2b = { location: "index.js:admin-cmd", message: "admin branch: user not admin", data: { userId, adminIds: ADMIN_IDS }, timestamp: Date.now(), hypothesisId: "H2" };
-      debugLog(p2b);
-      fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p2b) }).catch(() => {});
-      // #endregion
       await reply("Нет доступа к админке. Твой Telegram ID: " + (userId ?? "?") + ". Добавь в Render → Environment: ADMIN_TELEGRAM_IDS=" + (userId ?? "ТВОЙ_ID") + " и перезапусти бота.");
-      fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "index.js:admin-cmd", message: "after reply user not admin", timestamp: Date.now(), hypothesisId: "H2" }) }).catch(() => {});
       return;
     }
 
-    // #region agent log
-    const p5 = { location: "index.js:admin-cmd", message: "admin passed checks, sending link and fetching requests", data: { hasBotPublicUrl: !!process.env.BOT_PUBLIC_URL, targetId }, timestamp: Date.now(), hypothesisId: "H5" };
-    debugLog(p5);
-    fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p5) }).catch(() => {});
-    // #endregion
-
     // Сначала обязательно отправляем ссылку — чтобы пользователь получил её даже если дальше что-то упадёт
-    // #region agent log H4
-    fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "index.js:admin-cmd", message: "before sendLinkFirst", data: { targetId }, timestamp: Date.now(), hypothesisId: "H4" }) }).catch(() => {});
-    // #endregion
     await sendLinkFirst();
-    // #region agent log H4
-    fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "index.js:admin-cmd", message: "after sendLinkFirst", data: {}, timestamp: Date.now(), hypothesisId: "H4" }) }).catch(() => {});
-    // #endregion
 
     const adminUrl = getAdminUrl();
     const adminLinkLine = adminUrl
@@ -1145,11 +1094,6 @@ bot.command("admin", async (ctx) => {
     });
 
     const { requests, dbError } = await getRequestsForAdmin(30);
-    // #region agent log
-    const p5b = { location: "index.js:admin-cmd", message: "getRequestsForAdmin returned", data: { dbError, requestsLength: (requests || []).length }, timestamp: Date.now(), hypothesisId: "H5" };
-    debugLog(p5b);
-    fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p5b) }).catch(() => {});
-    // #endregion
 
     if (dbError) {
       await reply(
@@ -1187,11 +1131,6 @@ bot.command("admin", async (ctx) => {
       await reply("Не удалось отправить список (ошибка Telegram). Попробуй /admin ещё раз.");
     });
   } catch (err) {
-    // #region agent log
-    const p5c = { location: "index.js:admin-cmd", message: "admin handler catch", data: { errorMessage: err?.message || String(err) }, timestamp: Date.now(), hypothesisId: "H5" };
-    debugLog(p5c);
-    fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p5c) }).catch(() => {});
-    // #endregion
     console.error("[admin] Ошибка:", err?.message || err);
     replyAny("Ошибка при выполнении /admin. Попробуй /admin_check или подожди минуту (сервер мог проснуться) и напиши /admin снова.");
     sendAdminLink();
@@ -1219,40 +1158,6 @@ const app = express();
 const WEBHOOK_URL = (process.env.WEBHOOK_URL || "").replace(/\/$/, "");
 // Базовый URL для ссылки на админку. Одинаковое значение с WEBHOOK_URL — нормально (один сервис = один URL).
 const BOT_PUBLIC_URL = (process.env.BOT_PUBLIC_URL || process.env.WEBHOOK_URL || process.env.HEROES_API_BASE || "").replace(/\/webhook\/?$/i, "").replace(/\/$/, "");
-// #region agent log — H1: апдейты доходят до сервера?
-if (WEBHOOK_URL) {
-  // Отвечаем 200 сразу, обработка в фоне — иначе при холодном старте Render Telegram таймаутит и пользователь не получает ответ
-  app.use("/webhook", express.raw({ type: "application/json" }), (req, res) => {
-    const bodyLen = req.body && Buffer.isBuffer(req.body) ? req.body.length : (req.body ? String(req.body).length : 0);
-    const pl = { location: "index.js:webhook", message: "webhook POST received", data: { method: req.method, bodyLength: bodyLen }, timestamp: Date.now(), hypothesisId: "WH1" };
-    debugLog(pl);
-    fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(pl) }).catch(() => {});
-    let update;
-    try {
-      const raw = req.body && Buffer.isBuffer(req.body) ? req.body.toString("utf8") : (req.body ? String(req.body) : "{}");
-      update = raw ? JSON.parse(raw) : {};
-    } catch (_) {
-      update = {};
-    }
-    res.status(200).end();
-    setImmediate(async () => {
-      try {
-        if (!bot.isInited()) await bot.init();
-      } catch (e) {
-        console.error("[webhook] bot.init:", e?.message || e);
-      }
-      await bot.handleUpdate(update).catch((e) => console.error("[webhook] handleUpdate error:", e?.message || e));
-    });
-  });
-} else {
-  const origStart = bot.start.bind(bot);
-  bot.start = function (opts) {
-    debugLog({ location: "index.js:polling", message: "polling start", data: {}, timestamp: Date.now(), hypothesisId: "WH1" });
-    fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "index.js:polling", message: "polling start", timestamp: Date.now(), hypothesisId: "WH1" }) }).catch(() => {});
-    return origStart(opts);
-  };
-}
-// #endregion
 app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, res) => {
   try {
     const rawBody = Buffer.isBuffer(req.body) ? req.body.toString("utf8") : String(req.body || "");
@@ -1381,13 +1286,6 @@ app.get(["/admin", "/admin/"], (req, res) => {
     }
   });
 });
-
-// #region agent log
-app.use("/api/admin", (req, res, next) => {
-  debugLog({ location: "index.js:api-admin", message: "admin API request", data: { path: req.path, method: req.method }, timestamp: Date.now(), hypothesisId: "admin-html" });
-  next();
-});
-// #endregion
 
 app.get("/api/admin/me", (req, res) => {
   const auth = resolveAdminAuth(req);
@@ -1989,14 +1887,8 @@ app.post("/suno-callback", express.json(), (req, res) => {
 // Запасной приём заявок: Mini App шлёт POST с initData + форма (если sendData в TG не срабатывает).
 app.post("/api/submit-request", express.json(), async (req, res) => {
   const initData = req.body?.initData || req.headers["x-telegram-init"];
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:/api/submit-request',message:'submit-request entry',data:{hasBodyInitData:!!req.body?.initData,hasHeaderInitData:!!req.headers["x-telegram-init"],bodyKeys:Object.keys(req.body||{}),hasPerson1:!!req.body?.person1,mode:req.body?.mode||null},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H1,H2'})}).catch(()=>{});
-  // #endregion
   const telegramUserId = validateInitData(initData, BOT_TOKEN);
   if (telegramUserId == null) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:/api/submit-request',message:'submit-request auth failed',data:{reason:'validateInitData returned null',hasInitData:!!initData,initDataLength:(initData||'').length},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
     return res.status(401).json({ error: "Неверные или устаревшие данные. Открой приложение из чата с ботом и попробуй снова." });
   }
   const body = req.body || {};
@@ -2005,9 +1897,6 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   if (isNewFormat) {
     const { mode, person1, person2, request: reqText, language: lang } = body;
     if (!person1?.name || !person1?.birthdate || !person1?.birthplace || !reqText) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:/api/submit-request',message:'submit-request validation failed',data:{missingName:!person1?.name,missingBirthdate:!person1?.birthdate,missingBirthplace:!person1?.birthplace,missingRequest:!reqText,mode:mode||null,hasPerson2:!!person2},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H2'})}).catch(()=>{});
-      // #endregion
       return res.status(400).json({ error: "Не все обязательные поля заполнены (person1.name, birthdate, birthplace, request)" });
     }
     name = person1.name;
@@ -2070,15 +1959,9 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
     requestId = await saveRequest(saveData);
   } catch (err) {
     console.error("[submit-request] saveRequest:", err?.message || err);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:/api/submit-request',message:'submit-request saveRequest failed',data:{errorMessage:err?.message||String(err)},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H3'})}).catch(()=>{});
-    // #endregion
     return res.status(500).json({ error: "Ошибка сохранения заявки" });
   }
   if (!requestId) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:/api/submit-request',message:'submit-request empty requestId',data:{requestId:requestId||null},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H3'})}).catch(()=>{});
-    // #endregion
     return res.status(500).json({ error: "Не удалось сохранить заявку" });
   }
   const requestModeForAccess = isNewFormat && (body.mode === "couple" || body.mode === "transit") ? body.mode : "single";
@@ -2121,9 +2004,6 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
     payment_status: access.source === "trial" ? "gift_used" : (access.source === "subscription" ? "subscription_active" : "paid"),
     updated_at: new Date().toISOString(),
   }).eq("id", requestId);
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:/api/submit-request',message:'submit-request success',data:{requestId:requestId,telegramUserId:!!telegramUserId,mode:body.mode||'single'},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H3,H4'})}).catch(()=>{});
-  // #endregion
   const mode = body.person1 && body.mode === "couple" ? "couple" : "single";
   console.log(`[API] Заявка ${requestId} сохранена — ГЕНЕРИРУЕМ ПЕСНЮ БЕСПЛАТНО (режим: ${mode})`);
   const successText =
@@ -2170,11 +2050,6 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
 
 async function onBotStart(info) {
   console.log("Бот запущен:", info.username);
-  // #region agent log
-  const p0 = { location: "index.js:onBotStart", message: "bot started", data: { adminIdsLength: ADMIN_IDS.length, hasWebhookUrl: !!process.env.WEBHOOK_URL }, timestamp: Date.now(), hypothesisId: "H1" };
-  debugLog(p0);
-  fetch("http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p0) }).catch(() => {});
-  // #endregion
   if (ADMIN_IDS.length) console.log("Админы (ID):", ADMIN_IDS.join(", "));
   else console.warn("ADMIN_TELEGRAM_IDS не задан — команда /admin недоступна.");
   if (supabase) {
