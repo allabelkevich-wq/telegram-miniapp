@@ -239,6 +239,17 @@
       if (el) el.textContent = 'Страница: ' + window.location.origin + ' · Запросы к API: ' + window.API_BASE;
     })();
     let currentFilter = 'all';
+    // #region agent log
+    window.addEventListener('error', function(event) {
+      fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:window:error',message:'window runtime error',data:{message:event&&event.message?String(event.message):null,filename:event&&event.filename?String(event.filename):null,lineno:event&&event.lineno?Number(event.lineno):null,colno:event&&event.colno?Number(event.colno):null},timestamp:Date.now(),runId:'details-modal-debug',hypothesisId:'H1,H4'})}).catch(()=>{});
+    });
+    // #endregion
+    // #region agent log
+    window.addEventListener('unhandledrejection', function(event) {
+      var reason = event && event.reason;
+      fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:window:unhandledrejection',message:'unhandled promise rejection',data:{reason:reason&&reason.message?String(reason.message):String(reason)},timestamp:Date.now(),runId:'details-modal-debug',hypothesisId:'H1,H4'})}).catch(()=>{});
+    });
+    // #endregion
 
     function getToken() {
       const fromUrl = new URLSearchParams(window.location.search).get('token');
@@ -442,6 +453,9 @@
           </div>
         </div>`;
       }).join('');
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:renderRequests',message:'request cards rendered',data:{cardsCount:Array.isArray(data)?data.length:0,hasShowDetails:typeof window.showDetails==='function',firstRequestId:data&&data[0]&&data[0].id?String(data[0].id).slice(0,8):null},timestamp:Date.now(),runId:'details-modal-debug',hypothesisId:'H1,H2'})}).catch(()=>{});
+      // #endregion
     }
     function escapeHtml(s) {
       if (s == null) return '';
@@ -682,6 +696,9 @@
     });
 
     window.showDetails = async function showDetails(id) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:showDetails:start',message:'showDetails invoked',data:{id:id?String(id):'',hasAuthToken:!!getToken(),apiBase:API_BASE||null},timestamp:Date.now(),runId:'details-modal-debug',hypothesisId:'H2,H3'})}).catch(()=>{});
+      // #endregion
       const url = API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + authQueryFromPath();
       let json, res;
       try {
@@ -690,13 +707,22 @@
         json = result.json;
       } catch (e) {
         const msg = (e && e.message ? e.message : 'Ошибка загрузки');
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:showDetails:fetchError',message:'details fetch failed',data:{id:id?String(id):'',errorMessage:String(msg||'')},timestamp:Date.now(),runId:'details-modal-debug',hypothesisId:'H3'})}).catch(()=>{});
+        // #endregion
         const hint = msg === 'Failed to fetch'
           ? 'Сервер не ответил (сеть или холодный старт Render). Подождите 30 сек и нажмите «Подробнее» снова.'
           : 'Откройте админку по ссылке из бота (/admin).';
         alert('❌ ' + msg + '\n\n' + hint);
         return;
       }
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:showDetails:fetchDone',message:'details fetch completed',data:{id:id?String(id):'',httpStatus:res&&res.status?Number(res.status):null,success:!!(json&&json.success),hasData:!!(json&&json.data),error:json&&json.error?String(json.error):null},timestamp:Date.now(),runId:'details-modal-debug',hypothesisId:'H3'})}).catch(()=>{});
+      // #endregion
       if (!json.success || !json.data) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:showDetails:invalidPayload',message:'details payload invalid',data:{id:id?String(id):'',httpStatus:res&&res.status?Number(res.status):null,success:!!(json&&json.success),error:json&&json.error?String(json.error):null},timestamp:Date.now(),runId:'details-modal-debug',hypothesisId:'H3,H4'})}).catch(()=>{});
+        // #endregion
         alert('❌ Ошибка загрузки: ' + (json.error || res.status || 'Load error'));
         return;
       }
@@ -736,6 +762,9 @@
         ['delivery_done', 'Доставка'],
         ['pipeline_done', 'Финальный статус'],
       ];
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:showDetails:build',message:'building details modal',data:{id:r&&r.id?String(r.id):'',generationStatus:String(genStatus||''),hasGenerationSteps:!!(r&&r.generation_steps),stepsKeys:steps&&typeof steps==='object'?Object.keys(steps).length:0,hasDeepseek:!!deepseekFull},timestamp:Date.now(),runId:'details-modal-debug',hypothesisId:'H4'})}).catch(()=>{});
+      // #endregion
       const allStepsBlock = '<div class="details-section" style="margin-bottom:24px;"><div class="section-title" style="color:#fbbf24;">🧭 Контроль всех этапов расчёта</div><div class="content-text" style="font-size:12px;line-height:1.7;">' +
         stepMap.map(function (pair) {
           var k = pair[0], label = pair[1];
@@ -794,6 +823,9 @@
           </div>
         </div>`;
       document.body.appendChild(modal);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:showDetails:append',message:'details modal appended',data:{id:r&&r.id?String(r.id):'',modalInDom:!!document.body.contains(modal),bodyChildren:document.body&&document.body.children?document.body.children.length:null},timestamp:Date.now(),runId:'details-modal-debug',hypothesisId:'H5'})}).catch(()=>{});
+      // #endregion
     }
 
     window.restart = async function restart(id) {

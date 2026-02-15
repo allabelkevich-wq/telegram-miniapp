@@ -575,6 +575,21 @@
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       var tg = null;
+      function logColorSnapshot(stage, pageId) {
+        try {
+          var rootStyles = getComputedStyle(document.documentElement);
+          var bodyStyles = getComputedStyle(document.body);
+          var formPage = document.getElementById('formPage');
+          var scope = formPage || document;
+          var labelEl = scope.querySelector('label');
+          var fieldEl = scope.querySelector('input,select,textarea');
+          var requestLabelEl = scope.querySelector('.request-label');
+          var tgParams = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.themeParams) ? window.Telegram.WebApp.themeParams : {};
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:theme:colorSnapshot',message:'runtime color snapshot',data:{stage:String(stage||''),pageId:String(pageId||''),activePage:(document.querySelector('.page.active')||{}).id||null,tgTextColor:tgParams.text_color||null,tgBgColor:tgParams.bg_color||null,cssVarTextColor:(rootStyles.getPropertyValue('--tg-theme-text-color')||'').trim()||null,cssVarBgColor:(rootStyles.getPropertyValue('--tg-theme-bg-color')||'').trim()||null,bodyColor:bodyStyles.color||null,bodyBgColor:bodyStyles.backgroundColor||null,labelColor:labelEl?getComputedStyle(labelEl).color:null,fieldColor:fieldEl?getComputedStyle(fieldEl).color:null,fieldBgColor:fieldEl?getComputedStyle(fieldEl).backgroundColor:null,requestLabelColor:requestLabelEl?getComputedStyle(requestLabelEl).color:null,locationHref:window.location.href||null},timestamp:Date.now(),runId:'color-drift-debug',hypothesisId:'H1,H2,H3,H4'})}).catch(()=>{});
+        } catch (e) {
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:theme:colorSnapshot',message:'runtime color snapshot failed',data:{stage:String(stage||''),pageId:String(pageId||''),errorMessage:e&&e.message?String(e.message):String(e)},timestamp:Date.now(),runId:'color-drift-debug',hypothesisId:'H4'})}).catch(()=>{});
+        }
+      }
       function initApp() {
         try {
           if (window.Telegram && window.Telegram.WebApp) {
@@ -586,6 +601,7 @@
               document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#f9f7ff');
               document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#2d2d2d');
             }
+            logColorSnapshot('init-app', 'homePage');
             return true;
           }
         } catch (e) { console.warn('Telegram init:', e); }
@@ -598,6 +614,7 @@
           if (initApp() || attempts >= 50) {
             clearInterval(t);
             if (!tg) showNotFromTelegramBanner();
+            logColorSnapshot('init-retry-finished', 'homePage');
           }
         }, 100);
       }
@@ -986,6 +1003,9 @@
         if (target) target.classList.add('active');
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
         if (pageId === 'paymentPage') { loadPricingCatalog(); updatePaymentUiFromCatalog(); setPaymentStatus('',''); }
+        if (pageId === 'homePage' || pageId === 'formPage' || pageId === 'paymentPage') {
+          logColorSnapshot('go-to-page', pageId);
+        }
         if (document.getElementById('previewNav') && document.getElementById('previewNav').classList.contains('show')) {
           document.querySelectorAll('.preview-nav button').forEach(function(btn) {
             btn.classList.remove('active');
