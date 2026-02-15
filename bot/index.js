@@ -649,7 +649,22 @@ bot.on("message:web_app_data", async (ctx) => {
     await ctx.reply("💳 Бесплатный подарок уже использован. Чтобы продолжить, открой оплату HOT в Mini App.");
     return;
   }
-  if (access.source === "trial") await consumeTrial(telegramUserId, "first_song_gift");
+  if (access.source === "trial") {
+    const consumed = await consumeTrial(telegramUserId, "first_song_gift");
+    if (!consumed.ok) {
+      const skuPrice = await getSkuPrice(access.sku);
+      await supabase?.from("track_requests").update({
+        payment_provider: "hot",
+        payment_status: "requires_payment",
+        payment_amount: skuPrice ? Number(skuPrice.price) : null,
+        payment_currency: skuPrice?.currency || "USDT",
+        generation_status: "pending_payment",
+        updated_at: new Date().toISOString(),
+      }).eq("id", requestId);
+      await ctx.reply("💳 Подарочный продукт уже использован. Чтобы продолжить, открой оплату HOT в Mini App.");
+      return;
+    }
+  }
   await supabase?.from("track_requests").update({
     payment_provider: access.source === "trial" ? "gift" : (access.source === "subscription" ? "subscription" : "hot"),
     payment_status: access.source === "trial" ? "gift_used" : (access.source === "subscription" ? "subscription_active" : "paid"),

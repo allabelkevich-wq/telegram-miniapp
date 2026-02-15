@@ -263,6 +263,9 @@
         <div id="masterNav" style="display:none; margin-top:20px">
           <button class="secondary" id="goHeroesBtn">👥 Мои герои</button>
         </div>
+        <div id="adminLinkWrap" style="display:none; margin-top:16px; text-align:center">
+          <a href="#" id="adminLinkBtn" class="secondary" style="display:inline-block;padding:10px 20px;text-decoration:none;color:inherit;border-radius:8px;border:2px solid var(--tg-theme-button-color,#8b5cf6);color:var(--tg-theme-button-color,#8b5cf6)">👑 Админка</a>
+        </div>
       </div>
       
       <footer>
@@ -992,6 +995,7 @@
         var target = document.getElementById(pageId);
         if (target) target.classList.add('active');
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
+        if (pageId === 'paymentPage') { loadPricingCatalog(); updatePaymentUiFromCatalog(); setPaymentStatus('',''); }
         if (document.getElementById('previewNav') && document.getElementById('previewNav').classList.contains('show')) {
           document.querySelectorAll('.preview-nav button').forEach(function(btn) {
             btn.classList.remove('active');
@@ -1028,6 +1032,7 @@
           this.classList.add('active');
           currentMode = this.getAttribute('data-mode') || 'single';
           toggleFormsByMode(currentMode);
+          updatePaymentUiFromCatalog();
         });
       });
       // #region agent log
@@ -1124,6 +1129,8 @@
         
         goToPage('paymentPage');
       });
+      var promoApplyBtn = document.getElementById('promoApplyBtn');
+      if (promoApplyBtn) promoApplyBtn.addEventListener('click', applyPromoCode);
       
       var backFromPaymentBtn = document.getElementById('backFromPaymentBtn');
       if (backFromPaymentBtn) backFromPaymentBtn.addEventListener('click', function() {
@@ -1191,7 +1198,6 @@
         var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
         if (!initData) { alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.'); return; }
         payload.initData = initData;
-        goToPage('loadingPage');
         try {
           // #region agent log
           fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:payBtn',message:'submit request attempt',data:{apiBase:apiBase,mode:mode,hasInitData:!!initData,initDataLen:(initData||'').length,hasBirthplaceSelection:!!(birthplaceField&&birthplaceField.getAttribute('data-place-selected'))},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H1,H2'})}).catch(()=>{});
@@ -1209,8 +1215,59 @@
               else sp.textContent = '✨ ' + name1 + ', Вселенная услышала твой запрос.\n\nЗвуковой ключ Энергии Дня формируется. Через 2-3 минуты он придёт в этот чат.';
             }
             if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
+            goToPage('loadingPage');
             goToPage('successPage');
             console.log('[MiniApp] Заявка отправлена, requestId:', result.requestId);
+          } else if (result && result.payment_required && result.requestId) {
+            setPaymentStatus('Требуется оплата. Открываю HOT Checkout...', 'warn');
+            var hotResp = await fetch(apiBase + '/api/payments/hot/create', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+              body: JSON.stringify({ request_id: result.requestId, sku: result.sku || getCurrentSku(), promo_code: activePromo ? activePromo.code : null, initData: initData })
+            });
+            var hotJson = await hotResp.json().catch(function() { return {}; });
+            if (!hotResp.ok || !hotJson.success) {
+              throw new Error(hotJson.error || 'Не удалось создать оплату HOT');
+            }
+            if (hotJson.free_applied) {
+              setPaymentStatus('Промокод дал бесплатную генерацию. Запуск...', 'ok');
+              goToPage('loadingPage');
+              setTimeout(function() { goToPage('successPage'); }, 1800);
+              return;
+            }
+            if (!hotJson.checkout_url) throw new Error('Checkout URL не получен');
+            setPaymentStatus('Открыт HOT Checkout. После оплаты вернись в Mini App — статус обновится автоматически.', 'warn');
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) window.Telegram.WebApp.openLink(hotJson.checkout_url);
+            else window.open(hotJson.checkout_url, '_blank');
+            var maxAttempts = 60;
+            var attempt = 0;
+            var paid = false;
+            while (attempt < maxAttempts) {
+              attempt += 1;
+              await new Promise(function(resolve) { setTimeout(resolve, 3000); });
+              var statusResp = await fetch(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(result.requestId), {
+                headers: { 'X-Telegram-Init': initData }
+              });
+              var statusJson = await statusResp.json().catch(function() { return {}; });
+              var paymentStatus = statusJson && statusJson.data && statusJson.data.payment_status ? String(statusJson.data.payment_status).toLowerCase() : '';
+              if (paymentStatus === 'paid') { paid = true; break; }
+            }
+            if (!paid) {
+              setPaymentStatus('Оплата пока не подтверждена. Проверь статус позже или открой оплату повторно.', 'warn');
+              return;
+            }
+            setPaymentStatus('Оплата подтверждена. Запускаю генерацию...', 'ok');
+            var restartResp = await fetch(apiBase + '/api/payments/hot/confirm', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+              body: JSON.stringify({ request_id: result.requestId, initData: initData })
+            });
+            if (!restartResp.ok) {
+              setPaymentStatus('Оплата получена, но авто‑старт не удался. Запусти генерацию в админке по request_id: ' + result.requestId, 'warn');
+              return;
+            }
+            goToPage('loadingPage');
+            setTimeout(function() { goToPage('successPage'); }, 1800);
           } else throw new Error(result.error || 'HTTP ' + response.status);
         } catch (error) {
           console.error('[MiniApp] Ошибка:', error);
@@ -1221,8 +1278,8 @@
           if (!msg || /^HTTP\s+\d+$/i.test(msg)) {
             msg = 'Не удалось отправить заявку. Попробуй открыть Mini App заново из чата с ботом и отправить ещё раз.';
           }
+          setPaymentStatus(msg || 'Ошибка операции оплаты/заявки', 'error');
           alert('❌ ' + msg);
-          goToPage('paymentPage');
         }
       });
       
@@ -1401,6 +1458,28 @@
           goToPage(pageMap[button.getAttribute('data-page')] || 'homePage');
         });
       });
+      
+      (function checkAdminAndShowLink() {
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
+        if (!apiBase || !initData) return;
+        fetch(apiBase + '/api/admin/me', { headers: { 'X-Telegram-Init': initData } })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (!data || !data.admin) return;
+            var wrap = document.getElementById('adminLinkWrap');
+            var btn = document.getElementById('adminLinkBtn');
+            if (!wrap || !btn) return;
+            wrap.style.display = 'block';
+            btn.addEventListener('click', function(e) {
+              e.preventDefault();
+              var url = apiBase + '/admin';
+              if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) window.Telegram.WebApp.openLink(url);
+              else window.open(url, '_blank');
+            });
+          })
+          .catch(function() {});
+      })();
         } catch (e) {
           console.warn('App init error:', e);
         }

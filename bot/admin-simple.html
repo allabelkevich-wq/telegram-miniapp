@@ -57,6 +57,17 @@
     .audio-player { width: 100%; margin: 15px 0; }
     .loading { text-align: center; padding: 50px; color: #94a3b8; }
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(102,126,234,0.3); border-top-color: #667eea; border-radius: 50%; margin: 0 auto 15px; animation: spin 1s linear infinite; }
+    .mono-panel { margin-bottom: 22px; padding: 16px; border-radius: 10px; border: 1px solid #334155; background: rgba(15, 23, 42, 0.5); }
+    .mono-panel h3 { margin: 0 0 10px 0; color: #c4b5fd; font-size: 16px; }
+    .mono-table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #334155; }
+    .mono-table { width: 100%; border-collapse: collapse; min-width: 860px; }
+    .mono-table th, .mono-table td { border-bottom: 1px solid #334155; padding: 8px; font-size: 12px; vertical-align: middle; }
+    .mono-table th { background: rgba(30, 41, 59, 0.7); color: #cbd5e1; text-align: left; }
+    .mono-table td input, .mono-table td select { width: 100%; background: #0f172a; color: #fff; border: 1px solid #475569; border-radius: 6px; padding: 6px 8px; font-size: 12px; }
+    .mono-table td input[type="checkbox"] { width: auto; transform: scale(1.05); }
+    .mono-muted { color: #94a3b8; font-size: 12px; }
+    .mono-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .mono-msg { margin-top: 8px; font-size: 12px; min-height: 18px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     @media (max-width: 768px) {
       .header h1 { font-size: 26px; }
@@ -130,6 +141,89 @@
         </div>
       </div>
     </div>
+    <div class="details-section" style="margin-bottom:20px;">
+      <div class="section-title">💳 Монетизация HOT</div>
+      <p class="mono-muted">Управление тарифами, промокодами и быстрый просмотр статусов оплат.</p>
+      <div class="mono-actions">
+        <button type="button" class="btn btn-primary" id="monetization-refresh-btn" style="min-width:180px;">🔄 Обновить монетизацию</button>
+      </div>
+      <div id="monetizationGlobalMsg" class="mono-msg"></div>
+
+      <div class="mono-panel">
+        <h3>Тарифы (pricing_catalog)</h3>
+        <div class="mono-table-wrap">
+          <table class="mono-table" id="pricingTable">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Название</th>
+                <th>Цена</th>
+                <th>Валюта</th>
+                <th>Активен</th>
+                <th>Лимиты JSON</th>
+                <th>Действие</th>
+              </tr>
+            </thead>
+            <tbody id="pricingTableBody">
+              <tr><td colspan="7" class="mono-muted">Загрузка…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="pricingMsg" class="mono-msg"></div>
+      </div>
+
+      <div class="mono-panel">
+        <h3>Промокоды (promo_codes)</h3>
+        <div class="mono-table-wrap">
+          <table class="mono-table" id="promoTable">
+            <thead>
+              <tr>
+                <th>Код</th>
+                <th>Тип</th>
+                <th>Значение</th>
+                <th>SKU</th>
+                <th>Лимит (общий)</th>
+                <th>Лимит (на юзера)</th>
+                <th>Активен</th>
+                <th>Сроки</th>
+                <th>Used</th>
+                <th>Действие</th>
+              </tr>
+            </thead>
+            <tbody id="promoTableBody">
+              <tr><td colspan="10" class="mono-muted">Загрузка…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="promoMsg" class="mono-msg"></div>
+      </div>
+
+      <div class="mono-panel">
+        <h3>Последние оплаты</h3>
+        <div class="mono-table-wrap">
+          <table class="mono-table" id="paymentsTable">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Request ID</th>
+                <th>Имя</th>
+                <th>SKU/Mode</th>
+                <th>Провайдер</th>
+                <th>Статус</th>
+                <th>Сумма</th>
+                <th>Order</th>
+                <th>TX</th>
+                <th>Промо</th>
+              </tr>
+            </thead>
+            <tbody id="paymentsTableBody">
+              <tr><td colspan="10" class="mono-muted">Загрузка…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="paymentsMsg" class="mono-msg"></div>
+      </div>
+    </div>
     <div id="requests" class="loading">
       <div class="spinner"></div>
       <div>Загрузка... / Loading...</div>
@@ -165,6 +259,13 @@
     function authQueryFromPath() {
       const t = getToken();
       return t ? '?token=' + encodeURIComponent(t) : '';
+    }
+
+    function setMonoMsg(id, text, ok) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text || '';
+      el.style.color = ok === true ? '#86efac' : (ok === false ? '#fca5a5' : '#94a3b8');
     }
 
     async function fetchJson(url, opts) {
@@ -232,6 +333,7 @@
           const tempEl = document.getElementById('settings-temperature');
           if (tempEl && st.deepseek_temperature != null && Number.isFinite(Number(st.deepseek_temperature))) tempEl.value = Math.max(0, Math.min(2, Number(st.deepseek_temperature)));
         }
+        await loadMonetizationData();
       } catch (e) {
         const msg = (e && e.message) || String(e);
         const el = document.getElementById('requests');
@@ -348,6 +450,195 @@
       return div.innerHTML;
     }
 
+    function escapeAttr(s) {
+      return String(s == null ? '' : s).replace(/"/g, '&quot;');
+    }
+
+    async function loadMonetizationData() {
+      const pricingBody = document.getElementById('pricingTableBody');
+      const promoBody = document.getElementById('promoTableBody');
+      const paymentsBody = document.getElementById('paymentsTableBody');
+      if (pricingBody) pricingBody.innerHTML = '<tr><td colspan="7" class="mono-muted">Загрузка…</td></tr>';
+      if (promoBody) promoBody.innerHTML = '<tr><td colspan="10" class="mono-muted">Загрузка…</td></tr>';
+      if (paymentsBody) paymentsBody.innerHTML = '<tr><td colspan="10" class="mono-muted">Загрузка…</td></tr>';
+      setMonoMsg('monetizationGlobalMsg', 'Обновляю данные монетизации…', null);
+      try {
+        const [pricingResult, promoResult, paymentsResult] = await Promise.all([
+          fetchJson(API_BASE + '/api/admin/pricing' + authQueryFromPath(), { headers: authHeaders() }),
+          fetchJson(API_BASE + '/api/admin/promos' + authQueryFromPath(), { headers: authHeaders() }),
+          fetchJson(API_BASE + '/api/admin/payments?limit=100' + authQuery(), { headers: authHeaders() }),
+        ]);
+        renderPricingRows((pricingResult.json && pricingResult.json.catalog) || []);
+        renderPromoRows((promoResult.json && promoResult.json.data) || []);
+        renderPaymentsRows((paymentsResult.json && paymentsResult.json.data) || []);
+        setMonoMsg('monetizationGlobalMsg', 'Данные монетизации обновлены.', true);
+      } catch (e) {
+        setMonoMsg('monetizationGlobalMsg', 'Не удалось загрузить монетизацию: ' + ((e && e.message) || String(e)), false);
+      }
+    }
+
+    function renderPricingRows(rows) {
+      const body = document.getElementById('pricingTableBody');
+      if (!body) return;
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="7" class="mono-muted">Тарифы не найдены.</td></tr>';
+        return;
+      }
+      body.innerHTML = rows.map(function(item) {
+        const sku = escapeHtml(item.sku || '');
+        const limits = item.limits_json && typeof item.limits_json === 'object' ? JSON.stringify(item.limits_json) : (item.limits_json || '{}');
+        return '<tr data-sku="' + sku + '">' +
+          '<td><code>' + sku + '</code></td>' +
+          '<td><input data-field="title" value="' + escapeAttr(item.title || '') + '"></td>' +
+          '<td><input type="number" step="0.01" min="0" data-field="price" value="' + escapeAttr(item.price || 0) + '"></td>' +
+          '<td><input data-field="currency" value="' + escapeAttr(item.currency || 'USDT') + '"></td>' +
+          '<td style="text-align:center;"><input type="checkbox" data-field="active" ' + (item.active === false ? '' : 'checked') + '></td>' +
+          '<td><input data-field="limits_json" value="' + escapeAttr(limits) + '"></td>' +
+          '<td><button class="btn btn-primary" style="min-width:120px;padding:8px 12px;font-size:12px;" onclick="savePricingRow(\'' + escapeAttr(item.sku || '') + '\')">Сохранить</button></td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    function renderPromoRows(rows) {
+      const body = document.getElementById('promoTableBody');
+      if (!body) return;
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="10" class="mono-muted">Промокоды не найдены.</td></tr>';
+        return;
+      }
+      body.innerHTML = rows.map(function(item) {
+        const code = escapeHtml(item.code || '');
+        const validity = [item.starts_at ? new Date(item.starts_at).toLocaleString('ru-RU') : '—', item.expires_at ? new Date(item.expires_at).toLocaleString('ru-RU') : '—'].join(' → ');
+        return '<tr data-code="' + code + '">' +
+          '<td><code>' + code + '</code></td>' +
+          '<td><select data-field="type">' +
+            '<option value="discount_percent"' + (item.type === 'discount_percent' ? ' selected' : '') + '>discount_percent</option>' +
+            '<option value="discount_amount"' + (item.type === 'discount_amount' ? ' selected' : '') + '>discount_amount</option>' +
+            '<option value="free_generation"' + (item.type === 'free_generation' ? ' selected' : '') + '>free_generation</option>' +
+          '</select></td>' +
+          '<td><input type="number" step="0.01" min="0" data-field="value" value="' + escapeAttr(item.value == null ? '' : item.value) + '"></td>' +
+          '<td><input data-field="sku" value="' + escapeAttr(item.sku || '') + '"></td>' +
+          '<td><input type="number" step="1" min="0" data-field="max_uses" value="' + escapeAttr(item.max_uses == null ? '' : item.max_uses) + '"></td>' +
+          '<td><input type="number" step="1" min="1" data-field="per_user_limit" value="' + escapeAttr(item.per_user_limit == null ? 1 : item.per_user_limit) + '"></td>' +
+          '<td style="text-align:center;"><input type="checkbox" data-field="active" ' + (item.active === false ? '' : 'checked') + '></td>' +
+          '<td class="mono-muted">' + escapeHtml(validity) + '</td>' +
+          '<td>' + escapeHtml(String(item.used_count == null ? 0 : item.used_count)) + '</td>' +
+          '<td><button class="btn btn-primary" style="min-width:120px;padding:8px 12px;font-size:12px;" onclick="savePromoRow(\'' + escapeAttr(item.code || '') + '\')">Сохранить</button></td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    function renderPaymentsRows(rows) {
+      const body = document.getElementById('paymentsTableBody');
+      if (!body) return;
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="10" class="mono-muted">Оплаты не найдены.</td></tr>';
+        return;
+      }
+      body.innerHTML = rows.map(function(item) {
+        const created = item.created_at ? new Date(item.created_at).toLocaleString('ru-RU') : '—';
+        const reqId = String(item.id || '');
+        const orderId = String(item.payment_order_id || '');
+        const txId = String(item.payment_tx_id || '');
+        const promo = item.promo_code ? (String(item.promo_code) + (item.promo_discount_amount ? (' (-' + item.promo_discount_amount + ')') : '')) : '—';
+        const amount = item.payment_amount != null ? (String(item.payment_amount) + ' ' + (item.payment_currency || 'USDT')) : '—';
+        return '<tr>' +
+          '<td>' + escapeHtml(created) + '</td>' +
+          '<td><code title="' + escapeAttr(reqId) + '">' + escapeHtml(reqId.slice(0, 8)) + '</code></td>' +
+          '<td>' + escapeHtml(item.name || '—') + '</td>' +
+          '<td>' + escapeHtml(item.mode || '—') + '</td>' +
+          '<td>' + escapeHtml(item.payment_provider || '—') + '</td>' +
+          '<td>' + escapeHtml(item.payment_status || '—') + '</td>' +
+          '<td>' + escapeHtml(amount) + '</td>' +
+          '<td title="' + escapeAttr(orderId) + '">' + escapeHtml(orderId ? orderId.slice(0, 12) + '…' : '—') + '</td>' +
+          '<td title="' + escapeAttr(txId) + '">' + escapeHtml(txId ? txId.slice(0, 12) + '…' : '—') + '</td>' +
+          '<td>' + escapeHtml(promo) + '</td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    async function savePricingRow(sku) {
+      const row = Array.from(document.querySelectorAll('#pricingTableBody tr')).find(function(r) {
+        return r.getAttribute('data-sku') === sku;
+      });
+      if (!row) return;
+      const titleEl = row.querySelector('[data-field="title"]');
+      const priceEl = row.querySelector('[data-field="price"]');
+      const currencyEl = row.querySelector('[data-field="currency"]');
+      const activeEl = row.querySelector('[data-field="active"]');
+      const limitsEl = row.querySelector('[data-field="limits_json"]');
+      let limitsJson = {};
+      try {
+        limitsJson = limitsEl && String(limitsEl.value || '').trim() ? JSON.parse(limitsEl.value) : {};
+      } catch (_) {
+        setMonoMsg('pricingMsg', 'Некорректный JSON в limits_json для SKU ' + sku, false);
+        return;
+      }
+      const payload = {
+        title: titleEl ? titleEl.value : sku,
+        price: priceEl ? Number(priceEl.value || 0) : 0,
+        currency: currencyEl ? String(currencyEl.value || 'USDT').toUpperCase() : 'USDT',
+        active: !!(activeEl && activeEl.checked),
+        limits_json: limitsJson,
+      };
+      setMonoMsg('pricingMsg', 'Сохраняю тариф ' + sku + '…', null);
+      try {
+        const result = await fetchJson(API_BASE + '/api/admin/pricing/' + encodeURIComponent(sku) + authQueryFromPath(), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify(payload),
+        });
+        if (result.json && result.json.success) {
+          setMonoMsg('pricingMsg', 'Тариф ' + sku + ' сохранён.', true);
+          await loadMonetizationData();
+        } else {
+          setMonoMsg('pricingMsg', 'Ошибка сохранения тарифа ' + sku + ': ' + ((result.json && result.json.error) || 'unknown'), false);
+        }
+      } catch (e) {
+        setMonoMsg('pricingMsg', 'Ошибка сохранения тарифа ' + sku + ': ' + ((e && e.message) || String(e)), false);
+      }
+    }
+
+    async function savePromoRow(code) {
+      const row = Array.from(document.querySelectorAll('#promoTableBody tr')).find(function(r) {
+        return r.getAttribute('data-code') === code;
+      });
+      if (!row) return;
+      const typeEl = row.querySelector('[data-field="type"]');
+      const valueEl = row.querySelector('[data-field="value"]');
+      const skuEl = row.querySelector('[data-field="sku"]');
+      const maxUsesEl = row.querySelector('[data-field="max_uses"]');
+      const perUserEl = row.querySelector('[data-field="per_user_limit"]');
+      const activeEl = row.querySelector('[data-field="active"]');
+      const payload = {
+        type: typeEl ? typeEl.value : 'discount_percent',
+        value: valueEl && String(valueEl.value).trim() ? Number(valueEl.value) : null,
+        sku: skuEl && String(skuEl.value).trim() ? String(skuEl.value).trim() : null,
+        max_uses: maxUsesEl && String(maxUsesEl.value).trim() ? Number(maxUsesEl.value) : null,
+        per_user_limit: perUserEl && String(perUserEl.value).trim() ? Number(perUserEl.value) : 1,
+        active: !!(activeEl && activeEl.checked),
+      };
+      setMonoMsg('promoMsg', 'Сохраняю промокод ' + code + '…', null);
+      try {
+        const result = await fetchJson(API_BASE + '/api/admin/promos/' + encodeURIComponent(code) + authQueryFromPath(), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify(payload),
+        });
+        if (result.json && result.json.success) {
+          setMonoMsg('promoMsg', 'Промокод ' + code + ' сохранён.', true);
+          await loadMonetizationData();
+        } else {
+          setMonoMsg('promoMsg', 'Ошибка сохранения промокода ' + code + ': ' + ((result.json && result.json.error) || 'unknown'), false);
+        }
+      } catch (e) {
+        setMonoMsg('promoMsg', 'Ошибка сохранения промокода ' + code + ': ' + ((e && e.message) || String(e)), false);
+      }
+    }
+
+    window.savePricingRow = savePricingRow;
+    window.savePromoRow = savePromoRow;
+
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', function() {
         currentFilter = this.getAttribute('data-filter') || 'all';
@@ -385,6 +676,9 @@
         statusEl.textContent = '❌ ' + (e && e.message ? e.message : 'Ошибка');
         statusEl.style.color = '#e74c3c';
       }
+    });
+    document.getElementById('monetization-refresh-btn')?.addEventListener('click', function() {
+      loadMonetizationData();
     });
 
     async function showDetails(id) {
