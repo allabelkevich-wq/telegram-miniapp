@@ -14,13 +14,44 @@
   <style>
     /* АДАПТИВНЫЕ СТИЛИ С ПОДДЕРЖКОЙ ТЕМЫ ТЕЛЕГРАМ */
     :root {
-      --primary-color: #8b5cf6;
+      --primary-color: #d4af37;
       --secondary-color: #ec4899;
       --success-color: #10b981;
+      /* базовые переменные темы по умолчанию (dark premium) */
+      --tg-theme-bg-color: #0A0A1A;
+      --tg-theme-secondary-bg-color: rgba(255,255,255,0.08);
+      --tg-theme-text-color: #ffffff;
+      --tg-theme-hint-color: rgba(224, 224, 240, 0.7);
+      --tg-theme-border-color: rgba(212, 175, 55, 0.3);
+      --tg-theme-button-color: #d4af37;
+      --tg-theme-button-text-color: #0A0A1A;
+    }
+    .theme-light {
+      --tg-theme-bg-color: #f5f3ff;
+      --tg-theme-secondary-bg-color: rgba(255,255,255,0.92);
+      --tg-theme-text-color: #1f2937;
+      --tg-theme-hint-color: rgba(31, 41, 55, 0.6);
+      --tg-theme-border-color: rgba(212,175,55,0.35);
+      --tg-theme-button-color: #d4af37;
+      --tg-theme-button-text-color: #1f2937;
+    }
+    .theme-dark {
+      --tg-theme-bg-color: #0A0A1A;
+      --tg-theme-secondary-bg-color: rgba(255,255,255,0.08);
+      --tg-theme-text-color: #ffffff;
+      --tg-theme-hint-color: rgba(224,224,240,0.7);
+      --tg-theme-border-color: rgba(212,175,55,0.3);
+      --tg-theme-button-color: #d4af37;
+      --tg-theme-button-text-color: #0A0A1A;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
     body {
-      background: #050826 url('assets/bg-yupsoul.png') center/cover no-repeat fixed !important;
-      color: #f5e9c9 !important;
+      background: var(--tg-theme-bg-color) url('assets/bg-yupsoul.png') center/cover no-repeat fixed !important;
+      color: var(--tg-theme-text-color) !important;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       margin: 0;
       padding: 20px 15px;
@@ -30,6 +61,25 @@
       position: relative;
       overflow-x: hidden;
     }
+    body::before {
+      content:"";position:fixed;inset:0;z-index:0;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(212,175,55,0.08), transparent 55%),
+        radial-gradient(circle at 80% 70%, rgba(236,72,153,0.06), transparent 60%),
+        linear-gradient(135deg, rgba(212,175,55,0.08), rgba(0,0,0,0.2));
+      pointer-events:none;
+    }
+    body::after {
+      content:"";position:fixed;inset:0;z-index:0;background:
+        radial-gradient(1px 1px at 20% 20%, rgba(255,255,255,0.7), transparent 40px),
+        radial-gradient(1px 1px at 40% 60%, rgba(255,255,255,0.5), transparent 40px),
+        radial-gradient(1px 1px at 70% 30%, rgba(255,255,255,0.8), transparent 40px),
+        radial-gradient(1px 1px at 85% 80%, rgba(255,255,255,0.4), transparent 40px);
+      opacity:0.4;
+      animation: stars 5s linear infinite;
+      pointer-events:none;
+    }
+    @keyframes stars { 0%{opacity:0.3;} 50%{opacity:0.8;} 100%{opacity:0.3;} }
     .content-wrapper { max-width: 600px; margin: 0 auto; padding: 20px; }
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; color: var(--tg-theme-text-color, #fff); font-size: 14px; margin-bottom: 8px; font-weight: 500; }
@@ -115,6 +165,24 @@
     }
     .location-suggestion:hover { background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.1)); }
     .location-suggestion:last-child { border-bottom: none; }
+    .stepper {
+      display: flex; gap: 8px; align-items: center; margin-bottom: 16px; position: relative;
+    }
+    .step-line {
+      position: absolute; left: 12px; right: 12px; height: 2px; background: var(--tg-theme-border-color); top: 18px; z-index: 0;
+    }
+    .step-indicator {
+      position: relative; z-index: 1; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--tg-theme-border-color);
+      background: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); font-weight: 600; font-size: 13px;
+      flex: 1; text-align: center;
+    }
+    .step-indicator.active {
+      border-color: var(--tg-theme-button-color); background: linear-gradient(135deg, var(--tg-theme-button-color), #ec4899);
+      color: var(--tg-theme-button-text-color); box-shadow: 0 6px 18px rgba(139,92,246,0.25);
+    }
+    .step-panel { margin-top: 4px; }
+    .step-nav { display: flex; gap: 12px; margin-top: 16px; }
+    .step-nav button { flex: 1; text-transform: none; letter-spacing: 0; }
     @media (max-width: 480px) {
       .mode-buttons { grid-template-columns: 1fr; }
       .examples-grid { grid-template-columns: 1fr; }
@@ -134,10 +202,10 @@
     .page{display:none;min-height:100vh;padding-top:20px}
     .page.active{display:block}
     header{text-align:center;margin:25px 0 20px}
-    h1{font-size:2.4rem;background:linear-gradient(90deg,#f7df95,#d7a94b,#fff2c7);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;letter-spacing:-1px;line-height:1.1}
-    .subtitle{color:#e9ddba;font-size:1.15rem;margin-top:8px;font-weight:400}
-    .tagline{color:#f1d889;font-size:1.35rem;font-weight:700;margin:15px 0;letter-spacing:-0.5px}
-    .section{background:rgba(8,14,45,.76);border-radius:24px;padding:30px 25px;box-shadow:0 14px 42px rgba(4,9,34,.55);border:1px solid rgba(222,186,98,.52);position:relative;overflow:hidden;margin-bottom:25px;backdrop-filter:blur(2px)}
+    h1{font-size:2.4rem;background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 4s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;letter-spacing:-1px;line-height:1.1}
+    .subtitle{color:var(--tg-theme-hint-color);font-size:1.05rem;margin-top:8px;font-weight:400}
+    .tagline{color:#d4af37;font-size:1.2rem;font-weight:700;margin:15px 0;letter-spacing:-0.2px}
+    .section{background:var(--tg-theme-secondary-bg-color);backdrop-filter:blur(20px);border-radius:24px;padding:30px 25px;box-shadow:0 15px 45px rgba(212,175,55,0.28);border:1px solid var(--tg-theme-border-color);position:relative;overflow:hidden;margin-bottom:25px}
     .section::before{display:none}
     .field{margin-bottom:22px;text-align:left}
     label{display:block;margin-bottom:10px;color:var(--tg-theme-text-color,#2d2d2d);font-weight:600;font-size:1.05rem;display:flex;align-items:center;gap:10px}
@@ -172,14 +240,13 @@
     .example-btn{width:auto;min-width:260px;max-width:320px;flex-shrink:0;white-space:normal;text-transform:none;letter-spacing:0;font-size:.9rem;font-weight:600;padding:12px 14px;margin:0;min-height:auto;border-radius:12px;box-shadow:none}
     .example-btn::after{display:none}
     .example-btn:hover{transform:none;box-shadow:none}
-    button{background:linear-gradient(90deg,#a78bfa,#f9a8d4);color:white;border:none;padding:18px 30px;font-size:1.25rem;border-radius:20px;width:100%;font-weight:700;cursor:pointer;transition:all .3s ease;box-shadow:0 6px 20px rgba(167,139,250,.25);margin-top:10px;letter-spacing:1px;text-transform:uppercase;min-height:64px;position:relative;overflow:hidden}
-    button::after{content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);transform:rotate(30deg);transition:all .8s}
-    button:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(167,139,250,.35)}
-    button:hover::after{left:100%}
+    button{background:linear-gradient(135deg, #d4af37, #ec4899, #d4af37);background-size:300% 300%;animation:gradientShift 4s ease infinite;color:var(--tg-theme-button-text-color);border:none;padding:18px 30px;font-size:1.05rem;border-radius:18px;width:100%;font-weight:700;cursor:pointer;transition:all .3s ease;box-shadow:0 12px 35px rgba(212,175,55,0.6);margin-top:10px;letter-spacing:0;text-transform:none;min-height:58px;position:relative;overflow:hidden}
+    button::after{display:none}
+    button:hover{transform:translateY(-2px);box-shadow:0 14px 38px rgba(212,175,55,0.65)}
     button:active{transform:translateY(1px)}
-    button:disabled{background:#d1d5db;cursor:not-allowed;transform:none;box-shadow:none;opacity:.85}
-    button.secondary{background:white;color:#a78bfa;border:2px solid #a78bfa;box-shadow:none;text-transform:none;letter-spacing:-0.5px;font-weight:600;min-height:56px}
-    button.secondary:hover{background:#a78bfa;color:white;box-shadow:0 6px 20px rgba(167,139,250,.25)}
+    button:disabled{background:rgba(255,255,255,0.2);cursor:not-allowed;transform:none;box-shadow:none;opacity:.7}
+    button.secondary{background:rgba(255,255,255,0.12);color:var(--tg-theme-text-color);border:1px solid var(--tg-theme-border-color);box-shadow:none;text-transform:none;letter-spacing:0;font-weight:600;min-height:56px}
+    button.secondary:hover{background:rgba(255,255,255,0.18);box-shadow:0 6px 20px rgba(212,175,55,0.35)}
     .btn-group{display:flex;gap:15px;margin-top:25px}
     .btn-group button{flex:1}
     .price-tag{background:linear-gradient(90deg,#f9a8d4,#a78bfa);color:white;padding:12px 20px;border-radius:16px;font-size:1.4rem;font-weight:700;text-align:center;margin:20px 0;box-shadow:0 4px 15px rgba(249,168,212,.3);letter-spacing:1px}
@@ -313,173 +380,160 @@
       </header>
       
       <div class="section">
-        <div class="field" id="forWhoWrap" style="display:none">
-          <label for="forWho" data-icon="👤">Для кого создаём?</label>
-          <select id="forWho">
-            <option value="">Для себя</option>
-          </select>
+        <div class="stepper">
+          <div class="step-indicator active" data-step="1">Режим</div>
+          <div class="step-indicator" data-step="2">Данные</div>
+          <div class="step-indicator" data-step="3">Запрос</div>
+          <div class="step-line"></div>
         </div>
-        <div class="mode-selector">
-          <h3>✨ Выбери тип звукового ключа</h3>
-          <div class="mode-buttons">
-            <button type="button" class="mode-btn active" data-mode="single">
-              <span class="mode-icon">👤</span>
-              <span class="mode-label">Для себя</span>
-              <span class="mode-desc">Глубокий анализ для тебя</span>
-            </button>
-            <button type="button" class="mode-btn" data-mode="couple">
-              <span class="mode-icon">💞</span>
-              <span class="mode-label">Для двоих</span>
-              <span class="mode-desc">Анализ связи для двоих</span>
-            </button>
-            <button type="button" class="mode-btn" data-mode="transit">
-              <span class="mode-icon">🌅</span>
-              <span class="mode-label">Энергия дня</span>
-              <span class="mode-desc">Энергия момента</span>
-            </button>
-          </div>
-        </div>
-        <div class="field">
-          <input type="text" id="name" placeholder="Как тебя зовут?" required aria-label="Имя">
-        </div>
-        
-        <div class="field">
-          <input type="date" id="birthdate" required aria-label="Дата рождения">
-          <div id="birthdateSummary" class="field-summary" style="display:none; margin-top:8px; padding:10px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
-        </div>
-        
-        <div class="field">
-          <div class="birthplace-wrap">
-            <input type="text" id="birthplace" placeholder="Город или страна — выбери из подсказок" required autocomplete="off" aria-label="Локация рождения">
-            <ul id="birthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true"></ul>
-          </div>
-          <div id="birthplaceSummary" class="field-summary birthplace-summary" style="display:none; margin-top:8px; padding:12px 14px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
-          <div id="placeCoords" class="place-coords" style="display:none; margin-top:6px; padding:10px 14px; background:rgba(94,234,212,.1); border-radius:10px; font-size:.9rem; color:#0d9488;"></div>
-        </div>
-        
-        <div class="field">
-          <div class="time-group">
-            <input type="time" id="birthtime" required aria-label="Время рождения">
-            <div class="checkbox">
-              <input type="checkbox" id="unknown">
-              <label for="unknown">Не знаю точное время</label>
+
+        <div class="step-panel" data-step="1">
+          <div class="mode-selector">
+            <h3>Выбери тип звукового ключа</h3>
+            <div class="mode-buttons">
+              <button type="button" class="mode-btn active" data-mode="single">
+                <span class="mode-label">Для себя</span>
+                <span class="mode-desc">Глубокий анализ</span>
+              </button>
+              <button type="button" class="mode-btn" data-mode="couple">
+                <span class="mode-label">Для двоих</span>
+                <span class="mode-desc">Дуэт/пара</span>
+              </button>
+              <button type="button" class="mode-btn" data-mode="transit">
+                <span class="mode-label">Энергия дня</span>
+                <span class="mode-desc">Энергия момента</span>
+              </button>
             </div>
           </div>
         </div>
-        
-        <div class="field">
-          <label for="gender" data-icon="⚧️">Пол</label>
-          <select id="gender" required>
-            <option value="">Выбери</option>
-            <option value="male">Мужской</option>
-            <option value="female">Женский</option>
-          </select>
-        </div>
-        
-        <div class="field">
-          <select id="language" required aria-label="Язык песни и описания">
-            <option value="">Выбери язык</option>
-            <option value="ru">Русский</option>
-            <option value="en">English</option>
-            <option value="uk">Українська</option>
-          </select>
-        </div>
-        
-        <div id="secondPersonForm">
-          <h3>💞 Второй человек</h3>
+
+        <div class="step-panel" data-step="2" style="display:none">
           <div class="field">
-            <label for="name2">Имя</label>
-            <input type="text" id="name2" placeholder="Имя второго человека" maxlength="50">
+            <input type="text" id="name" placeholder="Как тебя зовут?" required aria-label="Имя">
           </div>
+          
           <div class="field">
-            <label for="birthdate2">Дата рождения</label>
-            <input type="date" id="birthdate2" max="2010-12-31">
+            <input type="date" id="birthdate" required aria-label="Дата рождения">
+            <div id="birthdateSummary" class="field-summary" style="display:none; margin-top:8px; padding:10px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
           </div>
-          <div class="field form-group location-input-wrapper">
-            <label for="birthplace2">Место рождения</label>
-            <input type="text" id="birthplace2" class="location-input" placeholder="Начни вводить город..." maxlength="100" autocomplete="off">
-            <div id="birthplaceSuggestions2" class="location-suggestions"></div>
-          </div>
+          
           <div class="field">
-            <label>Время рождения</label>
+            <div class="birthplace-wrap">
+              <input type="text" id="birthplace" placeholder="Город или страна — выбери из подсказок" required autocomplete="off" aria-label="Локация рождения">
+              <ul id="birthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true"></ul>
+            </div>
+            <div id="birthplaceSummary" class="field-summary birthplace-summary" style="display:none; margin-top:8px; padding:12px 14px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
+            <div id="placeCoords" class="place-coords" style="display:none; margin-top:6px; padding:10px 14px; background:rgba(94,234,212,.1); border-radius:10px; font-size:.9rem; color:#0d9488;"></div>
+          </div>
+          
+          <div class="field">
             <div class="time-group">
-              <input type="time" id="birthtime2" style="flex:1">
-              <div class="checkbox" style="margin:0 0 0 15px">
-                <input type="checkbox" id="unknown2">
-                <label for="unknown2">Не знаю</label>
+              <input type="time" id="birthtime" required aria-label="Время рождения">
+              <div class="checkbox">
+                <input type="checkbox" id="unknown">
+                <label for="unknown">Не знаю точное время</label>
               </div>
             </div>
           </div>
+          
           <div class="field">
-            <label for="gender2">Пол</label>
-            <select id="gender2">
-              <option value="">Выбери</option>
-              <option value="female">Женский</option>
+            <select id="gender" required>
+              <option value="">Пол</option>
               <option value="male">Мужской</option>
+              <option value="female">Женский</option>
             </select>
           </div>
-        </div>
-        
-        <div id="transitForm">
-          <h3>🌅 Энергия момента</h3>
+          
           <div class="field">
-            <label for="transitDate">Дата транзита</label>
-            <input type="date" id="transitDate" min="2024-01-01" max="2030-12-31">
-            <small style="color:#6b7280;display:block;margin-top:4px;font-size:.9rem">Когда хочешь узнать энергию дня?</small>
+            <select id="language" required aria-label="Язык песни и описания">
+              <option value="">Язык песни</option>
+              <option value="ru">Русский</option>
+              <option value="en">English</option>
+              <option value="uk">Українська</option>
+            </select>
           </div>
-          <div class="field">
-            <label for="transitTime">Время транзита</label>
-            <input type="time" id="transitTime">
-            <small style="color:#6b7280;display:block;margin-top:4px;font-size:.9rem">Точное время (если важно)</small>
-          </div>
-          <div class="field form-group location-input-wrapper">
-            <label for="transitLocation">Локация транзита</label>
-            <input type="text" id="transitLocation" class="location-input" placeholder="Город, где будет энергия дня..." maxlength="100" autocomplete="off">
-            <div id="transitLocationSuggestions" class="location-suggestions"></div>
-            <small style="color: var(--tg-theme-hint-color, rgba(255,255,255,0.6)); display: block; margin-top: 4px;">Где ты будешь в этот момент?</small>
-            <div class="checkbox-group" style="margin-top: 10px;">
-              <input type="checkbox" id="transitLocationConfirmed">
-              <label for="transitLocationConfirmed">Подтверждаю, что локация указана верно</label>
+          
+          <div id="secondPersonForm" style="display:none">
+            <h3 style="margin-bottom:12px;">Для двоих</h3>
+            <div class="field">
+              <input type="text" id="name2" placeholder="Имя второго человека" maxlength="50">
+            </div>
+            <div class="field">
+              <input type="date" id="birthdate2" max="2010-12-31" placeholder="Дата рождения">
+            </div>
+            <div class="field form-group location-input-wrapper">
+              <input type="text" id="birthplace2" class="location-input" placeholder="Место рождения второго" maxlength="100" autocomplete="off">
+              <div id="birthplaceSuggestions2" class="location-suggestions"></div>
+            </div>
+            <div class="field">
+              <div class="time-group">
+                <input type="time" id="birthtime2" style="flex:1" placeholder="Время рождения">
+                <div class="checkbox" style="margin:0 0 0 15px">
+                  <input type="checkbox" id="unknown2">
+                  <label for="unknown2">Не знаю</label>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <select id="gender2">
+                <option value="">Пол</option>
+                <option value="female">Женский</option>
+                <option value="male">Мужской</option>
+              </select>
             </div>
           </div>
-          <div class="field">
-            <label for="transitIntent">Намерение момента</label>
-            <textarea id="transitIntent" placeholder="Что ты хочешь узнать об энергии этого дня? (необязательно)" rows="2" maxlength="200" style="min-height:60px"></textarea>
-            <small style="color:#6b7280;display:block;margin-top:4px;font-size:.9rem">Например: Как мне использовать эту энергию?</small>
-          </div>
-        </div>
-        
-        <div class="field">
-          <div class="request-help-row">
-            <div class="request-label">Отправь запрос во Вселенную</div>
-            <button type="button" id="requestHintToggle" class="request-help-toggle" aria-expanded="false">✨ Идеи</button>
-          </div>
-          <textarea id="request" placeholder="Какую грань будем исследовать сегодня?" aria-label="Запрос во Вселенную"></textarea>
-          <div class="request-examples" id="requestExamplesPanel">
-            <h3>✨ Вдохновение для запроса</h3>
-            <div class="examples-grid">
-              <button type="button" class="example-btn" data-text="хочу найти гармонию в отношениях и научиться любить себя">Гармония в отношениях</button>
-              <button type="button" class="example-btn" data-text="помоги мне обрести уверенность в себе и найти своё предназначение">Уверенность и предназначение</button>
-              <button type="button" class="example-btn" data-text="как мне раскрыть свой творческий потенциал и начать творить без страха">Творческий потенциал</button>
-              <button type="button" class="example-btn" data-text="хочу научиться слушать своё сердце и принимать решения из любви, а не из страха">Слушать сердце</button>
-              <button type="button" class="example-btn" data-text="помоги мне отпустить прошлое и открыться новым возможностям">Отпустить прошлое</button>
-              <button type="button" class="example-btn" data-text="как мне найти баланс между работой и личной жизнью">Баланс жизни</button>
-              <button type="button" class="example-btn" data-text="хочу понять свои истинные желания и начать жить в соответствии с ними">Истинные желания</button>
-              <button type="button" class="example-btn" data-text="помоги мне исцелить детские травмы и обрести внутреннюю свободу">Исцеление травм</button>
-              <button type="button" class="example-btn" data-text="как мне научиться доверять жизни и отпускать контроль">Доверять жизни</button>
-              <button type="button" class="example-btn" data-text="хочу найти свой путь к счастью и внутреннему спокойствию">Путь к счастью</button>
-              <button type="button" class="example-btn special" data-text="РЕЖИМ ЮМОР 100%: создай весёлую песню про мои недостатки, но с любовью и принятием">😂 Режим юмор</button>
-              <button type="button" class="example-btn special" data-text="НАСТРОЕНИЕ ЭПИЧНОСТИ: создай песню о моей силе и величии">👑 Эпическое настроение</button>
-              <button type="button" class="example-btn special" data-text="НАСТРОЕНИЕ СИЛЫ И ПРЕОДОЛЕНИЯ: создай мощную песню о моей внутренней борьбе и победе">💪 Сила и преодоление</button>
-              <button type="button" class="example-btn special" data-text="НАСТРОЕНИЕ ГЛУБИНЫ И ТИШИНЫ: создай медитативную песню для ежедневной практики и исцеления">🧘 Глубина и тишина</button>
-              <button type="button" class="example-btn special" data-text="НАСТРОЕНИЕ НЕЖНОСТИ И ЗАБОТЫ: создай тёплую песню о моей способности любить и заботиться">💖 Нежность и забота</button>
+          
+          <div id="transitForm" style="display:none">
+            <h3 style="margin-bottom:12px;">Энергия момента</h3>
+            <div class="field">
+              <input type="date" id="transitDate" min="2024-01-01" max="2030-12-31" placeholder="Дата события">
+            </div>
+            <div class="field">
+              <input type="time" id="transitTime" placeholder="Время события">
+            </div>
+            <div class="field form-group location-input-wrapper">
+              <input type="text" id="transitLocation" class="location-input" placeholder="Город для энергии момента" maxlength="100" autocomplete="off">
+              <div id="transitLocationSuggestions" class="location-suggestions"></div>
+              <div class="checkbox-group" style="margin-top: 10px;">
+                <input type="checkbox" id="transitLocationConfirmed">
+                <label for="transitLocationConfirmed">Локация указана верно</label>
+              </div>
+            </div>
+            <div class="field">
+              <textarea id="transitIntent" placeholder="Намерение момента (опционально)" rows="2" maxlength="200" style="min-height:60px"></textarea>
             </div>
           </div>
         </div>
-        
-        <div class="btn-group">
-          <button class="secondary" id="backBtn">← Назад</button>
-          <button id="nextBtn">Далее →</button>
+
+        <div class="step-panel" data-step="3" style="display:none">
+          <div class="field">
+            <div class="request-help-row">
+              <div class="request-label">Отправь запрос</div>
+              <button type="button" id="quickRequestsToggle" class="request-help-toggle" aria-expanded="false">Быстрые запросы</button>
+            </div>
+            <textarea id="request" placeholder="Какую грань будем исследовать сегодня?" aria-label="Запрос" rows="4"></textarea>
+            <div class="request-examples" id="quickRequestsPanel">
+              <div class="quick-list" id="quickRequestsList" style="display:flex;flex-direction:column;gap:8px;">
+                <button type="button" class="example-btn" data-text="Гармония в отношениях и любовь к себе">Гармония и любовь к себе</button>
+                <button type="button" class="example-btn" data-text="Уверенность, предназначение и опора на себя">Уверенность и предназначение</button>
+                <button type="button" class="example-btn" data-text="Раскрыть творческий потенциал без страха">Творческий потенциал</button>
+                <button type="button" class="example-btn" data-text="Отпустить прошлое и открыть новые возможности">Отпустить прошлое</button>
+                <button type="button" class="example-btn" data-text="Баланс работы и личной жизни">Баланс жизни</button>
+                <button type="button" class="example-btn" data-text="Доверять жизни и отпускать контроль">Доверие и принятие</button>
+                <button type="button" class="example-btn" data-text="Исцелить детские травмы и обрести свободу">Исцеление и свобода</button>
+                <button type="button" class="example-btn" data-text="Найти свой путь к счастью и спокойствию">Путь к счастью</button>
+                <button type="button" class="example-btn" data-text="Мощная песня о моей силе и преодолении">Сила и преодоление</button>
+                <button type="button" class="example-btn" data-text="Медитативная песня для практики и исцеления">Глубина и тишина</button>
+                <button type="button" class="example-btn" data-text="Тёплая песня о заботе и нежности">Нежность и забота</button>
+                <button type="button" class="example-btn" data-text="Весёлая песня с самоиронией про мои слабости">Юмор и лёгкость</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-nav">
+          <button class="secondary" id="stepPrev" disabled>Назад</button>
+          <button id="stepNext">Далее</button>
         </div>
       </div>
       
@@ -597,10 +651,6 @@
         tg.ready();
             tg.expand();
             if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
-            if (tg.themeParams) {
-        document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#f9f7ff');
-        document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#2d2d2d');
-            }
             logColorSnapshot('init-app', 'homePage');
             return true;
           }
@@ -681,8 +731,9 @@
       var activePromo = null;
 
       function getCurrentSku() {
-        if (currentMode === 'couple') return 'couple_song';
-        if (currentMode === 'transit') return 'transit_energy_song';
+        var modeSku = selectedMode || 'single';
+        if (modeSku === 'couple') return 'couple_song';
+        if (modeSku === 'transit') return 'transit_energy_song';
         return 'single_song';
       }
       function setPaymentStatus(text, tone) {
@@ -1032,11 +1083,26 @@
       
       // Кнопки навигации
       var startBtn = document.getElementById('startBtn');
-      var backBtn = document.getElementById('backBtn');
-      var nextBtn = document.getElementById('nextBtn');
       if (startBtn) startBtn.addEventListener('click', function() { goToPage('formPage'); });
-      if (backBtn) backBtn.addEventListener('click', function() { goToPage('homePage'); });
-      var currentMode = 'single';
+
+      var stepPanels = document.querySelectorAll('.step-panel');
+      var stepIndicators = document.querySelectorAll('.step-indicator');
+      var stepPrev = document.getElementById('stepPrev');
+      var stepNext = document.getElementById('stepNext');
+      var quickToggle = document.getElementById('quickRequestsToggle');
+      var quickPanel = document.getElementById('quickRequestsPanel');
+      var selectedMode = 'single';
+      var currentStep = 1;
+      var totalSteps = 3;
+
+      function applyTheme() {
+        var hour = new Date().getHours();
+        var theme = (hour >= 7 && hour < 19) ? 'theme-light' : 'theme-dark';
+        document.body.classList.remove('theme-light', 'theme-dark');
+        document.body.classList.add(theme);
+      }
+      applyTheme();
+
       function toggleFormsByMode(mode) {
         var secondForm = document.getElementById('secondPersonForm');
         var transitForm = document.getElementById('transitForm');
@@ -1044,29 +1110,93 @@
         if (transitForm) transitForm.style.display = 'none';
         if (mode === 'couple' && secondForm) {
           secondForm.style.display = 'block';
-          secondForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } else if (mode === 'transit' && transitForm) {
           transitForm.style.display = 'block';
-          transitForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }
+
+      function updateStepUI() {
+        stepPanels.forEach(function(panel) {
+          var step = Number(panel.getAttribute('data-step'));
+          panel.style.display = (step === currentStep) ? 'block' : 'none';
+        });
+        stepIndicators.forEach(function(ind) {
+          var step = Number(ind.getAttribute('data-step'));
+          ind.classList.toggle('active', step === currentStep);
+        });
+        if (stepPrev) stepPrev.disabled = currentStep === 1;
+        if (stepNext) stepNext.textContent = currentStep === totalSteps ? 'К оплате' : 'Далее';
+        if (currentStep > 1) {
+          document.querySelectorAll('.mode-btn').forEach(function(btn) {
+            if (!btn.classList.contains('active')) btn.style.display = 'none';
+          });
+        } else {
+          document.querySelectorAll('.mode-btn').forEach(function(btn) { btn.style.display = 'block'; });
+        }
+      }
+
+      function setMode(mode) {
+        selectedMode = mode || 'single';
+        document.querySelectorAll('.mode-btn').forEach(function(btn) {
+          btn.classList.toggle('active', btn.getAttribute('data-mode') === selectedMode);
+        });
+        toggleFormsByMode(selectedMode);
+        updatePaymentUiFromCatalog();
+      }
+
+      function validateStep(step) {
+        if (step === 1) return true;
+        if (step === 2) {
+          var name = document.getElementById('name').value.trim();
+          var birthdate = document.getElementById('birthdate').value;
+          var birthplace = document.getElementById('birthplace').value.trim();
+          var birthtimeVal = (unknown && unknown.checked) ? 'ok' : (document.getElementById('birthtime') ? document.getElementById('birthtime').value : '');
+          var gender = document.getElementById('gender').value;
+          var language = document.getElementById('language').value;
+          if (name.length < 2) { alert('Имя должно содержать минимум 2 символа'); return false; }
+          if (!birthdate) { alert('Выбери дату рождения'); return false; }
+          if (birthplace.length < 3) { alert('Место рождения должно содержать минимум 3 символа'); return false; }
+          var birthplaceField = document.getElementById('birthplace');
+          if (!(birthplaceField && birthplaceField.getAttribute('data-place-selected'))) {
+            alert('Выбери локацию из списка подсказок — так подтянутся координаты для расчёта.');
+            return false;
+          }
+          if (!birthtimeVal) { alert('Укажи время рождения или отметь \"Не знаю\"'); return false; }
+          if (!gender) { alert('Укажи пол'); return false; }
+          if (!language) { alert('Выбери язык'); return false; }
+          if (selectedMode === 'couple') {
+            var name2 = (document.getElementById('name2').value || '').trim();
+            var birthdate2 = document.getElementById('birthdate2').value;
+            if (name2.length < 2) { alert('Имя второго человека — минимум 2 символа'); return false; }
+            if (!birthdate2) { alert('Укажи дату рождения второго человека'); return false; }
+          }
+          if (selectedMode === 'transit') {
+            var tDate = document.getElementById('transitDate').value;
+            var tLoc = document.getElementById('transitLocation').value.trim();
+            if (!tDate) { alert('Укажи дату события'); return false; }
+            if (!tLoc) { alert('Укажи локацию события'); return false; }
+          }
+          return true;
+        }
+        if (step === 3) {
+          var request = document.getElementById('request').value.trim();
+          if (request.length < 5) { alert('Добавь запрос (5+ символов)'); return false; }
+          return true;
+        }
+        return true;
+      }
+
       document.querySelectorAll('.mode-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
-          document.querySelectorAll('.mode-btn').forEach(function(b) { b.classList.remove('active'); });
-          this.classList.add('active');
-          currentMode = this.getAttribute('data-mode') || 'single';
-          toggleFormsByMode(currentMode);
-          updatePaymentUiFromCatalog();
+          setMode(this.getAttribute('data-mode'));
         });
       });
 
-      var requestHintToggle = document.getElementById('requestHintToggle');
-      var requestExamplesPanel = document.getElementById('requestExamplesPanel');
-      if (requestHintToggle && requestExamplesPanel) {
-        requestHintToggle.addEventListener('click', function() {
-          var isOpen = requestExamplesPanel.classList.toggle('open');
+      if (quickToggle && quickPanel) {
+        quickToggle.addEventListener('click', function() {
+          var isOpen = quickPanel.classList.toggle('open');
           this.setAttribute('aria-expanded', String(isOpen));
-          this.textContent = isOpen ? '✖ Скрыть' : '✨ Идеи';
+          this.textContent = isOpen ? 'Скрыть' : 'Быстрые запросы';
         });
       }
       document.querySelectorAll('.example-btn').forEach(function(btn) {
@@ -1076,67 +1206,33 @@
             requestField.value = this.getAttribute('data-text') || '';
             requestField.focus();
           }
-          if (requestExamplesPanel) {
-            requestExamplesPanel.classList.remove('open');
-            if (requestHintToggle) {
-              requestHintToggle.setAttribute('aria-expanded', 'false');
-              requestHintToggle.textContent = '✨ Идеи';
+          if (quickPanel) {
+            quickPanel.classList.remove('open');
+            if (quickToggle) {
+              quickToggle.setAttribute('aria-expanded', 'false');
+              quickToggle.textContent = 'Быстрые запросы';
             }
           }
-          document.querySelectorAll('.example-btn').forEach(function(b) {
-            b.style.borderColor = b.classList.contains('special') ? 'rgba(59,130,246,0.3)' : 'rgba(167,139,250,0.3)';
-            b.style.background = b.classList.contains('special') ? 'rgba(59,130,246,0.15)' : 'rgba(167,139,250,0.15)';
-          });
-          this.style.borderColor = this.classList.contains('special') ? 'rgba(59,130,246,0.8)' : 'rgba(167,139,250,0.8)';
-          this.style.background = this.classList.contains('special') ? 'rgba(59,130,246,0.3)' : 'rgba(167,139,250,0.3)';
         });
       });
-      if (nextBtn) nextBtn.addEventListener('click', function() {
-        var name = document.getElementById('name').value.trim();
-        var birthdate = document.getElementById('birthdate').value;
-        var birthplace = document.getElementById('birthplace').value.trim();
-        var birthtimeVal = (unknown && unknown.checked) ? 'ok' : (document.getElementById('birthtime') ? document.getElementById('birthtime').value : '');
-        var gender = document.getElementById('gender').value;
-        var request = document.getElementById('request').value.trim();
-        
-        if (name.length < 2) {
-          alert('Имя должно содержать минимум 2 символа');
-          return;
+
+      if (stepNext) stepNext.addEventListener('click', function() {
+        if (!validateStep(currentStep)) return;
+        if (currentStep < totalSteps) {
+          currentStep += 1;
+          updateStepUI();
+        } else {
+          goToPage('paymentPage');
         }
-        if (!birthdate) {
-          alert('Выбери дату рождения');
-          return;
-        }
-        if (birthplace.length < 3) {
-          alert('Место рождения должно содержать минимум 3 символа');
-          return;
-        }
-        var birthplaceField = document.getElementById('birthplace');
-        if (!(birthplaceField && birthplaceField.getAttribute('data-place-selected'))) {
-          alert('Выбери локацию из списка: введи город и нажми на вариант в подсказках — так подтянутся координаты для расчёта.');
-          return;
-        }
-        var btVal = document.getElementById('birthtime');
-        if (!birthtimeVal || (!(unknown && unknown.checked) && (!btVal || !btVal.value))) {
-          alert('Укажи время рождения или отметь "Не знаю"');
-          return;
-        }
-        if (!gender) {
-          alert('Выбери пол');
-          return;
-        }
-        var language = document.getElementById('language') && document.getElementById('language').value;
-        if (!language) {
-          alert('Выбери язык, на котором будет создаваться песня и описание');
-          return;
-        }
-        if (request.length < 10) {
-          alert('Запрос должен содержать минимум 10 символов');
-          return;
-        }
-        
-        goToPage('paymentPage');
       });
+      if (stepPrev) stepPrev.addEventListener('click', function() {
+        if (currentStep > 1) {
+          currentStep -= 1;
+          updateStepUI();
+        }
+      });
+      setMode('single');
+      updateStepUI();
       var promoApplyBtn = document.getElementById('promoApplyBtn');
       if (promoApplyBtn) promoApplyBtn.addEventListener('click', applyPromoCode);
       
@@ -1150,7 +1246,7 @@
       var payBtn = document.getElementById('payBtn');
       if (payBtn) payBtn.addEventListener('click', async function() {
         if (payBtn.disabled) return;
-        var mode = currentMode;
+        var mode = selectedMode || 'single';
         var name1 = document.getElementById('name').value.trim();
         var birthdate1 = document.getElementById('birthdate').value;
         var birthplace1 = document.getElementById('birthplace').value.trim();
@@ -1196,8 +1292,8 @@
           var transitTime = document.getElementById('transitTime').value;
           var transitLocation = (document.getElementById('transitLocation') && document.getElementById('transitLocation').value) ? document.getElementById('transitLocation').value.trim() : '';
           var transitIntent = (document.getElementById('transitIntent') && document.getElementById('transitIntent').value) ? document.getElementById('transitIntent').value.trim() : null;
-          if (!transitDate) { alert('✨ Выбери дату транзита'); return; }
-          if (!transitLocation) { alert('✨ Укажи локацию транзита'); return; }
+          if (!transitDate) { alert('✨ Выбери дату события'); return; }
+          if (!transitLocation) { alert('✨ Укажи локацию события'); return; }
           if (!(document.getElementById('transitLocationConfirmed') && document.getElementById('transitLocationConfirmed').checked)) { alert('✨ Подтверди, что локация указана верно'); return; }
           payload.transit = { date: transitDate, time: transitTime || null, location: transitLocation, intent: transitIntent || null };
         }
