@@ -33,6 +33,7 @@
     .content-wrapper { max-width: 600px; margin: 0 auto; padding: 20px; }
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; color: var(--tg-theme-text-color, #fff); font-size: 14px; margin-bottom: 8px; font-weight: 500; }
+    input::placeholder, textarea::placeholder { color: var(--tg-theme-hint-color, rgba(255,255,255,.45)); opacity: .85; }
     .form-group input, .form-group select, .form-group textarea {
       width: 100%; padding: 12px 16px; background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.05));
       border: 1px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1)); border-radius: 8px;
@@ -163,7 +164,7 @@
     .examples-grid{display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;overflow-y:hidden;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
     .examples-grid::-webkit-scrollbar{height:6px}
     .examples-grid::-webkit-scrollbar-thumb{background:rgba(167,139,250,.35);border-radius:8px}
-    .example-btn{width:auto;min-width:190px;max-width:260px;white-space:normal;text-transform:none;letter-spacing:0;font-size:.88rem;font-weight:600;padding:10px 12px;margin:0;min-height:auto;border-radius:12px;box-shadow:none}
+    .example-btn{width:auto;min-width:260px;max-width:320px;flex-shrink:0;white-space:normal;text-transform:none;letter-spacing:0;font-size:.9rem;font-weight:600;padding:12px 14px;margin:0;min-height:auto;border-radius:12px;box-shadow:none}
     .example-btn::after{display:none}
     .example-btn:hover{transform:none;box-shadow:none}
     @media (max-width: 430px){
@@ -256,9 +257,6 @@
       
       <div class="section">
         <img src="/assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="220" height="220">
-        <p style="text-align:center;font-size:1.15rem;line-height:1.7;margin-bottom:25px">
-          Создай свой персональный звуковой ключ — уникальную аудиокомпозицию, которая откроет тебе дверь к желаемому.
-        </p>
         <button id="startBtn">✨ Начать</button>
         <div id="masterNav" style="display:none; margin-top:20px">
           <button class="secondary" id="goHeroesBtn">👥 Мои герои</button>
@@ -342,21 +340,17 @@
           </div>
         </div>
         <div class="field">
-          <label for="name" data-icon="✨">Имя</label>
-          <input type="text" id="name" placeholder="Как тебя зовут?" required>
+          <input type="text" id="name" placeholder="Как тебя зовут?" required aria-label="Имя">
         </div>
         
         <div class="field">
-          <label for="birthdate" data-icon="📅">Дата рождения</label>
-          <input type="date" id="birthdate" required>
+          <input type="date" id="birthdate" required aria-label="Дата рождения">
           <div id="birthdateSummary" class="field-summary" style="display:none; margin-top:8px; padding:10px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
         </div>
         
         <div class="field">
-          <label for="birthplace" data-icon="🌍">Выбери локацию проявления в игре</label>
-          <p class="field-hint" style="margin:0 0 8px 0; font-size:.9rem; color:#6b7280;">Город или страна — координаты подтянутся из базы. Выбери вариант из подсказок.</p>
           <div class="birthplace-wrap">
-            <input type="text" id="birthplace" placeholder="Введи город или страну, выбери из списка" required autocomplete="off">
+            <input type="text" id="birthplace" placeholder="Город или страна — выбери из подсказок" required autocomplete="off" aria-label="Локация рождения">
             <ul id="birthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true"></ul>
           </div>
           <div id="birthplaceSummary" class="field-summary birthplace-summary" style="display:none; margin-top:8px; padding:12px 14px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
@@ -364,9 +358,8 @@
         </div>
         
         <div class="field">
-          <label for="birthtime" data-icon="⏰">Время рождения</label>
           <div class="time-group">
-            <input type="time" id="birthtime" required>
+            <input type="time" id="birthtime" required aria-label="Время рождения">
             <div class="checkbox">
               <input type="checkbox" id="unknown">
               <label for="unknown">Не знаю точное время</label>
@@ -380,13 +373,11 @@
             <option value="">Выбери</option>
             <option value="male">Мужской</option>
             <option value="female">Женский</option>
-            <option value="other">Другой</option>
           </select>
         </div>
         
         <div class="field">
-          <label for="language" data-icon="🌐">Язык песни и описания</label>
-          <select id="language" required>
+          <select id="language" required aria-label="Язык песни и описания">
             <option value="">Выбери язык</option>
             <option value="ru">Русский</option>
             <option value="en">English</option>
@@ -425,7 +416,6 @@
               <option value="">Выбери</option>
               <option value="female">Женский</option>
               <option value="male">Мужской</option>
-              <option value="other">Другой</option>
             </select>
           </div>
         </div>
@@ -464,7 +454,7 @@
             <div class="request-label">Отправь запрос во Вселенную</div>
             <button type="button" id="requestHintToggle" class="request-help-toggle" aria-expanded="false">✨ Идеи</button>
           </div>
-          <textarea id="request" placeholder="Что ты хочешь изменить в своей жизни? О чём просишь Вселенную?"></textarea>
+          <textarea id="request" placeholder="Какую грань будем исследовать сегодня?" aria-label="Запрос во Вселенную"></textarea>
           <div class="request-examples" id="requestExamplesPanel">
             <h3>✨ Вдохновение для запроса</h3>
             <div class="examples-grid">
@@ -508,7 +498,7 @@
       <div class="section">
         <div class="tagline" style="margin-bottom:15px">Оплата и доступ</div>
         <p style="text-align:center;font-size:1.05rem;line-height:1.7;margin-bottom:16px">
-          Первый продукт — в подарок. Дальше можно оплатить отдельный элемент или работать по подписке.
+          Первая песня  — в подарок. Дальше можно оплатить отдельный элемент или оформить подписку на полный доступ.
         </p>
         <div id="pricingNotice" style="background:rgba(94,234,212,.12);border:1px solid rgba(94,234,212,.35);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:.92rem;color:#99f6e4;">
           Загрузка тарифов...
@@ -1035,17 +1025,7 @@
           updatePaymentUiFromCatalog();
         });
       });
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:request-hints:init',message:'request hints baseline elements',data:{path:window.location.pathname,hasRequestExamples:!!document.querySelector('.request-examples'),exampleButtonsCount:document.querySelectorAll('.example-btn').length,hasRequestField:!!document.getElementById('request')},timestamp:Date.now(),runId:'hint-toggle-debug',hypothesisId:'H1,H2,H3'})}).catch(()=>{});
-      // #endregion
-      // #region agent log
-      (function() {
-        var heroLogo = document.querySelector('#homePage .app-logo');
-        var bgStyle = '';
-        try { bgStyle = window.getComputedStyle(document.body).backgroundImage || ''; } catch (_) {}
-        fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:theme:init',message:'theme assets runtime snapshot',data:{path:window.location.pathname,logoSrc:heroLogo?heroLogo.getAttribute('src'):null,hasLogo:!!heroLogo,bodyBackgroundImage:bgStyle.slice(0,220)},timestamp:Date.now(),runId:'theme-debug',hypothesisId:'T1,T2,T3'})}).catch(()=>{});
-      })();
-      // #endregion
+
       var requestHintToggle = document.getElementById('requestHintToggle');
       var requestExamplesPanel = document.getElementById('requestExamplesPanel');
       if (requestHintToggle && requestExamplesPanel) {
@@ -1053,17 +1033,11 @@
           var isOpen = requestExamplesPanel.classList.toggle('open');
           this.setAttribute('aria-expanded', String(isOpen));
           this.textContent = isOpen ? '✖ Скрыть' : '✨ Идеи';
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:request-hints:toggle',message:'request hints toggled',data:{path:window.location.pathname,isOpen:isOpen},timestamp:Date.now(),runId:'hint-toggle-debug',hypothesisId:'H1,H3'})}).catch(()=>{});
-          // #endregion
         });
       }
       document.querySelectorAll('.example-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
           var requestField = document.getElementById('request');
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:request-hints:example-click',message:'example button clicked',data:{path:window.location.pathname,textLen:(this.getAttribute('data-text')||'').length,isSpecial:this.classList.contains('special')},timestamp:Date.now(),runId:'hint-toggle-debug',hypothesisId:'H2,H4'})}).catch(()=>{});
-          // #endregion
           if (requestField) {
             requestField.value = this.getAttribute('data-text') || '';
             requestField.focus();
@@ -1199,14 +1173,8 @@
         if (!initData) { alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.'); return; }
         payload.initData = initData;
         try {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:payBtn',message:'submit request attempt',data:{apiBase:apiBase,mode:mode,hasInitData:!!initData,initDataLen:(initData||'').length,hasBirthplaceSelection:!!(birthplaceField&&birthplaceField.getAttribute('data-place-selected'))},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H1,H2'})}).catch(()=>{});
-          // #endregion
           var response = await fetch(apiBase + '/api/submit-request', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData }, body: JSON.stringify(payload) });
           var result = await response.json().catch(function() { return {}; });
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:payBtn',message:'submit response received',data:{status:response.status,ok:response.ok,resultOk:!!result.ok,error:result.error||null,hasRequestId:!!result.requestId},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H2,H3'})}).catch(()=>{});
-          // #endregion
           if (response.ok && result.ok && result.requestId) {
             var sp = document.getElementById('songPreviewText');
             if (sp) {
@@ -1271,9 +1239,6 @@
           } else throw new Error(result.error || 'HTTP ' + response.status);
         } catch (error) {
           console.error('[MiniApp] Ошибка:', error);
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:payBtn',message:'submit request catch',data:{errorMessage:(error&&error.message)?error.message:String(error),apiBase:apiBase,hasInitData:!!initData},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H1,H3,H4'})}).catch(()=>{});
-          // #endregion
           var msg = (error && error.message) ? String(error.message) : '';
           if (!msg || /^HTTP\s+\d+$/i.test(msg)) {
             msg = 'Не удалось отправить заявку. Попробуй открыть Mini App заново из чата с ботом и отправить ещё раз.';
