@@ -190,69 +190,78 @@
     }
 
     .request-help-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-    .request-help-row .request-label { max-width: 67%; text-align: left; }
+    .request-help-row .request-label { max-width: 58%; text-align: left; font-size: .9rem; color: #f1dfac; }
 
     .request-help-toggle {
       width: auto;
       min-height: auto;
       margin: 0;
-      padding: 8px 11px;
-      border-radius: 12px;
-      font-size: .78rem;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: .76rem;
+      line-height: 1;
       text-transform: none;
       letter-spacing: 0;
-      background: rgba(11, 26, 77, 0.85);
-      color: #f7e5b7;
-      border: 1px solid rgba(234, 199, 123, 0.58);
+      background: rgba(245, 244, 242, 0.95);
+      color: #2d2c31;
+      border: 1px solid rgba(205, 190, 168, 0.95);
       box-shadow: none;
+      white-space: nowrap;
     }
 
     .request-help-toggle::after { display: none; }
-    .request-help-toggle:hover { transform: none; background: rgba(15, 31, 88, 0.95); box-shadow: none; }
+    .request-help-toggle:hover { transform: none; background: rgba(255, 255, 255, 0.98); box-shadow: none; }
 
     .request-examples {
       display: none;
       margin-top: 8px;
-      padding: 9px;
-      background: rgba(12, 25, 72, 0.7);
-      border: 1px solid rgba(226, 194, 124, 0.35);
-      border-radius: 13px;
+      padding: 7px;
+      background: rgba(246, 244, 240, 0.95);
+      border: 1px solid rgba(208, 191, 166, 0.95);
+      border-radius: 14px;
     }
 
     .request-examples.open { display: block; }
-    .request-examples h3 { font-size: .84rem; margin: 0 0 6px; color: #f6e5b7; }
+    .request-examples h3 { font-size: .74rem; margin: 0 0 6px; color: #7c6e61; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
 
     .examples-grid {
       display: flex;
-      flex-wrap: nowrap;
-      gap: 7px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      padding-bottom: 2px;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 172px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 2px;
       scrollbar-width: thin;
+      scroll-snap-type: y proximity;
     }
 
+    .examples-grid::-webkit-scrollbar { width: 4px; }
+    .examples-grid::-webkit-scrollbar-thumb { background: rgba(171, 151, 125, 0.5); border-radius: 999px; }
+
     .example-btn {
-      width: auto;
-      min-width: 175px;
-      max-width: 240px;
+      width: 100%;
+      min-width: 0;
+      max-width: none;
       margin: 0;
       min-height: auto;
-      padding: 9px 10px;
+      padding: 8px 10px;
+      text-align: left;
       text-transform: none;
       letter-spacing: 0;
-      font-size: .78rem;
-      line-height: 1.25;
-      border-radius: 11px;
-      border: 1px solid rgba(228, 194, 125, 0.5);
-      background: rgba(14, 28, 83, 0.9);
-      color: #f3e3b3;
+      font-size: .76rem;
+      line-height: 1.24;
+      border-radius: 10px;
+      border: 1px solid rgba(202, 184, 160, 0.85);
+      background: rgba(255, 255, 255, 0.92);
+      color: #4b4037;
       box-shadow: none;
+      scroll-snap-align: start;
     }
 
     .example-btn::after { display: none; }
-    .example-btn:hover { transform: none; box-shadow: none; }
-    .example-btn.special { border-color: rgba(200, 158, 77, 0.6); background: rgba(26, 36, 92, 0.95); }
+    .example-btn:hover { transform: none; box-shadow: none; background: rgba(255,255,255,.98); }
+    .example-btn.special { border-color: rgba(191, 170, 140, 0.9); background: rgba(253, 249, 241, 0.95); }
 
     button {
       width: 100%;
@@ -483,8 +492,8 @@
       .btn-group { gap: 8px; }
       button { font-size: .9rem; min-height: 45px; }
       #startBtn, #nextBtn, #payBtn { font-size: .92rem; }
-      .request-help-row .request-label { max-width: 61%; }
-      .request-help-toggle { font-size: .74rem; padding: 7px 9px; }
+      .request-help-row .request-label { max-width: 56%; }
+      .request-help-toggle { font-size: .72rem; padding: 6px 10px; }
       .preview-nav-buttons { flex-direction: column; align-items: center; }
       .preview-nav button { width: 100%; max-width: 190px; }
     }
@@ -722,11 +731,11 @@
         <div class="field">
           <div class="request-help-row">
             <div class="request-label">Отправь запрос во Вселенную</div>
-            <button type="button" id="requestHintToggle" class="request-help-toggle" aria-expanded="false">✨ Подсказки</button>
+            <button type="button" id="requestHintToggle" class="request-help-toggle" aria-expanded="false">⚡ Быстрые запросы</button>
           </div>
           <textarea id="request" placeholder="Что ты хочешь изменить в своей жизни? О чём просишь Вселенную?"></textarea>
           <div class="request-examples" id="requestExamplesPanel">
-            <h3>✨ Вдохновение для запроса</h3>
+            <h3>Быстрые запросы</h3>
             <div class="examples-grid">
               <button type="button" class="example-btn" data-text="хочу найти гармонию в отношениях и научиться любить себя">Гармония в отношениях</button>
               <button type="button" class="example-btn" data-text="помоги мне обрести уверенность в себе и найти своё предназначение">Уверенность и предназначение</button>
@@ -1326,7 +1335,7 @@
         requestHintToggle.addEventListener('click', function() {
           var isOpen = requestExamplesPanel.classList.toggle('open');
           this.setAttribute('aria-expanded', String(isOpen));
-          this.textContent = isOpen ? '✖ Скрыть' : '✨ Подсказки';
+          this.textContent = isOpen ? '✖ Закрыть' : '⚡ Быстрые запросы';
           // #region agent log
           fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:request-hints:toggle',message:'request hints toggled',data:{path:window.location.pathname,isOpen:isOpen},timestamp:Date.now(),runId:'hint-toggle-debug',hypothesisId:'H1,H3'})}).catch(()=>{});
           // #endregion
@@ -1346,7 +1355,7 @@
             requestExamplesPanel.classList.remove('open');
             if (requestHintToggle) {
               requestHintToggle.setAttribute('aria-expanded', 'false');
-              requestHintToggle.textContent = '✨ Подсказки';
+              requestHintToggle.textContent = '⚡ Быстрые запросы';
             }
           }
           document.querySelectorAll('.example-btn').forEach(function(b) {
