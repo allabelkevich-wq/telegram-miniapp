@@ -367,17 +367,17 @@
       return '⏳ В работе / In Progress';
     }
 
+    function normalizeSteps(raw) {
+      if (raw && typeof raw === 'object') return raw;
+      if (typeof raw === 'string') {
+        try { return JSON.parse(raw); } catch (e) { return {}; }
+      }
+      return {};
+    }
     function renderRequests(data) {
       if (!data.length) {
         document.getElementById('requests').innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8">📭 Нет заявок / No requests</div>';
         return;
-      }
-      function normalizeSteps(raw) {
-        if (raw && typeof raw === 'object') return raw;
-        if (typeof raw === 'string') {
-          try { return JSON.parse(raw); } catch (e) { return {}; }
-        }
-        return {};
       }
       function stepMsg(steps, key) {
         if (!steps || typeof steps !== 'object') return '';
