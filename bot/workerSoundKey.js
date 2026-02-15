@@ -492,6 +492,11 @@ export async function generateSoundKey(requestId) {
     if (reqError || !request) {
       throw new Error(`Заявка ${requestId} не найдена: ${reqError?.message}`);
     }
+    const paymentStatus = String(request.payment_status || "").toLowerCase();
+    const generationAllowed = !paymentStatus || ["paid", "gift_used", "subscription_active"].includes(paymentStatus);
+    if (!generationAllowed) {
+      throw new Error(`Генерация заблокирована: требуется оплата (payment_status=${paymentStatus || "unknown"})`);
+    }
 
     console.log(`[Воркер] Заявка получена: ${request.name}, режим: ${request.mode || "single"}`);
     console.log(`[Воркер] Запрос: "${(request.request || "").substring(0, 50)}..."`);

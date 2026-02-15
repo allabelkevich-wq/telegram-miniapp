@@ -12,6 +12,7 @@ import { chatCompletion } from "./deepseek.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import fs from "node:fs";
+import crypto from "node:crypto";
 import "dotenv/config";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -40,6 +41,9 @@ const ADMIN_IDS = (process.env.ADMIN_TELEGRAM_IDS || "")
   .map((s) => parseInt(s, 10))
   .filter((n) => !Number.isNaN(n));
 const ADMIN_SECRET = process.env.ADMIN_SECRET || "";
+const HOT_API_JWT = process.env.HOT_API_JWT || "";
+const HOT_WEBHOOK_SECRET = process.env.HOT_WEBHOOK_SECRET || "";
+const HOT_PAYMENT_URL = (process.env.HOT_PAYMENT_URL || "https://pay.hot-labs.org/payment").trim();
 
 if (!BOT_TOKEN) {
   console.error("Укажи BOT_TOKEN в .env (получить у @BotFather)");
@@ -73,6 +77,280 @@ const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
 
 const memoryRequests = [];
 const pendingSoulChatByUser = new Map();
+
+const DEFAULT_PRICING_CATALOG = [
+  { sku: "single_song", title: "Single song", description: "Персональный звуковой ключ", price: "5.99", currency: "USDT", active: true, limits_json: { requests: 1 } },
+  { sku: "transit_energy_song", title: "Transit energy song", description: "Энергия дня (транзит)", price: "6.99", currency: "USDT", active: true, limits_json: { requests: 1 } },
+  { sku: "couple_song", title: "Couple song", description: "Песня совместимости пары", price: "8.99", currency: "USDT", active: true, limits_json: { requests: 1 } },
+  { sku: "deep_analysis_addon", title: "Deep analysis", description: "Дополнительный детальный разбор", price: "3.99", currency: "USDT", active: true, limits_json: { requests: 1 } },
+  { sku: "extra_regeneration", title: "Extra regeneration", description: "Повторная генерация трека", price: "2.49", currency: "USDT", active: true, limits_json: { requests: 1 } },
+  { sku: "soul_basic_sub", title: "Soul Basic", description: "3 трека/месяц + 10 soulchat", price: "14.99", currency: "USDT", active: true, limits_json: { monthly_tracks: 3, monthly_soulchat: 10, kind: "subscription" } },
+  { sku: "soul_plus_sub", title: "Soul Plus", description: "7 треков/месяц + 30 soulchat + приоритет", price: "24.99", currency: "USDT", active: true, limits_json: { monthly_tracks: 7, monthly_soulchat: 30, priority: true, kind: "subscription" } },
+];
+
+function resolveSkuByMode(mode) {
+  if (mode === "couple") return "couple_song";
+  if (mode === "transit") return "transit_energy_song";
+  return "single_song";
+}
+
+function parseJsonSafe(value, fallback = null) {
+  if (!value) return fallback;
+  if (typeof value === "object") return value;
+  try { return JSON.parse(value); } catch (_) { return fallback; }
+}
+
+async function getPricingCatalog() {
+  if (!supabase) return DEFAULT_PRICING_CATALOG;
+  const { data, error } = await supabase
+    .from("pricing_catalog")
+    .select("sku,title,description,price,currency,active,limits_json")
+    .order("sku", { ascending: true });
+  if (error && /does not exist|relation/i.test(error.message)) return DEFAULT_PRICING_CATALOG;
+  if (error || !Array.isArray(data) || data.length === 0) return DEFAULT_PRICING_CATALOG;
+  return data.map((row) => ({ ...row, limits_json: parseJsonSafe(row.limits_json, {}) || {} }));
+}
+
+async function getSkuPrice(sku) {
+  const catalog = await getPricingCatalog();
+  const found = catalog.find((c) => c.sku === sku && c.active !== false);
+  return found || catalog.find((c) => c.sku === sku) || null;
+}
+
+function normalizePromoCode(raw) {
+  return String(raw || "").trim().toUpperCase();
+}
+
+async function getPromoByCode(code) {
+  const normalized = normalizePromoCode(code);
+  if (!normalized || !supabase) return null;
+  const { data, error } = await supabase
+    .from("promo_codes")
+    .select("*")
+    .eq("code", normalized)
+    .maybeSingle();
+  if (error && /does not exist|relation/i.test(error.message)) return null;
+  if (error) return null;
+  return data || null;
+}
+
+async function getPromoUsageByUser(promoCodeId, telegramUserId) {
+  if (!supabase) return 0;
+  const { count, error } = await supabase
+    .from("promo_redemptions")
+    .select("id", { count: "exact", head: true })
+    .eq("promo_code_id", promoCodeId)
+    .eq("telegram_user_id", Number(telegramUserId));
+  if (error && /does not exist|relation/i.test(error.message)) return 0;
+  if (error) return 0;
+  return Number(count || 0);
+}
+
+async function validatePromoForOrder({ promoCode, sku, telegramUserId }) {
+  const code = normalizePromoCode(promoCode);
+  if (!code) return { ok: false, reason: "empty" };
+  const promo = await getPromoByCode(code);
+  if (!promo) return { ok: false, reason: "not_found" };
+  if (promo.active === false) return { ok: false, reason: "inactive" };
+  const now = Date.now();
+  if (promo.starts_at && new Date(promo.starts_at).getTime() > now) return { ok: false, reason: "not_started" };
+  if (promo.expires_at && new Date(promo.expires_at).getTime() < now) return { ok: false, reason: "expired" };
+  if (promo.sku && promo.sku !== sku) return { ok: false, reason: "sku_mismatch" };
+  if (promo.max_uses != null && Number(promo.used_count || 0) >= Number(promo.max_uses)) return { ok: false, reason: "global_limit_reached" };
+  const userUses = await getPromoUsageByUser(promo.id, telegramUserId);
+  if (userUses >= Number(promo.per_user_limit || 1)) return { ok: false, reason: "user_limit_reached" };
+  return { ok: true, promo, code };
+}
+
+function applyPromoToAmount(baseAmount, promo) {
+  const amount = Number(baseAmount || 0);
+  if (!Number.isFinite(amount) || amount <= 0) return { finalAmount: 0, discountAmount: 0 };
+  const type = String(promo?.type || "");
+  if (type === "free_generation") return { finalAmount: 0, discountAmount: amount };
+  if (type === "discount_percent") {
+    const percent = Math.max(0, Math.min(100, Number(promo?.value || 0)));
+    const discount = Number((amount * percent / 100).toFixed(2));
+    return { finalAmount: Number(Math.max(0, amount - discount).toFixed(2)), discountAmount: discount };
+  }
+  if (type === "discount_amount") {
+    const discount = Math.max(0, Number(promo?.value || 0));
+    return { finalAmount: Number(Math.max(0, amount - discount).toFixed(2)), discountAmount: Number(Math.min(amount, discount).toFixed(2)) };
+  }
+  return { finalAmount: amount, discountAmount: 0 };
+}
+
+async function redeemPromoUsage({ promo, telegramUserId, requestId, orderId, discountAmount = 0 }) {
+  if (!supabase || !promo?.id) return { ok: false };
+  const { data: existing, error: existingErr } = await supabase
+    .from("promo_redemptions")
+    .select("id")
+    .eq("promo_code_id", promo.id)
+    .eq("telegram_user_id", Number(telegramUserId))
+    .eq("request_id", requestId || null)
+    .maybeSingle();
+  if (!existingErr && existing) return { ok: true, reused: true };
+  const { error: insErr } = await supabase.from("promo_redemptions").insert({
+    promo_code_id: promo.id,
+    telegram_user_id: Number(telegramUserId),
+    request_id: requestId || null,
+    order_id: orderId ? String(orderId) : null,
+    discount_amount: Number(discountAmount || 0),
+    created_at: new Date().toISOString(),
+  });
+  if (insErr && !/does not exist|relation/i.test(insErr.message)) return { ok: false, error: insErr.message };
+  const nextCount = Number(promo.used_count || 0) + 1;
+  await supabase.from("promo_codes").update({ used_count: nextCount, updated_at: new Date().toISOString() }).eq("id", promo.id);
+  return { ok: true };
+}
+
+async function isTrialAvailable(telegramUserId, trialKey = "first_song_gift") {
+  if (!supabase) return true;
+  const { data, error } = await supabase
+    .from("user_trials")
+    .select("id")
+    .eq("telegram_user_id", Number(telegramUserId))
+    .eq("trial_key", trialKey)
+    .maybeSingle();
+  if (error && /does not exist|relation/i.test(error.message)) return true;
+  if (error) return false;
+  return !data;
+}
+
+async function consumeTrial(telegramUserId, trialKey = "first_song_gift") {
+  if (!supabase) return { ok: true };
+  const available = await isTrialAvailable(telegramUserId, trialKey);
+  if (!available) return { ok: false, reason: "already_consumed" };
+  const { error } = await supabase.from("user_trials").insert({
+    telegram_user_id: Number(telegramUserId),
+    trial_key: trialKey,
+    consumed_at: new Date().toISOString(),
+  });
+  if (error && /does not exist|relation/i.test(error.message)) return { ok: true };
+  if (error && /duplicate key value/i.test(error.message)) return { ok: false, reason: "already_consumed" };
+  if (error) return { ok: false, reason: error.message };
+  return { ok: true };
+}
+
+async function hasActiveSubscription(telegramUserId) {
+  if (!supabase) return false;
+  const nowIso = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select("id,plan_sku,status,renew_at")
+    .eq("telegram_user_id", Number(telegramUserId))
+    .eq("status", "active")
+    .gte("renew_at", nowIso)
+    .limit(1)
+    .maybeSingle();
+  if (error && /does not exist|relation/i.test(error.message)) return false;
+  if (error) return false;
+  return !!data;
+}
+
+async function consumeEntitlementIfExists(telegramUserId, sku) {
+  if (!supabase) return { ok: false };
+  const nowIso = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("user_entitlements")
+    .select("id,remaining_uses,expires_at")
+    .eq("telegram_user_id", Number(telegramUserId))
+    .eq("sku", sku)
+    .or(`expires_at.is.null,expires_at.gte.${nowIso}`)
+    .gt("remaining_uses", 0)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error && /does not exist|relation/i.test(error.message)) return { ok: false };
+  if (error || !data) return { ok: false };
+  const nextUses = Math.max(0, Number(data.remaining_uses || 0) - 1);
+  const { error: upErr } = await supabase
+    .from("user_entitlements")
+    .update({ remaining_uses: nextUses, updated_at: new Date().toISOString() })
+    .eq("id", data.id);
+  if (upErr) return { ok: false };
+  return { ok: true, remaining_uses: nextUses };
+}
+
+async function resolveAccessForRequest({ telegramUserId, mode }) {
+  const sku = resolveSkuByMode(mode);
+  if (await hasActiveSubscription(telegramUserId)) return { allowed: true, source: "subscription", sku };
+  const ent = await consumeEntitlementIfExists(telegramUserId, sku);
+  if (ent.ok) return { allowed: true, source: "entitlement", sku };
+  const trialAvailable = await isTrialAvailable(telegramUserId, "first_song_gift");
+  if (trialAvailable) return { allowed: true, source: "trial", sku };
+  return { allowed: false, source: "payment_required", sku };
+}
+
+async function grantEntitlement({ telegramUserId, sku, uses = 1, source = "payment", expiresAt = null }) {
+  if (!supabase) return { ok: false, error: "Supabase недоступен" };
+  const payload = {
+    telegram_user_id: Number(telegramUserId),
+    sku,
+    source,
+    remaining_uses: Number(uses) || 1,
+    expires_at: expiresAt,
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await supabase.from("user_entitlements").insert(payload);
+  if (error && /does not exist|relation/i.test(error.message)) return { ok: false, error: "missing_table" };
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+function pickHotItemId(sku) {
+  const envKey = `HOT_ITEM_ID_${String(sku || "").toUpperCase()}`;
+  return process.env[envKey] || process.env.HOT_ITEM_ID_DEFAULT || "";
+}
+
+function buildHotCheckoutUrl({ itemId, orderId, amount, currency, requestId, sku }) {
+  const url = new URL(HOT_PAYMENT_URL || "https://pay.hot-labs.org/payment");
+  if (itemId) url.searchParams.set("item_id", itemId);
+  if (orderId) url.searchParams.set("order_id", orderId);
+  if (amount != null) url.searchParams.set("amount", String(amount));
+  if (currency) url.searchParams.set("currency", String(currency));
+  if (requestId) url.searchParams.set("request_id", requestId);
+  if (sku) url.searchParams.set("sku", sku);
+  return url.toString();
+}
+
+function verifyHotWebhookSignature(rawBody, signatureHeader) {
+  if (!HOT_WEBHOOK_SECRET) return true;
+  if (!signatureHeader || !rawBody) return false;
+  const expected = crypto.createHmac("sha256", HOT_WEBHOOK_SECRET).update(rawBody).digest("hex");
+  const providedRaw = String(signatureHeader).trim();
+  const provided = providedRaw.includes("=") ? providedRaw.split("=")[1] : providedRaw;
+  const expectedBuf = Buffer.from(expected, "utf8");
+  const providedBuf = Buffer.from(provided, "utf8");
+  if (expectedBuf.length !== providedBuf.length) return false;
+  return crypto.timingSafeEqual(expectedBuf, providedBuf);
+}
+
+async function createOrRefreshSubscription({ telegramUserId, planSku, source = "hot" }) {
+  if (!supabase) return { ok: false, error: "Supabase недоступен" };
+  const now = new Date();
+  const renewAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  const payload = {
+    telegram_user_id: Number(telegramUserId),
+    plan_sku: planSku,
+    status: "active",
+    renew_at: renewAt,
+    source,
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await supabase.from("subscriptions").insert(payload);
+  if (error && /does not exist|relation/i.test(error.message)) return { ok: false, error: "missing_table" };
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, renew_at: renewAt };
+}
+
+async function grantPurchaseBySku({ telegramUserId, sku, source = "hot_payment" }) {
+  const normalizedSku = String(sku || "").trim();
+  if (!normalizedSku) return { ok: false, error: "sku_required" };
+  if (normalizedSku === "soul_basic_sub" || normalizedSku === "soul_plus_sub") {
+    return createOrRefreshSubscription({ telegramUserId, planSku: normalizedSku, source });
+  }
+  return grantEntitlement({ telegramUserId, sku: normalizedSku, uses: 1, source });
+}
 
 function isAdmin(telegramId) {
   return telegramId && ADMIN_IDS.includes(Number(telegramId));
@@ -356,6 +634,27 @@ bot.on("message:web_app_data", async (ctx) => {
   }
 
   console.log("[Заявка] Сохранена успешно, ID:", requestId, { name, birthdate, birthplace, gender, language, request: (userRequest || "").slice(0, 50), hasCoords: !!(birthplaceLat && birthplaceLon) });
+
+  const access = await resolveAccessForRequest({ telegramUserId, mode: "single" });
+  if (!access.allowed) {
+    const skuPrice = await getSkuPrice(access.sku);
+    await supabase?.from("track_requests").update({
+      payment_provider: "hot",
+      payment_status: "requires_payment",
+      payment_amount: skuPrice ? Number(skuPrice.price) : null,
+      payment_currency: skuPrice?.currency || "USDT",
+      generation_status: "pending_payment",
+      updated_at: new Date().toISOString(),
+    }).eq("id", requestId);
+    await ctx.reply("💳 Бесплатный подарок уже использован. Чтобы продолжить, открой оплату HOT в Mini App.");
+    return;
+  }
+  if (access.source === "trial") await consumeTrial(telegramUserId, "first_song_gift");
+  await supabase?.from("track_requests").update({
+    payment_provider: access.source === "trial" ? "gift" : (access.source === "subscription" ? "subscription" : "hot"),
+    payment_status: access.source === "trial" ? "gift_used" : (access.source === "subscription" ? "subscription_active" : "paid"),
+    updated_at: new Date().toISOString(),
+  }).eq("id", requestId);
 
   if (supabase && birthdate && birthplace) {
     console.log(`[API] ЗАПУСКАЮ ВОРКЕР для ${requestId}`);
@@ -939,6 +1238,89 @@ if (WEBHOOK_URL) {
   };
 }
 // #endregion
+app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, res) => {
+  try {
+    const rawBody = Buffer.isBuffer(req.body) ? req.body.toString("utf8") : String(req.body || "");
+    const signature = req.headers["x-hot-signature"] || req.headers["x-signature"] || "";
+    if (!verifyHotWebhookSignature(rawBody, signature)) {
+      return res.status(401).json({ success: false, error: "Invalid webhook signature" });
+    }
+    const body = parseJsonSafe(rawBody, {});
+    const orderId = String(body.order_id || body.orderId || body.data?.order_id || "").trim();
+    const status = String(body.payment_status || body.status || body.event || "").toLowerCase();
+    const txId = String(body.tx_id || body.txId || body.transaction_id || body.data?.tx_id || "").trim() || null;
+    if (!orderId) return res.status(400).json({ success: false, error: "order_id is required" });
+    if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+
+    const { data: row, error: rowErr } = await supabase
+      .from("track_requests")
+      .select("id,telegram_user_id,payment_status,payment_order_id,mode,payment_raw,payment_tx_id,generation_status,status")
+      .eq("payment_order_id", orderId)
+      .maybeSingle();
+    if (rowErr) return res.status(500).json({ success: false, error: rowErr.message });
+    if (!row) return res.status(404).json({ success: false, error: "Order not found" });
+    if ((row.payment_status || "").toLowerCase() === "paid") return res.json({ success: true, message: "Already processed" });
+
+    const normalizedPaid = ["paid", "success", "completed", "confirmed"].includes(status);
+    const paymentStatus = normalizedPaid ? "paid" : (status || "pending");
+    const paymentAmount = body.amount != null ? Number(body.amount) : null;
+    const paymentCurrency = String(body.currency || "USDT");
+    const webhookSku = String(body.sku || body.item_sku || body.data?.sku || "").trim();
+    const fallbackSku = String(parseJsonSafe(row.payment_raw, {})?.sku || "").trim();
+    const purchasedSku = webhookSku || fallbackSku || resolveSkuByMode(row.mode);
+
+    if (txId) {
+      const { data: txRow, error: txErr } = await supabase
+        .from("track_requests")
+        .select("id,payment_status")
+        .eq("payment_tx_id", txId)
+        .neq("id", row.id)
+        .maybeSingle();
+      if (!txErr && txRow && String(txRow.payment_status || "").toLowerCase() === "paid") {
+        return res.json({ success: true, message: "Duplicate tx ignored" });
+      }
+    }
+
+    const updatePayload = {
+      payment_provider: "hot",
+      payment_status: paymentStatus,
+      payment_tx_id: txId,
+      payment_amount: Number.isFinite(paymentAmount) ? paymentAmount : null,
+      payment_currency: paymentCurrency,
+      payment_raw: { ...parseJsonSafe(row.payment_raw, {}) || {}, ...body, sku: purchasedSku },
+      paid_at: normalizedPaid ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
+    };
+    const { error: updErr } = await supabase.from("track_requests").update(updatePayload).eq("id", row.id);
+    if (updErr && !/does not exist|column/i.test(updErr.message)) return res.status(500).json({ success: false, error: updErr.message });
+
+    if (normalizedPaid) {
+      const promoFromOrder = String(parseJsonSafe(row.payment_raw, {})?.promo_code || "").trim();
+      if (promoFromOrder) {
+        const promoObj = await getPromoByCode(promoFromOrder);
+        if (promoObj) {
+          await redeemPromoUsage({
+            promo: promoObj,
+            telegramUserId: row.telegram_user_id,
+            requestId: row.id,
+            orderId,
+            discountAmount: Number(parseJsonSafe(row.payment_raw, {})?.discount_amount || 0),
+          });
+        }
+      }
+      await grantPurchaseBySku({ telegramUserId: row.telegram_user_id, sku: purchasedSku, source: "hot_payment" });
+      const gs = String(row.generation_status || row.status || "pending");
+      if (["pending_payment", "pending", "processing"].includes(gs)) {
+        import("./workerSoundKey.js").then(({ generateSoundKey }) => {
+          generateSoundKey(row.id).catch((err) => console.error("[payments/hot/webhook] generate:", err?.message || err));
+        }).catch((err) => console.error("[payments/hot/webhook] import worker:", err?.message || err));
+      }
+    }
+    return res.json({ success: true, paid: normalizedPaid, sku: purchasedSku });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: e?.message || "Webhook error" });
+  }
+});
 app.use(express.json());
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -1220,6 +1602,340 @@ app.post("/api/soul-chat", express.json(), asyncApi(async (req, res) => {
   });
 }));
 
+app.get("/api/pricing/catalog", asyncApi(async (req, res) => {
+  const initData = req.headers["x-telegram-init"] || req.query?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  const catalog = await getPricingCatalog();
+  let trialAvailable = true;
+  let hasSubscription = false;
+  if (telegramUserId != null) {
+    trialAvailable = await isTrialAvailable(telegramUserId, "first_song_gift");
+    hasSubscription = await hasActiveSubscription(telegramUserId);
+  }
+  return res.json({
+    success: true,
+    catalog,
+    free_trial: {
+      key: "first_song_gift",
+      available: trialAvailable,
+      description: "Первый звуковой ключ в подарок",
+    },
+    subscription_active: hasSubscription,
+    display_currency: "USDT",
+    alt_currencies: ["TON", "USD", "RUB"],
+  });
+}));
+
+app.post("/api/promos/validate", express.json(), asyncApi(async (req, res) => {
+  const initData = req.headers["x-telegram-init"] || req.body?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, error: "Unauthorized" });
+  const sku = String(req.body?.sku || "").trim();
+  const code = normalizePromoCode(req.body?.promo_code);
+  if (!sku) return res.status(400).json({ success: false, error: "sku обязателен" });
+  if (!code) return res.status(400).json({ success: false, error: "promo_code обязателен" });
+  const price = await getSkuPrice(sku);
+  if (!price) return res.status(404).json({ success: false, error: "SKU не найден" });
+  const checked = await validatePromoForOrder({ promoCode: code, sku, telegramUserId });
+  if (!checked.ok) return res.status(400).json({ success: false, valid: false, reason: checked.reason });
+  const applied = applyPromoToAmount(Number(price.price), checked.promo);
+  return res.json({
+    success: true,
+    valid: true,
+    promo: {
+      code: checked.code,
+      type: checked.promo.type,
+      value: checked.promo.value,
+      sku: checked.promo.sku || null,
+    },
+    amount_before: Number(price.price),
+    discount_amount: applied.discountAmount,
+    amount_after: applied.finalAmount,
+    currency: price.currency || "USDT",
+  });
+}));
+
+app.post("/api/payments/hot/create", express.json(), asyncApi(async (req, res) => {
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const initData = req.headers["x-telegram-init"] || req.body?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, error: "Unauthorized" });
+
+  const requestId = String(req.body?.request_id || "").trim();
+  if (!requestId || !UUID_REGEX.test(requestId)) {
+    return res.status(400).json({ success: false, error: "request_id (UUID) обязателен" });
+  }
+  const { data: requestRow, error: reqErr } = await supabase
+    .from("track_requests")
+    .select("id,telegram_user_id,mode,payment_status,payment_order_id")
+    .eq("id", requestId)
+    .maybeSingle();
+  if (reqErr || !requestRow) return res.status(404).json({ success: false, error: "Заявка не найдена" });
+  if (Number(requestRow.telegram_user_id) !== Number(telegramUserId)) {
+    return res.status(403).json({ success: false, error: "Нет доступа к этой заявке" });
+  }
+  if ((requestRow.payment_status || "").toLowerCase() === "paid") {
+    return res.json({ success: true, already_paid: true, payment_status: "paid" });
+  }
+
+  const sku = String(req.body?.sku || resolveSkuByMode(requestRow.mode)).trim();
+  const price = await getSkuPrice(sku);
+  if (!price) return res.status(400).json({ success: false, error: `SKU не найден: ${sku}` });
+  const promoCode = normalizePromoCode(req.body?.promo_code);
+  let promoResult = null;
+  let finalAmount = Number(price.price);
+  let discountAmount = 0;
+  if (promoCode) {
+    promoResult = await validatePromoForOrder({ promoCode, sku, telegramUserId });
+    if (!promoResult.ok) {
+      return res.status(400).json({ success: false, error: "Промокод недействителен", reason: promoResult.reason });
+    }
+    const applied = applyPromoToAmount(finalAmount, promoResult.promo);
+    finalAmount = applied.finalAmount;
+    discountAmount = applied.discountAmount;
+  }
+  const itemId = String(req.body?.item_id || pickHotItemId(sku)).trim();
+  const orderId = requestRow.payment_order_id || crypto.randomUUID();
+  if (promoResult?.promo?.type === "free_generation" || finalAmount <= 0) {
+    await grantPurchaseBySku({ telegramUserId, sku, source: "promo_free" });
+    await redeemPromoUsage({
+      promo: promoResult?.promo,
+      telegramUserId,
+      requestId,
+      orderId,
+      discountAmount: Number(price.price),
+    });
+    await supabase.from("track_requests").update({
+      payment_provider: "promo",
+      payment_status: "paid",
+      payment_order_id: orderId,
+      payment_amount: 0,
+      payment_currency: price.currency || "USDT",
+      promo_code: promoCode || null,
+      promo_discount_amount: Number(price.price),
+      promo_type: promoResult?.promo?.type || "free_generation",
+      payment_raw: {
+        provider: "promo",
+        sku,
+        promo_code: promoCode,
+        promo_type: promoResult?.promo?.type || "free_generation",
+        amount_before: Number(price.price),
+        amount_after: 0,
+      },
+      paid_at: new Date().toISOString(),
+      generation_status: "pending",
+      updated_at: new Date().toISOString(),
+    }).eq("id", requestId);
+    import("./workerSoundKey.js").then(({ generateSoundKey }) => {
+      generateSoundKey(requestId).catch((err) => console.error("[payments/hot/create promo-free] generate:", err?.message || err));
+    }).catch((err) => console.error("[payments/hot/create promo-free] import worker:", err?.message || err));
+    return res.json({
+      success: true,
+      provider: "promo",
+      free_applied: true,
+      request_id: requestId,
+      order_id: orderId,
+      sku,
+      promo_code: promoCode || null,
+      amount: 0,
+      currency: price.currency || "USDT",
+      message: "Промокод применён: генерация запущена бесплатно.",
+    });
+  }
+  const checkoutUrl = buildHotCheckoutUrl({
+    itemId,
+    orderId,
+    amount: finalAmount,
+    currency: price.currency || "USDT",
+    requestId,
+    sku,
+  });
+
+  const paymentRaw = {
+    provider: "hot",
+    sku,
+    promo_code: promoCode || null,
+    amount_before: Number(price.price),
+    amount_after: Number(finalAmount),
+    discount_amount: Number(discountAmount || 0),
+    item_id: itemId || null,
+    checkout_url: checkoutUrl,
+    created_via: HOT_API_JWT ? "jwt_enabled" : "checkout_link",
+  };
+  const { error: updateErr } = await supabase.from("track_requests").update({
+    payment_provider: "hot",
+    payment_status: "pending",
+    payment_order_id: orderId,
+    payment_amount: Number(finalAmount),
+    payment_currency: price.currency || "USDT",
+    promo_code: promoCode || null,
+    promo_discount_amount: Number(discountAmount || 0),
+    promo_type: promoResult?.promo?.type || null,
+    payment_raw: paymentRaw,
+    updated_at: new Date().toISOString(),
+  }).eq("id", requestId);
+  if (updateErr && !/does not exist|column/i.test(updateErr.message)) {
+    return res.status(500).json({ success: false, error: updateErr.message });
+  }
+
+  return res.json({
+    success: true,
+    provider: "hot",
+    request_id: requestId,
+    order_id: orderId,
+    sku,
+    amount: Number(finalAmount),
+    amount_before: Number(price.price),
+    discount_amount: Number(discountAmount || 0),
+    currency: price.currency || "USDT",
+    promo_code: promoCode || null,
+    checkout_url: checkoutUrl,
+  });
+}));
+
+app.get("/api/payments/hot/status", asyncApi(async (req, res) => {
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const initData = req.headers["x-telegram-init"] || req.query?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, error: "Unauthorized" });
+  const requestId = String(req.query?.request_id || "").trim();
+  if (!requestId || !UUID_REGEX.test(requestId)) {
+    return res.status(400).json({ success: false, error: "request_id (UUID) обязателен" });
+  }
+  const { data, error } = await supabase
+    .from("track_requests")
+    .select("id,telegram_user_id,payment_provider,payment_status,payment_order_id,payment_tx_id,payment_amount,payment_currency,payment_raw,paid_at,generation_status,status")
+    .eq("id", requestId)
+    .maybeSingle();
+  if (error || !data) return res.status(404).json({ success: false, error: "Заявка не найдена" });
+  if (Number(data.telegram_user_id) !== Number(telegramUserId)) {
+    return res.status(403).json({ success: false, error: "Нет доступа к этой заявке" });
+  }
+  return res.json({ success: true, data });
+}));
+
+app.post("/api/payments/hot/confirm", express.json(), asyncApi(async (req, res) => {
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const initData = req.headers["x-telegram-init"] || req.body?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, error: "Unauthorized" });
+  const requestId = String(req.body?.request_id || "").trim();
+  if (!requestId || !UUID_REGEX.test(requestId)) {
+    return res.status(400).json({ success: false, error: "request_id (UUID) обязателен" });
+  }
+  const { data, error } = await supabase
+    .from("track_requests")
+    .select("id,telegram_user_id,payment_status,status,generation_status")
+    .eq("id", requestId)
+    .maybeSingle();
+  if (error || !data) return res.status(404).json({ success: false, error: "Заявка не найдена" });
+  if (Number(data.telegram_user_id) !== Number(telegramUserId)) {
+    return res.status(403).json({ success: false, error: "Нет доступа к этой заявке" });
+  }
+  const paid = String(data.payment_status || "").toLowerCase() === "paid";
+  if (!paid) return res.status(409).json({ success: false, error: "Оплата не подтверждена" });
+  const gs = String(data.generation_status || data.status || "pending");
+  if (["completed", "processing", "lyrics_generated", "suno_processing", "astro_calculated"].includes(gs)) {
+    return res.json({ success: true, started: false, status: gs });
+  }
+  await supabase.from("track_requests").update({
+    status: "pending",
+    generation_status: "pending",
+    updated_at: new Date().toISOString(),
+  }).eq("id", requestId);
+  import("./workerSoundKey.js").then(({ generateSoundKey }) => {
+    generateSoundKey(requestId).catch((err) => console.error("[payments/hot/confirm] generate:", err?.message || err));
+  }).catch((err) => console.error("[payments/hot/confirm] import worker:", err?.message || err));
+  return res.json({ success: true, started: true, status: "pending" });
+}));
+
+app.get("/api/admin/pricing", asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  const catalog = await getPricingCatalog();
+  return res.json({ success: true, catalog });
+}));
+
+app.put("/api/admin/pricing/:sku", express.json(), asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const sku = String(req.params.sku || "").trim();
+  if (!sku) return res.status(400).json({ success: false, error: "sku обязателен" });
+  const body = req.body || {};
+  const payload = {
+    sku,
+    title: body.title != null ? String(body.title) : sku,
+    description: body.description != null ? String(body.description) : null,
+    price: body.price != null ? String(body.price) : "0",
+    currency: body.currency != null ? String(body.currency).toUpperCase() : "USDT",
+    active: body.active !== false,
+    limits_json: typeof body.limits_json === "object" ? body.limits_json : parseJsonSafe(body.limits_json, {}),
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await supabase.from("pricing_catalog").upsert(payload, { onConflict: "sku" });
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  return res.json({ success: true, item: payload });
+}));
+
+app.get("/api/admin/payments", asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const limit = Math.min(Math.max(parseInt(req.query?.limit, 10) || 50, 1), 200);
+  const { data, error } = await supabase
+    .from("track_requests")
+    .select("id,name,mode,payment_provider,payment_status,payment_order_id,payment_tx_id,payment_amount,payment_currency,promo_code,promo_discount_amount,promo_type,paid_at,created_at")
+    .not("payment_provider", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error && /does not exist|column/i.test(error.message)) return res.json({ success: true, data: [] });
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  return res.json({ success: true, data: data || [] });
+}));
+
+app.get("/api/admin/promos", asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const { data, error } = await supabase
+    .from("promo_codes")
+    .select("id,code,type,value,sku,max_uses,used_count,per_user_limit,active,starts_at,expires_at,metadata,created_at,updated_at")
+    .order("created_at", { ascending: false });
+  if (error && /does not exist|relation/i.test(error.message)) return res.json({ success: true, data: [] });
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  return res.json({ success: true, data: data || [] });
+}));
+
+app.put("/api/admin/promos/:code", express.json(), asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const code = normalizePromoCode(req.params.code);
+  if (!code) return res.status(400).json({ success: false, error: "code обязателен" });
+  const b = req.body || {};
+  const type = String(b.type || "discount_percent");
+  if (!["discount_percent", "discount_amount", "free_generation"].includes(type)) {
+    return res.status(400).json({ success: false, error: "Некорректный type" });
+  }
+  const payload = {
+    code,
+    type,
+    value: type === "free_generation" ? null : Number(b.value || 0),
+    sku: b.sku ? String(b.sku) : null,
+    max_uses: b.max_uses != null ? Number(b.max_uses) : null,
+    per_user_limit: b.per_user_limit != null ? Number(b.per_user_limit) : 1,
+    active: b.active !== false,
+    starts_at: b.starts_at || null,
+    expires_at: b.expires_at || null,
+    metadata: typeof b.metadata === "object" ? b.metadata : parseJsonSafe(b.metadata, {}),
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await supabase.from("promo_codes").upsert(payload, { onConflict: "code" });
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  return res.json({ success: true, item: payload });
+}));
+
 app.use("/api", (err, req, res, next) => {
   if (res.headersSent) return next(err);
   res.status(500).json({ success: false, error: err?.message || "Ошибка сервера" });
@@ -1350,6 +2066,46 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
     // #endregion
     return res.status(500).json({ error: "Не удалось сохранить заявку" });
   }
+  const requestModeForAccess = isNewFormat && (body.mode === "couple" || body.mode === "transit") ? body.mode : "single";
+  const access = await resolveAccessForRequest({ telegramUserId, mode: requestModeForAccess });
+  if (!access.allowed) {
+    const skuPrice = await getSkuPrice(access.sku);
+    await supabase.from("track_requests").update({
+      payment_provider: "hot",
+      payment_status: "requires_payment",
+      payment_amount: skuPrice ? Number(skuPrice.price) : null,
+      payment_currency: skuPrice?.currency || "USDT",
+      generation_status: "pending_payment",
+      updated_at: new Date().toISOString(),
+    }).eq("id", requestId);
+    return res.status(402).json({
+      ok: false,
+      payment_required: true,
+      requestId,
+      sku: access.sku,
+      price: skuPrice || null,
+      message: "Для этой заявки нужна оплата. Откройте оплату HOT.",
+    });
+  }
+  if (access.source === "trial") {
+    const consumed = await consumeTrial(telegramUserId, "first_song_gift");
+    if (!consumed.ok) {
+      const skuPrice = await getSkuPrice(access.sku);
+      return res.status(402).json({
+        ok: false,
+        payment_required: true,
+        requestId,
+        sku: access.sku,
+        price: skuPrice || null,
+        message: "Подарочный продукт уже использован. Перейдите к оплате.",
+      });
+    }
+  }
+  await supabase.from("track_requests").update({
+    payment_provider: access.source === "trial" ? "gift" : (access.source === "subscription" ? "subscription" : "hot"),
+    payment_status: access.source === "trial" ? "gift_used" : (access.source === "subscription" ? "subscription_active" : "paid"),
+    updated_at: new Date().toISOString(),
+  }).eq("id", requestId);
   // #region agent log
   fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/index.js:/api/submit-request',message:'submit-request success',data:{requestId:requestId,telegramUserId:!!telegramUserId,mode:body.mode||'single'},timestamp:Date.now(),runId:'submit-debug',hypothesisId:'H3,H4'})}).catch(()=>{});
   // #endregion
