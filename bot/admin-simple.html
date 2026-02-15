@@ -840,6 +840,18 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:DOMContentLoaded',message:'admin script initialized',data:{hasShowDetails:typeof window.showDetails==='function',hasRestart:typeof window.restart==='function',apiBase:API_BASE||null},timestamp:Date.now(),runId:'details-modal-debug',hypothesisId:'H1,H2'})}).catch(()=>{});
+      // #endregion
+      document.addEventListener('click', function(event) {
+        var btn = event && event.target && event.target.closest ? event.target.closest('button') : null;
+        if (!btn) return;
+        var text = String(btn.textContent || '').trim();
+        if (text.indexOf('Подробнее') === -1 && text.indexOf('Details') === -1) return;
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:detailsButton:click',message:'details button clicked',data:{buttonText:text,onclickAttr:btn.getAttribute('onclick')||null,hasShowDetails:typeof window.showDetails==='function',activeElementTag:document.activeElement?document.activeElement.tagName:null},timestamp:Date.now(),runId:'details-modal-debug',hypothesisId:'H2,H3'})}).catch(()=>{});
+        // #endregion
+      });
       try { loadAdminData(); }
       catch (e) {
         const el = document.getElementById('requests');
