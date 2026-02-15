@@ -153,8 +153,13 @@
     textarea{min-height:140px;line-height:1.6;resize:vertical}
     .request-label{font-size:1.3rem;text-align:center;margin-bottom:15px;color:#a78bfa;font-weight:700;letter-spacing:-0.5px}
     .request-help-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-    .request-help-row .request-label{margin-bottom:0;text-align:left;font-size:1.08rem;letter-spacing:-0.2px}
-    .request-help-toggle{width:auto;min-height:auto;margin:0;padding:10px 14px;border-radius:14px;background:rgba(167,139,250,.14);color:#7c3aed;border:1px solid rgba(167,139,250,.45);box-shadow:none;text-transform:none;letter-spacing:0;font-size:.92rem;font-weight:700}
+    .request-help-row .request-label{margin-bottom:0;text-align:left;font-size:1.08rem;letter-spacing:-0.2px;line-height:1.2;max-width:68%}
+    .request-help-toggle{width:auto;min-height:auto;margin:0;padding:10px 12px;border-radius:14px;background:rgba(167,139,250,.14);color:#7c3aed;border:1px solid rgba(167,139,250,.45);box-shadow:none;text-transform:none;letter-spacing:0;font-size:.88rem;font-weight:700;flex:0 0 auto;white-space:nowrap}
+    @media (max-width: 430px){
+      .request-help-row{align-items:flex-start}
+      .request-help-row .request-label{max-width:62%}
+      .request-help-toggle{padding:9px 10px;font-size:.82rem}
+    }
     .request-help-toggle::after{display:none}
     .request-help-toggle:hover{transform:none;background:rgba(167,139,250,.2);box-shadow:none}
     .request-examples{display:none;margin:10px 0 0 0;padding:10px;background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.22);border-radius:14px}
@@ -457,7 +462,7 @@
         <div class="field">
           <div class="request-help-row">
             <div class="request-label">Отправь запрос во Вселенную</div>
-            <button type="button" id="requestHintToggle" class="request-help-toggle" aria-expanded="false">✨ Подсказки</button>
+            <button type="button" id="requestHintToggle" class="request-help-toggle" aria-expanded="false">✨ Идеи</button>
           </div>
           <textarea id="request" placeholder="Что ты хочешь изменить в своей жизни? О чём просишь Вселенную?"></textarea>
           <div class="request-examples" id="requestExamplesPanel">
@@ -942,7 +947,7 @@
         requestHintToggle.addEventListener('click', function() {
           var isOpen = requestExamplesPanel.classList.toggle('open');
           this.setAttribute('aria-expanded', String(isOpen));
-          this.textContent = isOpen ? '✖ Скрыть' : '✨ Подсказки';
+          this.textContent = isOpen ? '✖ Скрыть' : '✨ Идеи';
           // #region agent log
           fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:request-hints:toggle',message:'request hints toggled',data:{path:window.location.pathname,isOpen:isOpen},timestamp:Date.now(),runId:'hint-toggle-debug',hypothesisId:'H1,H3'})}).catch(()=>{});
           // #endregion
@@ -962,7 +967,7 @@
             requestExamplesPanel.classList.remove('open');
             if (requestHintToggle) {
               requestHintToggle.setAttribute('aria-expanded', 'false');
-              requestHintToggle.textContent = '✨ Подсказки';
+              requestHintToggle.textContent = '✨ Идеи';
             }
           }
           document.querySelectorAll('.example-btn').forEach(function(b) {
