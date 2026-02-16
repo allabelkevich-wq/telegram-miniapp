@@ -19,9 +19,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Лог всегда в корне проекта (workspace), чтобы его можно было прочитать при любом cwd
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const DEFAULT_MINI_APP = process.env.RENDER_EXTERNAL_URL ? (process.env.RENDER_EXTERNAL_URL + "/app") : "https://telegram-miniapp-six-teal.vercel.app";
+// Ссылка в коде — не слетает. Vercel удалён, используем только Render.
+const HARDCODED_MINI_APP = "https://telegram-miniapp-ar09.onrender.com/app";
+const DEFAULT_MINI_APP = process.env.RENDER_EXTERNAL_URL ? (process.env.RENDER_EXTERNAL_URL + "/app") : HARDCODED_MINI_APP;
 const MINI_APP_BASE = (process.env.MINI_APP_URL || DEFAULT_MINI_APP).replace(/\?.*$/, "").replace(/\/$/, "");
-const MINI_APP_URL = MINI_APP_BASE + "?v=14";
+const MINI_APP_URL = MINI_APP_BASE + "?v=15";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";
@@ -2160,6 +2162,14 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
 
 async function onBotStart(info) {
   console.log("Бот запущен:", info.username);
+  try {
+    await bot.api.setChatMenuButton({
+      menu_button: { type: "web_app", text: "Открыть приложение", web_app: { url: MINI_APP_URL } }
+    });
+    console.log("[Bot] Кнопка меню установлена:", MINI_APP_URL);
+  } catch (e) {
+    console.warn("[Bot] setChatMenuButton:", e?.message || e);
+  }
   if (ADMIN_IDS.length) console.log("Админы (ID):", ADMIN_IDS.join(", "));
   else console.warn("ADMIN_TELEGRAM_IDS не задан — команда /admin недоступна.");
   if (supabase) {
