@@ -1717,7 +1717,7 @@
         var r = document.getElementById('request');
         if (n) n.value = '';
         if (bd) bd.value = '';
-        if (bp) bp.value = '';
+        if (bp) { bp.value = ''; bp.removeAttribute('data-place-selected'); bp.removeAttribute('data-lat'); bp.removeAttribute('data-lon'); }
         if (bt) bt.value = '';
         if (unknown) unknown.checked = false;
         if (g) g.value = '';
@@ -1725,6 +1725,8 @@
         if (r) r.value = '';
         if (birthdateSummary) birthdateSummary.style.display = 'none';
         if (birthplaceSummary) birthplaceSummary.style.display = 'none';
+        var placeCoordsEl = document.getElementById('placeCoords');
+        if (placeCoordsEl) placeCoordsEl.style.display = 'none';
         goToPage('formPage');
       });
       
