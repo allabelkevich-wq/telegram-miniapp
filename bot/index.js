@@ -19,7 +19,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const MINI_APP_BASE = (process.env.MINI_APP_URL || "https://telegram-miniapp-six-teal.vercel.app").replace(/\?.*$/, "").replace(/\/$/, "");
-const MINI_APP_URL = MINI_APP_BASE + "?v=7";
+const MINI_APP_URL = MINI_APP_BASE + "?v=11";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";

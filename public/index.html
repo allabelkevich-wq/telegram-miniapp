@@ -214,6 +214,12 @@
     .birthplace-suggestions .place-type{font-size:.85rem;color:#6b7280;margin-top:2px}
     .birthplace-summary .place-name{font-weight:700;color:#5b21b6}
     .place-coords{font-family:ui-monospace,monospace;letter-spacing:.02em}
+    .hot-debug-toggle{position:fixed;right:12px;top:12px;z-index:100000;background:rgba(212,175,55,0.18);border:1px solid rgba(212,175,55,0.35);color:#fff;padding:8px 10px;border-radius:10px;font-size:12px;cursor:pointer;opacity:.95;font-weight:700}
+    .hot-debug-panel{position:fixed;right:12px;top:52px;z-index:100000;width:320px;max-height:360px;overflow-y:auto;background:rgba(10,10,26,0.96);border:1px solid rgba(212,175,55,0.35);border-radius:12px;padding:10px 12px;box-shadow:0 14px 30px rgba(0,0,0,0.45);display:none}
+    .hot-debug-panel h4{margin:0 0 8px 0;font-size:13px;color:#fff}
+    .hot-debug-panel .row{font-size:12px;color:#d1d5db;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08)}
+    .hot-debug-panel .row:last-child{border-bottom:none}
+    .payment-build-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(212,175,55,0.14);border:1px solid rgba(212,175,55,0.35);color:#f8e7b0;padding:6px 10px;border-radius:999px;font-size:12px;margin-bottom:12px}
     
     #transitForm{display:none;margin-top:30px;padding:20px;background:var(--tg-theme-secondary-bg-color,rgba(255,255,255,0.05));border-radius:12px;border:1px solid var(--tg-theme-border-color,rgba(255,255,255,0.1))}
     #transitForm h3{color:var(--tg-theme-text-color,#fff);margin:0 0 15px 0;font-size:18px}
@@ -423,17 +429,17 @@
         <div id="transitForm">
           <h3>🌅 Энергия момента</h3>
           <div class="field">
-            <label for="transitDate">Дата транзита</label>
+            <label for="transitDate">Дата события</label>
             <input type="date" id="transitDate" min="2024-01-01" max="2030-12-31">
             <small style="color:#6b7280;display:block;margin-top:4px;font-size:.9rem">Когда хочешь узнать энергию дня?</small>
           </div>
           <div class="field">
-            <label for="transitTime">Время транзита</label>
+            <label for="transitTime">Время события</label>
             <input type="time" id="transitTime">
             <small style="color:#6b7280;display:block;margin-top:4px;font-size:.9rem">Точное время (если важно)</small>
           </div>
           <div class="field form-group location-input-wrapper">
-            <label for="transitLocation">Локация транзита</label>
+            <label for="transitLocation">Локация события</label>
             <input type="text" id="transitLocation" class="location-input" placeholder="Город, где будет энергия дня..." maxlength="100" autocomplete="off">
             <div id="transitLocationSuggestions" class="location-suggestions"></div>
             <small style="color: var(--tg-theme-hint-color, rgba(255,255,255,0.6)); display: block; margin-top: 4px;">Где ты будешь в этот момент?</small>
@@ -496,6 +502,7 @@
       </header>
       
       <div class="section">
+        <div class="payment-build-badge">Build: public-sync-90f18bf</div>
         <div class="tagline" style="margin-bottom:15px">Оплата и доступ</div>
         <p style="text-align:center;font-size:1.05rem;line-height:1.7;margin-bottom:16px">
           Первая песня  — в подарок. Дальше можно оплатить отдельный элемент или оформить подписку на полный доступ.
@@ -523,6 +530,11 @@
       <footer>
         <p>YupSoul • 2026</p>
       </footer>
+      <button id="hotDebugToggle" class="hot-debug-toggle" type="button">DBG HOT</button>
+      <div id="hotDebugPanel" class="hot-debug-panel">
+        <h4>Оплата HOT — шаги</h4>
+        <div id="hotDebugList"></div>
+      </div>
     </div>
     
     <!-- Страница загрузки -->
@@ -1125,6 +1137,31 @@
       });
       var promoApplyBtn = document.getElementById('promoApplyBtn');
       if (promoApplyBtn) promoApplyBtn.addEventListener('click', applyPromoCode);
+      var hotDebugToggle = document.getElementById('hotDebugToggle');
+      var hotDebugPanel = document.getElementById('hotDebugPanel');
+      var hotDebugList = document.getElementById('hotDebugList');
+      function hotLog(message, data) {
+        if (!hotDebugList) return;
+        var row = document.createElement('div');
+        row.className = 'row';
+        var payload = '';
+        if (data) {
+          try { payload = JSON.stringify(data); } catch (e) { payload = String(data); }
+        }
+        row.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message + (payload ? ' ' + payload : '');
+        hotDebugList.prepend(row);
+        while (hotDebugList.children.length > 20) hotDebugList.removeChild(hotDebugList.lastChild);
+      }
+      function ensureHotDebugVisible() {
+        if (hotDebugToggle) hotDebugToggle.style.display = 'block';
+        if (hotDebugPanel) hotDebugPanel.style.display = 'block';
+      }
+      if (hotDebugToggle && hotDebugPanel) {
+        hotDebugToggle.addEventListener('click', function() {
+          var visible = hotDebugPanel.style.display === 'block';
+          hotDebugPanel.style.display = visible ? 'none' : 'block';
+        });
+      }
       
       var backFromPaymentBtn = document.getElementById('backFromPaymentBtn');
       if (backFromPaymentBtn) backFromPaymentBtn.addEventListener('click', function() {
@@ -1182,8 +1219,8 @@
           var transitTime = document.getElementById('transitTime').value;
           var transitLocation = (document.getElementById('transitLocation') && document.getElementById('transitLocation').value) ? document.getElementById('transitLocation').value.trim() : '';
           var transitIntent = (document.getElementById('transitIntent') && document.getElementById('transitIntent').value) ? document.getElementById('transitIntent').value.trim() : null;
-          if (!transitDate) { alert('✨ Выбери дату транзита'); return; }
-          if (!transitLocation) { alert('✨ Укажи локацию транзита'); return; }
+          if (!transitDate) { alert('✨ Выбери дату события'); return; }
+          if (!transitLocation) { alert('✨ Укажи локацию события'); return; }
           if (!(document.getElementById('transitLocationConfirmed') && document.getElementById('transitLocationConfirmed').checked)) { alert('✨ Подтверди, что локация указана верно'); return; }
           payload.transit = { date: transitDate, time: transitTime || null, location: transitLocation, intent: transitIntent || null };
         }
@@ -1193,8 +1230,17 @@
         if (!initData) { alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.'); return; }
         payload.initData = initData;
         try {
+          ensureHotDebugVisible();
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:pay:click',message:'pay button clicked',data:{mode:mode,hasRequest:requestText.length>=1},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P1'})}).catch(()=>{});
+          // #endregion
+          hotLog('pay click', { mode: mode });
           var response = await fetch(apiBase + '/api/submit-request', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData }, body: JSON.stringify(payload) });
           var result = await response.json().catch(function() { return {}; });
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:pay:submitResult',message:'submit-request result',data:{ok:!!(response.ok && result.ok),paymentRequired:!!(result && result.payment_required),requestId:result&&result.requestId?String(result.requestId):null,httpStatus:response.status},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P2'})}).catch(()=>{});
+          // #endregion
+          hotLog('submit result', { ok: !!(response.ok && result.ok), paymentRequired: !!(result && result.payment_required), httpStatus: response.status, requestId: result && result.requestId ? String(result.requestId).slice(0, 8) : null });
           if (response.ok && result.ok && result.requestId) {
             var sp = document.getElementById('songPreviewText');
             if (sp) {
@@ -1214,6 +1260,7 @@
               body: JSON.stringify({ request_id: result.requestId, sku: result.sku || getCurrentSku(), promo_code: activePromo ? activePromo.code : null, initData: initData })
             });
             var hotJson = await hotResp.json().catch(function() { return {}; });
+            hotLog('hot create', { status: hotResp.status, success: !!(hotJson && hotJson.success), hasCheckout: !!(hotJson && hotJson.checkout_url), freeApplied: !!(hotJson && hotJson.free_applied) });
             if (!hotResp.ok || !hotJson.success) {
               throw new Error(hotJson.error || 'Не удалось создать оплату HOT');
             }
@@ -1238,6 +1285,7 @@
               });
               var statusJson = await statusResp.json().catch(function() { return {}; });
               var paymentStatus = statusJson && statusJson.data && statusJson.data.payment_status ? String(statusJson.data.payment_status).toLowerCase() : '';
+              if (attempt === 1 || paymentStatus === 'paid') hotLog('status poll', { attempt: attempt, status: paymentStatus || null, httpStatus: statusResp.status });
               if (paymentStatus === 'paid') { paid = true; break; }
             }
             if (!paid) {
@@ -1250,6 +1298,7 @@
               headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
               body: JSON.stringify({ request_id: result.requestId, initData: initData })
             });
+            hotLog('confirm', { httpStatus: restartResp.status, ok: restartResp.ok });
             if (!restartResp.ok) {
               setPaymentStatus('Оплата получена, но авто‑старт не удался. Запусти генерацию в админке по request_id: ' + result.requestId, 'warn');
               return;
@@ -1265,6 +1314,7 @@
           }
           setPaymentStatus(msg || 'Ошибка операции оплаты/заявки', 'error');
           alert('❌ ' + msg);
+          hotLog('error', { message: msg || null });
         }
       });
       
