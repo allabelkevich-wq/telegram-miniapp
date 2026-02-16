@@ -221,7 +221,6 @@
     .checkbox input{width:auto;height:20px;accent-color:#a78bfa}
     .checkbox label{margin-bottom:0;font-weight:500;color:var(--tg-theme-text-color,#2d2d2d);font-size:1rem;display:flex;align-items:center;gap:8px}
     .checkbox label::before{content:"❓";font-size:1.3rem}
-    .time-unknown-wrap{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;margin-top:10px;opacity:.92}
     select{appearance:none;background:url("image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23a78bfa' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 16px center;background-size:20px;padding-right:48px}
     textarea{min-height:140px;line-height:1.6;resize:vertical}
     .request-label{font-size:1.3rem;text-align:center;margin-bottom:15px;color:#a78bfa;font-weight:700;letter-spacing:-0.5px}
@@ -284,8 +283,6 @@
     .birthplace-suggestions li:hover,.birthplace-suggestions li.selected{background:rgba(167,139,250,.12);color:#6d28d9}
     .birthplace-suggestions .place-type{font-size:.85rem;color:#6b7280;margin-top:2px}
     .birthplace-summary .place-name{font-weight:700;color:#5b21b6}
-    .birthplace-summary{word-wrap:break-word;overflow-wrap:break-word;word-break:break-word}
-    .birthplace-change-btn{font-size:.85rem;color:#a78bfa;text-decoration:underline;cursor:pointer;margin-top:6px;display:inline-block;background:transparent!important;border:none!important;box-shadow:none!important;min-height:auto!important;padding:6px 0!important}
     .place-coords{font-family:ui-monospace,monospace;letter-spacing:.02em}
     /* Debug overlay for HOT payment */
     .hot-debug-toggle{position:fixed;right:12px;top:12px;z-index:100000;background:rgba(212,175,55,0.18);border:1px solid var(--tg-theme-border-color);color:var(--tg-theme-text-color);padding:8px 10px;border-radius:10px;font-size:12px;cursor:pointer;opacity:0.95;transition:all .2s;font-weight:700}
@@ -337,8 +334,7 @@
       </header>
       
       <div class="section">
-        <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="220" height="220" onerror="this.style.display='none';var w=document.getElementById('logoFallback');if(w)w.style.display='block';">
-        <div id="logoFallback" class="app-logo" style="display:none;width:220px;height:220px;margin:0 auto;background:linear-gradient(135deg,#a78bfa,#ec4899);border-radius:24px;font-size:2.5rem;font-weight:700;color:#fff;line-height:220px;text-align:center;box-shadow:0 10px 28px rgba(167,139,250,.3);">YupSoul</div>
+        <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="220" height="220">
         <p id="homeGreeting" class="tagline" style="display:none;margin-bottom:12px"></p>
         <button id="startBtn">Начать</button>
         <div id="masterNav" style="display:none; margin-top:20px">
@@ -396,13 +392,6 @@
       </header>
       
       <div class="section">
-        <div class="stepper">
-          <div class="step-indicator active" data-step="1">Режим</div>
-          <div class="step-indicator" data-step="2">Данные</div>
-          <div class="step-indicator" data-step="3">Запрос</div>
-          <div class="step-line"></div>
-        </div>
-
         <div class="step-panel" data-step="1">
           <div class="mode-selector">
             <h3>Выбери тип звукового ключа</h3>
@@ -423,7 +412,7 @@
           </div>
         </div>
 
-        <div class="step-panel" data-step="2" style="display:none">
+        <div class="step-panel" data-step="2">
         <div class="field">
             <input type="text" id="name" placeholder="Как тебя зовут?" required aria-label="Имя">
         </div>
@@ -439,14 +428,13 @@
             <ul id="birthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true"></ul>
           </div>
           <div id="birthplaceSummary" class="field-summary birthplace-summary" style="display:none; margin-top:8px; padding:12px 14px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
-          <div id="birthplaceChangeWrap" style="display:none; margin-top:6px;"><button type="button" id="birthplaceChangeBtn" class="birthplace-change-btn secondary" style="padding:8px 12px;font-size:.9rem;min-height:auto;width:auto;">Изменить место</button></div>
           <div id="placeCoords" class="place-coords" style="display:none; margin-top:6px; padding:10px 14px; background:rgba(94,234,212,.1); border-radius:10px; font-size:.9rem; color:#0d9488;"></div>
         </div>
         
         <div class="field">
           <div class="time-group">
               <input type="time" id="birthtime" required aria-label="Время рождения">
-            <div class="checkbox time-unknown-wrap">
+            <div class="checkbox">
               <input type="checkbox" id="unknown">
               <label for="unknown">Не знаю точное время</label>
             </div>
@@ -522,7 +510,7 @@
           </div>
         </div>
         
-        <div class="step-panel" data-step="3" style="display:none">
+        <div class="step-panel" data-step="3">
         <div class="field">
           <div class="request-help-row">
               <div class="request-label">Отправь запрос</div>
@@ -549,8 +537,7 @@
         </div>
         
         <div class="step-nav">
-          <button class="secondary" id="stepPrev" disabled>Назад</button>
-          <button id="stepNext">Далее</button>
+          <button id="stepNext">К оплате</button>
         </div>
       </div>
       
@@ -576,9 +563,9 @@
           Загрузка тарифов...
         </div>
         <div id="priceSummary" style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:20px;margin:16px 0;">
-          <div id="priceSummaryTitle" style="font-size:.95rem;color:rgba(255,255,255,0.9);">Звуковой ключ для себя</div>
-          <div id="priceLabel" style="font-size:1rem;font-weight:600;color:rgba(255,255,255,0.85);margin-top:6px;"></div>
-          <div id="priceValue" style="font-size:1.8rem;font-weight:800;color:#fff;margin-top:6px;">Загрузка...</div>
+          <div style="font-size:.95rem;color:rgba(255,255,255,0.9);">Текущий элемент</div>
+          <div id="priceLabel" style="font-size:1.15rem;font-weight:700;color:#fff;margin-top:6px;">—</div>
+          <div id="priceValue" style="font-size:1.8rem;font-weight:800;color:#fff;margin-top:6px;">—</div>
           <div id="priceHint" style="font-size:.88rem;color:rgba(255,255,255,0.85);margin-top:6px;"></div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -590,9 +577,6 @@
           <button class="secondary" id="backFromPaymentBtn">← Назад</button>
           <button id="payBtn">Оформить и продолжить</button>
         </div>
-        <!-- #region agent log — диагностический блок -->
-        <div id="diagStatus" style="margin-top:8px;padding:6px 10px;font-size:12px;color:#aaa;text-align:center;min-height:18px;"></div>
-        <!-- #endregion -->
       </div>
       
       <footer>
@@ -620,8 +604,7 @@
       </header>
       
       <div class="section">
-        <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo success" width="180" height="180" onerror="this.style.display='none';var w=document.getElementById('logoFallbackSuccess');if(w)w.style.display='block';">
-        <div id="logoFallbackSuccess" style="display:none;width:180px;height:180px;margin:0 auto 15px;background:linear-gradient(135deg,#a78bfa,#ec4899);border-radius:20px;font-size:2rem;font-weight:700;color:#fff;line-height:180px;text-align:center;">YupSoul</div>
+        <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo success" width="180" height="180">
         <h2 class="success-title">Готово!</h2>
         <p class="success-text">
           Твой персональный звуковой ключ создан! Это твой уникальный артефакт силы для игры жизни.
@@ -660,7 +643,7 @@
         <p class="success-text" id="paymentThanksMessage" style="margin:0 0 24px 0; font-size:1rem">
           Проверяем оплату…
         </p>
-        <button id="paymentThanksBackBtn">Вернуться в приложение</button>
+        <button id="paymentThanksBackBtn">Готово</button>
       </div>
       <footer><p>YupSoul • 2026</p></footer>
     </div>
@@ -668,13 +651,6 @@
   </div>
 
   <script>
-    // #region agent log — глобальный перехватчик ошибок для диагностики
-    window.addEventListener('error', function(e) {
-      console.error('[DIAG-GLOBAL] JS Error:', e.message, 'at', e.filename, ':', e.lineno);
-      var diagEl = document.getElementById('diagStatus');
-      if (diagEl) diagEl.textContent = '⚠️ JS Error: ' + (e.message || '') + ' (строка ' + (e.lineno || '?') + ')';
-    });
-    // #endregion
     document.addEventListener('DOMContentLoaded', function() {
       var tg = null;
       function logColorSnapshot(stage, pageId) {
@@ -778,20 +754,12 @@
       var pricingCatalog = [];
       var freeTrialAvailable = true;
       var activePromo = null;
-      var pricingCatalogLoadFailed = false;
-      var selectedMode = 'single';
 
       function getCurrentSku() {
         var modeSku = selectedMode || 'single';
         if (modeSku === 'couple') return 'couple_song';
         if (modeSku === 'transit') return 'transit_energy_song';
         return 'single_song';
-      }
-      function getCurrentModeLabel() {
-        var m = selectedMode || 'single';
-        if (m === 'couple') return 'Звуковой ключ для двоих';
-        if (m === 'transit') return 'Энергия дня';
-        return 'Звуковой ключ для себя';
       }
       function setPaymentStatus(text, tone) {
         var el = document.getElementById('paymentStatus');
@@ -808,24 +776,17 @@
       }
       function updatePaymentUiFromCatalog() {
         var sku = getCurrentSku();
-        var modeLabel = getCurrentModeLabel();
         var item = pricingCatalog.find(function(x) { return x && x.sku === sku; }) || null;
         var priceLabel = document.getElementById('priceLabel');
         var priceValue = document.getElementById('priceValue');
         var priceHint = document.getElementById('priceHint');
         var notice = document.getElementById('pricingNotice');
-        var summaryTitle = document.getElementById('priceSummaryTitle');
-        if (summaryTitle) summaryTitle.textContent = modeLabel;
-        if (priceLabel) priceLabel.textContent = item ? (item.title || item.description || modeLabel) : modeLabel;
+        if (priceLabel) priceLabel.textContent = item ? (item.title || sku) : sku;
         if (priceValue) {
-          if (freeTrialAvailable && !activePromo) {
-            priceValue.textContent = 'Бесплатно';
-          } else if (item && activePromo && activePromo.sku === sku) {
+          if (item && activePromo && activePromo.sku === sku) {
             priceValue.textContent = String(activePromo.amount_after) + ' ' + (activePromo.currency || item.currency || 'USDT');
-          } else if (item) {
-            priceValue.textContent = String(item.price) + ' ' + (item.currency || 'USDT');
           } else {
-            priceValue.textContent = freeTrialAvailable ? 'Бесплатно' : 'Загрузка цены...';
+            priceValue.textContent = item ? (String(item.price) + ' ' + (item.currency || 'USDT')) : '—';
           }
         }
         if (priceHint) {
@@ -836,12 +797,7 @@
           }
         }
         if (notice) {
-          if (pricingCatalogLoadFailed) {
-            notice.textContent = 'Не удалось загрузить тарифы. Можно оформить заявку — цена уточнится.';
-            notice.style.borderColor = 'rgba(212,175,55,.35)';
-            notice.style.background = 'rgba(212,175,55,.1)';
-            notice.style.color = 'rgba(255,255,255,.95)';
-          } else if (freeTrialAvailable) {
+          if (freeTrialAvailable) {
             notice.textContent = 'Первый звуковой ключ доступен бесплатно.';
             notice.style.borderColor = 'rgba(212,175,55,.4)';
             notice.style.background = 'rgba(212,175,55,.12)';
@@ -857,8 +813,6 @@
       async function loadPricingCatalog() {
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         var initData = (tg && tg.initData) ? tg.initData : '';
-        pricingCatalogLoadFailed = false;
-        updatePaymentUiFromCatalog();
         if (!apiBase) return;
         try {
           var url = apiBase + '/api/pricing/catalog';
@@ -869,15 +823,9 @@
           if (resp.ok && json.success) {
             pricingCatalog = Array.isArray(json.catalog) ? json.catalog : [];
             freeTrialAvailable = !!(json.free_trial && json.free_trial.available);
-            pricingCatalogLoadFailed = false;
-          } else {
-            pricingCatalogLoadFailed = true;
+            updatePaymentUiFromCatalog();
           }
-          updatePaymentUiFromCatalog();
-        } catch (_) {
-          pricingCatalogLoadFailed = true;
-          updatePaymentUiFromCatalog();
-        }
+        } catch (_) {}
       }
       async function applyPromoCode() {
         var input = document.getElementById('promoCodeInput');
@@ -1042,9 +990,6 @@
             }
             birthplaceSummary.innerHTML = '<span class="place-name">Место рождения:</span> ' + escapeHtml(displayName || '');
             birthplaceSummary.style.display = 'block';
-            var changeWrap = document.getElementById('birthplaceChangeWrap');
-            if (changeWrap) changeWrap.style.display = 'block';
-            birthplaceInput.style.display = 'none';
             if (placeCoordsEl && lat != null && lon != null) {
               placeCoordsEl.textContent = 'Координаты: ' + formatLatLon(lat, lon);
               placeCoordsEl.style.display = 'block';
@@ -1058,9 +1003,6 @@
             birthplaceInput.removeAttribute('data-place-selected');
             birthplaceInput.removeAttribute('data-lat');
             birthplaceInput.removeAttribute('data-lon');
-            birthplaceInput.style.display = '';
-            var changeWrap = document.getElementById('birthplaceChangeWrap');
-            if (changeWrap) changeWrap.style.display = 'none';
             if (placeCoordsEl) placeCoordsEl.style.display = 'none';
           }
           function fetchPlaces(q) {
@@ -1129,28 +1071,16 @@
           if (birthplaceInput.value.trim()) {
             if (birthplaceInput.getAttribute('data-place-selected')) {
               birthplaceSummary.innerHTML = '<span class="place-name">Место рождения:</span> ' + escapeHtml(birthplaceInput.value.trim());
-              birthplaceSummary.style.display = 'block';
-              birthplaceInput.style.display = 'none';
-              var cw = document.getElementById('birthplaceChangeWrap');
-              if (cw) cw.style.display = 'block';
               if (placeCoordsEl && birthplaceInput.getAttribute('data-lat')) {
                 placeCoordsEl.textContent = 'Координаты: ' + formatLatLon(birthplaceInput.getAttribute('data-lat'), birthplaceInput.getAttribute('data-lon'));
                 placeCoordsEl.style.display = 'block';
               }
             } else {
               birthplaceSummary.innerHTML = 'Выбери место из подсказок (клик по варианту в списке).';
-              birthplaceSummary.style.display = 'block';
             }
+            birthplaceSummary.style.display = 'block';
             showPlaceConfirm(birthplaceInput.value.trim());
           }
-          var changeBtn = document.getElementById('birthplaceChangeBtn');
-          if (changeBtn) changeBtn.addEventListener('click', function() {
-            clearPlaceSelection();
-            birthplaceInput.value = '';
-            birthplaceSummary.style.display = 'none';
-            birthplaceInput.style.display = '';
-            birthplaceInput.focus();
-          });
         }
         var birthplace2Input = document.getElementById('birthplace2');
         if (birthplace2Input) {
@@ -1202,15 +1132,58 @@
 
       // Редирект с HOT: при открытии с ?payment=success показываем страницу «Спасибо за оплату»
       var search = typeof window.location !== 'undefined' && window.location.search ? window.location.search : '';
+      var paymentThanksMsg = document.getElementById('paymentThanksMessage');
       if (search.indexOf('payment=success') !== -1) {
         goToPage('paymentThanksPage');
+        var requestIdMatch = search.match(/request_id=([^&\s]+)/);
+        var thanksRequestId = requestIdMatch ? decodeURIComponent(requestIdMatch[1]) : null;
+        (async function checkPaymentAndConfirm() {
+          if (!paymentThanksMsg) return;
+          if (!thanksRequestId) {
+            paymentThanksMsg.textContent = 'Оплата подтверждена. Песня в генерации. Через 2–3 минуты придёт в чат с ботом.';
+            return;
+          }
+          var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+          var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
+          if (!apiBase || !initData) {
+            if (paymentThanksMsg) paymentThanksMsg.textContent = 'Оплата получена. Песня в генерации. Через 2–3 минуты придёт в чат с ботом.';
+            return;
+          }
+          try {
+            var payStatus = '';
+            for (var attempt = 0; attempt < 3; attempt++) {
+              var statusResp = await fetch(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(thanksRequestId), {
+                headers: { 'X-Telegram-Init': initData }
+              });
+              var statusJson = await statusResp.json().catch(function() { return {}; });
+              payStatus = statusJson && statusJson.data && statusJson.data.payment_status ? String(statusJson.data.payment_status).toLowerCase() : '';
+              if (payStatus === 'paid') break;
+              if (attempt < 2) await new Promise(function(r) { setTimeout(r, 2000); });
+            }
+            if (payStatus === 'paid') {
+              var confirmResp = await fetch(apiBase + '/api/payments/hot/confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+                body: JSON.stringify({ request_id: thanksRequestId, initData: initData })
+              });
+              confirmResp.json().catch(function() {});
+            }
+            paymentThanksMsg.textContent = 'Оплата подтверждена. Песня ушла в генерацию, заявка принята! Через 2–3 минуты придёт в чат с ботом.';
+          } catch (e) {
+            paymentThanksMsg.textContent = 'Оплата получена. Песня в генерации. Через 2–3 минуты придёт в чат с ботом.';
+          }
+        })();
         if (window.history && window.history.replaceState) {
           var cleanUrl = window.location.pathname + (window.location.hash || '');
           window.history.replaceState({}, '', cleanUrl);
         }
       }
       var paymentThanksBackBtn = document.getElementById('paymentThanksBackBtn');
-      if (paymentThanksBackBtn) paymentThanksBackBtn.addEventListener('click', function() { goToPage('homePage'); });
+      if (paymentThanksBackBtn) paymentThanksBackBtn.addEventListener('click', function() {
+        var sp = document.getElementById('songPreviewText');
+        if (sp) sp.textContent = 'Твой звуковой ключ формируется. Через 2–3 минуты он придёт в этот чат.';
+        goToPage('successPage');
+      });
 
       // Кнопки навигации
       var startBtn = document.getElementById('startBtn');
@@ -1219,14 +1192,10 @@
         goToPage('formPage');
       });
 
-      var stepPanels = document.querySelectorAll('.step-panel');
-      var stepIndicators = document.querySelectorAll('.step-indicator');
-      var stepPrev = document.getElementById('stepPrev');
       var stepNext = document.getElementById('stepNext');
       var quickToggle = document.getElementById('quickRequestsToggle');
       var quickPanel = document.getElementById('quickRequestsPanel');
-      var currentStep = 1;
-      var totalSteps = 3;
+      var selectedMode = 'single';
       var hotDebugToggle = document.getElementById('hotDebugToggle');
       var hotDebugPanel = document.getElementById('hotDebugPanel');
       var hotDebugList = document.getElementById('hotDebugList');
@@ -1274,23 +1243,7 @@
       }
 
       function updateStepUI() {
-        stepPanels.forEach(function(panel) {
-          var step = Number(panel.getAttribute('data-step'));
-          panel.style.display = (step === currentStep) ? 'block' : 'none';
-        });
-        stepIndicators.forEach(function(ind) {
-          var step = Number(ind.getAttribute('data-step'));
-          ind.classList.toggle('active', step === currentStep);
-        });
-        if (stepPrev) stepPrev.disabled = currentStep === 1;
-        if (stepNext) stepNext.textContent = currentStep === totalSteps ? 'К оплате' : 'Далее';
-        if (currentStep > 1) {
-          document.querySelectorAll('.mode-btn').forEach(function(btn) {
-            if (!btn.classList.contains('active')) btn.style.display = 'none';
-          });
-        } else {
-          document.querySelectorAll('.mode-btn').forEach(function(btn) { btn.style.display = 'block'; });
-        }
+        document.querySelectorAll('.mode-btn').forEach(function(btn) { btn.style.display = ''; });
       }
 
       function setMode(mode) {
@@ -1303,7 +1256,11 @@
       }
 
       function validateStep(step) {
-        if (step === 1) return true;
+        if (step === 1) {
+          var activeMode = document.querySelector('.mode-btn.active');
+          if (!activeMode) { alert('Выбери тип звукового ключа'); return false; }
+          return true;
+        }
         if (step === 2) {
           var name = document.getElementById('name').value.trim();
           var birthdate = document.getElementById('birthdate').value;
@@ -1375,19 +1332,10 @@
       });
 
       if (stepNext) stepNext.addEventListener('click', function() {
-        if (!validateStep(currentStep)) return;
-        if (currentStep < totalSteps) {
-          currentStep += 1;
-          updateStepUI();
-        } else {
-          goToPage('paymentPage');
-        }
-      });
-      if (stepPrev) stepPrev.addEventListener('click', function() {
-        if (currentStep > 1) {
-          currentStep -= 1;
-          updateStepUI();
-        }
+        if (!validateStep(1)) return;
+        if (!validateStep(2)) return;
+        if (!validateStep(3)) return;
+        goToPage('paymentPage');
       });
       setMode('single');
       updateStepUI();
@@ -1402,17 +1350,10 @@
         goToPage('formPage');
       });
       var payBtn = document.getElementById('payBtn');
-      // #region agent log — диагностика привязки обработчика
-      console.log('[DIAG] payBtn element:', payBtn ? 'FOUND' : 'NOT FOUND');
-      // #endregion
       if (payBtn) payBtn.addEventListener('click', async function() {
         if (payBtn.disabled) return;
-        // #region agent log — видимая диагностика при клике
-        var diagEl = document.getElementById('diagStatus');
-        payBtn.disabled = true;
-        payBtn.textContent = '⏳ Отправляю...';
-        if (diagEl) diagEl.textContent = '🔄 Обработчик запущен...';
-        console.log('[DIAG] payBtn clicked, handler entered');
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:handlerEntered',message:'pay handler entered',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H1'})}).catch(()=>{});
         // #endregion
         var mode = selectedMode || 'single';
         var name1 = document.getElementById('name').value.trim();
@@ -1468,27 +1409,24 @@
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:validationPassed',message:'pay validation passed',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
         // #endregion
-        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || 'https://telegram-miniapp-ar09.onrender.com').replace(/\/$/, '');
-        // #region agent log — диагностика apiBase
-        if (diagEl) diagEl.textContent = '🔗 apiBase: ' + (apiBase || '(пусто)');
-        // #endregion
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         if (!apiBase) {
-          if (diagEl) diagEl.textContent = '❌ apiBase пустой!';
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:earlyReturn',message:'early return no apiBase',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
+          // #endregion
           alert('Не настроен адрес API. Укажи HEROES_API_BASE.'); return;
         }
         var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
-        // #region agent log — диагностика initData
-        if (diagEl) diagEl.textContent = '🔑 initData: ' + (initData ? initData.length + ' символов' : '(пусто)');
-        // #endregion
         if (!initData) {
-          if (diagEl) diagEl.textContent = '❌ initData пустой! Откройте из Telegram.';
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:earlyReturn',message:'early return no initData',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
+          // #endregion
           alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.'); return;
         }
         payload.initData = initData;
         try {
-          // #region agent log — диагностика: дошли до try
-          payBtn.textContent = '⏳ Отправляю на сервер...';
-          if (diagEl) diagEl.textContent = '📡 Запрос: POST ' + apiBase + '/api/submit-request';
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:click',message:'pay button clicked',data:{mode:mode,hasRequest:requestText.length>=1,hasPerson2:!!payload.person2,hasTransit:!!payload.transit},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P1'})}).catch(()=>{});
           // #endregion
           hotLog('pay click', { mode: mode, hasPerson2: !!payload.person2, hasTransit: !!payload.transit });
           var response = await fetch(apiBase + '/api/submit-request', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData }, body: JSON.stringify(payload) });
@@ -1589,11 +1527,10 @@
           }
           setPaymentStatus(msg || 'Ошибка операции оплаты/заявки', 'error');
           alert('❌ ' + msg);
-          hotLog('error', { message: msg || null });
-        } finally {
-          // #region agent log — всегда восстанавливаем кнопку
-          if (payBtn) { payBtn.disabled = false; payBtn.textContent = 'Отправить заявку'; }
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:error',message:'pay flow error',data:{errorMessage:msg||null},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P1,P2,P3,P4,P5'})}).catch(()=>{});
           // #endregion
+          hotLog('error', { message: msg || null });
         }
       });
       
@@ -1782,7 +1719,7 @@
         var r = document.getElementById('request');
         if (n) n.value = '';
         if (bd) bd.value = '';
-        if (bp) { bp.value = ''; bp.removeAttribute('data-place-selected'); bp.removeAttribute('data-lat'); bp.removeAttribute('data-lon'); }
+        if (bp) bp.value = '';
         if (bt) bt.value = '';
         if (unknown) unknown.checked = false;
         if (g) g.value = '';
@@ -1790,8 +1727,6 @@
         if (r) r.value = '';
         if (birthdateSummary) birthdateSummary.style.display = 'none';
         if (birthplaceSummary) birthplaceSummary.style.display = 'none';
-        var placeCoordsEl = document.getElementById('placeCoords');
-        if (placeCoordsEl) placeCoordsEl.style.display = 'none';
         goToPage('formPage');
       });
       

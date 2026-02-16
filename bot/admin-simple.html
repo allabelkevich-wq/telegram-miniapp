@@ -355,6 +355,13 @@
       if (gs === 'failed') return '❌ Ошибка / Failed';
       return '⏳ В работе / In Progress';
     }
+    function paymentLabel(ps) {
+      if (!ps) return { text: '—', cls: 'mono-muted' };
+      const s = String(ps).toLowerCase();
+      if (['paid', 'gift_used', 'subscription_active'].includes(s)) return { text: '✅ Оплачено', cls: '' };
+      if (['requires_payment', 'pending'].includes(s)) return { text: '⚠️ Не оплачено', cls: '' };
+      return { text: String(ps), cls: '' };
+    }
 
     function normalizeSteps(raw) {
       if (raw && typeof raw === 'object') return raw;
@@ -397,6 +404,7 @@
                 '</div>' : ''}
               <div class="request-id" title="Полный UUID: ${escapeHtml((r.id || ''))}">ID: ${(r.id || '').substring(0,8)} • ${r.created_at ? new Date(r.created_at).toLocaleDateString('ru-RU') : '—'}</div>
               <div class="request-id">Режим: ${escapeHtml(r.mode || 'single')}${r.person2_name ? ' · Пара: ' + escapeHtml((r.person2_gender || '—')) : ''}</div>
+              ${(function(){ var pl = paymentLabel(r.payment_status); return '<div class="request-id" style="margin-top:4px;"><span class="' + pl.cls + '">' + escapeHtml(pl.text) + '</span>' + (r.payment_provider ? ' · ' + escapeHtml(r.payment_provider) : '') + '</div>'; })()}
             </div>
             <div class="request-status ${statusClass(gs)}">${statusLabel(gs)}</div>
           </div>
@@ -437,8 +445,9 @@
           ${stepsDigest(steps) ? '<div class="details-section"><div class="section-title">🧭 Контроль новых этапов</div><div class="content-text" style="font-size:12px;">' + stepsDigest(steps) + '</div></div>' : ''}
           <div class="actions">
             <button class="btn btn-primary" onclick="showDetails('${(r.id || '').replace(/'/g, "\\'")}')">📋 Подробнее / Details</button>
-            ${gs !== 'completed' ? '<button class="btn btn-warning" onclick="restart(\'' + (r.id || '').replace(/'/g, "\\'") + '\', this)">🔄 Перезапустить / Restart</button>' : ''}
+            <button class="btn btn-warning" onclick="restart('${(r.id || '').replace(/'/g, "\\'")}')">${gs === 'completed' ? '🔄 Перегенерировать' : '🔄 Перезапустить / Restart'}</button>
             ${r.audio_url ? '<button class="btn btn-success" onclick="window.open(\'' + r.audio_url.replace(/'/g, "\\'") + '\')">▶️ Слушать / Listen</button>' : ''}
+            ${r.audio_url ? '<button class="btn btn-success" onclick="deliver(\'' + (r.id || '').replace(/'/g, "\\'") + '\', this)">📤 Отправить пользователю</button>' : ''}
           </div>
         </div>`;
       }).join('');
@@ -804,28 +813,40 @@
           ${r.lyrics ? '<div class="details-section"><div class="section-title">🎵 Текст песни</div><div class="content-text" style="white-space:pre-wrap;">' + escapeHtml(r.lyrics) + '</div></div>' : ''}
           ${r.audio_url ? '<div class="details-section"><div class="section-title">🔊 Аудио</div><audio class="audio-player" controls src="' + escapeHtml(r.audio_url) + '"></audio><br><a href="' + escapeHtml(r.audio_url) + '" download><button class="btn btn-success" style="width:auto;">⬇️ Скачать</button></a></div>' : ''}
           <div class="actions" style="margin-top:30px;">
-            <button class="btn btn-warning" onclick="restart(\'' + (r.id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\', this); this.closest(\'div\').parentElement.remove();">🔄 Перезапустить генерацию</button>
+            <button class="btn btn-warning" onclick="restart(\'' + (r.id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\'); this.closest(\'div\').parentElement.remove();">🔄 Перезапустить генерацию</button>
+            ${r.audio_url ? '<button class="btn btn-success" onclick="deliver(\'' + (r.id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\', this); this.closest(\'div\').parentElement.remove();">📤 Отправить пользователю</button>' : ''}
             <button class="btn btn-primary" onclick="this.closest('div').parentElement.remove()">✅ Закрыть</button>
           </div>
         </div>`;
       document.body.appendChild(modal);
     }
 
-    window.restart = async function restart(id, btnEl) {
-      if (!id || typeof id !== 'string') { alert('Ошибка: нет ID заявки'); return; }
+    window.restart = async function restart(id) {
       if (!confirm('Перезапустить генерацию? / Restart generation?')) return;
-      if (btnEl) { btnEl.disabled = true; btnEl.textContent = '⏳ Перезапуск…'; }
       try {
-        const url = API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + '/restart' + authQueryFromPath();
-        const result = await fetchJson(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() } });
+        const result = await fetchJson(API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + '/restart' + authQueryFromPath(), { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() } });
         const json = result.json;
         const res = result.res;
-        if (json.success) { alert('✅ Генерация перезапущена / Generation restarted'); loadAdminData(); }
+        if (json.success) { alert('✅ Генерация перезапущена'); loadAdminData(); }
         else alert('Ошибка: ' + (json.error || res.status));
       } catch (e) {
         alert('Ошибка: ' + (e && e.message ? e.message : e));
+      }
+    }
+
+    window.deliver = async function deliver(id, btnEl) {
+      if (!btnEl) btnEl = document.activeElement;
+      const origText = btnEl ? btnEl.textContent : '';
+      if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Отправка…'; }
+      try {
+        const result = await fetchJson(API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + '/deliver' + authQueryFromPath(), { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() } });
+        const json = result.json;
+        if (json.success) { alert('✅ Песня отправлена пользователю'); }
+        else alert('Ошибка: ' + (json.error || 'unknown'));
+      } catch (e) {
+        alert('Ошибка: ' + (e && e.message ? e.message : e));
       } finally {
-        if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = '🔄 Перезапустить / Restart'; }
+        if (btnEl) { btnEl.disabled = false; btnEl.textContent = origText; }
       }
     }
 

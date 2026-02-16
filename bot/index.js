@@ -11,7 +11,6 @@ import { createHeroesRouter, getOrCreateAppUser, validateInitData } from "./hero
 import { chatCompletion } from "./deepseek.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import fs from "node:fs";
 import crypto from "node:crypto";
 import "dotenv/config";
 
@@ -19,14 +18,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Лог всегда в корне проекта (workspace), чтобы его можно было прочитать при любом cwd
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
-// Ссылка в коде — ВСЕГДА Render. Vercel удалён, env MINI_APP_URL с vercel игнорируем.
-const HARDCODED_MINI_APP = "https://telegram-miniapp-ar09.onrender.com/app";
-const MINI_APP_BASE = (() => {
-  const env = process.env.MINI_APP_URL || (process.env.RENDER_EXTERNAL_URL ? process.env.RENDER_EXTERNAL_URL + "/app" : null);
-  if (env && !env.toLowerCase().includes("vercel")) return env.replace(/\?.*$/, "").replace(/\/$/, "");
-  return HARDCODED_MINI_APP;
-})();
-const MINI_APP_URL = MINI_APP_BASE + "?v=16";
+const MINI_APP_BASE = (process.env.MINI_APP_URL || "https://telegram-miniapp-six-teal.vercel.app").replace(/\?.*$/, "").replace(/\/$/, "");
+const MINI_APP_URL = MINI_APP_BASE + "?v=11";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";
@@ -304,13 +297,7 @@ function buildHotCheckoutUrl({ itemId, orderId, amount, currency, requestId, sku
   if (sku) url.searchParams.set("sku", sku);
   // По умолчанию — мини-апп с параметрами для страницы «Спасибо за оплату» и авто-проверки статуса.
   const redirectUrl = process.env.HOT_REDIRECT_URL || (MINI_APP_BASE + "?payment=success&request_id=" + encodeURIComponent(requestId || ""));
-  if (redirectUrl) {
-    url.searchParams.set("redirect_url", redirectUrl);
-    try {
-      const domain = new URL(redirectUrl).hostname;
-      console.log("[hot/checkout] redirect_url domain:", domain, "| full:", redirectUrl.slice(0, 80) + (redirectUrl.length > 80 ? "…" : ""), "| HOT_REDIRECT_URL set:", !!process.env.HOT_REDIRECT_URL);
-    } catch (_) {}
-  }
+  if (redirectUrl) url.searchParams.set("redirect_url", redirectUrl);
   return url.toString();
 }
 
@@ -708,7 +695,7 @@ bot.on("message:web_app_data", async (ctx) => {
   await ctx.reply(
     "✅ Заявка принята!\n\n" +
     "Твой персональный звуковой ключ будет создан. Как только он будет готов — пришлю его сюда в чат. Ожидай уведомление.\n\n" +
-    "Детальную расшифровку узора можно запросить командой /get_analysis после оплаты."
+    "Детальную расшифровку натальной карты можно запросить командой /get_analysis после оплаты."
   );
 
   // Уведомление админам в личку о новой заявке (приходит в чат с ботом)
@@ -769,7 +756,7 @@ async function sendAnalysisIfPaid(ctx) {
     return;
   }
   if (!row?.detailed_analysis) {
-    await ctx.reply("У тебя пока нет готовой расшифровки узора. Сначала дождись готовой песни по заявке — затем можно запросить детальный разбор (после оплаты).");
+    await ctx.reply("У тебя пока нет готовой расшифровки натальной карты. Сначала дождись готовой песни по заявке — затем можно запросить детальный анализ (после оплаты).");
     return;
   }
   if (!row.analysis_paid) {
@@ -783,7 +770,7 @@ async function sendAnalysisIfPaid(ctx) {
     return;
   }
   if (text.length <= TELEGRAM_MAX) {
-    await ctx.reply("📜 Твоя детальная расшифровка узора:\n\n" + text);
+    await ctx.reply("📜 Твоя детальная расшифровка натальной карты:\n\n" + text);
     return;
   }
   await ctx.reply("📜 Твоя детальная расшифровка (несколько сообщений):");
@@ -1192,10 +1179,6 @@ const app = express();
 const WEBHOOK_URL = (process.env.WEBHOOK_URL || "").replace(/\/$/, "");
 // Базовый URL для ссылки на админку. Одинаковое значение с WEBHOOK_URL — нормально (один сервис = один URL).
 const BOT_PUBLIC_URL = (process.env.BOT_PUBLIC_URL || process.env.WEBHOOK_URL || process.env.HEROES_API_BASE || "").replace(/\/webhook\/?$/i, "").replace(/\/$/, "");
-// Telegram webhook: приём апдейтов от Telegram (/start, /ping, /admin и т.д.)
-if (WEBHOOK_URL) {
-  app.post("/webhook", express.json(), webhookCallback(bot, "express"));
-}
 app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, res) => {
   try {
     const rawBody = Buffer.isBuffer(req.body) ? req.body.toString("utf8") : String(req.body || "");
@@ -1294,40 +1277,11 @@ const healthHtml =
 app.get("/healthz", (_req, res) =>
   res.status(200).set("Content-Type", "text/html; charset=utf-8").send(healthHtml)
 );
-// Редирект с корня на Mini App — чтобы по ссылке без /app открывалось приложение, а не страница статуса
-app.get("/", (_req, res) => res.redirect(302, "/app"));
-// Страница статуса бота — по /status (для проверки и пробуждения)
-app.get("/status", (_req, res) =>
+app.get("/", (_req, res) =>
   res.status(200).set("Content-Type", "text/html; charset=utf-8").send(
-    "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>YupSoul Bot</title></head><body><p>YupSoul Bot работает.</p><p>Проверка: <a href=\"/healthz\">/healthz</a></p><p><strong>Mini App:</strong> <a href=\"/app\">/app</a></p><p>Админка: <a href=\"/admin\">/admin</a></p><p>Статус webhook: <a href=\"/healthz?webhook=1\">/healthz?webhook=1</a> — если бот не видит команды.</p><p>Приложение открывай из Telegram — кнопка меню бота.</p></body></html>"
+    "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>YupSoul Bot</title></head><body><p>YupSoul Bot работает.</p><p>Проверка: <a href=\"/healthz\">/healthz</a></p><p>Админка: <a href=\"/admin\">/admin</a></p><p>Статус webhook: <a href=\"/healthz?webhook=1\">/healthz?webhook=1</a> — если бот не видит команды.</p><p>Приложение открывай из Telegram — кнопка меню бота.</p></body></html>"
   )
 );
-const publicDir = fs.existsSync(path.join(__dirname, "public")) ? path.join(__dirname, "public") : path.join(__dirname, "..", "public");
-const miniAppIndexPath = path.join(publicDir, "index.html");
-function serveMiniAppHtml(_req, res) {
-  try {
-    if (!fs.existsSync(miniAppIndexPath)) {
-      console.error("[app] Mini App не найден:", miniAppIndexPath);
-      return res.status(404).set("Content-Type", "text/html; charset=utf-8").send(
-        "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Ошибка</title></head><body><p>Mini App не найден (public/index.html).</p><p><a href=\"/\">Назад</a></p></body></html>"
-      );
-    }
-    let html = fs.readFileSync(miniAppIndexPath, "utf8");
-    html = html.replace(
-      /window\.HEROES_API_BASE\s*=\s*'[^']*';\s*window\.BACKEND_URL\s*=\s*window\.HEROES_API_BASE;/,
-      "window.HEROES_API_BASE = window.location.origin; window.BACKEND_URL = window.HEROES_API_BASE;"
-    );
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    res.send(html);
-  } catch (err) {
-    console.error("[app] serve mini app:", err?.message || err);
-    res.status(500).send("Ошибка загрузки Mini App: " + (err?.message || err));
-  }
-}
-app.get("/app", serveMiniAppHtml);
-app.get("/app/", serveMiniAppHtml);
-app.use("/app", express.static(publicDir));
 // Обработчик /api/me (чтобы не было 500 ошибки)
 app.get("/api/me", (_req, res) => {
   res.json({ ok: true, user: null, authenticated: false });
@@ -1422,26 +1376,18 @@ app.get("/api/admin/requests", asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const limit = Math.min(parseInt(req.query?.limit, 10) || 50, 100);
   const statusFilter = req.query?.status || "all";
-  const fullSelect = "id,name,gender,birthdate,birthplace,person2_name,person2_gender,person2_birthdate,person2_birthplace,status,generation_status,payment_status,created_at,audio_url,mode,request,generation_steps";
-  const allowedPayment = ["paid", "gift_used", "subscription_active"];
+  const fullSelect = "id,name,gender,birthdate,birthplace,person2_name,person2_gender,person2_birthdate,person2_birthplace,status,generation_status,created_at,audio_url,mode,request,generation_steps,payment_status,payment_provider,telegram_user_id";
   let q = supabase.from("track_requests").select(fullSelect).order("created_at", { ascending: false }).limit(limit);
-  if (statusFilter === "pending") {
-    q = q.in("generation_status", ["pending", "astro_calculated", "lyrics_generated", "suno_processing", "processing"]);
-    q = q.in("payment_status", allowedPayment);
-  } else if (statusFilter === "idlers") {
-    q = q.or("payment_status.is.null,payment_status.eq.pending,payment_status.eq.requires_payment");
-  } else if (statusFilter === "completed") q = q.eq("generation_status", "completed");
+  if (statusFilter === "pending") q = q.in("generation_status", ["pending", "astro_calculated", "lyrics_generated", "suno_processing"]);
+  else if (statusFilter === "completed") q = q.eq("generation_status", "completed");
   else if (statusFilter === "failed") q = q.eq("generation_status", "failed");
   let result = await q;
   if (result.error && /does not exist|column/i.test(result.error.message)) {
-    if (statusFilter === "idlers") result = { data: [] };
-    else {
-      const minSelect = "id, name, status, created_at, request, telegram_user_id";
-      let q2 = supabase.from("track_requests").select(minSelect).order("created_at", { ascending: false }).limit(limit);
-      if (statusFilter === "completed") q2 = q2.eq("status", "completed");
-      else if (statusFilter === "failed") q2 = q2.eq("status", "failed");
-      result = await q2;
-    }
+    const minSelect = "id, name, status, created_at, request, telegram_user_id";
+    let q2 = supabase.from("track_requests").select(minSelect).order("created_at", { ascending: false }).limit(limit);
+    if (statusFilter === "completed") q2 = q2.eq("status", "completed");
+    else if (statusFilter === "failed") q2 = q2.eq("status", "failed");
+    result = await q2;
   }
   if (result.error) return res.status(500).json({ success: false, error: result.error.message });
   return res.json({ success: true, data: result.data || [] });
@@ -1466,7 +1412,7 @@ app.get("/api/admin/requests/:id", asyncApi(async (req, res) => {
   const id = sanitizeRequestId(req.params.id);
   if (!id) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
   if (!isValidRequestId(id)) return res.status(400).json({ success: false, error: "Используйте полный UUID заявки (с дефисами), не обрезанный ID" });
-  const fullCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message,llm_truncated,generation_steps";
+  const fullCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message,llm_truncated,generation_steps,payment_status,payment_provider,telegram_user_id";
   const coreCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message";
   const minCols = "id,name,gender,birthdate,birthplace,request,created_at,status,telegram_user_id";
   let usedFallbackCols = false;
@@ -1527,13 +1473,6 @@ app.post("/api/admin/requests/:id/restart", asyncApi(async (req, res) => {
   const id = sanitizeRequestId(req.params.id);
   if (!id) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
   if (!isValidRequestId(id)) return res.status(400).json({ success: false, error: "Используйте полный UUID заявки (с дефисами), не обрезанный ID" });
-  const { data: row, error: rowErr } = await supabase.from("track_requests").select("payment_status").eq("id", id).maybeSingle();
-  if (!rowErr && row) {
-    const ps = String(row.payment_status || "").toLowerCase();
-    if (ps && !["paid", "gift_used", "subscription_active"].includes(ps)) {
-      return res.status(400).json({ success: false, error: "Перезапуск только для оплаченных заявок. Статус: " + ps });
-    }
-  }
   const { error: updateError } = await supabase
     .from("track_requests")
     .update({
@@ -1548,6 +1487,52 @@ app.post("/api/admin/requests/:id/restart", asyncApi(async (req, res) => {
     generateSoundKey(id).catch((err) => console.error("[admin] restart generateSoundKey:", err?.message || err));
   }).catch((err) => console.error("[admin] restart import workerSoundKey:", err?.message || err));
   return res.json({ success: true, message: "Перезапущено" });
+}));
+
+app.post("/api/admin/requests/:id/deliver", asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const id = sanitizeRequestId(req.params.id);
+  if (!id || !isValidRequestId(id)) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
+  const { data, error } = await supabase
+    .from("track_requests")
+    .select("id,name,telegram_user_id,audio_url,cover_url,title")
+    .eq("id", id)
+    .maybeSingle();
+  if (error || !data) return res.status(404).json({ success: false, error: "Заявка не найдена" });
+  const { telegram_user_id, audio_url, cover_url, title, name } = data;
+  if (!telegram_user_id) return res.status(400).json({ success: false, error: "Нет telegram_user_id" });
+  if (!audio_url) return res.status(400).json({ success: false, error: "Нет аудио (audio_url)" });
+  if (!BOT_TOKEN) return res.status(503).json({ success: false, error: "BOT_TOKEN не настроен" });
+  const caption = `🗝️ ${name || "Друг"}, твой звуковой ключ готов!\n\nЭто не просто песня — это твой персональный ключ. Слушай сердцем ❤️\n— YupSoul`;
+  try {
+    if (cover_url) {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          chat_id: String(telegram_user_id),
+          photo: cover_url,
+          caption: `Обложка · ${title || "Звуковой ключ"}`,
+        }).toString(),
+      });
+    }
+    const audioRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        chat_id: String(telegram_user_id),
+        audio: audio_url,
+        caption,
+      }).toString(),
+    });
+    const audioData = await audioRes.json().catch(() => ({}));
+    if (!audioData.ok) return res.status(500).json({ success: false, error: audioData.description || "Ошибка Telegram API" });
+    return res.json({ success: true, message: "Песня отправлена пользователю" });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: e?.message || "Ошибка отправки" });
+  }
 }));
 
 app.get("/api/admin/settings", asyncApi(async (req, res) => {
@@ -1828,22 +1813,6 @@ app.post("/api/payments/hot/create", express.json(), asyncApi(async (req, res) =
   });
 }));
 
-// Для отладки «Redirect URL domain does not match» — проверить, какой redirect_url отправляется в HOT.
-app.get("/api/payments/hot/redirect-info", (_req, res) => {
-  const redirectUrl = process.env.HOT_REDIRECT_URL || (MINI_APP_BASE + "?payment=success&request_id=EXAMPLE");
-  let domain = "";
-  try {
-    domain = new URL(redirectUrl).hostname;
-  } catch (_) {}
-  res.json({
-    redirect_url: redirectUrl,
-    domain,
-    hint: "В панели HOT Pay в поле «Redirect Domain» должен быть указан ровно этот domain. Если там другой домен — ошибка «Redirect URL domain does not match».",
-    HOT_REDIRECT_URL_set: !!process.env.HOT_REDIRECT_URL,
-    MINI_APP_BASE,
-  });
-});
-
 app.get("/api/payments/hot/status", asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const initData = req.headers["x-telegram-init"] || req.query?.initData || "";
@@ -1938,8 +1907,6 @@ app.get("/api/admin/payments", asyncApi(async (req, res) => {
     .from("track_requests")
     .select("id,name,mode,payment_provider,payment_status,payment_order_id,payment_tx_id,payment_amount,payment_currency,promo_code,promo_discount_amount,promo_type,paid_at,created_at")
     .not("payment_provider", "is", null)
-    .in("payment_status", ["paid", "gift_used", "subscription_active"])
-    .order("paid_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error && /does not exist|column/i.test(error.message)) return res.json({ success: true, data: [] });
@@ -2210,14 +2177,6 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
 
 async function onBotStart(info) {
   console.log("Бот запущен:", info.username);
-  try {
-    await bot.api.setChatMenuButton({
-      menu_button: { type: "web_app", text: "Открыть приложение", web_app: { url: MINI_APP_URL } }
-    });
-    console.log("[Bot] Кнопка меню установлена:", MINI_APP_URL);
-  } catch (e) {
-    console.warn("[Bot] setChatMenuButton:", e?.message || e);
-  }
   if (ADMIN_IDS.length) console.log("Админы (ID):", ADMIN_IDS.join(", "));
   else console.warn("ADMIN_TELEGRAM_IDS не задан — команда /admin недоступна.");
   if (supabase) {
