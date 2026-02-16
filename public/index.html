@@ -334,7 +334,8 @@
       </header>
       
       <div class="section">
-        <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="220" height="220">
+        <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="220" height="220" onerror="this.style.display='none';var w=document.getElementById('logoFallback');if(w)w.style.display='block';">
+        <div id="logoFallback" class="app-logo" style="display:none;width:220px;height:220px;margin:0 auto;background:linear-gradient(135deg,#a78bfa,#ec4899);border-radius:24px;font-size:2.5rem;font-weight:700;color:#fff;line-height:220px;text-align:center;box-shadow:0 10px 28px rgba(167,139,250,.3);">YupSoul</div>
         <p id="homeGreeting" class="tagline" style="display:none;margin-bottom:12px"></p>
         <button id="startBtn">Начать</button>
         <div id="masterNav" style="display:none; margin-top:20px">
@@ -620,7 +621,8 @@
       </header>
       
       <div class="section">
-        <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo success" width="180" height="180">
+        <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo success" width="180" height="180" onerror="this.style.display='none';var w=document.getElementById('logoFallbackSuccess');if(w)w.style.display='block';">
+        <div id="logoFallbackSuccess" style="display:none;width:180px;height:180px;margin:0 auto 15px;background:linear-gradient(135deg,#a78bfa,#ec4899);border-radius:20px;font-size:2rem;font-weight:700;color:#fff;line-height:180px;text-align:center;">YupSoul</div>
         <h2 class="success-title">Готово!</h2>
         <p class="success-text">
           Твой персональный звуковой ключ создан! Это твой уникальный артефакт силы для игры жизни.
@@ -1449,7 +1451,7 @@
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:validationPassed',message:'pay validation passed',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
         // #endregion
-        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || 'https://telegram-miniapp-ar09.onrender.com').replace(/\/$/, '');
         // #region agent log — диагностика apiBase
         if (diagEl) diagEl.textContent = '🔗 apiBase: ' + (apiBase || '(пусто)');
         // #endregion
