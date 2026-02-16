@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>YupSoul</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- URL бота с API заявок (Render). Заявки идут через POST /api/submit-request. -->
+  <script>window.HEROES_API_BASE = 'https://telegram-miniapp-ar09.onrender.com'; window.BACKEND_URL = window.HEROES_API_BASE;</script>
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+    /* АДАПТИВНЫЕ СТИЛИ С ПОДДЕРЖКОЙ ТЕМЫ ТЕЛЕГРАМ */
+    :root {
+      --primary-color: #d4af37;
+      --secondary-color: #ec4899;
+      --success-color: #10b981;
+      --subtitle-readable: rgba(255,255,255,0.92);
+      /* базовые переменные темы по умолчанию (dark premium) */
+      --tg-theme-bg-color: #0A0A1A;
+      --tg-theme-secondary-bg-color: rgba(255,255,255,0.08);
+      --tg-theme-text-color: #ffffff;
+      --tg-theme-hint-color: rgba(224, 224, 240, 0.7);
+      --tg-theme-border-color: rgba(212, 175, 55, 0.3);
+      --tg-theme-button-color: #d4af37;
+      --tg-theme-button-text-color: #0A0A1A;
+    }
+    .theme-light {
+      --tg-theme-bg-color: #f5f3ff;
+      --tg-theme-secondary-bg-color: rgba(255,255,255,0.92);
+      --tg-theme-text-color: #1f2937;
+      --tg-theme-hint-color: rgba(31, 41, 55, 0.6);
+      --tg-theme-border-color: rgba(212,175,55,0.35);
+      --tg-theme-button-color: #d4af37;
+      --tg-theme-button-text-color: #1f2937;
+      --subtitle-readable: rgba(31,41,55,0.88);
+    }
+    .theme-dark {
+      --tg-theme-bg-color: #0A0A1A;
+      --tg-theme-secondary-bg-color: rgba(255,255,255,0.08);
+      --tg-theme-text-color: #ffffff;
+      --tg-theme-hint-color: rgba(224,224,240,0.7);
+      --tg-theme-border-color: rgba(212,175,55,0.3);
+      --tg-theme-button-color: #d4af37;
+      --tg-theme-button-text-color: #0A0A1A;
+      --subtitle-readable: rgba(255,255,255,0.92);
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    body {
+      background: var(--tg-theme-bg-color) url('assets/bg-yupsoul.png') center/cover no-repeat fixed !important;
+      color: var(--tg-theme-text-color) !important;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 20px 15px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content:"";position:fixed;inset:0;z-index:0;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(212,175,55,0.08), transparent 55%),
+        radial-gradient(circle at 80% 70%, rgba(236,72,153,0.06), transparent 60%),
+        linear-gradient(135deg, rgba(212,175,55,0.08), rgba(0,0,0,0.2));
+      pointer-events:none;
+    }
+    body::after {
+      content:"";position:fixed;inset:0;z-index:0;background:
+        radial-gradient(1px 1px at 20% 20%, rgba(255,255,255,0.7), transparent 40px),
+        radial-gradient(1px 1px at 40% 60%, rgba(255,255,255,0.5), transparent 40px),
+        radial-gradient(1px 1px at 70% 30%, rgba(255,255,255,0.8), transparent 40px),
+        radial-gradient(1px 1px at 85% 80%, rgba(255,255,255,0.4), transparent 40px);
+      opacity:0.4;
+      animation: stars 5s linear infinite;
+      pointer-events:none;
+    }
+    @keyframes stars { 0%{opacity:0.3;} 50%{opacity:0.8;} 100%{opacity:0.3;} }
+    .content-wrapper { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; color: var(--tg-theme-text-color, #fff); font-size: 14px; margin-bottom: 8px; font-weight: 500; }
+    input::placeholder, textarea::placeholder { color: var(--tg-theme-hint-color, rgba(255,255,255,.45)); opacity: .85; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 12px 16px; background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.05));
+      border: 1px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1)); border-radius: 8px;
+      color: var(--tg-theme-text-color, #fff); font-size: 14px; box-sizing: border-box;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--tg-theme-button-color, #8b5cf6); box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    }
+    .checkbox-group { display: flex; align-items: center; margin-top: 8px; }
+    .checkbox-group input[type="checkbox"] { width: 18px; height: 18px; margin-right: 8px; cursor: pointer; }
+    .checkbox-group label { margin: 0; font-size: 13px; color: var(--tg-theme-text-color, #fff); opacity: 0.9; }
+    small { color: var(--tg-theme-hint-color, rgba(255, 255, 255, 0.6)); font-size: 12px; }
+    h3 { color: var(--tg-theme-text-color, #fff); font-size: 18px; margin: 0 0 15px 0; font-weight: 600; }
+    #payBtn {
+      width: 100%; padding: 16px; background: linear-gradient(135deg, var(--tg-theme-button-color, #8b5cf6), #ec4899);
+      border: none; border-radius: 10px; color: var(--tg-theme-button-text-color, #fff); font-size: 16px; font-weight: 600;
+      cursor: pointer; transition: all 0.3s; margin-top: 20px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    }
+    #payBtn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4); }
+    #payBtn:active { transform: translateY(0); }
+    .form-section {
+      background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.05)); border-radius: 12px; padding: 20px; margin-bottom: 20px;
+      border: 1px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1));
+    }
+    .request-examples {
+      margin: 20px 0; padding: 15px; background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.05));
+      border-radius: 12px; border: 1px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1));
+    }
+    .request-examples h3 { font-size: 16px; color: var(--tg-theme-text-color, #fff); margin: 0 0 12px 0; font-weight: 500; }
+    .examples-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+    .example-btn {
+      background: var(--tg-theme-button-color, #8b5cf6); border: 1px solid var(--tg-theme-button-color, #8b5cf6);
+      color: var(--tg-theme-button-text-color, #fff); padding: 10px 12px; border-radius: 8px; font-size: 12px;
+      cursor: pointer; text-align: left; transition: all 0.2s; width: 100%;
+    }
+    .example-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .example-btn.special { background: var(--tg-theme-button-color, #8b5cf6); border-color: var(--tg-theme-button-color, #8b5cf6); }
+    .mode-selector {
+      margin: 20px 0; padding: 15px; background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.05));
+      border-radius: 12px; border: 1px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1));
+    }
+    .mode-selector h3 { font-size: 16px; color: var(--tg-theme-text-color, #fff); margin: 0 0 15px 0; font-weight: 500; text-align: center; }
+    .mode-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .mode-btn {
+      background: var(--tg-theme-bg-color, #1a1a1a); border: 2px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1));
+      color: var(--tg-theme-text-color, #fff); padding: 16px 12px; border-radius: 10px; cursor: pointer; transition: all 0.3s;
+      text-align: center; font-size: 14px; line-height: 1.4;
+    }
+    .mode-btn:hover {
+      background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.1)); border-color: var(--tg-theme-button-color, #8b5cf6);
+      transform: translateY(-2px);
+    }
+    .mode-btn.active {
+      background: linear-gradient(135deg, var(--tg-theme-button-color, #8b5cf6), #ec4899);
+      border-color: var(--tg-theme-button-color, #8b5cf6); color: var(--tg-theme-button-text-color, #fff);
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    }
+    .mode-icon { font-size: 28px; display: block; margin: 0 auto 8px; }
+    .mode-label { font-weight: 600; font-size: 14px; display: block; margin: 0 0 4px; }
+    .mode-desc { font-size: 11px; opacity: 0.8; display: block; margin-top: 4px; }
+    .location-input-wrapper { position: relative; }
+    .location-input {
+      width: 100%; padding: 12px 16px; background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.05));
+      border: 1px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1)); border-radius: 8px;
+      color: var(--tg-theme-text-color, #fff); font-size: 14px; box-sizing: border-box;
+    }
+    .location-input:focus {
+      outline: none; border-color: var(--tg-theme-button-color, #8b5cf6); box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    }
+    .location-suggestions {
+      position: absolute; z-index: 1000; background: var(--tg-theme-bg-color, #1a1a1a);
+      border: 1px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1)); border-radius: 8px;
+      max-height: 200px; overflow-y: auto; width: 100%; margin-top: 4px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      display: none;
+    }
+    .location-suggestion {
+      padding: 10px 12px; cursor: pointer; border-bottom: 1px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1));
+      color: var(--tg-theme-text-color, #fff); font-size: 14px; transition: background 0.2s;
+    }
+    .location-suggestion:hover { background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.1)); }
+    .location-suggestion:last-child { border-bottom: none; }
+    .stepper {
+      display: flex; gap: 8px; align-items: center; margin-bottom: 16px; position: relative;
+    }
+    .step-line {
+      position: absolute; left: 12px; right: 12px; height: 2px; background: var(--tg-theme-border-color); top: 18px; z-index: 0;
+    }
+    .step-indicator {
+      position: relative; z-index: 1; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--tg-theme-border-color);
+      background: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); font-weight: 600; font-size: 13px;
+      flex: 1; text-align: center;
+    }
+    .step-indicator.active {
+      border-color: var(--tg-theme-button-color); background: linear-gradient(135deg, var(--tg-theme-button-color), #ec4899);
+      color: var(--tg-theme-button-text-color); box-shadow: 0 6px 18px rgba(139,92,246,0.25);
+    }
+    .step-panel { margin-top: 4px; }
+    .step-nav { display: flex; gap: 12px; margin-top: 16px; }
+    .step-nav button { flex: 1; text-transform: none; letter-spacing: 0; }
+    @media (max-width: 480px) {
+      .mode-buttons { grid-template-columns: 1fr; }
+      .examples-grid { grid-template-columns: 1fr; }
+      .mode-btn { padding: 14px 10px; }
+      .mode-icon { font-size: 24px; }
+      .content-wrapper { padding: 15px; }
+      #payBtn { padding: 14px; font-size: 15px; }
+    }
+    @media (min-width: 481px) and (max-width: 768px) {
+      .mode-buttons { grid-template-columns: repeat(2, 1fr); }
+      .examples-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    /* Остальные стили приложения */
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Comfortaa',sans-serif}
+    body::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(1,6,26,.62) 0%,rgba(8,10,38,.78) 100%);z-index:0}
+    .container{max-width:600px;margin:0 auto;width:100%;position:relative;z-index:1}
+    .page{display:none;min-height:100vh;padding-top:20px}
+    .page.active{display:block}
+    header{text-align:center;margin:25px 0 20px}
+    h1{font-size:2.4rem;background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 4s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;letter-spacing:-1px;line-height:1.1}
+    .subtitle{color:var(--subtitle-readable,var(--tg-theme-text-color));font-size:1.05rem;margin-top:8px;font-weight:400}
+    .tagline{color:#d4af37;font-size:1.15rem;font-weight:600;margin:12px 0;letter-spacing:-0.2px}
+    .section{background:var(--tg-theme-secondary-bg-color);backdrop-filter:blur(20px);border-radius:24px;padding:30px 25px;box-shadow:0 15px 45px rgba(212,175,55,0.28);border:1px solid var(--tg-theme-border-color);position:relative;overflow:hidden;margin-bottom:25px}
+    .section::before{display:none}
+    .field{margin-bottom:22px;text-align:left}
+    label{display:block;margin-bottom:10px;color:var(--tg-theme-text-color,#2d2d2d);font-weight:600;font-size:1.05rem;display:flex;align-items:center;gap:10px}
+    label::before{content:attr(data-icon);font-size:1.25rem}
+    input,textarea,select{width:100%;padding:15px;border-radius:16px;border:1px solid var(--tg-theme-border-color,#e5e7eb);background:var(--tg-theme-secondary-bg-color,#fff);color:var(--tg-theme-text-color,#2d2d2d);font-size:16px;transition:all .3s ease;font-family:'Comfortaa',sans-serif}
+    input:focus,textarea:focus,select:focus{outline:none;border-color:var(--tg-theme-button-color,#a78bfa);box-shadow:0 0 0 3px rgba(167,139,250,.15)}
+    input.valid,textarea.valid{border-color:#4ade80}
+    .time-group{display:flex;flex-direction:column;gap:14px}
+    .checkbox{display:flex;align-items:center;gap:12px;margin-top:-6px}
+    .checkbox input{width:auto;height:20px;accent-color:#a78bfa}
+    .checkbox label{margin-bottom:0;font-weight:500;color:var(--tg-theme-text-color,#2d2d2d);font-size:1rem;display:flex;align-items:center;gap:8px}
+    .checkbox label::before{content:"❓";font-size:1.3rem}
+    select{appearance:none;background:url("image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23a78bfa' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 16px center;background-size:20px;padding-right:48px}
+    textarea{min-height:140px;line-height:1.6;resize:vertical}
+    .request-label{font-size:1.3rem;text-align:center;margin-bottom:15px;color:#a78bfa;font-weight:700;letter-spacing:-0.5px}
+    .request-help-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .request-help-row .request-label{margin-bottom:0;text-align:left;font-size:1.08rem;letter-spacing:-0.2px;line-height:1.2;max-width:68%}
+    .request-help-toggle{width:auto;min-height:auto;margin:0;padding:10px 12px;border-radius:14px;background:rgba(167,139,250,.14);color:#7c3aed;border:1px solid rgba(167,139,250,.45);box-shadow:none;text-transform:none;letter-spacing:0;font-size:.88rem;font-weight:700;flex:0 0 auto;white-space:nowrap}
+    @media (max-width: 430px){
+      .request-help-row{align-items:flex-start}
+      .request-help-row .request-label{max-width:62%}
+      .request-help-toggle{padding:9px 10px;font-size:.82rem}
+    }
+    .request-help-toggle::after{display:none}
+    .request-help-toggle:hover{transform:none;background:rgba(167,139,250,.2);box-shadow:none}
+    .request-examples{display:none;margin:10px 0 0 0;padding:10px;background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.22);border-radius:14px}
+    .request-examples.open{display:block}
+    .request-examples h3{font-size:.95rem;margin:0 0 8px 0;color:#7c3aed}
+    .examples-grid{display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;overflow-y:hidden;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+    .examples-grid::-webkit-scrollbar{height:6px}
+    .examples-grid::-webkit-scrollbar-thumb{background:rgba(167,139,250,.35);border-radius:8px}
+    .example-btn{width:auto;min-width:260px;max-width:320px;flex-shrink:0;white-space:normal;text-transform:none;letter-spacing:0;font-size:.9rem;font-weight:600;padding:12px 14px;margin:0;min-height:auto;border-radius:12px;box-shadow:none}
+    .example-btn::after{display:none}
+    .example-btn:hover{transform:none;box-shadow:none}
+    button{background:linear-gradient(135deg, #d4af37, #ec4899, #d4af37);background-size:300% 300%;animation:gradientShift 4s ease infinite;color:var(--tg-theme-button-text-color);border:none;padding:18px 30px;font-size:1.05rem;border-radius:18px;width:100%;font-weight:700;cursor:pointer;transition:all .3s ease;box-shadow:0 12px 35px rgba(212,175,55,0.6);margin-top:10px;letter-spacing:0;text-transform:none;min-height:58px;position:relative;overflow:hidden}
+    button::after{display:none}
+    button:hover{transform:translateY(-2px);box-shadow:0 14px 38px rgba(212,175,55,0.65)}
+    button:active{transform:translateY(1px)}
+    button:disabled{background:rgba(255,255,255,0.2);cursor:not-allowed;transform:none;box-shadow:none;opacity:.7}
+    button.secondary{background:rgba(255,255,255,0.12);color:var(--tg-theme-text-color);border:1px solid var(--tg-theme-border-color);box-shadow:none;text-transform:none;letter-spacing:0;font-weight:600;min-height:56px}
+    button.secondary:hover{background:rgba(255,255,255,0.18);box-shadow:0 6px 20px rgba(212,175,55,0.35)}
+    .btn-group{display:flex;gap:15px;margin-top:25px}
+    .btn-group button{flex:1}
+    .price-tag{background:linear-gradient(90deg,#f9a8d4,#a78bfa);color:white;padding:12px 20px;border-radius:16px;font-size:1.4rem;font-weight:700;text-align:center;margin:20px 0;box-shadow:0 4px 15px rgba(249,168,212,.3);letter-spacing:1px}
+    .payment-info{background:rgba(167,139,250,.05);border-left:4px solid #a78bfa;padding:15px;border-radius:0 12px 12px 0;margin:15px 0;font-size:.95rem;line-height:1.6}
+    .payment-info::before{content:"💎 ";font-size:1.3rem}
+    .success-icon{font-size:5rem;text-align:center;margin:20px 0;background:linear-gradient(90deg,#5eead4,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .keys-composition{display:flex;align-items:center;justify-content:center;gap:20px;margin:25px 0;flex-wrap:wrap}
+    .keys-composition svg{filter:drop-shadow(0 4px 12px rgba(167,139,250,.25));transition:transform .3s ease}
+    .keys-composition .key-music{transform:rotate(-10deg);width:56px;height:80px}
+    .keys-composition .key-door{transform:rotate(8deg);width:52px;height:80px}
+    .keys-composition .key-music:hover,.keys-composition .key-door:hover{transform:rotate(0) scale(1.05)}
+    .keys-composition-small{display:flex;align-items:center;justify-content:center;gap:12px;margin:15px 0}
+    .keys-composition-small .key-music{width:36px;height:50px;transform:rotate(-8deg);opacity:.9}
+    .keys-composition-small .key-door{width:34px;height:50px;transform:rotate(6deg);opacity:.9}
+    .app-logo{display:block;margin:0 auto;max-width:220px;width:100%;height:auto;border-radius:0;box-shadow:0 10px 28px rgba(214,172,83,.22)}
+    .app-logo.success{max-width:180px;margin-bottom:15px}
+    .success-title{font-size:2.2rem;color:#a78bfa;font-weight:800;text-align:center;margin:20px 0;background:linear-gradient(90deg,#a78bfa,#f9a8d4);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .success-text{font-size:1.15rem;line-height:1.7;margin:20px 0;text-align:center;padding:0 10px}
+    .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px 40px;text-align:center;min-height:70vh}
+    .spinner{width:60px;height:60px;border:5px solid rgba(167,139,250,.2);border-top-color:#a78bfa;border-radius:50%;margin:0 auto 25px;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-text{font-size:1.5rem;color:#a78bfa;font-weight:700;margin-bottom:15px}
+    .song-preview{background:white;border-radius:16px;padding:20px;margin:20px 0;text-align:left;border:2px solid #a78bfa}
+    .song-preview h3{color:#a78bfa;font-size:1.4rem;margin-bottom:10px;text-align:center}
+    .song-preview p{font-size:1.05rem;line-height:1.7;color:var(--tg-theme-text-color,#2d2d2d)}
+    footer{text-align:center;padding:30px 0 20px;color:#6b7280;font-size:.95rem;margin-top:auto}
+    .birthplace-wrap{position:relative}
+    .birthplace-suggestions{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--tg-theme-bg-color,#fff);border:1px solid var(--tg-theme-border-color,#e5e7eb);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;z-index:50;list-style:none;padding:6px 0}
+    .birthplace-suggestions li{padding:12px 16px;cursor:pointer;font-size:1rem;color:var(--tg-theme-text-color,#2d2d2d);border-bottom:1px solid var(--tg-theme-border-color,#f3f4f6);transition:background .15s}
+    .birthplace-suggestions li:last-child{border-bottom:none}
+    .birthplace-suggestions li:hover,.birthplace-suggestions li.selected{background:rgba(167,139,250,.12);color:#6d28d9}
+    .birthplace-suggestions .place-type{font-size:.85rem;color:#6b7280;margin-top:2px}
+    .birthplace-summary .place-name{font-weight:700;color:#5b21b6}
+    .place-coords{font-family:ui-monospace,monospace;letter-spacing:.02em}
+    /* Debug overlay for HOT payment */
+    .hot-debug-toggle{position:fixed;right:12px;top:12px;z-index:100000;background:rgba(212,175,55,0.18);border:1px solid var(--tg-theme-border-color);color:var(--tg-theme-text-color);padding:8px 10px;border-radius:10px;font-size:12px;cursor:pointer;opacity:0.95;transition:all .2s;font-weight:700}
+    .hot-debug-toggle:hover{opacity:1;box-shadow:0 6px 18px rgba(212,175,55,0.45)}
+    .hot-debug-panel{position:fixed;right:12px;top:52px;z-index:100000;width:320px;max-height:360px;overflow-y:auto;background:rgba(10,10,26,0.96);border:1px solid var(--tg-theme-border-color);border-radius:12px;padding:10px 12px;box-shadow:0 14px 30px rgba(0,0,0,0.45);display:none}
+    .hot-debug-panel h4{margin:0 0 8px 0;font-size:13px;color:var(--tg-theme-text-color)}
+    .hot-debug-panel .row{font-size:12px;color:var(--tg-theme-hint-color);padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08)}
+    .hot-debug-panel .row:last-child{border-bottom:none}
+    .payment-build-badge{display:none;align-items:center;gap:6px;background:rgba(212,175,55,0.14);border:1px solid rgba(212,175,55,0.35);color:#f8e7b0;padding:6px 10px;border-radius:999px;font-size:12px;margin-bottom:12px}
+    
+    #transitForm{display:none;margin-top:30px;padding:20px;background:var(--tg-theme-secondary-bg-color,rgba(255,255,255,0.05));border-radius:12px;border:1px solid var(--tg-theme-border-color,rgba(255,255,255,0.1))}
+    #transitForm h3{color:var(--tg-theme-text-color,#fff);margin:0 0 15px 0;font-size:18px}
+    #secondPersonForm{display:none;margin-top:30px;padding:20px;background:var(--tg-theme-secondary-bg-color,rgba(255,255,255,0.05));border-radius:12px;border:1px solid var(--tg-theme-border-color,rgba(255,255,255,0.1))}
+    #secondPersonForm h3{color:var(--tg-theme-text-color,#fff);margin:0 0 15px 0;font-size:18px}
+    
+    /* Панель навигации для превью в браузере */
+    .preview-nav{background:white;border-radius:16px;padding:12px;margin-bottom:25px;box-shadow:0 4px 20px rgba(167,139,250,.15);text-align:center;border:1px solid #e5e7eb;display:none}
+    .preview-nav.show{display:block}
+    .preview-nav-buttons{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
+    .preview-nav button{background:white;color:#a78bfa;border:2px solid #a78bfa;padding:6px 14px;margin:0 4px;border-radius:20px;cursor:pointer;font-weight:600;transition:all .2s;font-size:.9rem;min-width:90px}
+    .preview-nav button:hover{background:#a78bfa;color:white;transform:translateY(-2px)}
+    .preview-nav button.active{background:linear-gradient(90deg,#a78bfa,#f9a8d4);color:white;border-color:transparent;box-shadow:0 4px 15px rgba(167,139,250,.3)}
+    
+    @media (max-width:480px){.container{padding:0 12px}h1{font-size:2.1rem}.subtitle{font-size:1.05rem}.tagline{font-size:1.2rem}.section{padding:25px 20px}.btn-group{flex-direction:column}.btn-group button{width:100%}button{font-size:1.15rem;padding:16px;min-height:60px}.price-tag{font-size:1.25rem;padding:10px 15px}.success-icon{font-size:4rem}.success-title{font-size:1.9rem}.success-text{font-size:1.05rem}.preview-nav-buttons{flex-direction:column;align-items:center}.preview-nav button{width:100%;max-width:200px}}
+  </style>
+</head>
+<body>
+  <!-- Панель навигации для превью (показывается только в браузере) -->
+  <div class="container">
+    <div class="preview-nav" id="previewNav">
+      <div style="font-weight:600;color:#a78bfa;margin-bottom:8px">🎨 Режим превью</div>
+      <div class="preview-nav-buttons">
+        <button class="active" data-page="home">Главная</button>
+        <button data-page="form">Форма</button>
+        <button data-page="payment">Оплата</button>
+        <button data-page="loading">Загрузка</button>
+        <button data-page="success">Успех</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Главная страница -->
+    <div class="page active" id="homePage">
+      <header>
+        <h1>YupSoul</h1>
+        <div class="subtitle">твоя жизнь — игра</div>
+        <div class="tagline">Отправь запрос во Вселенную</div>
+      </header>
+      
+      <div class="section">
+        <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="220" height="220">
+        <p id="homeGreeting" class="tagline" style="display:none;margin-bottom:12px"></p>
+        <button id="startBtn">Начать</button>
+        <div id="masterNav" style="display:none; margin-top:20px">
+          <button class="secondary" id="goHeroesBtn">👥 Мои герои</button>
+        </div>
+        <div id="adminLinkWrap" style="display:none; margin-top:16px; text-align:center">
+          <a href="#" id="adminLinkBtn" class="secondary" style="display:inline-block;padding:10px 20px;text-decoration:none;color:inherit;border-radius:8px;border:2px solid var(--tg-theme-button-color,#8b5cf6);color:var(--tg-theme-button-color,#8b5cf6)">👑 Админка</a>
+        </div>
+      </div>
+      
+      <footer>
+        <p>YupSoul • 2026</p>
+      </footer>
+    </div>
+    
+    <!-- Страница «Мои герои» (тариф Мастер) -->
+    <div class="page" id="heroesPage">
+      <header>
+        <h1>Мои герои</h1>
+        <div class="subtitle">Картотека клиентов</div>
+      </header>
+      <div class="section">
+        <div class="field">
+          <label>Поиск по имени</label>
+          <input type="text" id="heroesSearch" placeholder="Введите имя...">
+        </div>
+        <button class="secondary" id="heroesSearchBtn" style="margin-bottom:15px">Искать</button>
+        <div id="heroesList"></div>
+        <button id="addHeroBtn" style="margin-top:15px">➕ Добавить героя</button>
+        <div id="heroFormWrap" style="display:none; margin-top:25px; padding-top:20px; border-top:1px solid #e5e7eb">
+          <div class="field"><label for="heroName">Имя *</label><input type="text" id="heroName" placeholder="Имя героя" required></div>
+          <div class="field"><label for="heroBirthdate">Дата рождения</label><input type="date" id="heroBirthdate"></div>
+          <div class="field"><label for="heroBirthtime">Время рождения</label><input type="time" id="heroBirthtime"></div>
+          <div class="field"><label for="heroBirthplace">Место рождения</label><input type="text" id="heroBirthplace" placeholder="Город, страна"></div>
+          <div class="checkbox" style="margin-bottom:15px"><input type="checkbox" id="heroBirthtimeUnknown"><label for="heroBirthtimeUnknown">Не знаю точное время</label></div>
+          <div class="field"><label for="heroGender">Пол</label><select id="heroGender"><option value="">Выбери</option><option value="male">Мужской</option><option value="female">Женский</option><option value="other">Другой</option></select></div>
+          <div class="field"><label for="heroNotes">Досье / заметки</label><textarea id="heroNotes" placeholder="Заметки о клиенте" rows="3"></textarea></div>
+          <div class="btn-group">
+            <button class="secondary" id="heroFormCancel">Отмена</button>
+            <button id="heroFormSave">Сохранить</button>
+          </div>
+        </div>
+      </div>
+      <div class="btn-group" style="margin-top:20px">
+        <button class="secondary" id="heroesBackBtn">← Назад</button>
+      </div>
+      <footer><p>YupSoul • 2026</p></footer>
+    </div>
+    
+    <!-- Страница формы -->
+    <div class="page" id="formPage">
+      <header>
+        <h1>YupSoul</h1>
+        <div class="subtitle">твоя жизнь — игра</div>
+      </header>
+      
+      <div class="section">
+        <div class="step-panel" data-step="1">
+          <div class="mode-selector">
+            <h3>Выбери тип звукового ключа</h3>
+            <div class="mode-buttons">
+              <button type="button" class="mode-btn active" data-mode="single">
+                <span class="mode-label">Для себя</span>
+                <span class="mode-desc">Глубокий анализ</span>
+              </button>
+              <button type="button" class="mode-btn" data-mode="couple">
+                <span class="mode-label">Для двоих</span>
+                <span class="mode-desc">Дуэт/пара</span>
+              </button>
+              <button type="button" class="mode-btn" data-mode="transit">
+                <span class="mode-label">Энергия дня</span>
+                <span class="mode-desc">Энергия момента</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-panel" data-step="2">
+        <div class="field">
+            <input type="text" id="name" placeholder="Как тебя зовут?" required aria-label="Имя">
+        </div>
+        
+        <div class="field">
+            <input type="date" id="birthdate" required aria-label="Дата рождения">
+          <div id="birthdateSummary" class="field-summary" style="display:none; margin-top:8px; padding:10px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
+        </div>
+        
+        <div class="field">
+          <div class="birthplace-wrap">
+              <input type="text" id="birthplace" placeholder="Город или страна — выбери из подсказок" required autocomplete="off" aria-label="Локация рождения">
+            <ul id="birthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true"></ul>
+          </div>
+          <div id="birthplaceSummary" class="field-summary birthplace-summary" style="display:none; margin-top:8px; padding:12px 14px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
+          <div id="placeCoords" class="place-coords" style="display:none; margin-top:6px; padding:10px 14px; background:rgba(94,234,212,.1); border-radius:10px; font-size:.9rem; color:#0d9488;"></div>
+        </div>
+        
+        <div class="field">
+          <div class="time-group">
+              <input type="time" id="birthtime" required aria-label="Время рождения">
+            <div class="checkbox">
+              <input type="checkbox" id="unknown">
+              <label for="unknown">Не знаю точное время</label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="field">
+          <select id="gender" required>
+              <option value="">Пол</option>
+            <option value="male">Мужской</option>
+            <option value="female">Женский</option>
+          </select>
+        </div>
+        
+        <div class="field">
+            <select id="language" required aria-label="Язык песни и описания">
+              <option value="">Язык песни</option>
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+            <option value="uk">Українська</option>
+          </select>
+        </div>
+        
+          <div id="secondPersonForm" style="display:none">
+            <h3 style="margin-bottom:12px;">Для двоих</h3>
+          <div class="field">
+            <input type="text" id="name2" placeholder="Имя второго человека" maxlength="50">
+          </div>
+          <div class="field">
+              <input type="date" id="birthdate2" max="2010-12-31" placeholder="Дата рождения">
+          </div>
+          <div class="field form-group location-input-wrapper">
+              <input type="text" id="birthplace2" class="location-input" placeholder="Место рождения второго" maxlength="100" autocomplete="off">
+            <div id="birthplaceSuggestions2" class="location-suggestions"></div>
+          </div>
+          <div class="field">
+            <div class="time-group">
+                <input type="time" id="birthtime2" style="flex:1" placeholder="Время рождения">
+              <div class="checkbox" style="margin:0 0 0 15px">
+                <input type="checkbox" id="unknown2">
+                <label for="unknown2">Не знаю</label>
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <select id="gender2">
+                <option value="">Пол</option>
+              <option value="female">Женский</option>
+              <option value="male">Мужской</option>
+            </select>
+          </div>
+        </div>
+        
+          <div id="transitForm" style="display:none">
+            <h3 style="margin-bottom:12px;">Энергия момента</h3>
+          <div class="field">
+              <input type="date" id="transitDate" min="2024-01-01" max="2030-12-31" placeholder="Дата события">
+          </div>
+          <div class="field">
+              <input type="time" id="transitTime" placeholder="Время события">
+          </div>
+          <div class="field form-group location-input-wrapper">
+              <input type="text" id="transitLocation" class="location-input" placeholder="Город для энергии момента" maxlength="100" autocomplete="off">
+            <div id="transitLocationSuggestions" class="location-suggestions"></div>
+            <div class="checkbox-group" style="margin-top: 10px;">
+              <input type="checkbox" id="transitLocationConfirmed">
+                <label for="transitLocationConfirmed">Локация указана верно</label>
+            </div>
+          </div>
+          <div class="field">
+              <textarea id="transitIntent" placeholder="Намерение момента (опционально)" rows="2" maxlength="200" style="min-height:60px"></textarea>
+            </div>
+          </div>
+        </div>
+        
+        <div class="step-panel" data-step="3">
+        <div class="field">
+          <div class="request-help-row">
+              <div class="request-label">Отправь запрос</div>
+              <button type="button" id="quickRequestsToggle" class="request-help-toggle" aria-expanded="false">Быстрые запросы</button>
+          </div>
+            <textarea id="request" placeholder="Какую грань будем исследовать сегодня?" aria-label="Запрос" rows="4"></textarea>
+            <div class="request-examples" id="quickRequestsPanel">
+              <div class="quick-list" id="quickRequestsList" style="display:flex;flex-direction:column;gap:8px;">
+                <button type="button" class="example-btn" data-text="Гармония в отношениях и любовь к себе">Гармония и любовь к себе</button>
+                <button type="button" class="example-btn" data-text="Уверенность, предназначение и опора на себя">Уверенность и предназначение</button>
+                <button type="button" class="example-btn" data-text="Раскрыть творческий потенциал без страха">Творческий потенциал</button>
+                <button type="button" class="example-btn" data-text="Отпустить прошлое и открыть новые возможности">Отпустить прошлое</button>
+                <button type="button" class="example-btn" data-text="Баланс работы и личной жизни">Баланс жизни</button>
+                <button type="button" class="example-btn" data-text="Доверять жизни и отпускать контроль">Доверие и принятие</button>
+                <button type="button" class="example-btn" data-text="Исцелить детские травмы и обрести свободу">Исцеление и свобода</button>
+                <button type="button" class="example-btn" data-text="Найти свой путь к счастью и спокойствию">Путь к счастью</button>
+                <button type="button" class="example-btn" data-text="Мощная песня о моей силе и преодолении">Сила и преодоление</button>
+                <button type="button" class="example-btn" data-text="Медитативная песня для практики и исцеления">Глубина и тишина</button>
+                <button type="button" class="example-btn" data-text="Тёплая песня о заботе и нежности">Нежность и забота</button>
+                <button type="button" class="example-btn" data-text="Весёлая песня с самоиронией про мои слабости">Юмор и лёгкость</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="step-nav">
+          <button id="stepNext">К оплате</button>
+        </div>
+      </div>
+      
+      <footer>
+        <p>YupSoul • 2026</p>
+      </footer>
+    </div>
+    
+    <!-- Страница донатов / реквизиты -->
+    <div class="page" id="paymentPage">
+      <header>
+        <h1>YupSoul</h1>
+        <div class="subtitle">Твой звуковой ключ</div>
+      </header>
+      
+      <div class="section">
+        <div class="payment-build-badge">Build: c4eee97+dbg</div>
+        <div class="tagline" style="margin-bottom:15px">Оплата и доступ</div>
+        <p style="text-align:center;font-size:1.05rem;line-height:1.7;margin-bottom:16px">
+          Первая песня  — в подарок. Дальше можно оплатить отдельный элемент или оформить подписку на полный доступ.
+        </p>
+        <div id="pricingNotice" style="background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.4);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:.92rem;color:rgba(255,255,255,0.95);">
+          Загрузка тарифов...
+        </div>
+        <div id="priceSummary" style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:20px;margin:16px 0;">
+          <div style="font-size:.95rem;color:rgba(255,255,255,0.9);">Текущий элемент</div>
+          <div id="priceLabel" style="font-size:1.15rem;font-weight:700;color:#fff;margin-top:6px;">—</div>
+          <div id="priceValue" style="font-size:1.8rem;font-weight:800;color:#fff;margin-top:6px;">—</div>
+          <div id="priceHint" style="font-size:.88rem;color:rgba(255,255,255,0.85);margin-top:6px;"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input id="promoCodeInput" type="text" placeholder="Промокод" style="flex:1;min-width:180px;padding:10px 12px;border-radius:10px;border:1px solid rgba(212,175,55,.4);background:var(--tg-theme-secondary-bg-color);color:var(--tg-theme-text-color);text-transform:uppercase;">
+          <button id="promoApplyBtn" type="button" class="secondary" style="min-width:140px;margin-top:0;">Применить</button>
+        </div>
+        <div id="paymentStatus" style="display:none;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.35);border-radius:12px;padding:12px 14px;margin:14px 0;font-size:.92rem;color:rgba(255,255,255,.95);"></div>
+        <div class="btn-group">
+          <button class="secondary" id="backFromPaymentBtn">← Назад</button>
+          <button id="payBtn">Оформить и продолжить</button>
+        </div>
+      </div>
+      
+      <footer>
+        <p>YupSoul • 2026</p>
+      </footer>
+      
+    </div>
+    
+    <!-- Страница загрузки -->
+    <div class="page" id="loadingPage">
+      <div class="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">Создаю твой ключ...</div>
+        <div style="color:#6b7280;font-size:1.1rem;text-align:center;max-width:400px">
+          Магия творится в реальном времени. Твой персональный звуковой ключ формируется на основе твоих уникальных данных.
+        </div>
+      </div>
+    </div>
+    
+    <!-- Страница успеха -->
+    <div class="page" id="successPage">
+      <header>
+        <h1>YupSoul</h1>
+        <div class="subtitle">Ключ активирован!</div>
+      </header>
+      
+      <div class="section">
+        <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo success" width="180" height="180">
+        <h2 class="success-title">Готово!</h2>
+        <p class="success-text">
+          Твой персональный звуковой ключ создан! Это твой уникальный артефакт силы для игры жизни.
+        </p>
+        
+        <div class="song-preview">
+          <h3>🎵 Твоя песня</h3>
+          <p id="songPreviewText">
+            Твоя уникальная аудиокомпозиция уже ждёт тебя в боте. Слушай её каждое утро, чтобы настроиться на волну успеха.
+          </p>
+        </div>
+        
+        <div style="background:rgba(167,139,250,.08);border-radius:12px;padding:15px;margin:20px 0;text-align:center;font-size:1.05rem;line-height:1.7">
+          <strong>Что дальше:</strong><br>
+          Открой бота <a href="https://t.me/Yup_Soul_bot" style="color:#a78bfa;text-decoration:underline">@Yup_Soul_bot</a> в Telegram — там тебя ждёт твой звуковой ключ.
+        </div>
+        
+        <button class="secondary" id="soulChatBtn" type="button" style="margin-top:15px">Поговорить с душой</button>
+        <button class="secondary" id="newKeyBtn" style="margin-top:15px">Создать ещё один ключ</button>
+      </div>
+      
+      <footer>
+        <p>YupSoul • 2026</p>
+      </footer>
+    </div>
+
+    <!-- Страница «Спасибо за оплату» (редирект с HOT) -->
+    <div class="page" id="paymentThanksPage">
+      <header>
+        <h1>YupSoul</h1>
+        <div class="subtitle">оплата принята</div>
+      </header>
+      <div class="section" style="text-align:center; padding: 40px 20px">
+        <div class="success-icon" style="font-size:4rem; margin-bottom:20px">✓</div>
+        <h2 class="success-title" style="font-size:1.6rem; margin:0 0 16px 0">Спасибо за оплату</h2>
+        <p class="success-text" id="paymentThanksMessage" style="margin:0 0 24px 0; font-size:1rem">
+          Проверяем оплату…
+        </p>
+        <button id="paymentThanksBackBtn">Готово</button>
+      </div>
+      <footer><p>YupSoul • 2026</p></footer>
+    </div>
+    
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var tg = null;
+      function logColorSnapshot(stage, pageId) {
+        try {
+          var rootStyles = getComputedStyle(document.documentElement);
+          var bodyStyles = getComputedStyle(document.body);
+          var formPage = document.getElementById('formPage');
+          var scope = formPage || document;
+          var labelEl = scope.querySelector('label');
+          var fieldEl = scope.querySelector('input,select,textarea');
+          var requestLabelEl = scope.querySelector('.request-label');
+          var tgParams = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.themeParams) ? window.Telegram.WebApp.themeParams : {};
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:theme:colorSnapshot',message:'runtime color snapshot',data:{stage:String(stage||''),pageId:String(pageId||''),activePage:(document.querySelector('.page.active')||{}).id||null,tgTextColor:tgParams.text_color||null,tgBgColor:tgParams.bg_color||null,cssVarTextColor:(rootStyles.getPropertyValue('--tg-theme-text-color')||'').trim()||null,cssVarBgColor:(rootStyles.getPropertyValue('--tg-theme-bg-color')||'').trim()||null,bodyColor:bodyStyles.color||null,bodyBgColor:bodyStyles.backgroundColor||null,labelColor:labelEl?getComputedStyle(labelEl).color:null,fieldColor:fieldEl?getComputedStyle(fieldEl).color:null,fieldBgColor:fieldEl?getComputedStyle(fieldEl).backgroundColor:null,requestLabelColor:requestLabelEl?getComputedStyle(requestLabelEl).color:null,locationHref:window.location.href||null},timestamp:Date.now(),runId:'color-drift-debug',hypothesisId:'H1,H2,H3,H4'})}).catch(()=>{});
+        } catch (e) {
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:theme:colorSnapshot',message:'runtime color snapshot failed',data:{stage:String(stage||''),pageId:String(pageId||''),errorMessage:e&&e.message?String(e.message):String(e)},timestamp:Date.now(),runId:'color-drift-debug',hypothesisId:'H4'})}).catch(()=>{});
+        }
+      }
+      function initApp() {
+        try {
+      if (window.Telegram && window.Telegram.WebApp) {
+            tg = window.Telegram.WebApp;
+        tg.ready();
+            tg.expand();
+            if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
+            logColorSnapshot('init-app', 'homePage');
+            return true;
+          }
+        } catch (e) { console.warn('Telegram init:', e); }
+        return false;
+      }
+      if (!initApp()) {
+        var attempts = 0;
+        var t = setInterval(function() {
+          attempts++;
+          if (initApp() || attempts >= 50) {
+            clearInterval(t);
+            if (!tg) showNotFromTelegramBanner();
+            logColorSnapshot('init-retry-finished', 'homePage');
+          }
+        }, 100);
+      }
+      function showNotFromTelegramBanner() {
+        var banner = document.createElement('div');
+        banner.id = 'not-telegram-banner';
+        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fef3c7;color:#92400e;padding:12px 16px;text-align:center;font-size:0.95rem;border-bottom:1px solid #f59e0b;';
+        banner.textContent = 'Открой приложение из чата с ботом в Telegram (кнопка меню) — иначе заявка не отправится.';
+        document.body.insertBefore(banner, document.body.firstChild);
+      }
+      async function showLocationSuggestions(inputElement, suggestionsContainerId, confirmCheckboxId) {
+        var value = inputElement.value.trim();
+        var suggestionsContainer = document.getElementById(suggestionsContainerId);
+        if (value.length < 2) {
+          if (suggestionsContainer) suggestionsContainer.style.display = 'none';
+          return;
+        }
+        try {
+          var response = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(value) + '&addressdetails=1&limit=5', { headers: { 'Accept': 'application/json', 'User-Agent': 'YupSoulMiniApp/1.0' } });
+          var locations = await response.json();
+          if (locations.length === 0) {
+            if (suggestionsContainer) {
+              suggestionsContainer.innerHTML = '<div style="padding: 10px; color: var(--tg-theme-hint-color, rgba(255,255,255,0.6)); text-align: center;">Не найдено</div>';
+              suggestionsContainer.style.display = 'block';
+            }
+            return;
+          }
+          if (suggestionsContainer) {
+            suggestionsContainer.innerHTML = locations.map(function(loc) {
+              var display = (loc.display_name || '')
+                .replace(', Россия', '').replace(', Беларусь', '').replace(', Российская Федерация', '').replace(', Republic of Belarus', '');
+              return '<div class="location-suggestion" data-value="' + (display.replace(/"/g, '&quot;')) + '">' + (display.replace(/</g, '&lt;')) + '</div>';
+            }).join('');
+            suggestionsContainer.style.display = 'block';
+            suggestionsContainer.querySelectorAll('.location-suggestion').forEach(function(item) {
+              item.addEventListener('click', function() {
+                inputElement.value = item.getAttribute('data-value');
+                suggestionsContainer.style.display = 'none';
+                if (confirmCheckboxId) {
+                  var checkbox = document.getElementById(confirmCheckboxId);
+                  if (checkbox) checkbox.checked = true;
+                }
+              });
+            });
+          }
+        } catch (err) {
+          console.error('Ошибка поиска местоположения:', err);
+          if (suggestionsContainer) {
+            suggestionsContainer.innerHTML = '<div style="padding: 10px; color: #ef4444; text-align: center;">Ошибка поиска</div>';
+            suggestionsContainer.style.display = 'block';
+          }
+        }
+      }
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.location-input-wrapper')) {
+          document.querySelectorAll('.location-suggestions').forEach(function(el) { el.style.display = 'none'; });
+        }
+      });
+      var userTariff = 'basic';
+      var userProfile = null;
+      var heroesCache = [];
+      var editingHeroId = null;
+      var pricingCatalog = [];
+      var freeTrialAvailable = true;
+      var activePromo = null;
+
+      function getCurrentSku() {
+        var modeSku = selectedMode || 'single';
+        if (modeSku === 'couple') return 'couple_song';
+        if (modeSku === 'transit') return 'transit_energy_song';
+        return 'single_song';
+      }
+      function setPaymentStatus(text, tone) {
+        var el = document.getElementById('paymentStatus');
+        if (!el) return;
+        if (!text) { el.style.display = 'none'; return; }
+        el.style.display = 'block';
+        el.textContent = text;
+        el.style.color = 'rgba(255,255,255,.95)';
+        if (tone === 'ok') { el.style.borderColor = 'rgba(212,175,55,.5)'; el.style.background = 'rgba(212,175,55,.15)'; return; }
+        if (tone === 'warn') { el.style.borderColor = 'rgba(212,175,55,.45)'; el.style.background = 'rgba(212,175,55,.12)'; return; }
+        if (tone === 'error') { el.style.borderColor = 'rgba(236,72,153,.5)'; el.style.background = 'rgba(236,72,153,.12)'; return; }
+        el.style.borderColor = 'rgba(212,175,55,.35)';
+        el.style.background = 'rgba(212,175,55,.1)';
+      }
+      function updatePaymentUiFromCatalog() {
+        var sku = getCurrentSku();
+        var item = pricingCatalog.find(function(x) { return x && x.sku === sku; }) || null;
+        var priceLabel = document.getElementById('priceLabel');
+        var priceValue = document.getElementById('priceValue');
+        var priceHint = document.getElementById('priceHint');
+        var notice = document.getElementById('pricingNotice');
+        if (priceLabel) priceLabel.textContent = item ? (item.title || sku) : sku;
+        if (priceValue) {
+          if (item && activePromo && activePromo.sku === sku) {
+            priceValue.textContent = String(activePromo.amount_after) + ' ' + (activePromo.currency || item.currency || 'USDT');
+          } else {
+            priceValue.textContent = item ? (String(item.price) + ' ' + (item.currency || 'USDT')) : '—';
+          }
+        }
+        if (priceHint) {
+          if (item && activePromo && activePromo.sku === sku) {
+            priceHint.textContent = 'Промокод ' + activePromo.code + ': -' + activePromo.discount_amount + ' ' + (activePromo.currency || item.currency || 'USDT');
+          } else {
+            priceHint.textContent = '';
+          }
+        }
+        if (notice) {
+          if (freeTrialAvailable) {
+            notice.textContent = 'Первый звуковой ключ доступен бесплатно.';
+            notice.style.borderColor = 'rgba(212,175,55,.4)';
+            notice.style.background = 'rgba(212,175,55,.12)';
+            notice.style.color = 'rgba(255,255,255,.95)';
+          } else {
+            notice.textContent = 'Оплата требуется для новых заявок.';
+            notice.style.borderColor = 'rgba(212,175,55,.35)';
+            notice.style.background = 'rgba(212,175,55,.1)';
+            notice.style.color = 'rgba(255,255,255,.95)';
+          }
+        }
+      }
+      async function loadPricingCatalog() {
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        var initData = (tg && tg.initData) ? tg.initData : '';
+        if (!apiBase) return;
+        try {
+          var url = apiBase + '/api/pricing/catalog';
+          var sep = url.indexOf('?') >= 0 ? '&' : '?';
+          if (initData) url += sep + 'initData=' + encodeURIComponent(initData);
+          var resp = await fetch(url, { headers: { 'X-Telegram-Init': initData } });
+          var json = await resp.json().catch(function() { return {}; });
+          if (resp.ok && json.success) {
+            pricingCatalog = Array.isArray(json.catalog) ? json.catalog : [];
+            freeTrialAvailable = !!(json.free_trial && json.free_trial.available);
+            updatePaymentUiFromCatalog();
+          }
+        } catch (_) {}
+      }
+      async function applyPromoCode() {
+        var input = document.getElementById('promoCodeInput');
+        if (!input) return;
+        var code = String(input.value || '').trim().toUpperCase();
+        if (!code) {
+          activePromo = null;
+          updatePaymentUiFromCatalog();
+          setPaymentStatus('Промокод очищен.', 'warn');
+          return;
+        }
+        var sku = getCurrentSku();
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        var initData = (tg && tg.initData) ? tg.initData : '';
+        try {
+          var resp = await fetch(apiBase + '/api/promos/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+            body: JSON.stringify({ promo_code: code, sku: sku, initData: initData })
+          });
+          var json = await resp.json().catch(function() { return {}; });
+          if (!resp.ok || !json.success || !json.valid) {
+            activePromo = null;
+            updatePaymentUiFromCatalog();
+            throw new Error(json.error || 'Промокод не принят');
+          }
+          activePromo = {
+            code: code,
+            sku: sku,
+            amount_before: json.amount_before,
+            discount_amount: json.discount_amount,
+            amount_after: json.amount_after,
+            currency: json.currency || 'USDT'
+          };
+          updatePaymentUiFromCatalog();
+          setPaymentStatus('Промокод применён: итоговая сумма ' + json.amount_after + ' ' + (json.currency || 'USDT'), 'ok');
+        } catch (e) {
+          setPaymentStatus((e && e.message) ? e.message : 'Не удалось применить промокод', 'error');
+        }
+      }
+      function heroesApi(path, opts) {
+        var base = (window.HEROES_API_BASE || '').replace(/\/$/, '');
+        if (!base) return Promise.reject(new Error('API не настроен'));
+        var initData = (tg && tg.initData) ? tg.initData : '';
+        var url = base + '/api' + path;
+        var sep = path.indexOf('?') >= 0 ? '&' : '?';
+        if (initData && (!opts || opts.method === 'GET')) url += sep + 'initData=' + encodeURIComponent(initData);
+        if (opts && opts.query) url += (url.indexOf('?') >= 0 ? '&' : '?') + opts.query;
+        var options = { headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData } };
+        if (opts && opts.method) options.method = opts.method;
+        if (opts && opts.body) options.body = JSON.stringify(opts.body);
+        return fetch(url, options).then(function(r) {
+          if (r.status === 204) return null;
+          return r.json().then(function(j) { if (!r.ok) throw new Error(j.error || r.statusText); return j; });
+        });
+      }
+      function loadMe() {
+        if (!(window.HEROES_API_BASE || '').replace(/\/$/, '')) return;
+        heroesApi('/me', { method: 'POST', body: { initData: (tg && tg.initData) || '' } }).then(function(d) {
+          userTariff = (d && d.tariff) || 'basic';
+          var masterNav = document.getElementById('masterNav');
+          if (masterNav && userTariff === 'master') masterNav.style.display = 'block';
+        }).catch(function() {});
+      }
+      async function fetchUserProfile() {
+        var base = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        if (!base || !tg || !tg.initData) return null;
+        try {
+          var res = await fetch(base + '/api/user/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': tg.initData },
+            body: JSON.stringify({ initData: tg.initData })
+          });
+          var json = await res.json().catch(function() { return {}; });
+          return json.profile || null;
+        } catch (e) { return null; }
+      }
+      if (tg) loadMe();
+
+      setTimeout(function() {
+        try {
+        (function initProfile() {
+          if (!tg || !tg.initData) return;
+          fetchUserProfile().then(function(p) {
+            userProfile = p;
+            var greetEl = document.getElementById('homeGreeting');
+            if (greetEl && p && p.name) {
+              greetEl.textContent = 'Привет, ' + p.name + '! Твои данные уже здесь.';
+              greetEl.style.display = 'block';
+            }
+          });
+        })();
+        if (!tg) {
+          var p = document.getElementById('previewNav');
+          if (p) p.classList.add('show');
+        }
+        var birthdateEl = document.getElementById('birthdate');
+        if (birthdateEl) {
+          var today = new Date();
+          birthdateEl.max = today.toISOString().split('T')[0];
+          var minDate = new Date();
+      minDate.setFullYear(minDate.getFullYear() - 100);
+          birthdateEl.min = minDate.toISOString().split('T')[0];
+        }
+        var unknown = document.getElementById('unknown');
+        var birthtime = document.getElementById('birthtime');
+        if (unknown && birthtime) unknown.addEventListener('change', function() {
+        birthtime.required = !unknown.checked;
+        });
+        var birthdateSummary = document.getElementById('birthdateSummary');
+        var birthdateInput = document.getElementById('birthdate');
+        var birthplaceSummary = document.getElementById('birthplaceSummary');
+        var birthplaceInput = document.getElementById('birthplace');
+        var monthsRu = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+        function formatDateRu(dateStr) {
+          if (!dateStr) return '';
+          var d = new Date(dateStr + 'T12:00:00');
+          if (isNaN(d.getTime())) return dateStr;
+          return d.getDate() + ' ' + monthsRu[d.getMonth()] + ' ' + d.getFullYear() + ' г.';
+        }
+        if (birthdateInput && birthdateSummary) {
+          birthdateInput.addEventListener('change', function() {
+            var v = birthdateInput.value;
+            if (v) {
+              birthdateSummary.textContent = 'Выбрано: ' + formatDateRu(v);
+              birthdateSummary.style.display = 'block';
+            } else {
+              birthdateSummary.style.display = 'none';
+            }
+          });
+          if (birthdateInput.value) {
+            birthdateSummary.textContent = 'Выбрано: ' + formatDateRu(birthdateInput.value);
+            birthdateSummary.style.display = 'block';
+          }
+        }
+        if (birthplaceInput && birthplaceSummary) {
+          var suggestionsEl = document.getElementById('birthplaceSuggestions');
+          var placeCoordsEl = document.getElementById('placeCoords');
+          var debounceTimer = null;
+          var lastSearch = '';
+          function hideSuggestions() {
+            if (suggestionsEl) { suggestionsEl.innerHTML = ''; suggestionsEl.setAttribute('aria-hidden', 'true'); suggestionsEl.style.display = 'none'; }
+          }
+          function escapeHtml(s) {
+            if (!s) return '';
+            var d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+          }
+          function formatLatLon(lat, lon) {
+            var la = parseFloat(lat); var lo = parseFloat(lon);
+            if (isNaN(la) || isNaN(lo)) return '';
+            var latStr = Math.abs(la).toFixed(2) + '° ' + (la >= 0 ? 'N' : 'S');
+            var lonStr = Math.abs(lo).toFixed(2) + '° ' + (lo >= 0 ? 'E' : 'W');
+            return latStr + ', ' + lonStr;
+          }
+          function showPlaceConfirm(displayName) {}
+          function selectPlace(displayName, lat, lon) {
+            birthplaceInput.value = displayName || '';
+            birthplaceInput.setAttribute('data-place-selected', '1');
+            if (lat != null && lon != null) {
+              birthplaceInput.setAttribute('data-lat', String(lat));
+              birthplaceInput.setAttribute('data-lon', String(lon));
+            }
+            birthplaceSummary.innerHTML = '<span class="place-name">Место рождения:</span> ' + escapeHtml(displayName || '');
+            birthplaceSummary.style.display = 'block';
+            if (placeCoordsEl && lat != null && lon != null) {
+              placeCoordsEl.textContent = 'Координаты: ' + formatLatLon(lat, lon);
+              placeCoordsEl.style.display = 'block';
+            } else if (placeCoordsEl) {
+              placeCoordsEl.style.display = 'none';
+            }
+            showPlaceConfirm(displayName);
+            hideSuggestions();
+          }
+          function clearPlaceSelection() {
+            birthplaceInput.removeAttribute('data-place-selected');
+            birthplaceInput.removeAttribute('data-lat');
+            birthplaceInput.removeAttribute('data-lon');
+            if (placeCoordsEl) placeCoordsEl.style.display = 'none';
+          }
+          function fetchPlaces(q) {
+            if (!q || q.length < 2) { hideSuggestions(); return; }
+            var url = 'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=8&addressdetails=1';
+            fetch(url, { headers: { 'Accept': 'application/json', 'Accept-Language': 'ru', 'User-Agent': 'YupSoulMiniApp/1.0 (contact@yupsoul.com)' } })
+              .then(function(r) { return r.json(); })
+              .then(function(list) {
+                if (lastSearch !== q) return;
+                if (!suggestionsEl) return;
+                suggestionsEl.innerHTML = '';
+                (list || []).forEach(function(item) {
+                  var li = document.createElement('li');
+                  var main = item.display_name || (item.address && (item.address.city || item.address.town || item.address.village || item.address.state || item.address.country));
+                  var sub = item.address && item.address.country ? (item.address.country + (item.address.country_code ? ' (' + item.address.country_code.toUpperCase() + ')' : '')) : '';
+                  li.textContent = main;
+                  if (sub) { var sp = document.createElement('div'); sp.className = 'place-type'; sp.textContent = sub; li.appendChild(sp); }
+                  var lat = item.lat; var lon = item.lon;
+                  li.addEventListener('click', function() { selectPlace(item.display_name || main, lat, lon); });
+                  suggestionsEl.appendChild(li);
+                });
+                suggestionsEl.style.display = (list && list.length) ? 'block' : 'none';
+                suggestionsEl.setAttribute('aria-hidden', list && list.length ? 'false' : 'true');
+              })
+              .catch(function() { hideSuggestions(); });
+          }
+          birthplaceInput.addEventListener('input', function() {
+            var v = birthplaceInput.value.trim();
+            clearPlaceSelection();
+            if (v) {
+              lastSearch = v;
+              clearTimeout(debounceTimer);
+              debounceTimer = setTimeout(function() { fetchPlaces(v); }, 320);
+              if (!suggestionsEl || suggestionsEl.style.display !== 'block') {
+                birthplaceSummary.innerHTML = 'Выбери локацию из подсказок — нужны точные координаты для расчёта.';
+                birthplaceSummary.style.display = 'block';
+                showPlaceConfirm(v);
+              }
+            } else {
+              hideSuggestions();
+              birthplaceSummary.style.display = 'none';
+            }
+          });
+          birthplaceInput.addEventListener('focus', function() {
+            var v = birthplaceInput.value.trim();
+            if (v && v.length >= 2) { lastSearch = v; fetchPlaces(v); }
+          });
+          birthplaceInput.addEventListener('blur', function() {
+            setTimeout(hideSuggestions, 200);
+            var v = birthplaceInput.value.trim();
+            if (v) {
+              if (birthplaceInput.getAttribute('data-place-selected')) {
+                birthplaceSummary.innerHTML = '<span class="place-name">Место рождения:</span> ' + escapeHtml(v);
+                if (placeCoordsEl && birthplaceInput.getAttribute('data-lat')) {
+                  placeCoordsEl.textContent = 'Координаты: ' + formatLatLon(birthplaceInput.getAttribute('data-lat'), birthplaceInput.getAttribute('data-lon'));
+                  placeCoordsEl.style.display = 'block';
+                }
+              } else {
+                birthplaceSummary.innerHTML = 'Выбери место из подсказок (клик по варианту в списке).';
+                if (placeCoordsEl) placeCoordsEl.style.display = 'none';
+              }
+              birthplaceSummary.style.display = 'block';
+              showPlaceConfirm(v);
+            }
+          });
+          if (birthplaceInput.value.trim()) {
+            if (birthplaceInput.getAttribute('data-place-selected')) {
+              birthplaceSummary.innerHTML = '<span class="place-name">Место рождения:</span> ' + escapeHtml(birthplaceInput.value.trim());
+              if (placeCoordsEl && birthplaceInput.getAttribute('data-lat')) {
+                placeCoordsEl.textContent = 'Координаты: ' + formatLatLon(birthplaceInput.getAttribute('data-lat'), birthplaceInput.getAttribute('data-lon'));
+                placeCoordsEl.style.display = 'block';
+              }
+            } else {
+              birthplaceSummary.innerHTML = 'Выбери место из подсказок (клик по варианту в списке).';
+            }
+            birthplaceSummary.style.display = 'block';
+            showPlaceConfirm(birthplaceInput.value.trim());
+          }
+        }
+        var birthplace2Input = document.getElementById('birthplace2');
+        if (birthplace2Input) {
+          var debounce2 = null;
+          birthplace2Input.addEventListener('input', function() {
+            var self = this;
+            clearTimeout(debounce2);
+            debounce2 = setTimeout(function() { showLocationSuggestions(self, 'birthplaceSuggestions2', null); }, 320);
+          });
+        }
+        var transitLocationInput = document.getElementById('transitLocation');
+        if (transitLocationInput) {
+          var debounceTransit = null;
+          transitLocationInput.addEventListener('input', function() {
+            var self = this;
+            clearTimeout(debounceTransit);
+            debounceTransit = setTimeout(function() { showLocationSuggestions(self, 'transitLocationSuggestions', 'transitLocationConfirmed'); }, 320);
+          });
+        }
+        var formPage = document.getElementById('formPage');
+        if (formPage && userTariff === 'master') loadForWhoSelect();
+      
+      // Навигация по страницам
+      function goToPage(pageId) {
+        if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
+        if (pageId !== 'paymentPage') {
+          var payBtnReset = document.getElementById('payBtn');
+          if (payBtnReset) { payBtnReset.disabled = false; payBtnReset.textContent = 'Отправить заявку'; }
+        }
+        document.querySelectorAll('.page').forEach(function(page) {
+          page.classList.remove('active');
+        });
+        var target = document.getElementById(pageId);
+        if (target) target.classList.add('active');
+        if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
+        if (pageId === 'paymentPage') { loadPricingCatalog(); updatePaymentUiFromCatalog(); setPaymentStatus('',''); }
+        if (pageId === 'homePage' || pageId === 'formPage' || pageId === 'paymentPage') {
+          logColorSnapshot('go-to-page', pageId);
+        }
+        if (document.getElementById('previewNav') && document.getElementById('previewNav').classList.contains('show')) {
+          document.querySelectorAll('.preview-nav button').forEach(function(btn) {
+            btn.classList.remove('active');
+          });
+          var pageMap = { 'homePage': 'home', 'formPage': 'form', 'paymentPage': 'payment', 'loadingPage': 'loading', 'successPage': 'success', 'heroesPage': 'heroes', 'paymentThanksPage': 'payment' };
+          var activeBtn = document.querySelector('.preview-nav button[data-page="' + (pageMap[pageId] || '') + '"]');
+          if (activeBtn) activeBtn.classList.add('active');
+        }
+      }
+
+      // Редирект с HOT: при открытии с ?payment=success показываем страницу «Спасибо за оплату»
+      var search = typeof window.location !== 'undefined' && window.location.search ? window.location.search : '';
+      var paymentThanksMsg = document.getElementById('paymentThanksMessage');
+      if (search.indexOf('payment=success') !== -1) {
+        goToPage('paymentThanksPage');
+        var requestIdMatch = search.match(/request_id=([^&\s]+)/);
+        var thanksRequestId = requestIdMatch ? decodeURIComponent(requestIdMatch[1]) : null;
+        (async function checkPaymentAndConfirm() {
+          if (!paymentThanksMsg) return;
+          if (!thanksRequestId) {
+            paymentThanksMsg.textContent = 'Оплата подтверждена. Песня в генерации. Через 2–3 минуты придёт в чат с ботом.';
+            return;
+          }
+          var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+          var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
+          if (!apiBase || !initData) {
+            if (paymentThanksMsg) paymentThanksMsg.textContent = 'Оплата получена. Песня в генерации. Через 2–3 минуты придёт в чат с ботом.';
+            return;
+          }
+          try {
+            var payStatus = '';
+            for (var attempt = 0; attempt < 3; attempt++) {
+              var statusResp = await fetch(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(thanksRequestId), {
+                headers: { 'X-Telegram-Init': initData }
+              });
+              var statusJson = await statusResp.json().catch(function() { return {}; });
+              payStatus = statusJson && statusJson.data && statusJson.data.payment_status ? String(statusJson.data.payment_status).toLowerCase() : '';
+              if (payStatus === 'paid') break;
+              if (attempt < 2) await new Promise(function(r) { setTimeout(r, 2000); });
+            }
+            if (payStatus === 'paid') {
+              var confirmResp = await fetch(apiBase + '/api/payments/hot/confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+                body: JSON.stringify({ request_id: thanksRequestId, initData: initData })
+              });
+              confirmResp.json().catch(function() {});
+            }
+            paymentThanksMsg.textContent = 'Оплата подтверждена. Песня ушла в генерацию, заявка принята! Через 2–3 минуты придёт в чат с ботом.';
+          } catch (e) {
+            paymentThanksMsg.textContent = 'Оплата получена. Песня в генерации. Через 2–3 минуты придёт в чат с ботом.';
+          }
+        })();
+        if (window.history && window.history.replaceState) {
+          var cleanUrl = window.location.pathname + (window.location.hash || '');
+          window.history.replaceState({}, '', cleanUrl);
+        }
+      }
+      var paymentThanksBackBtn = document.getElementById('paymentThanksBackBtn');
+      if (paymentThanksBackBtn) paymentThanksBackBtn.addEventListener('click', function() {
+        var sp = document.getElementById('songPreviewText');
+        if (sp) sp.textContent = 'Твой звуковой ключ формируется. Через 2–3 минуты он придёт в этот чат.';
+        goToPage('successPage');
+      });
+
+      // Кнопки навигации
+      var startBtn = document.getElementById('startBtn');
+      if (startBtn) startBtn.addEventListener('click', function() {
+        fillFormFromProfile(userProfile || (tg && tg.initDataUnsafe && tg.initDataUnsafe.user));
+        goToPage('formPage');
+      });
+
+      var stepNext = document.getElementById('stepNext');
+      var quickToggle = document.getElementById('quickRequestsToggle');
+      var quickPanel = document.getElementById('quickRequestsPanel');
+      var selectedMode = 'single';
+      var hotDebugToggle = document.getElementById('hotDebugToggle');
+      var hotDebugPanel = document.getElementById('hotDebugPanel');
+      var hotDebugList = document.getElementById('hotDebugList');
+
+      function hotLog(message, data) {
+        if (!hotDebugList) return;
+        var row = document.createElement('div');
+        row.className = 'row';
+        var payload = '';
+        if (data) {
+          try { payload = JSON.stringify(data); } catch (e) { payload = String(data); }
+        }
+        row.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message + (payload ? ' ' + payload : '');
+        hotDebugList.prepend(row);
+        while (hotDebugList.children.length > 20) hotDebugList.removeChild(hotDebugList.lastChild);
+      }
+      function ensureHotDebugVisible() {
+        if (hotDebugToggle && !tg) hotDebugToggle.style.display = 'block';
+      }
+      if (hotDebugToggle && hotDebugPanel) {
+        hotDebugToggle.addEventListener('click', function() {
+          var visible = hotDebugPanel.style.display === 'block';
+          hotDebugPanel.style.display = visible ? 'none' : 'block';
+        });
+      }
+
+      function applyTheme() {
+        var hour = new Date().getHours();
+        var theme = (hour >= 7 && hour < 19) ? 'theme-light' : 'theme-dark';
+        document.body.classList.remove('theme-light', 'theme-dark');
+        document.body.classList.add(theme);
+      }
+      applyTheme();
+
+      function toggleFormsByMode(mode) {
+        var secondForm = document.getElementById('secondPersonForm');
+        var transitForm = document.getElementById('transitForm');
+        if (secondForm) secondForm.style.display = 'none';
+        if (transitForm) transitForm.style.display = 'none';
+        if (mode === 'couple' && secondForm) {
+          secondForm.style.display = 'block';
+        } else if (mode === 'transit' && transitForm) {
+          transitForm.style.display = 'block';
+        }
+      }
+
+      function updateStepUI() {
+        document.querySelectorAll('.mode-btn').forEach(function(btn) { btn.style.display = ''; });
+      }
+
+      function setMode(mode) {
+        selectedMode = mode || 'single';
+        document.querySelectorAll('.mode-btn').forEach(function(btn) {
+          btn.classList.toggle('active', btn.getAttribute('data-mode') === selectedMode);
+        });
+        toggleFormsByMode(selectedMode);
+        updatePaymentUiFromCatalog();
+      }
+
+      function validateStep(step) {
+        if (step === 1) {
+          var activeMode = document.querySelector('.mode-btn.active');
+          if (!activeMode) { alert('Выбери тип звукового ключа'); return false; }
+          return true;
+        }
+        if (step === 2) {
+          var name = document.getElementById('name').value.trim();
+          var birthdate = document.getElementById('birthdate').value;
+          var birthplace = document.getElementById('birthplace').value.trim();
+          var birthtimeVal = (unknown && unknown.checked) ? 'ok' : (document.getElementById('birthtime') ? document.getElementById('birthtime').value : '');
+          var gender = document.getElementById('gender').value;
+          var language = document.getElementById('language').value;
+          if (name.length < 2) { alert('Имя должно содержать минимум 2 символа'); return false; }
+          if (!birthdate) { alert('Выбери дату рождения'); return false; }
+          if (birthplace.length < 3) { alert('Место рождения должно содержать минимум 3 символа'); return false; }
+          var birthplaceField = document.getElementById('birthplace');
+          if (!(birthplaceField && birthplaceField.getAttribute('data-place-selected'))) {
+            alert('Выбери локацию из списка подсказок — так подтянутся координаты для расчёта.');
+            return false;
+          }
+          if (!birthtimeVal) { alert('Укажи время рождения или отметь \"Не знаю\"'); return false; }
+          if (!gender) { alert('Укажи пол'); return false; }
+          if (!language) { alert('Выбери язык'); return false; }
+          if (selectedMode === 'couple') {
+            var name2 = (document.getElementById('name2').value || '').trim();
+            var birthdate2 = document.getElementById('birthdate2').value;
+            if (name2.length < 2) { alert('Имя второго человека — минимум 2 символа'); return false; }
+            if (!birthdate2) { alert('Укажи дату рождения второго человека'); return false; }
+          }
+          if (selectedMode === 'transit') {
+            var tDate = document.getElementById('transitDate').value;
+            var tLoc = document.getElementById('transitLocation').value.trim();
+            if (!tDate) { alert('Укажи дату события'); return false; }
+            if (!tLoc) { alert('Укажи локацию события'); return false; }
+          }
+          return true;
+        }
+        if (step === 3) {
+          var request = document.getElementById('request').value.trim();
+          if (request.length < 5) { alert('Добавь запрос (5+ символов)'); return false; }
+          return true;
+        }
+        return true;
+      }
+
+      document.querySelectorAll('.mode-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          setMode(this.getAttribute('data-mode'));
+        });
+      });
+
+      if (quickToggle && quickPanel) {
+        quickToggle.addEventListener('click', function() {
+          var isOpen = quickPanel.classList.toggle('open');
+          this.setAttribute('aria-expanded', String(isOpen));
+          this.textContent = isOpen ? 'Скрыть' : 'Быстрые запросы';
+        });
+      }
+      document.querySelectorAll('.example-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var requestField = document.getElementById('request');
+          if (requestField) {
+            requestField.value = this.getAttribute('data-text') || '';
+            requestField.focus();
+          }
+          if (quickPanel) {
+            quickPanel.classList.remove('open');
+            if (quickToggle) {
+              quickToggle.setAttribute('aria-expanded', 'false');
+              quickToggle.textContent = 'Быстрые запросы';
+            }
+          }
+        });
+      });
+
+      if (stepNext) stepNext.addEventListener('click', function() {
+        if (!validateStep(1)) return;
+        if (!validateStep(2)) return;
+        if (!validateStep(3)) return;
+        goToPage('paymentPage');
+      });
+      setMode('single');
+      updateStepUI();
+      var promoApplyBtn = document.getElementById('promoApplyBtn');
+      if (promoApplyBtn) promoApplyBtn.addEventListener('click', applyPromoCode);
+      
+      var backFromPaymentBtn = document.getElementById('backFromPaymentBtn');
+      if (backFromPaymentBtn) backFromPaymentBtn.addEventListener('click', function() {
+        if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
+        var payBtnEl = document.getElementById('payBtn');
+        if (payBtnEl) { payBtnEl.disabled = false; payBtnEl.textContent = 'Отправить заявку'; }
+        goToPage('formPage');
+      });
+      var payBtn = document.getElementById('payBtn');
+      if (payBtn) payBtn.addEventListener('click', async function() {
+        if (payBtn.disabled) return;
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:handlerEntered',message:'pay handler entered',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H1'})}).catch(()=>{});
+        // #endregion
+        var mode = selectedMode || 'single';
+        var name1 = document.getElementById('name').value.trim();
+        var birthdate1 = document.getElementById('birthdate').value;
+        var birthplace1 = document.getElementById('birthplace').value.trim();
+        var birthtime1 = document.getElementById('birthtime').value;
+        var birthtimeUnknown1 = document.getElementById('unknown').checked;
+        var gender1 = document.getElementById('gender').value;
+        var requestText = document.getElementById('request').value.trim();
+        if (name1.length < 2) { alert('✨ Имя должно содержать минимум 2 символа'); return; }
+        if (!birthdate1) { alert('✨ Выбери дату рождения'); return; }
+        if (birthplace1.length < 3) { alert('✨ Место рождения должно содержать минимум 3 символа'); return; }
+        if (!birthtimeUnknown1 && !birthtime1) { alert('✨ Укажи время рождения или отметь "Не знаю"'); return; }
+        if (!gender1) { alert('✨ Выбери свой путь'); return; }
+        if (requestText.length < 15) { alert('✨ Расскажи Вселенной подробнее (минимум 15 символов)'); return; }
+        var payload = {
+          mode: mode,
+          person1: { name: name1, birthdate: birthdate1, birthplace: birthplace1, birthtime: birthtimeUnknown1 ? null : birthtime1, birthtimeUnknown: birthtimeUnknown1, gender: gender1 },
+          request: requestText,
+          language: (document.getElementById('language') && document.getElementById('language').value) || 'ru'
+        };
+        var birthplaceField = document.getElementById('birthplace');
+        if (birthplaceField && birthplaceField.getAttribute('data-lat') && birthplaceField.getAttribute('data-lon')) {
+          payload.person1.birthplaceLat = parseFloat(birthplaceField.getAttribute('data-lat'));
+          payload.person1.birthplaceLon = parseFloat(birthplaceField.getAttribute('data-lon'));
+        }
+        var forWho = document.getElementById('forWho');
+        if (forWho && forWho.value && userTariff === 'master') payload.clientId = forWho.value;
+        if (mode === 'couple') {
+          var name2 = document.getElementById('name2').value.trim();
+          var birthdate2 = document.getElementById('birthdate2').value;
+          var birthplace2 = document.getElementById('birthplace2').value.trim();
+          var birthtime2 = document.getElementById('birthtime2').value;
+          var birthtimeUnknown2 = document.getElementById('unknown2').checked;
+          var gender2 = document.getElementById('gender2').value;
+          if (name2.length < 2) { alert('✨ Имя второго человека должно содержать минимум 2 символа'); return; }
+          if (!birthdate2) { alert('✨ Выбери дату рождения второго человека'); return; }
+          if (birthplace2.length < 3) { alert('✨ Место рождения второго человека должно содержать минимум 3 символа'); return; }
+          if (!birthtimeUnknown2 && !birthtime2) { alert('✨ Укажи время рождения второго человека'); return; }
+          if (!gender2) { alert('✨ Выбери пол второго человека'); return; }
+          payload.person2 = { name: name2, birthdate: birthdate2, birthplace: birthplace2, birthtime: birthtimeUnknown2 ? null : birthtime2, birthtimeUnknown: birthtimeUnknown2, gender: gender2 };
+        }
+        if (mode === 'transit') {
+          var transitDate = document.getElementById('transitDate').value;
+          var transitTime = document.getElementById('transitTime').value;
+          var transitLocation = (document.getElementById('transitLocation') && document.getElementById('transitLocation').value) ? document.getElementById('transitLocation').value.trim() : '';
+          var transitIntent = (document.getElementById('transitIntent') && document.getElementById('transitIntent').value) ? document.getElementById('transitIntent').value.trim() : null;
+          if (!transitDate) { alert('✨ Выбери дату события'); return; }
+          if (!transitLocation) { alert('✨ Укажи локацию события'); return; }
+          if (!(document.getElementById('transitLocationConfirmed') && document.getElementById('transitLocationConfirmed').checked)) { alert('✨ Подтверди, что локация указана верно'); return; }
+          payload.transit = { date: transitDate, time: transitTime || null, location: transitLocation, intent: transitIntent || null };
+        }
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:validationPassed',message:'pay validation passed',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
+        // #endregion
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        if (!apiBase) {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:earlyReturn',message:'early return no apiBase',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
+          // #endregion
+          alert('Не настроен адрес API. Укажи HEROES_API_BASE.'); return;
+        }
+        var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
+        if (!initData) {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:earlyReturn',message:'early return no initData',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
+          // #endregion
+          alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.'); return;
+        }
+        payload.initData = initData;
+        try {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:click',message:'pay button clicked',data:{mode:mode,hasRequest:requestText.length>=1,hasPerson2:!!payload.person2,hasTransit:!!payload.transit},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P1'})}).catch(()=>{});
+          // #endregion
+          hotLog('pay click', { mode: mode, hasPerson2: !!payload.person2, hasTransit: !!payload.transit });
+          var response = await fetch(apiBase + '/api/submit-request', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData }, body: JSON.stringify(payload) });
+          var result = await response.json().catch(function() { return {}; });
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:submitResult',message:'submit-request result',data:{ok:!!(response.ok && result.ok),paymentRequired:!!(result && result.payment_required),requestId:result&&result.requestId?String(result.requestId):null,httpStatus:response.status},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P2'})}).catch(()=>{});
+          // #endregion
+          hotLog('submit result', { ok: !!(response.ok && result.ok), paymentRequired: !!(result && result.payment_required), requestId: result && result.requestId ? String(result.requestId).slice(0, 8) : null, httpStatus: response.status });
+          if (response.ok && result.ok && result.requestId) {
+            goToPage('loadingPage');
+            var sp = document.getElementById('songPreviewText');
+            if (sp) {
+              if (mode === 'single') sp.textContent = '✨ ' + name1 + ', Вселенная услышала твой запрос.\n\nТвой звуковой ключ формируется. Через 2-3 минуты он придёт в этот чат.';
+              else if (mode === 'couple') sp.textContent = '✨ ' + name1 + ' и ' + payload.person2.name + ', Вселенная услышала ваш запрос.\n\nВаш звуковой ключ формируется. Через 2-3 минуты он придёт в этот чат.';
+              else sp.textContent = '✨ ' + name1 + ', Вселенная услышала твой запрос.\n\nЗвуковой ключ Энергии Дня формируется. Через 2-3 минуты он придёт в этот чат.';
+            }
+            if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
+          goToPage('successPage');
+            console.log('[MiniApp] Заявка отправлена, requestId:', result.requestId);
+          } else if (result && result.payment_required && result.requestId) {
+            setPaymentStatus('Требуется оплата. Открываю HOT Checkout...', 'warn');
+            var hotResp = await fetch(apiBase + '/api/payments/hot/create', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+              body: JSON.stringify({ request_id: result.requestId, sku: result.sku || getCurrentSku(), promo_code: activePromo ? activePromo.code : null, initData: initData })
+            });
+            var hotJson = await hotResp.json().catch(function() { return {}; });
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:hotCreate',message:'hot create response',data:{httpStatus:hotResp.status,success:!!(hotJson&&hotJson.success),freeApplied:!!hotJson.free_applied,hasCheckout:!!hotJson.checkout_url,requestId:result.requestId||null},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P3'})}).catch(()=>{});
+            // #endregion
+            hotLog('hot create', { status: hotResp.status, success: !!(hotJson && hotJson.success), freeApplied: !!hotJson.free_applied, hasCheckout: !!hotJson.checkout_url, requestId: result.requestId ? String(result.requestId).slice(0, 8) : null });
+            if (!hotResp.ok || !hotJson.success) {
+              throw new Error(hotJson.error || 'Не удалось создать оплату HOT');
+            }
+            if (hotJson.free_applied) {
+              setPaymentStatus('Промокод дал бесплатную генерацию. Запуск...', 'ok');
+              goToPage('loadingPage');
+              setTimeout(function() { goToPage('successPage'); }, 1800);
+              return;
+            }
+            if (!hotJson.checkout_url) throw new Error('Checkout URL не получен');
+            setPaymentStatus('Открыт HOT Checkout. После оплаты вернись в Mini App — статус обновится автоматически.', 'warn');
+            // #region agent log
+            var hasTg = !!(window.Telegram && window.Telegram.WebApp);
+            var hasOpenLink = !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink);
+            fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:aboutToOpenCheckout',message:'about to open checkout',data:{hasTelegramWebApp:hasTg,hasOpenLink:hasOpenLink,checkoutUrlLength:(hotJson.checkout_url||'').length},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H5'})}).catch(()=>{});
+            // #endregion
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) window.Telegram.WebApp.openLink(hotJson.checkout_url);
+            else window.open(hotJson.checkout_url, '_blank');
+            var maxAttempts = 60;
+            var attempt = 0;
+            var paid = false;
+            while (attempt < maxAttempts) {
+              attempt += 1;
+              await new Promise(function(resolve) { setTimeout(resolve, 3000); });
+              var statusResp = await fetch(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(result.requestId), {
+                headers: { 'X-Telegram-Init': initData }
+              });
+              var statusJson = await statusResp.json().catch(function() { return {}; });
+              var paymentStatus = statusJson && statusJson.data && statusJson.data.payment_status ? String(statusJson.data.payment_status).toLowerCase() : '';
+              if (attempt === 1 || paymentStatus === 'paid') {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:statusPoll',message:'status poll',data:{attempt:attempt,status:paymentStatus||null,httpStatus:statusResp.status},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P4'})}).catch(()=>{});
+                // #endregion
+                hotLog('status poll', { attempt: attempt, status: paymentStatus || null, httpStatus: statusResp.status });
+              }
+              if (paymentStatus === 'paid') { paid = true; break; }
+            }
+            if (!paid) {
+              setPaymentStatus('Оплата пока не подтверждена. Проверь статус позже или открой оплату повторно.', 'warn');
+              return;
+            }
+            setPaymentStatus('Оплата подтверждена. Запускаю генерацию...', 'ok');
+            var restartResp = await fetch(apiBase + '/api/payments/hot/confirm', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+              body: JSON.stringify({ request_id: result.requestId, initData: initData })
+            });
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:confirm',message:'confirm response',data:{httpStatus:restartResp.status,ok:restartResp.ok,requestId:result.requestId||null},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P5'})}).catch(()=>{});
+            // #endregion
+            hotLog('confirm', { httpStatus: restartResp.status, ok: restartResp.ok, requestId: result.requestId ? String(result.requestId).slice(0, 8) : null });
+            if (!restartResp.ok) {
+              setPaymentStatus('Оплата получена, но авто‑старт не удался. Запусти генерацию в админке по request_id: ' + result.requestId, 'warn');
+              return;
+            }
+            goToPage('loadingPage');
+            setTimeout(function() { goToPage('successPage'); }, 1800);
+          } else {
+            var errMsg = (result && result.error) ? String(result.error) : (result && result.message) ? String(result.message) : ('HTTP ' + response.status);
+            throw new Error(errMsg);
+          }
+        } catch (error) {
+          console.error('[MiniApp] Ошибка:', error);
+          var msg = (error && error.message) ? String(error.message) : '';
+          if (!msg || /^HTTP\s+\d+$/i.test(msg)) {
+            msg = 'Не удалось отправить заявку. Попробуй открыть Mini App заново из чата с ботом и отправить ещё раз.';
+          }
+          setPaymentStatus(msg || 'Ошибка операции оплаты/заявки', 'error');
+          alert('❌ ' + msg);
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:error',message:'pay flow error',data:{errorMessage:msg||null},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P1,P2,P3,P4,P5'})}).catch(()=>{});
+          // #endregion
+          hotLog('error', { message: msg || null });
+        }
+      });
+      
+      var goHeroesBtn = document.getElementById('goHeroesBtn');
+      if (goHeroesBtn) goHeroesBtn.addEventListener('click', function() { goToPage('heroesPage'); loadHeroesList(); });
+
+      function loadHeroesList() {
+        var listEl = document.getElementById('heroesList');
+        if (!listEl) return;
+        listEl.innerHTML = '<p style="color:#6b7280">Загрузка...</p>';
+        var search = (document.getElementById('heroesSearch') || {}).value;
+        var q = search ? '?search=' + encodeURIComponent(search) : '';
+        heroesApi('/heroes' + q, { method: 'GET' }).then(function(d) {
+          heroesCache = (d && d.clients) || [];
+          if (!heroesCache.length) { listEl.innerHTML = '<p style="color:#6b7280">Пока нет героев. Нажми «Добавить героя».</p>'; return; }
+          listEl.innerHTML = heroesCache.map(function(h) {
+            var dateStr = h.birth_date || '—';
+            var addStr = h.created_at ? new Date(h.created_at).toLocaleDateString('ru-RU') : '';
+            return '<div class="section" style="margin-bottom:12px" data-hero-id="' + (h.id || '') + '">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">' +
+              '<strong>' + (h.name || '—') + '</strong>' +
+              '<span style="font-size:.9rem;color:#6b7280">' + dateStr + (addStr ? ' · ' + addStr : '') + '</span>' +
+              '</div>' +
+              (h.birth_place ? '<div style="font-size:.95rem;color:#6b7280;margin-top:6px">' + h.birth_place + '</div>' : '') +
+              '<div style="margin-top:10px;display:flex;gap:8px">' +
+              '<button type="button" class="secondary hero-edit-btn" style="padding:8px 14px;font-size:.9rem" data-id="' + (h.id || '') + '">Изменить</button>' +
+              '<button type="button" class="secondary hero-delete-btn" style="padding:8px 14px;font-size:.9rem;color:#dc2626" data-id="' + (h.id || '') + '" data-name="' + (h.name || '').replace(/"/g, '&quot;') + '">Удалить</button>' +
+              '</div></div>';
+          }).join('');
+          listEl.querySelectorAll('.hero-edit-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+              var id = btn.getAttribute('data-id');
+              var h = heroesCache.find(function(c) { return c.id === id; });
+              if (!h) return;
+              editingHeroId = id;
+              document.getElementById('heroName').value = h.name || '';
+              document.getElementById('heroBirthdate').value = h.birth_date || '';
+              document.getElementById('heroBirthtime').value = (h.birth_time || '').substring(0, 5);
+              document.getElementById('heroBirthplace').value = h.birth_place || '';
+              document.getElementById('heroBirthtimeUnknown').checked = !!h.birthtime_unknown;
+              document.getElementById('heroGender').value = h.gender || '';
+              document.getElementById('heroNotes').value = h.notes || '';
+              document.getElementById('heroFormWrap').style.display = 'block';
+            });
+          });
+          listEl.querySelectorAll('.hero-delete-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+              var id = btn.getAttribute('data-id');
+              var name = btn.getAttribute('data-name') || 'этого героя';
+              if (!confirm('Удалить «' + name + '»? Это действие нельзя отменить.')) return;
+              heroesApi('/heroes/' + id, { method: 'DELETE' }).then(function() { loadHeroesList(); }).catch(function(e) { alert('Ошибка: ' + (e.message || e)); });
+            });
+          });
+        }).catch(function(e) {
+          listEl.innerHTML = '<p style="color:#dc2626">Не удалось загрузить список. Проверьте настройку API.</p>';
+        });
+      }
+      var addHeroBtn = document.getElementById('addHeroBtn');
+      var heroFormWrap = document.getElementById('heroFormWrap');
+      var heroFormCancel = document.getElementById('heroFormCancel');
+      if (addHeroBtn) addHeroBtn.addEventListener('click', function() {
+        editingHeroId = null;
+        document.getElementById('heroName').value = '';
+        document.getElementById('heroBirthdate').value = '';
+        document.getElementById('heroBirthtime').value = '';
+        document.getElementById('heroBirthplace').value = '';
+        document.getElementById('heroBirthtimeUnknown').checked = false;
+        document.getElementById('heroGender').value = '';
+        document.getElementById('heroNotes').value = '';
+        heroFormWrap.style.display = 'block';
+      });
+      if (heroFormCancel) heroFormCancel.addEventListener('click', function() { heroFormWrap.style.display = 'none'; editingHeroId = null; });
+      var heroFormSave = document.getElementById('heroFormSave');
+      if (heroFormSave) heroFormSave.addEventListener('click', function() {
+        var name = (document.getElementById('heroName') || {}).value.trim();
+        if (!name) { alert('Введите имя'); return; }
+        var payload = {
+          initData: (tg && tg.initData) || '',
+          name: name,
+          birth_date: (document.getElementById('heroBirthdate') || {}).value || null,
+          birth_time: (document.getElementById('heroBirthtime') || {}).value || null,
+          birth_place: (document.getElementById('heroBirthplace') || {}).value.trim() || null,
+          birthtime_unknown: (document.getElementById('heroBirthtimeUnknown') || {}).checked,
+          gender: (document.getElementById('heroGender') || {}).value || null,
+          notes: (document.getElementById('heroNotes') || {}).value.trim() || null
+        };
+        if (editingHeroId) {
+          heroesApi('/heroes/' + editingHeroId, { method: 'PATCH', body: payload }).then(function() {
+            heroFormWrap.style.display = 'none';
+            editingHeroId = null;
+            loadHeroesList();
+          }).catch(function(e) { alert('Ошибка: ' + (e.message || e)); });
+        } else {
+          heroesApi('/heroes', { method: 'POST', body: payload }).then(function() {
+            heroFormWrap.style.display = 'none';
+            loadHeroesList();
+          }).catch(function(e) { alert('Ошибка: ' + (e.message || e)); });
+        }
+      });
+      var heroesSearchBtn = document.getElementById('heroesSearchBtn');
+      if (heroesSearchBtn) heroesSearchBtn.addEventListener('click', loadHeroesList);
+      var heroesBackBtn = document.getElementById('heroesBackBtn');
+      if (heroesBackBtn) heroesBackBtn.addEventListener('click', function() { goToPage('homePage'); });
+      var todayHero = new Date();
+      var heroBirthdateEl = document.getElementById('heroBirthdate');
+      if (heroBirthdateEl) {
+        heroBirthdateEl.max = todayHero.toISOString().split('T')[0];
+        var minH = new Date(); minH.setFullYear(minH.getFullYear() - 100);
+        heroBirthdateEl.min = minH.toISOString().split('T')[0];
+      }
+
+      function fillFormFromProfile(profileOrTgUser) {
+        if (!profileOrTgUser) return;
+        var nameEl = document.getElementById('name');
+        var bd = document.getElementById('birthdate');
+        var bt = document.getElementById('birthtime');
+        var bp = document.getElementById('birthplace');
+        var unk = document.getElementById('unknown');
+        var g = document.getElementById('gender');
+        var langEl = document.getElementById('language');
+        var isProfile = profileOrTgUser && (profileOrTgUser.birthdate != null || profileOrTgUser.birthplace != null);
+        var firstName = profileOrTgUser.first_name || profileOrTgUser.name;
+        if (nameEl && firstName) nameEl.value = firstName;
+        if (isProfile) {
+          if (bd) bd.value = (profileOrTgUser.birthdate || '').toString().slice(0, 10);
+          if (bt) bt.value = (profileOrTgUser.birthtime || '').toString().slice(0, 5);
+          if (bp) bp.value = profileOrTgUser.birthplace || '';
+          if (unk) unk.checked = !!profileOrTgUser.birthtime_unknown;
+          if (g) g.value = profileOrTgUser.gender || '';
+          if (langEl && profileOrTgUser.language) langEl.value = profileOrTgUser.language;
+          if (birthdateSummary) { birthdateSummary.textContent = profileOrTgUser.birthdate ? 'Выбрано: ' + formatDateRu(profileOrTgUser.birthdate) : ''; birthdateSummary.style.display = profileOrTgUser.birthdate ? 'block' : 'none'; }
+          if (birthplaceSummary) { birthplaceSummary.innerHTML = profileOrTgUser.birthplace ? '<span class="place-name">Место рождения:</span> ' + (profileOrTgUser.birthplace.replace(/</g, '&lt;')) : ''; birthplaceSummary.style.display = profileOrTgUser.birthplace ? 'block' : 'none'; }
+        }
+      }
+      function fillFormFromHero(hero) {
+        if (!hero) return;
+        var nameEl = document.getElementById('name');
+        var bd = document.getElementById('birthdate');
+        var bt = document.getElementById('birthtime');
+        var bp = document.getElementById('birthplace');
+        var unk = document.getElementById('unknown');
+        var g = document.getElementById('gender');
+        if (nameEl) nameEl.value = hero.name || '';
+        if (bd) bd.value = hero.birth_date || '';
+        if (bt) bt.value = (hero.birth_time || '').substring(0, 5);
+        if (bp) bp.value = hero.birth_place || '';
+        if (unk) unk.checked = !!hero.birthtime_unknown;
+        if (g) g.value = hero.gender || '';
+        var langEl = document.getElementById('language');
+        if (langEl && hero.language) langEl.value = hero.language;
+        if (birthdateSummary) { birthdateSummary.textContent = hero.birth_date ? 'Выбрано: ' + formatDateRu(hero.birth_date) : ''; birthdateSummary.style.display = hero.birth_date ? 'block' : 'none'; }
+        if (birthplaceSummary) { birthplaceSummary.textContent = hero.birth_place ? 'Место рождения: ' + hero.birth_place : ''; birthplaceSummary.style.display = hero.birth_place ? 'block' : 'none'; }
+      }
+      function loadForWhoSelect() {
+        var wrap = document.getElementById('forWhoWrap');
+        var sel = document.getElementById('forWho');
+        if (!wrap || !sel) return;
+        if (userTariff !== 'master') { wrap.style.display = 'none'; return; }
+        wrap.style.display = 'block';
+        heroesApi('/heroes', { method: 'GET' }).then(function(d) {
+          heroesCache = (d && d.clients) || [];
+          sel.innerHTML = '<option value="">Для себя</option>' + heroesCache.map(function(h) { return '<option value="' + (h.id || '') + '">Для: ' + (h.name || '—') + '</option>'; }).join('');
+          sel.addEventListener('change', function() {
+            var id = sel.value;
+            if (!id) { fillFormFromHero(null); return; }
+            var hero = heroesCache.find(function(c) { return c.id === id; });
+            if (hero) fillFormFromHero(hero);
+          });
+        }).catch(function() { wrap.style.display = 'none'; });
+      }
+
+      var soulChatBtn = document.getElementById('soulChatBtn');
+      if (soulChatBtn) soulChatBtn.addEventListener('click', function() {
+        var botUrl = 'https://t.me/Yup_Soul_bot';
+        if (tg && tg.openTelegramLink) tg.openTelegramLink(botUrl);
+        else window.open(botUrl, '_blank');
+      });
+      var newKeyBtn = document.getElementById('newKeyBtn');
+      if (newKeyBtn) newKeyBtn.addEventListener('click', function() {
+        var n = document.getElementById('name');
+        var bd = document.getElementById('birthdate');
+        var bp = document.getElementById('birthplace');
+        var bt = document.getElementById('birthtime');
+        var g = document.getElementById('gender');
+        var langEl = document.getElementById('language');
+        var r = document.getElementById('request');
+        if (n) n.value = '';
+        if (bd) bd.value = '';
+        if (bp) bp.value = '';
+        if (bt) bt.value = '';
+        if (unknown) unknown.checked = false;
+        if (g) g.value = '';
+        if (langEl) langEl.value = '';
+        if (r) r.value = '';
+        if (birthdateSummary) birthdateSummary.style.display = 'none';
+        if (birthplaceSummary) birthplaceSummary.style.display = 'none';
+        goToPage('formPage');
+      });
+      
+      document.querySelectorAll('.preview-nav button').forEach(function(button) {
+        button.addEventListener('click', function() {
+          var pageMap = { 'home': 'homePage', 'form': 'formPage', 'payment': 'paymentPage', 'loading': 'loadingPage', 'success': 'successPage', 'heroes': 'heroesPage' };
+          document.querySelectorAll('.preview-nav button').forEach(function(btn) { btn.classList.remove('active'); });
+          this.classList.add('active');
+          goToPage(pageMap[button.getAttribute('data-page')] || 'homePage');
+        });
+      });
+      
+      (function checkAdminAndShowLink() {
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
+        if (!apiBase || !initData) return;
+        fetch(apiBase + '/api/admin/me', { headers: { 'X-Telegram-Init': initData } })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (!data || !data.admin) return;
+            var wrap = document.getElementById('adminLinkWrap');
+            var btn = document.getElementById('adminLinkBtn');
+            if (!wrap || !btn) return;
+            wrap.style.display = 'block';
+            btn.addEventListener('click', function(e) {
+              e.preventDefault();
+              var url = apiBase + '/admin';
+              if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) window.Telegram.WebApp.openLink(url);
+              else window.open(url, '_blank');
+            });
+          })
+          .catch(function() {});
+      })();
+        } catch (e) {
+          console.warn('App init error:', e);
+        }
+      }, 50);
+    });
+  </script>
+</body>
+</html>
