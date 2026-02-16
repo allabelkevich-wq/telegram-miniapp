@@ -1,8 +1,8 @@
 Ссылка для кнопки меню в @BotFather (если слетела):
 
-https://telegram-miniapp-six-teal.vercel.app
+https://telegram-miniapp-ar09.onrender.com/app
 
-Как вставить:
+Vercel удалён — только Render. Как вставить:
 1. Telegram → @BotFather → /mybots → твой бот
 2. Bot Settings → Menu Button → Configure menu button
 3. Вставить ссылку выше (без пробелов)
