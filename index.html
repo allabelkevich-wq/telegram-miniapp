@@ -11,7 +11,7 @@
   <!-- URL бота с API заявок (Render). Заявки идут через POST /api/submit-request. -->
   <script>window.HEROES_API_BASE = 'https://telegram-miniapp-ar09.onrender.com'; window.BACKEND_URL = window.HEROES_API_BASE;</script>
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
+    <style>
     /* АДАПТИВНЫЕ СТИЛИ С ПОДДЕРЖКОЙ ТЕМЫ ТЕЛЕГРАМ */
     :root {
       --primary-color: #d4af37;
@@ -332,7 +332,8 @@
       
       <div class="section">
         <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="220" height="220">
-        <button id="startBtn">✨ Начать</button>
+        <p id="homeGreeting" class="tagline" style="display:none;margin-bottom:12px"></p>
+        <button id="startBtn">Начать</button>
         <div id="masterNav" style="display:none; margin-top:20px">
           <button class="secondary" id="goHeroesBtn">👥 Мои герои</button>
         </div>
@@ -416,109 +417,109 @@
         </div>
 
         <div class="step-panel" data-step="2" style="display:none">
-          <div class="field">
+        <div class="field">
             <input type="text" id="name" placeholder="Как тебя зовут?" required aria-label="Имя">
-          </div>
-          
-          <div class="field">
+        </div>
+        
+        <div class="field">
             <input type="date" id="birthdate" required aria-label="Дата рождения">
-            <div id="birthdateSummary" class="field-summary" style="display:none; margin-top:8px; padding:10px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
-          </div>
-          
-          <div class="field">
-            <div class="birthplace-wrap">
+          <div id="birthdateSummary" class="field-summary" style="display:none; margin-top:8px; padding:10px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
+        </div>
+        
+        <div class="field">
+          <div class="birthplace-wrap">
               <input type="text" id="birthplace" placeholder="Город или страна — выбери из подсказок" required autocomplete="off" aria-label="Локация рождения">
-              <ul id="birthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true"></ul>
-            </div>
-            <div id="birthplaceSummary" class="field-summary birthplace-summary" style="display:none; margin-top:8px; padding:12px 14px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
-            <div id="placeCoords" class="place-coords" style="display:none; margin-top:6px; padding:10px 14px; background:rgba(94,234,212,.1); border-radius:10px; font-size:.9rem; color:#0d9488;"></div>
+            <ul id="birthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true"></ul>
           </div>
-          
-          <div class="field">
-            <div class="time-group">
+          <div id="birthplaceSummary" class="field-summary birthplace-summary" style="display:none; margin-top:8px; padding:12px 14px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
+          <div id="placeCoords" class="place-coords" style="display:none; margin-top:6px; padding:10px 14px; background:rgba(94,234,212,.1); border-radius:10px; font-size:.9rem; color:#0d9488;"></div>
+        </div>
+        
+        <div class="field">
+          <div class="time-group">
               <input type="time" id="birthtime" required aria-label="Время рождения">
-              <div class="checkbox">
-                <input type="checkbox" id="unknown">
-                <label for="unknown">Не знаю точное время</label>
-              </div>
+            <div class="checkbox">
+              <input type="checkbox" id="unknown">
+              <label for="unknown">Не знаю точное время</label>
             </div>
           </div>
-          
-          <div class="field">
-            <select id="gender" required>
+        </div>
+        
+        <div class="field">
+          <select id="gender" required>
               <option value="">Пол</option>
-              <option value="male">Мужской</option>
-              <option value="female">Женский</option>
-            </select>
-          </div>
-          
-          <div class="field">
+            <option value="male">Мужской</option>
+            <option value="female">Женский</option>
+          </select>
+        </div>
+        
+        <div class="field">
             <select id="language" required aria-label="Язык песни и описания">
               <option value="">Язык песни</option>
-              <option value="ru">Русский</option>
-              <option value="en">English</option>
-              <option value="uk">Українська</option>
-            </select>
-          </div>
-          
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+            <option value="uk">Українська</option>
+          </select>
+        </div>
+        
           <div id="secondPersonForm" style="display:none">
             <h3 style="margin-bottom:12px;">Для двоих</h3>
-            <div class="field">
-              <input type="text" id="name2" placeholder="Имя второго человека" maxlength="50">
-            </div>
-            <div class="field">
+          <div class="field">
+            <input type="text" id="name2" placeholder="Имя второго человека" maxlength="50">
+          </div>
+          <div class="field">
               <input type="date" id="birthdate2" max="2010-12-31" placeholder="Дата рождения">
-            </div>
-            <div class="field form-group location-input-wrapper">
+          </div>
+          <div class="field form-group location-input-wrapper">
               <input type="text" id="birthplace2" class="location-input" placeholder="Место рождения второго" maxlength="100" autocomplete="off">
-              <div id="birthplaceSuggestions2" class="location-suggestions"></div>
-            </div>
-            <div class="field">
-              <div class="time-group">
+            <div id="birthplaceSuggestions2" class="location-suggestions"></div>
+          </div>
+          <div class="field">
+            <div class="time-group">
                 <input type="time" id="birthtime2" style="flex:1" placeholder="Время рождения">
-                <div class="checkbox" style="margin:0 0 0 15px">
-                  <input type="checkbox" id="unknown2">
-                  <label for="unknown2">Не знаю</label>
-                </div>
+              <div class="checkbox" style="margin:0 0 0 15px">
+                <input type="checkbox" id="unknown2">
+                <label for="unknown2">Не знаю</label>
               </div>
-            </div>
-            <div class="field">
-              <select id="gender2">
-                <option value="">Пол</option>
-                <option value="female">Женский</option>
-                <option value="male">Мужской</option>
-              </select>
             </div>
           </div>
-          
+          <div class="field">
+            <select id="gender2">
+                <option value="">Пол</option>
+              <option value="female">Женский</option>
+              <option value="male">Мужской</option>
+            </select>
+          </div>
+        </div>
+        
           <div id="transitForm" style="display:none">
             <h3 style="margin-bottom:12px;">Энергия момента</h3>
-            <div class="field">
+          <div class="field">
               <input type="date" id="transitDate" min="2024-01-01" max="2030-12-31" placeholder="Дата события">
-            </div>
-            <div class="field">
+          </div>
+          <div class="field">
               <input type="time" id="transitTime" placeholder="Время события">
-            </div>
-            <div class="field form-group location-input-wrapper">
+          </div>
+          <div class="field form-group location-input-wrapper">
               <input type="text" id="transitLocation" class="location-input" placeholder="Город для энергии момента" maxlength="100" autocomplete="off">
-              <div id="transitLocationSuggestions" class="location-suggestions"></div>
-              <div class="checkbox-group" style="margin-top: 10px;">
-                <input type="checkbox" id="transitLocationConfirmed">
+            <div id="transitLocationSuggestions" class="location-suggestions"></div>
+            <div class="checkbox-group" style="margin-top: 10px;">
+              <input type="checkbox" id="transitLocationConfirmed">
                 <label for="transitLocationConfirmed">Локация указана верно</label>
-              </div>
             </div>
-            <div class="field">
+          </div>
+          <div class="field">
               <textarea id="transitIntent" placeholder="Намерение момента (опционально)" rows="2" maxlength="200" style="min-height:60px"></textarea>
             </div>
           </div>
         </div>
-
+        
         <div class="step-panel" data-step="3" style="display:none">
-          <div class="field">
-            <div class="request-help-row">
+        <div class="field">
+          <div class="request-help-row">
               <div class="request-label">Отправь запрос</div>
               <button type="button" id="quickRequestsToggle" class="request-help-toggle" aria-expanded="false">Быстрые запросы</button>
-            </div>
+          </div>
             <textarea id="request" placeholder="Какую грань будем исследовать сегодня?" aria-label="Запрос" rows="4"></textarea>
             <div class="request-examples" id="quickRequestsPanel">
               <div class="quick-list" id="quickRequestsList" style="display:flex;flex-direction:column;gap:8px;">
@@ -538,7 +539,7 @@
             </div>
           </div>
         </div>
-
+        
         <div class="step-nav">
           <button class="secondary" id="stepPrev" disabled>Назад</button>
           <button id="stepNext">Далее</button>
@@ -631,12 +632,30 @@
           Открой бота <a href="https://t.me/Yup_Soul_bot" style="color:#a78bfa;text-decoration:underline">@Yup_Soul_bot</a> в Telegram — там тебя ждёт твой звуковой ключ.
         </div>
         
-        <button class="secondary" id="newKeyBtn" style="margin-top:25px">✨ Создать ещё один ключ</button>
+        <button class="secondary" id="soulChatBtn" type="button" style="margin-top:15px">Поговорить с душой</button>
+        <button class="secondary" id="newKeyBtn" style="margin-top:15px">Создать ещё один ключ</button>
       </div>
       
       <footer>
         <p>YupSoul • 2026</p>
       </footer>
+    </div>
+
+    <!-- Страница «Спасибо за оплату» (редирект с HOT) -->
+    <div class="page" id="paymentThanksPage">
+      <header>
+        <h1>YupSoul</h1>
+        <div class="subtitle">оплата принята</div>
+      </header>
+      <div class="section" style="text-align:center; padding: 40px 20px">
+        <div class="success-icon" style="font-size:4rem; margin-bottom:20px">✓</div>
+        <h2 class="success-title" style="font-size:1.6rem; margin:0 0 16px 0">Спасибо за оплату</h2>
+        <p class="success-text" id="paymentThanksMessage" style="margin:0 0 24px 0; font-size:1rem">
+          Проверяем оплату…
+        </p>
+        <button id="paymentThanksBackBtn">Вернуться в приложение</button>
+      </div>
+      <footer><p>YupSoul • 2026</p></footer>
     </div>
     
   </div>
@@ -739,6 +758,7 @@
         }
       });
       var userTariff = 'basic';
+      var userProfile = null;
       var heroesCache = [];
       var editingHeroId = null;
       var pricingCatalog = [];
@@ -880,10 +900,34 @@
           if (masterNav && userTariff === 'master') masterNav.style.display = 'block';
         }).catch(function() {});
       }
+      async function fetchUserProfile() {
+        var base = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        if (!base || !tg || !tg.initData) return null;
+        try {
+          var res = await fetch(base + '/api/user/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': tg.initData },
+            body: JSON.stringify({ initData: tg.initData })
+          });
+          var json = await res.json().catch(function() { return {}; });
+          return json.profile || null;
+        } catch (e) { return null; }
+      }
       if (tg) loadMe();
 
       setTimeout(function() {
         try {
+        (function initProfile() {
+          if (!tg || !tg.initData) return;
+          fetchUserProfile().then(function(p) {
+            userProfile = p;
+            var greetEl = document.getElementById('homeGreeting');
+            if (greetEl && p && p.name) {
+              greetEl.textContent = 'Привет, ' + p.name + '! Твои данные уже здесь.';
+              greetEl.style.display = 'block';
+            }
+          });
+        })();
         if (!tg) {
           var p = document.getElementById('previewNav');
           if (p) p.classList.add('show');
@@ -1090,15 +1134,30 @@
           document.querySelectorAll('.preview-nav button').forEach(function(btn) {
             btn.classList.remove('active');
           });
-          var pageMap = { 'homePage': 'home', 'formPage': 'form', 'paymentPage': 'payment', 'loadingPage': 'loading', 'successPage': 'success', 'heroesPage': 'heroes' };
+          var pageMap = { 'homePage': 'home', 'formPage': 'form', 'paymentPage': 'payment', 'loadingPage': 'loading', 'successPage': 'success', 'heroesPage': 'heroes', 'paymentThanksPage': 'payment' };
           var activeBtn = document.querySelector('.preview-nav button[data-page="' + (pageMap[pageId] || '') + '"]');
           if (activeBtn) activeBtn.classList.add('active');
         }
       }
-      
+
+      // Редирект с HOT: при открытии с ?payment=success показываем страницу «Спасибо за оплату»
+      var search = typeof window.location !== 'undefined' && window.location.search ? window.location.search : '';
+      if (search.indexOf('payment=success') !== -1) {
+        goToPage('paymentThanksPage');
+        if (window.history && window.history.replaceState) {
+          var cleanUrl = window.location.pathname + (window.location.hash || '');
+          window.history.replaceState({}, '', cleanUrl);
+        }
+      }
+      var paymentThanksBackBtn = document.getElementById('paymentThanksBackBtn');
+      if (paymentThanksBackBtn) paymentThanksBackBtn.addEventListener('click', function() { goToPage('homePage'); });
+
       // Кнопки навигации
       var startBtn = document.getElementById('startBtn');
-      if (startBtn) startBtn.addEventListener('click', function() { goToPage('formPage'); });
+      if (startBtn) startBtn.addEventListener('click', function() {
+        fillFormFromProfile(userProfile || (tg && tg.initDataUnsafe && tg.initDataUnsafe.user));
+        goToPage('formPage');
+      });
 
       var stepPanels = document.querySelectorAll('.step-panel');
       var stepIndicators = document.querySelectorAll('.step-indicator');
@@ -1554,6 +1613,29 @@
         heroBirthdateEl.min = minH.toISOString().split('T')[0];
       }
 
+      function fillFormFromProfile(profileOrTgUser) {
+        if (!profileOrTgUser) return;
+        var nameEl = document.getElementById('name');
+        var bd = document.getElementById('birthdate');
+        var bt = document.getElementById('birthtime');
+        var bp = document.getElementById('birthplace');
+        var unk = document.getElementById('unknown');
+        var g = document.getElementById('gender');
+        var langEl = document.getElementById('language');
+        var isProfile = profileOrTgUser && (profileOrTgUser.birthdate != null || profileOrTgUser.birthplace != null);
+        var firstName = profileOrTgUser.first_name || profileOrTgUser.name;
+        if (nameEl && firstName) nameEl.value = firstName;
+        if (isProfile) {
+          if (bd) bd.value = (profileOrTgUser.birthdate || '').toString().slice(0, 10);
+          if (bt) bt.value = (profileOrTgUser.birthtime || '').toString().slice(0, 5);
+          if (bp) bp.value = profileOrTgUser.birthplace || '';
+          if (unk) unk.checked = !!profileOrTgUser.birthtime_unknown;
+          if (g) g.value = profileOrTgUser.gender || '';
+          if (langEl && profileOrTgUser.language) langEl.value = profileOrTgUser.language;
+          if (birthdateSummary) { birthdateSummary.textContent = profileOrTgUser.birthdate ? 'Выбрано: ' + formatDateRu(profileOrTgUser.birthdate) : ''; birthdateSummary.style.display = profileOrTgUser.birthdate ? 'block' : 'none'; }
+          if (birthplaceSummary) { birthplaceSummary.innerHTML = profileOrTgUser.birthplace ? '<span class="place-name">Место рождения:</span> ' + (profileOrTgUser.birthplace.replace(/</g, '&lt;')) : ''; birthplaceSummary.style.display = profileOrTgUser.birthplace ? 'block' : 'none'; }
+        }
+      }
       function fillFormFromHero(hero) {
         if (!hero) return;
         var nameEl = document.getElementById('name');
@@ -1591,6 +1673,12 @@
         }).catch(function() { wrap.style.display = 'none'; });
       }
 
+      var soulChatBtn = document.getElementById('soulChatBtn');
+      if (soulChatBtn) soulChatBtn.addEventListener('click', function() {
+        var botUrl = 'https://t.me/Yup_Soul_bot';
+        if (tg && tg.openTelegramLink) tg.openTelegramLink(botUrl);
+        else window.open(botUrl, '_blank');
+      });
       var newKeyBtn = document.getElementById('newKeyBtn');
       if (newKeyBtn) newKeyBtn.addEventListener('click', function() {
         var n = document.getElementById('name');

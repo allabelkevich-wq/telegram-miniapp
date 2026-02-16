@@ -289,10 +289,15 @@ function buildHotCheckoutUrl({ itemId, orderId, amount, currency, requestId, sku
   const url = new URL(HOT_PAYMENT_URL || "https://pay.hot-labs.org/payment");
   if (itemId) url.searchParams.set("item_id", itemId);
   if (orderId) url.searchParams.set("order_id", orderId);
+  // HOT официально: memo — идентификатор заказа, приходит в webhook (Verify income payments with HOT PAY).
+  if (orderId) url.searchParams.set("memo", orderId);
   if (amount != null) url.searchParams.set("amount", String(amount));
   if (currency) url.searchParams.set("currency", String(currency));
   if (requestId) url.searchParams.set("request_id", requestId);
   if (sku) url.searchParams.set("sku", sku);
+  // По умолчанию — мини-апп с параметром, чтобы показать страницу «Спасибо за оплату».
+  const redirectUrl = process.env.HOT_REDIRECT_URL || (MINI_APP_BASE + "?payment=success");
+  if (redirectUrl) url.searchParams.set("redirect_url", redirectUrl);
   return url.toString();
 }
 
@@ -337,6 +342,19 @@ async function grantPurchaseBySku({ telegramUserId, sku, source = "hot_payment" 
 
 function isAdmin(telegramId) {
   return telegramId && ADMIN_IDS.includes(Number(telegramId));
+}
+
+async function getLastCompletedRequestForUser(telegramUserId) {
+  if (!supabase || !telegramUserId) return null;
+  const { data } = await supabase
+    .from("track_requests")
+    .select("id")
+    .eq("telegram_user_id", Number(telegramUserId))
+    .eq("status", "completed")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data ? data.id : null;
 }
 
 async function getRequestForSoulChat(requestId) {
@@ -896,16 +914,19 @@ bot.command("soulchat", async (ctx) => {
     await ctx.reply("Не удалось определить пользователя.");
     return;
   }
-  const args = ctx.message?.text?.trim()?.split(/\s+/)?.slice(1) || [];
-  if (!args.length) {
-    await ctx.reply("Использование: /soulchat <request_id>\nПример: /soulchat 00000000-0000-0000-0000-000000000000");
-    return;
-  }
   if (!supabase) {
     await ctx.reply("❌ База данных недоступна.");
     return;
   }
-  const requestId = String(args[0] || "").trim();
+  const args = ctx.message?.text?.trim()?.split(/\s+/)?.slice(1) || [];
+  let requestId = args.length ? String(args[0] || "").trim() : null;
+  if (!requestId) {
+    requestId = await getLastCompletedRequestForUser(userId);
+    if (!requestId) {
+      await ctx.reply("У тебя пока нет готового звукового ключа. Сначала создай его в приложении — затем сможешь задать вопрос своей душе.");
+      return;
+    }
+  }
   const loaded = await getRequestForSoulChat(requestId);
   if (loaded.error) {
     await ctx.reply(`❌ ${loaded.error}`);
@@ -917,7 +938,7 @@ bot.command("soulchat", async (ctx) => {
   }
   pendingSoulChatByUser.set(Number(userId), { requestId, startedAt: Date.now() });
   const req = loaded.row;
-  await ctx.reply(`🫂 Режим «разговор по душам» включён для заявки ${requestId.slice(0, 8)}.\nНапиши один вопрос текстом следующим сообщением.\n\nПрофиль: ${req.name || "—"}${req.person2_name ? ` + ${req.person2_name}` : ""}.`);
+  await ctx.reply(`Задай вопрос своей душе — напиши его следующим сообщением.\n\nПрофиль: ${req.name || "—"}${req.person2_name ? ` + ${req.person2_name}` : ""}`);
 });
 
 bot.on("message:text", async (ctx, next) => {
@@ -1166,10 +1187,11 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
       return res.status(401).json({ success: false, error: "Invalid webhook signature" });
     }
     const body = parseJsonSafe(rawBody, {});
-    const orderId = String(body.order_id || body.orderId || body.data?.order_id || "").trim();
+    // HOT присылает memo (см. Webhook Payload Example), order_id может отсутствовать.
+    const orderId = String(body.memo || body.order_id || body.orderId || body.data?.order_id || "").trim();
     const status = String(body.payment_status || body.status || body.event || "").toLowerCase();
-    const txId = String(body.tx_id || body.txId || body.transaction_id || body.data?.tx_id || "").trim() || null;
-    if (!orderId) return res.status(400).json({ success: false, error: "order_id is required" });
+    const txId = String(body.tx_id || body.txId || body.near_trx || body.transaction_id || body.data?.tx_id || "").trim() || null;
+    if (!orderId) return res.status(400).json({ success: false, error: "memo or order_id is required" });
     if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
 
     const { data: row, error: rowErr } = await supabase
@@ -1264,6 +1286,38 @@ app.get("/", (_req, res) =>
 app.get("/api/me", (_req, res) => {
   res.json({ ok: true, user: null, authenticated: false });
 });
+
+// Профиль пользователя — автовход, предзаполнение формы
+app.post("/api/user/profile", express.json(), asyncApi(async (req, res) => {
+  const initData = req.body?.initData ?? req.headers["x-telegram-init"];
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) {
+    return res.status(401).json({ error: "Неверные данные авторизации. Открой приложение из чата с ботом." });
+  }
+  if (!supabase) return res.status(503).json({ error: "База недоступна" });
+  const body = req.body || {};
+  const profileData = {};
+  if (body.name != null) profileData.name = body.name;
+  if (body.birthdate != null) profileData.birthdate = body.birthdate;
+  if (body.birthplace != null) profileData.birthplace = body.birthplace;
+  if (body.birthtime != null) profileData.birthtime = body.birthtime;
+  if (body.birthtime_unknown != null) profileData.birthtime_unknown = !!body.birthtime_unknown;
+  if (body.gender != null) profileData.gender = body.gender;
+  if (body.language != null) profileData.language = body.language;
+  if (Object.keys(profileData).length > 0) {
+    profileData.telegram_id = telegramUserId;
+    profileData.updated_at = new Date().toISOString();
+    const { error } = await supabase.from("user_profiles").upsert(profileData, { onConflict: "telegram_id" });
+    if (error && /does not exist|relation/i.test(error.message)) {
+      return res.json({ profile: null, message: "Таблица user_profiles не создана. Выполни миграцию bot/supabase-migration-user-profiles.sql" });
+    }
+    if (error) return res.status(500).json({ error: error.message });
+  }
+  const { data, error } = await supabase.from("user_profiles").select("*").eq("telegram_id", telegramUserId).maybeSingle();
+  if (error && /does not exist|relation/i.test(error.message)) return res.json({ profile: null });
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json({ profile: data || null });
+}));
 
 function resolveAdminAuth(req) {
   const initData = req.headers["x-telegram-init"] || req.query?.initData || req.body?.initData;
@@ -1957,6 +2011,20 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
       saveData.birthplaceLon = birthplaceLon;
     }
     requestId = await saveRequest(saveData);
+    if (supabase && name && birthdate && birthplace) {
+      const up = {
+        telegram_id: telegramUserId,
+        name: name || null,
+        birthdate: birthdate || null,
+        birthplace: birthplace || null,
+        birthtime: birthtime || null,
+        birthtime_unknown: !!birthtimeUnknown,
+        gender: gender || null,
+        language: language || "ru",
+        updated_at: new Date().toISOString(),
+      };
+      await supabase.from("user_profiles").upsert(up, { onConflict: "telegram_id" }).catch(() => {});
+    }
   } catch (err) {
     console.error("[submit-request] saveRequest:", err?.message || err);
     return res.status(500).json({ error: "Ошибка сохранения заявки" });

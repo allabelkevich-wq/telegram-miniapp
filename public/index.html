@@ -11,7 +11,7 @@
   <!-- URL бота с API заявок (Render). Заявки идут через POST /api/submit-request. -->
   <script>window.HEROES_API_BASE = 'https://telegram-miniapp-ar09.onrender.com'; window.BACKEND_URL = window.HEROES_API_BASE;</script>
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
+    <style>
     /* АДАПТИВНЫЕ СТИЛИ С ПОДДЕРЖКОЙ ТЕМЫ ТЕЛЕГРАМ */
     :root {
       --primary-color: #8b5cf6;
@@ -581,6 +581,23 @@
         <p>YupSoul • 2026</p>
       </footer>
     </div>
+
+    <!-- Страница «Спасибо за оплату» (редирект с HOT) -->
+    <div class="page" id="paymentThanksPage">
+      <header>
+        <h1>YupSoul</h1>
+        <div class="subtitle">оплата принята</div>
+      </header>
+      <div class="section" style="text-align:center; padding: 40px 20px">
+        <div class="success-icon" style="font-size:4rem; margin-bottom:20px">✓</div>
+        <h2 class="success-title" style="font-size:1.6rem; margin:0 0 16px 0">Спасибо за оплату</h2>
+        <p class="success-text" id="paymentThanksMessage" style="margin:0 0 24px 0; font-size:1rem">
+          Проверяем оплату…
+        </p>
+        <button id="paymentThanksBackBtn">Вернуться в приложение</button>
+      </div>
+      <footer><p>YupSoul • 2026</p></footer>
+    </div>
     
   </div>
 
@@ -1022,12 +1039,56 @@
           document.querySelectorAll('.preview-nav button').forEach(function(btn) {
             btn.classList.remove('active');
           });
-          var pageMap = { 'homePage': 'home', 'formPage': 'form', 'paymentPage': 'payment', 'loadingPage': 'loading', 'successPage': 'success', 'heroesPage': 'heroes' };
+          var pageMap = { 'homePage': 'home', 'formPage': 'form', 'paymentPage': 'payment', 'loadingPage': 'loading', 'successPage': 'success', 'heroesPage': 'heroes', 'paymentThanksPage': 'payment' };
           var activeBtn = document.querySelector('.preview-nav button[data-page="' + (pageMap[pageId] || '') + '"]');
           if (activeBtn) activeBtn.classList.add('active');
         }
       }
-      
+
+      // Редирект с HOT: при открытии с ?payment=success показываем страницу «Спасибо за оплату» и автоматически проверяем статус
+      var search = typeof window.location !== 'undefined' && window.location.search ? window.location.search : '';
+      var paymentThanksRequestId = null;
+      if (search.indexOf('payment=success') !== -1) {
+        var params = new URLSearchParams(window.location.search || '');
+        paymentThanksRequestId = params.get('request_id') || null;
+        goToPage('paymentThanksPage');
+        if (window.history && window.history.replaceState) {
+          var cleanUrl = window.location.pathname + (window.location.hash || '');
+          window.history.replaceState({}, '', cleanUrl);
+        }
+      }
+      function startPaymentThanksPoll() {
+        if (!paymentThanksRequestId) {
+          var msg = document.getElementById('paymentThanksMessage');
+          if (msg) msg.textContent = 'Заявка обрабатывается. Результат придёт в бота — проверь Telegram.';
+          return;
+        }
+        var apiBase = window.BACKEND_URL || window.HEROES_API_BASE || '';
+        var initData = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) ? window.Telegram.WebApp.initData : '';
+        var msgEl = document.getElementById('paymentThanksMessage');
+        var pollCount = 0;
+        var maxPolls = 60;
+        var interval = setInterval(function() {
+          pollCount++;
+          if (pollCount > maxPolls) {
+            clearInterval(interval);
+            if (msgEl) msgEl.textContent = 'Заявка обрабатывается. Результат придёт в бота — проверь Telegram.';
+            return;
+          }
+          fetch(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(paymentThanksRequestId), {
+            headers: { 'X-Telegram-Init': initData }
+          }).then(function(r) { return r.json(); }).then(function(json) {
+            if (json.data && String(json.data.payment_status || '').toLowerCase() === 'paid') {
+              clearInterval(interval);
+              if (msgEl) msgEl.textContent = 'Оплата подтверждена! Результат придёт в бота.';
+            }
+          }).catch(function() {});
+        }, 3000);
+      }
+      if (paymentThanksRequestId) startPaymentThanksPoll();
+      var paymentThanksBackBtn = document.getElementById('paymentThanksBackBtn');
+      if (paymentThanksBackBtn) paymentThanksBackBtn.addEventListener('click', function() { goToPage('homePage'); });
+
       // Кнопки навигации
       var startBtn = document.getElementById('startBtn');
       var backBtn = document.getElementById('backBtn');
