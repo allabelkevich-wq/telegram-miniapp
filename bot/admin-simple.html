@@ -437,7 +437,7 @@
           ${stepsDigest(steps) ? '<div class="details-section"><div class="section-title">🧭 Контроль новых этапов</div><div class="content-text" style="font-size:12px;">' + stepsDigest(steps) + '</div></div>' : ''}
           <div class="actions">
             <button class="btn btn-primary" onclick="showDetails('${(r.id || '').replace(/'/g, "\\'")}')">📋 Подробнее / Details</button>
-            ${gs !== 'completed' ? '<button class="btn btn-warning" onclick="restart(\'' + (r.id || '').replace(/'/g, "\\'") + '\')">🔄 Перезапустить / Restart</button>' : ''}
+            ${gs !== 'completed' ? '<button class="btn btn-warning" onclick="restart(\'' + (r.id || '').replace(/'/g, "\\'") + '\', this)">🔄 Перезапустить / Restart</button>' : ''}
             ${r.audio_url ? '<button class="btn btn-success" onclick="window.open(\'' + r.audio_url.replace(/'/g, "\\'") + '\')">▶️ Слушать / Listen</button>' : ''}
           </div>
         </div>`;
@@ -804,32 +804,28 @@
           ${r.lyrics ? '<div class="details-section"><div class="section-title">🎵 Текст песни</div><div class="content-text" style="white-space:pre-wrap;">' + escapeHtml(r.lyrics) + '</div></div>' : ''}
           ${r.audio_url ? '<div class="details-section"><div class="section-title">🔊 Аудио</div><audio class="audio-player" controls src="' + escapeHtml(r.audio_url) + '"></audio><br><a href="' + escapeHtml(r.audio_url) + '" download><button class="btn btn-success" style="width:auto;">⬇️ Скачать</button></a></div>' : ''}
           <div class="actions" style="margin-top:30px;">
-            <button class="btn btn-warning" onclick="restart(\'' + (r.id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\'); this.closest(\'div\').parentElement.remove();">🔄 Перезапустить генерацию</button>
+            <button class="btn btn-warning" onclick="restart(\'' + (r.id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\', this); this.closest(\'div\').parentElement.remove();">🔄 Перезапустить генерацию</button>
             <button class="btn btn-primary" onclick="this.closest('div').parentElement.remove()">✅ Закрыть</button>
           </div>
         </div>`;
       document.body.appendChild(modal);
     }
 
-    window.restart = async function restart(id) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:restart:click',message:'restart clicked',data:{id:id?String(id):'',apiBase:API_BASE||null},timestamp:Date.now(),runId:'restart-debug',hypothesisId:'R1,R2'})}).catch(()=>{});
-      // #endregion
+    window.restart = async function restart(id, btnEl) {
+      if (!id || typeof id !== 'string') { alert('Ошибка: нет ID заявки'); return; }
       if (!confirm('Перезапустить генерацию? / Restart generation?')) return;
+      if (btnEl) { btnEl.disabled = true; btnEl.textContent = '⏳ Перезапуск…'; }
       try {
-        const result = await fetchJson(API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + '/restart' + authQueryFromPath(), { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() } });
+        const url = API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + '/restart' + authQueryFromPath();
+        const result = await fetchJson(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() } });
         const json = result.json;
         const res = result.res;
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:restart:response',message:'restart response',data:{id:id?String(id):'',httpStatus:res&&res.status?Number(res.status):null,success:!!(json&&json.success),error:json&&json.error?String(json.error):null},timestamp:Date.now(),runId:'restart-debug',hypothesisId:'R2'})}).catch(()=>{});
-        // #endregion
         if (json.success) { alert('✅ Генерация перезапущена / Generation restarted'); loadAdminData(); }
         else alert('Ошибка: ' + (json.error || res.status));
       } catch (e) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:restart:error',message:'restart failed',data:{id:id?String(id):'',errorMessage:e&&e.message?String(e.message):String(e)},timestamp:Date.now(),runId:'restart-debug',hypothesisId:'R2'})}).catch(()=>{});
-        // #endregion
         alert('Ошибка: ' + (e && e.message ? e.message : e));
+      } finally {
+        if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = '🔄 Перезапустить / Restart'; }
       }
     }
 

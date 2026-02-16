@@ -221,6 +221,7 @@
     .checkbox input{width:auto;height:20px;accent-color:#a78bfa}
     .checkbox label{margin-bottom:0;font-weight:500;color:var(--tg-theme-text-color,#2d2d2d);font-size:1rem;display:flex;align-items:center;gap:8px}
     .checkbox label::before{content:"❓";font-size:1.3rem}
+    .time-unknown-wrap{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;margin-top:10px;opacity:.92}
     select{appearance:none;background:url("image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23a78bfa' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 16px center;background-size:20px;padding-right:48px}
     textarea{min-height:140px;line-height:1.6;resize:vertical}
     .request-label{font-size:1.3rem;text-align:center;margin-bottom:15px;color:#a78bfa;font-weight:700;letter-spacing:-0.5px}
@@ -283,6 +284,8 @@
     .birthplace-suggestions li:hover,.birthplace-suggestions li.selected{background:rgba(167,139,250,.12);color:#6d28d9}
     .birthplace-suggestions .place-type{font-size:.85rem;color:#6b7280;margin-top:2px}
     .birthplace-summary .place-name{font-weight:700;color:#5b21b6}
+    .birthplace-summary{word-wrap:break-word;overflow-wrap:break-word;word-break:break-word}
+    .birthplace-change-btn{font-size:.85rem;color:#a78bfa;text-decoration:underline;cursor:pointer;margin-top:6px;display:inline-block;background:transparent!important;border:none!important;box-shadow:none!important;min-height:auto!important;padding:6px 0!important}
     .place-coords{font-family:ui-monospace,monospace;letter-spacing:.02em}
     /* Debug overlay for HOT payment */
     .hot-debug-toggle{position:fixed;right:12px;top:12px;z-index:100000;background:rgba(212,175,55,0.18);border:1px solid var(--tg-theme-border-color);color:var(--tg-theme-text-color);padding:8px 10px;border-radius:10px;font-size:12px;cursor:pointer;opacity:0.95;transition:all .2s;font-weight:700}
@@ -436,13 +439,14 @@
             <ul id="birthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true"></ul>
           </div>
           <div id="birthplaceSummary" class="field-summary birthplace-summary" style="display:none; margin-top:8px; padding:12px 14px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
+          <div id="birthplaceChangeWrap" style="display:none; margin-top:6px;"><button type="button" id="birthplaceChangeBtn" class="birthplace-change-btn secondary" style="padding:8px 12px;font-size:.9rem;min-height:auto;width:auto;">Изменить место</button></div>
           <div id="placeCoords" class="place-coords" style="display:none; margin-top:6px; padding:10px 14px; background:rgba(94,234,212,.1); border-radius:10px; font-size:.9rem; color:#0d9488;"></div>
         </div>
         
         <div class="field">
           <div class="time-group">
               <input type="time" id="birthtime" required aria-label="Время рождения">
-            <div class="checkbox">
+            <div class="checkbox time-unknown-wrap">
               <input type="checkbox" id="unknown">
               <label for="unknown">Не знаю точное время</label>
             </div>
@@ -1038,6 +1042,9 @@
             }
             birthplaceSummary.innerHTML = '<span class="place-name">Место рождения:</span> ' + escapeHtml(displayName || '');
             birthplaceSummary.style.display = 'block';
+            var changeWrap = document.getElementById('birthplaceChangeWrap');
+            if (changeWrap) changeWrap.style.display = 'block';
+            birthplaceInput.style.display = 'none';
             if (placeCoordsEl && lat != null && lon != null) {
               placeCoordsEl.textContent = 'Координаты: ' + formatLatLon(lat, lon);
               placeCoordsEl.style.display = 'block';
@@ -1051,6 +1058,9 @@
             birthplaceInput.removeAttribute('data-place-selected');
             birthplaceInput.removeAttribute('data-lat');
             birthplaceInput.removeAttribute('data-lon');
+            birthplaceInput.style.display = '';
+            var changeWrap = document.getElementById('birthplaceChangeWrap');
+            if (changeWrap) changeWrap.style.display = 'none';
             if (placeCoordsEl) placeCoordsEl.style.display = 'none';
           }
           function fetchPlaces(q) {
@@ -1119,16 +1129,28 @@
           if (birthplaceInput.value.trim()) {
             if (birthplaceInput.getAttribute('data-place-selected')) {
               birthplaceSummary.innerHTML = '<span class="place-name">Место рождения:</span> ' + escapeHtml(birthplaceInput.value.trim());
+              birthplaceSummary.style.display = 'block';
+              birthplaceInput.style.display = 'none';
+              var cw = document.getElementById('birthplaceChangeWrap');
+              if (cw) cw.style.display = 'block';
               if (placeCoordsEl && birthplaceInput.getAttribute('data-lat')) {
                 placeCoordsEl.textContent = 'Координаты: ' + formatLatLon(birthplaceInput.getAttribute('data-lat'), birthplaceInput.getAttribute('data-lon'));
                 placeCoordsEl.style.display = 'block';
               }
             } else {
               birthplaceSummary.innerHTML = 'Выбери место из подсказок (клик по варианту в списке).';
+              birthplaceSummary.style.display = 'block';
             }
-            birthplaceSummary.style.display = 'block';
             showPlaceConfirm(birthplaceInput.value.trim());
           }
+          var changeBtn = document.getElementById('birthplaceChangeBtn');
+          if (changeBtn) changeBtn.addEventListener('click', function() {
+            clearPlaceSelection();
+            birthplaceInput.value = '';
+            birthplaceSummary.style.display = 'none';
+            birthplaceInput.style.display = '';
+            birthplaceInput.focus();
+          });
         }
         var birthplace2Input = document.getElementById('birthplace2');
         if (birthplace2Input) {

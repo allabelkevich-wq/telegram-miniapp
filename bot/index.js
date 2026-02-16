@@ -1422,18 +1422,26 @@ app.get("/api/admin/requests", asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const limit = Math.min(parseInt(req.query?.limit, 10) || 50, 100);
   const statusFilter = req.query?.status || "all";
-  const fullSelect = "id,name,gender,birthdate,birthplace,person2_name,person2_gender,person2_birthdate,person2_birthplace,status,generation_status,created_at,audio_url,mode,request,generation_steps";
+  const fullSelect = "id,name,gender,birthdate,birthplace,person2_name,person2_gender,person2_birthdate,person2_birthplace,status,generation_status,payment_status,created_at,audio_url,mode,request,generation_steps";
+  const allowedPayment = ["paid", "gift_used", "subscription_active"];
   let q = supabase.from("track_requests").select(fullSelect).order("created_at", { ascending: false }).limit(limit);
-  if (statusFilter === "pending") q = q.in("generation_status", ["pending", "astro_calculated", "lyrics_generated", "suno_processing"]);
-  else if (statusFilter === "completed") q = q.eq("generation_status", "completed");
+  if (statusFilter === "pending") {
+    q = q.in("generation_status", ["pending", "astro_calculated", "lyrics_generated", "suno_processing", "processing"]);
+    q = q.in("payment_status", allowedPayment);
+  } else if (statusFilter === "idlers") {
+    q = q.or("payment_status.is.null,payment_status.eq.pending,payment_status.eq.requires_payment");
+  } else if (statusFilter === "completed") q = q.eq("generation_status", "completed");
   else if (statusFilter === "failed") q = q.eq("generation_status", "failed");
   let result = await q;
   if (result.error && /does not exist|column/i.test(result.error.message)) {
-    const minSelect = "id, name, status, created_at, request, telegram_user_id";
-    let q2 = supabase.from("track_requests").select(minSelect).order("created_at", { ascending: false }).limit(limit);
-    if (statusFilter === "completed") q2 = q2.eq("status", "completed");
-    else if (statusFilter === "failed") q2 = q2.eq("status", "failed");
-    result = await q2;
+    if (statusFilter === "idlers") result = { data: [] };
+    else {
+      const minSelect = "id, name, status, created_at, request, telegram_user_id";
+      let q2 = supabase.from("track_requests").select(minSelect).order("created_at", { ascending: false }).limit(limit);
+      if (statusFilter === "completed") q2 = q2.eq("status", "completed");
+      else if (statusFilter === "failed") q2 = q2.eq("status", "failed");
+      result = await q2;
+    }
   }
   if (result.error) return res.status(500).json({ success: false, error: result.error.message });
   return res.json({ success: true, data: result.data || [] });
@@ -1519,6 +1527,13 @@ app.post("/api/admin/requests/:id/restart", asyncApi(async (req, res) => {
   const id = sanitizeRequestId(req.params.id);
   if (!id) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
   if (!isValidRequestId(id)) return res.status(400).json({ success: false, error: "Используйте полный UUID заявки (с дефисами), не обрезанный ID" });
+  const { data: row, error: rowErr } = await supabase.from("track_requests").select("payment_status").eq("id", id).maybeSingle();
+  if (!rowErr && row) {
+    const ps = String(row.payment_status || "").toLowerCase();
+    if (ps && !["paid", "gift_used", "subscription_active"].includes(ps)) {
+      return res.status(400).json({ success: false, error: "Перезапуск только для оплаченных заявок. Статус: " + ps });
+    }
+  }
   const { error: updateError } = await supabase
     .from("track_requests")
     .update({
@@ -1923,6 +1938,8 @@ app.get("/api/admin/payments", asyncApi(async (req, res) => {
     .from("track_requests")
     .select("id,name,mode,payment_provider,payment_status,payment_order_id,payment_tx_id,payment_amount,payment_currency,promo_code,promo_discount_amount,promo_type,paid_at,created_at")
     .not("payment_provider", "is", null)
+    .in("payment_status", ["paid", "gift_used", "subscription_active"])
+    .order("paid_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error && /does not exist|column/i.test(error.message)) return res.json({ success: true, data: [] });

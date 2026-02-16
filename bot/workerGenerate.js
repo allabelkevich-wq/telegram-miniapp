@@ -282,12 +282,15 @@ async function runOnceWithAstro() {
     console.error("[Worker] Нет Supabase");
     return;
   }
-  // Не трогаем заявки, которые уже обрабатывает workerSoundKey (ваш промпт из кода)
+  // Только оплаченные заявки — unpaid не должны получать треки бесплатно
+  const allowedPayment = ["paid", "gift_used", "subscription_active"];
   const { data: rows, error } = await supabase
     .from("track_requests")
     .select("id, telegram_user_id, name, birthdate, birthplace, birthtime, birthtime_unknown, request, language, astro_snapshot_id")
     .eq("status", "pending")
     .or("generation_status.is.null,generation_status.eq.pending")
+    .in("payment_status", allowedPayment)
+    .order("paid_at", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: true })
     .limit(1);
   if (error) {

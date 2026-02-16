@@ -406,7 +406,7 @@ function parseResponse(text) {
 
   if (!title && lyrics) title = "Sound Key";
   if (!lyrics) return null;
-  
+
   return {
     detailed_analysis: detailed_analysis || null,
     title: title || "",
@@ -863,7 +863,7 @@ ${extBlock ? "\n" + extBlock : ""}
         updated_at: new Date().toISOString()
       })
       .eq('id', requestId);
-    
+
     // ========== ЭТАП 3: SUNO ==========
     const styleSentToSuno = parsed.style || "";
     console.log(`[Воркер] ЭТАП 3 — Suno: отправляю лирику ${lyricsForSuno.length} символов, title="${parsed.title}", style (первые 120 символов): ${styleSentToSuno.slice(0, 120)}${styleSentToSuno.length > 120 ? "…" : ""}`);
