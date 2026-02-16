@@ -304,7 +304,13 @@ function buildHotCheckoutUrl({ itemId, orderId, amount, currency, requestId, sku
   if (sku) url.searchParams.set("sku", sku);
   // По умолчанию — мини-апп с параметрами для страницы «Спасибо за оплату» и авто-проверки статуса.
   const redirectUrl = process.env.HOT_REDIRECT_URL || (MINI_APP_BASE + "?payment=success&request_id=" + encodeURIComponent(requestId || ""));
-  if (redirectUrl) url.searchParams.set("redirect_url", redirectUrl);
+  if (redirectUrl) {
+    url.searchParams.set("redirect_url", redirectUrl);
+    try {
+      const domain = new URL(redirectUrl).hostname;
+      console.log("[hot/checkout] redirect_url domain:", domain, "| full:", redirectUrl.slice(0, 80) + (redirectUrl.length > 80 ? "…" : ""), "| HOT_REDIRECT_URL set:", !!process.env.HOT_REDIRECT_URL);
+    } catch (_) {}
+  }
   return url.toString();
 }
 
@@ -1802,6 +1808,22 @@ app.post("/api/payments/hot/create", express.json(), asyncApi(async (req, res) =
     checkout_url: checkoutUrl,
   });
 }));
+
+// Для отладки «Redirect URL domain does not match» — проверить, какой redirect_url отправляется в HOT.
+app.get("/api/payments/hot/redirect-info", (_req, res) => {
+  const redirectUrl = process.env.HOT_REDIRECT_URL || (MINI_APP_BASE + "?payment=success&request_id=EXAMPLE");
+  let domain = "";
+  try {
+    domain = new URL(redirectUrl).hostname;
+  } catch (_) {}
+  res.json({
+    redirect_url: redirectUrl,
+    domain,
+    hint: "В панели HOT Pay в поле «Redirect Domain» должен быть указан ровно этот domain. Если там другой домен — ошибка «Redirect URL domain does not match».",
+    HOT_REDIRECT_URL_set: !!process.env.HOT_REDIRECT_URL,
+    MINI_APP_BASE,
+  });
+});
 
 app.get("/api/payments/hot/status", asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });

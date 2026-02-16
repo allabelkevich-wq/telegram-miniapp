@@ -19,15 +19,23 @@
 
 ## «Redirect URL domain does not match the configured redirect domain»
 
-Эта ошибка на странице оплаты — домен редиректа не добавлен в настройки HOT.
+Эта ошибка на странице оплаты HOT — домен редиректа не совпадает с тем, что указан в настройках.
 
-**Что сделать:** в панели HOT Pay ([pay.hot-labs.org](https://pay.hot-labs.org)) → твоя платёжная ссылка (item) → **Redirect Domain** — добавь:
+**Шаг 1.** Проверь, какой domain отправляется:
 
-```
-telegram-miniapp-ar09.onrender.com
-```
+- Открой в браузере: `https://telegram-miniapp-ar09.onrender.com/api/payments/hot/redirect-info`
+- В ответе будут `redirect_url` и `domain` — именно этот домен должен быть в HOT.
 
-Только домен, без `https://` и пути. Сохрани изменения.
+**Шаг 2.** Если `HOT_REDIRECT_URL_set: true` — в Render задана переменная `HOT_REDIRECT_URL`. Убедись, что она указывает на нужный домен (например `https://telegram-miniapp-ar09.onrender.com/app?...`). Либо удали её, чтобы использовался дефолт.
+
+**Шаг 3.** В панели HOT Pay ([pay.hot-labs.org](https://pay.hot-labs.org)):
+
+- Открой **ту же платёжную ссылку (item)**, чей `item_id` используется (см. `HOT_ITEM_ID_SINGLE_SONG` и т.п. в Render).
+- В поле **Redirect Domain** добавь: `telegram-miniapp-ar09.onrender.com` (только домен, без `https://`).
+- Если есть поле **Redirect URL** — попробуй полный URL: `https://telegram-miniapp-ar09.onrender.com/app`.
+- Сохрани и подожди 1–2 минуты.
+
+**Шаг 4.** В логах Render при попытке оплаты должна появиться строка `[hot/checkout] redirect_url domain:` — сверь домен с тем, что указан в HOT.
 
 ## Webhook
 
