@@ -571,9 +571,9 @@
           Загрузка тарифов...
         </div>
         <div id="priceSummary" style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:20px;margin:16px 0;">
-          <div style="font-size:.95rem;color:rgba(255,255,255,0.9);">Текущий элемент</div>
-          <div id="priceLabel" style="font-size:1.15rem;font-weight:700;color:#fff;margin-top:6px;">—</div>
-          <div id="priceValue" style="font-size:1.8rem;font-weight:800;color:#fff;margin-top:6px;">—</div>
+          <div id="priceSummaryTitle" style="font-size:.95rem;color:rgba(255,255,255,0.9);">Звуковой ключ для себя</div>
+          <div id="priceLabel" style="font-size:1rem;font-weight:600;color:rgba(255,255,255,0.85);margin-top:6px;"></div>
+          <div id="priceValue" style="font-size:1.8rem;font-weight:800;color:#fff;margin-top:6px;">Загрузка...</div>
           <div id="priceHint" style="font-size:.88rem;color:rgba(255,255,255,0.85);margin-top:6px;"></div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -585,6 +585,9 @@
           <button class="secondary" id="backFromPaymentBtn">← Назад</button>
           <button id="payBtn">Оформить и продолжить</button>
         </div>
+        <!-- #region agent log — диагностический блок -->
+        <div id="diagStatus" style="margin-top:8px;padding:6px 10px;font-size:12px;color:#aaa;text-align:center;min-height:18px;"></div>
+        <!-- #endregion -->
       </div>
       
       <footer>
@@ -664,6 +667,13 @@
   </div>
 
   <script>
+    // #region agent log — глобальный перехватчик ошибок для диагностики
+    window.addEventListener('error', function(e) {
+      console.error('[DIAG-GLOBAL] JS Error:', e.message, 'at', e.filename, ':', e.lineno);
+      var diagEl = document.getElementById('diagStatus');
+      if (diagEl) diagEl.textContent = '⚠️ JS Error: ' + (e.message || '') + ' (строка ' + (e.lineno || '?') + ')';
+    });
+    // #endregion
     document.addEventListener('DOMContentLoaded', function() {
       var tg = null;
       function logColorSnapshot(stage, pageId) {
@@ -767,12 +777,19 @@
       var pricingCatalog = [];
       var freeTrialAvailable = true;
       var activePromo = null;
+      var pricingCatalogLoadFailed = false;
 
       function getCurrentSku() {
         var modeSku = selectedMode || 'single';
         if (modeSku === 'couple') return 'couple_song';
         if (modeSku === 'transit') return 'transit_energy_song';
         return 'single_song';
+      }
+      function getCurrentModeLabel() {
+        var m = selectedMode || 'single';
+        if (m === 'couple') return 'Звуковой ключ для двоих';
+        if (m === 'transit') return 'Энергия дня';
+        return 'Звуковой ключ для себя';
       }
       function setPaymentStatus(text, tone) {
         var el = document.getElementById('paymentStatus');
@@ -789,17 +806,24 @@
       }
       function updatePaymentUiFromCatalog() {
         var sku = getCurrentSku();
+        var modeLabel = getCurrentModeLabel();
         var item = pricingCatalog.find(function(x) { return x && x.sku === sku; }) || null;
         var priceLabel = document.getElementById('priceLabel');
         var priceValue = document.getElementById('priceValue');
         var priceHint = document.getElementById('priceHint');
         var notice = document.getElementById('pricingNotice');
-        if (priceLabel) priceLabel.textContent = item ? (item.title || sku) : sku;
+        var summaryTitle = document.getElementById('priceSummaryTitle');
+        if (summaryTitle) summaryTitle.textContent = modeLabel;
+        if (priceLabel) priceLabel.textContent = item ? (item.title || item.description || modeLabel) : modeLabel;
         if (priceValue) {
-          if (item && activePromo && activePromo.sku === sku) {
+          if (freeTrialAvailable && !activePromo) {
+            priceValue.textContent = 'Бесплатно';
+          } else if (item && activePromo && activePromo.sku === sku) {
             priceValue.textContent = String(activePromo.amount_after) + ' ' + (activePromo.currency || item.currency || 'USDT');
+          } else if (item) {
+            priceValue.textContent = String(item.price) + ' ' + (item.currency || 'USDT');
           } else {
-            priceValue.textContent = item ? (String(item.price) + ' ' + (item.currency || 'USDT')) : '—';
+            priceValue.textContent = freeTrialAvailable ? 'Бесплатно' : 'Загрузка цены...';
           }
         }
         if (priceHint) {
@@ -810,7 +834,12 @@
           }
         }
         if (notice) {
-          if (freeTrialAvailable) {
+          if (pricingCatalogLoadFailed) {
+            notice.textContent = 'Не удалось загрузить тарифы. Можно оформить заявку — цена уточнится.';
+            notice.style.borderColor = 'rgba(212,175,55,.35)';
+            notice.style.background = 'rgba(212,175,55,.1)';
+            notice.style.color = 'rgba(255,255,255,.95)';
+          } else if (freeTrialAvailable) {
             notice.textContent = 'Первый звуковой ключ доступен бесплатно.';
             notice.style.borderColor = 'rgba(212,175,55,.4)';
             notice.style.background = 'rgba(212,175,55,.12)';
@@ -826,6 +855,8 @@
       async function loadPricingCatalog() {
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         var initData = (tg && tg.initData) ? tg.initData : '';
+        pricingCatalogLoadFailed = false;
+        updatePaymentUiFromCatalog();
         if (!apiBase) return;
         try {
           var url = apiBase + '/api/pricing/catalog';
@@ -836,9 +867,15 @@
           if (resp.ok && json.success) {
             pricingCatalog = Array.isArray(json.catalog) ? json.catalog : [];
             freeTrialAvailable = !!(json.free_trial && json.free_trial.available);
-            updatePaymentUiFromCatalog();
+            pricingCatalogLoadFailed = false;
+          } else {
+            pricingCatalogLoadFailed = true;
           }
-        } catch (_) {}
+          updatePaymentUiFromCatalog();
+        } catch (_) {
+          pricingCatalogLoadFailed = true;
+          updatePaymentUiFromCatalog();
+        }
       }
       async function applyPromoCode() {
         var input = document.getElementById('promoCodeInput');
@@ -1346,10 +1383,17 @@
         goToPage('formPage');
       });
       var payBtn = document.getElementById('payBtn');
+      // #region agent log — диагностика привязки обработчика
+      console.log('[DIAG] payBtn element:', payBtn ? 'FOUND' : 'NOT FOUND');
+      // #endregion
       if (payBtn) payBtn.addEventListener('click', async function() {
         if (payBtn.disabled) return;
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:handlerEntered',message:'pay handler entered',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H1'})}).catch(()=>{});
+        // #region agent log — видимая диагностика при клике
+        var diagEl = document.getElementById('diagStatus');
+        payBtn.disabled = true;
+        payBtn.textContent = '⏳ Отправляю...';
+        if (diagEl) diagEl.textContent = '🔄 Обработчик запущен...';
+        console.log('[DIAG] payBtn clicked, handler entered');
         // #endregion
         var mode = selectedMode || 'single';
         var name1 = document.getElementById('name').value.trim();
@@ -1406,26 +1450,29 @@
         fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:validationPassed',message:'pay validation passed',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
         // #endregion
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        // #region agent log — диагностика apiBase
+        if (diagEl) diagEl.textContent = '🔗 apiBase: ' + (apiBase || '(пусто)');
+        // #endregion
         if (!apiBase) {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:earlyReturn',message:'early return no apiBase',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
-          // #endregion
+          if (diagEl) diagEl.textContent = '❌ apiBase пустой!';
           alert('Не настроен адрес API. Укажи HEROES_API_BASE.'); return;
         }
         var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
+        // #region agent log — диагностика initData
+        if (diagEl) diagEl.textContent = '🔑 initData: ' + (initData ? initData.length + ' символов' : '(пусто)');
+        // #endregion
         if (!initData) {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:earlyReturn',message:'early return no initData',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
-          // #endregion
+          if (diagEl) diagEl.textContent = '❌ initData пустой! Откройте из Telegram.';
           alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.'); return;
         }
         payload.initData = initData;
         try {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:click',message:'pay button clicked',data:{mode:mode,hasRequest:requestText.length>=1,hasPerson2:!!payload.person2,hasTransit:!!payload.transit},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P1'})}).catch(()=>{});
+          // #region agent log — диагностика: дошли до try
+          payBtn.textContent = '⏳ Отправляю на сервер...';
+          if (diagEl) diagEl.textContent = '📡 Запрос: POST ' + apiBase + '/api/submit-request';
           // #endregion
           ensureHotDebugVisible();
-          hotDebugPanel.style.display = 'block';
+          if (hotDebugPanel) hotDebugPanel.style.display = 'block';
           hotLog('pay click', { mode: mode, hasPerson2: !!payload.person2, hasTransit: !!payload.transit });
           var response = await fetch(apiBase + '/api/submit-request', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData }, body: JSON.stringify(payload) });
           var result = await response.json().catch(function() { return {}; });
@@ -1525,10 +1572,11 @@
           }
           setPaymentStatus(msg || 'Ошибка операции оплаты/заявки', 'error');
           alert('❌ ' + msg);
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:error',message:'pay flow error',data:{errorMessage:msg||null},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P1,P2,P3,P4,P5'})}).catch(()=>{});
-          // #endregion
           hotLog('error', { message: msg || null });
+        } finally {
+          // #region agent log — всегда восстанавливаем кнопку
+          if (payBtn) { payBtn.disabled = false; payBtn.textContent = 'Отправить заявку'; }
+          // #endregion
         }
       });
       

@@ -1279,7 +1279,10 @@ const healthHtml =
 app.get("/healthz", (_req, res) =>
   res.status(200).set("Content-Type", "text/html; charset=utf-8").send(healthHtml)
 );
-app.get("/", (_req, res) =>
+// Редирект с корня на Mini App — чтобы по ссылке без /app открывалось приложение, а не страница статуса
+app.get("/", (_req, res) => res.redirect(302, "/app"));
+// Страница статуса бота — по /status (для проверки и пробуждения)
+app.get("/status", (_req, res) =>
   res.status(200).set("Content-Type", "text/html; charset=utf-8").send(
     "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>YupSoul Bot</title></head><body><p>YupSoul Bot работает.</p><p>Проверка: <a href=\"/healthz\">/healthz</a></p><p><strong>Mini App:</strong> <a href=\"/app\">/app</a></p><p>Админка: <a href=\"/admin\">/admin</a></p><p>Статус webhook: <a href=\"/healthz?webhook=1\">/healthz?webhook=1</a> — если бот не видит команды.</p><p>Приложение открывай из Telegram — кнопка меню бота.</p></body></html>"
   )
