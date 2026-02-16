@@ -2060,7 +2060,9 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
         language: language || "ru",
         updated_at: new Date().toISOString(),
       };
-      await supabase.from("user_profiles").upsert(up, { onConflict: "telegram_id" }).catch(() => {});
+      try {
+        await supabase.from("user_profiles").upsert(up, { onConflict: "telegram_id" });
+      } catch (_e) { /* user_profiles — не критично, заявка уже сохранена */ }
     }
   } catch (err) {
     console.error("[submit-request] saveRequest:", err?.message || err);
