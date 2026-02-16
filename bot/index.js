@@ -1277,6 +1277,12 @@ const healthHtml =
 app.get("/healthz", (_req, res) =>
   res.status(200).set("Content-Type", "text/html; charset=utf-8").send(healthHtml)
 );
+// Mini App по /app (кнопка меню в Telegram может вести сюда)
+const publicDir = path.join(__dirname, "public");
+app.get(["/app", "/app/"], (_req, res) => {
+  res.sendFile(path.join(publicDir, "index.html"));
+});
+app.use("/app", express.static(publicDir, { index: false }));
 app.get("/", (_req, res) =>
   res.status(200).set("Content-Type", "text/html; charset=utf-8").send(
     "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>YupSoul Bot</title></head><body><p>YupSoul Bot работает.</p><p>Проверка: <a href=\"/healthz\">/healthz</a></p><p>Админка: <a href=\"/admin\">/admin</a></p><p>Статус webhook: <a href=\"/healthz?webhook=1\">/healthz?webhook=1</a> — если бот не видит команды.</p><p>Приложение открывай из Telegram — кнопка меню бота.</p></body></html>"
