@@ -653,6 +653,23 @@
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       var tg = null;
+      // Persist initData to survive Telegram WebView re-open (sometimes initData becomes empty on 2nd open)
+      var INIT_DATA_STORAGE_KEY = 'tg_init_data';
+      function isTelegramWebApp() {
+        return !!(window.Telegram && window.Telegram.WebApp);
+      }
+      function getInitData() {
+        if (!isTelegramWebApp()) return '';
+        var current = '';
+        try {
+          current = (tg && tg.initData) ? String(tg.initData) : String((window.Telegram.WebApp && window.Telegram.WebApp.initData) || '');
+        } catch (_) { current = ''; }
+        if (current) {
+          try { localStorage.setItem(INIT_DATA_STORAGE_KEY, current); } catch (_) {}
+          return current;
+        }
+        try { return localStorage.getItem(INIT_DATA_STORAGE_KEY) || ''; } catch (_) { return ''; }
+      }
       function logColorSnapshot(stage, pageId) {
         try {
           var rootStyles = getComputedStyle(document.documentElement);
@@ -675,6 +692,7 @@
         tg.ready();
             tg.expand();
             if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
+            getInitData();
             logColorSnapshot('init-app', 'homePage');
             return true;
           }
@@ -1416,7 +1434,7 @@
           // #endregion
           alert('Не настроен адрес API. Укажи HEROES_API_BASE.'); return;
         }
-        var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
+        var initData = getInitData();
         if (!initData) {
           // #region agent log
           fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:earlyReturn',message:'early return no initData',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
