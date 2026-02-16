@@ -1492,7 +1492,10 @@
             }
             goToPage('loadingPage');
             setTimeout(function() { goToPage('successPage'); }, 1800);
-          } else throw new Error(result.error || 'HTTP ' + response.status);
+          } else {
+            var errMsg = (result && result.error) ? String(result.error) : (result && result.message) ? String(result.message) : ('HTTP ' + response.status);
+            throw new Error(errMsg);
+          }
         } catch (error) {
           console.error('[MiniApp] Ошибка:', error);
           var msg = (error && error.message) ? String(error.message) : '';

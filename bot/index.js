@@ -295,8 +295,8 @@ function buildHotCheckoutUrl({ itemId, orderId, amount, currency, requestId, sku
   if (currency) url.searchParams.set("currency", String(currency));
   if (requestId) url.searchParams.set("request_id", requestId);
   if (sku) url.searchParams.set("sku", sku);
-  // По умолчанию — мини-апп с параметром, чтобы показать страницу «Спасибо за оплату».
-  const redirectUrl = process.env.HOT_REDIRECT_URL || (MINI_APP_BASE + "?payment=success");
+  // По умолчанию — мини-апп с параметрами для страницы «Спасибо за оплату» и авто-проверки статуса.
+  const redirectUrl = process.env.HOT_REDIRECT_URL || (MINI_APP_BASE + "?payment=success&request_id=" + encodeURIComponent(requestId || ""));
   if (redirectUrl) url.searchParams.set("redirect_url", redirectUrl);
   return url.toString();
 }
@@ -1629,6 +1629,7 @@ app.post("/api/payments/hot/create", express.json(), asyncApi(async (req, res) =
   if (telegramUserId == null) return res.status(401).json({ success: false, error: "Unauthorized" });
 
   const requestId = String(req.body?.request_id || "").trim();
+  console.log("[hot/create] входящий запрос", { requestId: requestId ? requestId.slice(0, 8) + "…" : null, hasBody: !!req.body });
   if (!requestId || !UUID_REGEX.test(requestId)) {
     return res.status(400).json({ success: false, error: "request_id (UUID) обязателен" });
   }
@@ -1662,6 +1663,10 @@ app.post("/api/payments/hot/create", express.json(), asyncApi(async (req, res) =
     discountAmount = applied.discountAmount;
   }
   const itemId = String(req.body?.item_id || pickHotItemId(sku)).trim();
+  if (!itemId) {
+    console.warn("[hot/create] HOT_ITEM_ID не задан для sku:", sku, "- задайте HOT_ITEM_ID_DEFAULT или HOT_ITEM_ID_* в Render");
+    return res.status(400).json({ success: false, error: "Оплата HOT не настроена: не задан item_id. Добавьте HOT_ITEM_ID_DEFAULT в переменные окружения Render." });
+  }
   const orderId = requestRow.payment_order_id || crypto.randomUUID();
   if (promoResult?.promo?.type === "free_generation" || finalAmount <= 0) {
     await grantPurchaseBySku({ telegramUserId, sku, source: "promo_free" });
@@ -1717,6 +1722,7 @@ app.post("/api/payments/hot/create", express.json(), asyncApi(async (req, res) =
     requestId,
     sku,
   });
+  console.log("[hot/create] checkout_url сформирован", { requestId: requestId.slice(0, 8), itemId: itemId.slice(0, 12) + "…", urlPrefix: checkoutUrl.slice(0, 60) + "…" });
 
   const paymentRaw = {
     provider: "hot",
@@ -1745,6 +1751,7 @@ app.post("/api/payments/hot/create", express.json(), asyncApi(async (req, res) =
     return res.status(500).json({ success: false, error: updateErr.message });
   }
 
+  console.log("[hot/create] успех, возвращаем checkout_url");
   return res.json({
     success: true,
     provider: "hot",
@@ -2035,6 +2042,7 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   const requestModeForAccess = isNewFormat && (body.mode === "couple" || body.mode === "transit") ? body.mode : "single";
   const access = await resolveAccessForRequest({ telegramUserId, mode: requestModeForAccess });
   if (!access.allowed) {
+    console.log("[submit-request] payment_required", { requestId, sku: access.sku, telegramUserId });
     const skuPrice = await getSkuPrice(access.sku);
     await supabase.from("track_requests").update({
       payment_provider: "hot",
