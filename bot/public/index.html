@@ -696,6 +696,7 @@
         tg.ready();
             tg.expand();
             if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
+            // cache initData early for Telegram WebView re-opens
             getInitData();
             logColorSnapshot('init-app', 'homePage');
             return true;
