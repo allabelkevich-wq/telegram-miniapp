@@ -1,7 +1,7 @@
 # YupSoul Telegram Mini App
 
-**Единственная версия приложения:** `public/index.html`.  
-Деплой (GitHub Pages / Vercel) и превью (`npm run preview`) используют только папку `public/` — дубликатов нет.
+**Единственная версия приложения:** `public/index.html`.
 
-- Локальный просмотр: `npm run preview`
-- Бот и API: папка `bot/`
+- **Продакшен:** всё на Render (`telegram-miniapp-ar09.onrender.com`) — бот, API, Mini App, админка. См. `docs/ДЕПЛОЙ_НА_RENDER.md`.
+- **Локальный просмотр:** `npm run preview` (папка `public/`)
+- **Бот и API:** папка `bot/`. Папка `backend/` — устарела (раньше для отдельного деплоя на Vercel, не используется).

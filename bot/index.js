@@ -19,9 +19,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Лог всегда в корне проекта (workspace), чтобы его можно было прочитать при любом cwd
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const DEFAULT_MINI_APP = process.env.RENDER_EXTERNAL_URL ? (process.env.RENDER_EXTERNAL_URL + "/app") : "https://telegram-miniapp-six-teal.vercel.app";
-const MINI_APP_BASE = (process.env.MINI_APP_URL || DEFAULT_MINI_APP).replace(/\?.*$/, "").replace(/\/$/, "");
-const MINI_APP_URL = MINI_APP_BASE + "?v=14";
+// Ссылка в коде — ВСЕГДА Render. Vercel удалён, env MINI_APP_URL с vercel игнорируем.
+const HARDCODED_MINI_APP = "https://telegram-miniapp-ar09.onrender.com/app";
+const MINI_APP_BASE = (() => {
+  const env = process.env.MINI_APP_URL || (process.env.RENDER_EXTERNAL_URL ? process.env.RENDER_EXTERNAL_URL + "/app" : null);
+  if (env && !env.toLowerCase().includes("vercel")) return env.replace(/\?.*$/, "").replace(/\/$/, "");
+  return HARDCODED_MINI_APP;
+})();
+const MINI_APP_URL = MINI_APP_BASE + "?v=16";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";
@@ -1279,7 +1284,10 @@ const healthHtml =
 app.get("/healthz", (_req, res) =>
   res.status(200).set("Content-Type", "text/html; charset=utf-8").send(healthHtml)
 );
-app.get("/", (_req, res) =>
+// Редирект с корня на Mini App — чтобы по ссылке без /app открывалось приложение, а не страница статуса
+app.get("/", (_req, res) => res.redirect(302, "/app"));
+// Страница статуса бота — по /status (для проверки и пробуждения)
+app.get("/status", (_req, res) =>
   res.status(200).set("Content-Type", "text/html; charset=utf-8").send(
     "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>YupSoul Bot</title></head><body><p>YupSoul Bot работает.</p><p>Проверка: <a href=\"/healthz\">/healthz</a></p><p><strong>Mini App:</strong> <a href=\"/app\">/app</a></p><p>Админка: <a href=\"/admin\">/admin</a></p><p>Статус webhook: <a href=\"/healthz?webhook=1\">/healthz?webhook=1</a> — если бот не видит команды.</p><p>Приложение открывай из Telegram — кнопка меню бота.</p></body></html>"
   )
@@ -2159,6 +2167,14 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
 
 async function onBotStart(info) {
   console.log("Бот запущен:", info.username);
+  try {
+    await bot.api.setChatMenuButton({
+      menu_button: { type: "web_app", text: "Открыть приложение", web_app: { url: MINI_APP_URL } }
+    });
+    console.log("[Bot] Кнопка меню установлена:", MINI_APP_URL);
+  } catch (e) {
+    console.warn("[Bot] setChatMenuButton:", e?.message || e);
+  }
   if (ADMIN_IDS.length) console.log("Админы (ID):", ADMIN_IDS.join(", "));
   else console.warn("ADMIN_TELEGRAM_IDS не задан — команда /admin недоступна.");
   if (supabase) {

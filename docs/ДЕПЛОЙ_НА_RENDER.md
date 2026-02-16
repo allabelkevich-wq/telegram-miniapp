@@ -47,7 +47,7 @@
 | `SUPABASE_URL` | Из `.env`. |
 | `SUPABASE_SERVICE_KEY` | Из `.env`. |
 | `ADMIN_TELEGRAM_IDS` | Из `.env` (твой Telegram ID). |
-| `MINI_APP_URL` | Из `.env` (ссылка на Mini App, например Vercel: `https://telegram-miniapp-six-teal.vercel.app`). |
+| `MINI_APP_URL` | Из `.env` (ссылка на Mini App, например Render: `https://telegram-miniapp-ar09.onrender.com/app`). |
 | `DEEPSEEK_API_KEY` | Из `.env` (для воркера). |
 | `SUNO_API_KEY` | Из `.env` (для воркера). |
 
@@ -101,6 +101,6 @@
 
 3. **Render Dashboard** → сервис **yupsoul-bot** (и при необходимости воркер) → убедись, что сервис **не suspended**. Если был остановлен — **Resume** / **Deploy**.
 
-4. **Переменные окружения** на Render должны совпадать с рабочими: `BOT_TOKEN`, `SUPABASE_*`, `ADMIN_TELEGRAM_IDS`, `MINI_APP_URL` (Vercel), при необходимости `DEEPSEEK_API_KEY`, `SUNO_API_KEY`.
+4. **Переменные окружения** на Render должны совпадать с рабочими: `BOT_TOKEN`, `SUPABASE_*`, `ADMIN_TELEGRAM_IDS`, `MINI_APP_URL` (Render), при необходимости `DEEPSEEK_API_KEY`, `SUNO_API_KEY`.
 
 5. **Отладка:** логи смотри в Render: **Logs** у Web Service (бот) и у Background Worker (воркер). При отправке заявки из приложения в логах бота должны появляться строки `[Заявка] Получены web_app_data` и `[Заявка]` с ID; уведомления админу — `[Уведомление] Доставлено админу`.
