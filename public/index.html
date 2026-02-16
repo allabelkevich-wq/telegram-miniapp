@@ -591,11 +591,6 @@
         <p>YupSoul • 2026</p>
       </footer>
       
-      <button id="hotDebugToggle" class="hot-debug-toggle" type="button" style="display:none">DBG HOT</button>
-      <div id="hotDebugPanel" class="hot-debug-panel">
-        <h4>Оплата HOT — шаги</h4>
-        <div id="hotDebugList"></div>
-      </div>
     </div>
     
     <!-- Страница загрузки -->
@@ -1424,8 +1419,6 @@
           // #region agent log
           fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:click',message:'pay button clicked',data:{mode:mode,hasRequest:requestText.length>=1,hasPerson2:!!payload.person2,hasTransit:!!payload.transit},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P1'})}).catch(()=>{});
           // #endregion
-          ensureHotDebugVisible();
-          hotDebugPanel.style.display = 'block';
           hotLog('pay click', { mode: mode, hasPerson2: !!payload.person2, hasTransit: !!payload.transit });
           var response = await fetch(apiBase + '/api/submit-request', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData }, body: JSON.stringify(payload) });
           var result = await response.json().catch(function() { return {}; });
