@@ -11,6 +11,7 @@ import { createHeroesRouter, getOrCreateAppUser, validateInitData } from "./hero
 import { chatCompletion } from "./deepseek.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import fs from "node:fs";
 import crypto from "node:crypto";
 import "dotenv/config";
 
@@ -19,7 +20,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const MINI_APP_BASE = (process.env.MINI_APP_URL || "https://telegram-miniapp-six-teal.vercel.app").replace(/\?.*$/, "").replace(/\/$/, "");
-const MINI_APP_URL = MINI_APP_BASE + "?v=11";
+const MINI_APP_URL = MINI_APP_BASE + "?v=13";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";
@@ -1279,9 +1280,33 @@ app.get("/healthz", (_req, res) =>
 );
 app.get("/", (_req, res) =>
   res.status(200).set("Content-Type", "text/html; charset=utf-8").send(
-    "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>YupSoul Bot</title></head><body><p>YupSoul Bot работает.</p><p>Проверка: <a href=\"/healthz\">/healthz</a></p><p>Админка: <a href=\"/admin\">/admin</a></p><p>Статус webhook: <a href=\"/healthz?webhook=1\">/healthz?webhook=1</a> — если бот не видит команды.</p><p>Приложение открывай из Telegram — кнопка меню бота.</p></body></html>"
+    "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>YupSoul Bot</title></head><body><p>YupSoul Bot работает.</p><p>Проверка: <a href=\"/healthz\">/healthz</a></p><p><strong>Mini App:</strong> <a href=\"/app\">/app</a></p><p>Админка: <a href=\"/admin\">/admin</a></p><p>Статус webhook: <a href=\"/healthz?webhook=1\">/healthz?webhook=1</a> — если бот не видит команды.</p><p>Приложение открывай из Telegram — кнопка меню бота.</p></body></html>"
   )
 );
+const miniAppPath = fs.existsSync(path.join(__dirname, "public", "index.html"))
+  ? path.join(__dirname, "public", "index.html")
+  : path.join(__dirname, "..", "public", "index.html");
+app.get("/app", (_req, res) => {
+  try {
+    if (!fs.existsSync(miniAppPath)) {
+      console.error("[app] Mini App не найден:", miniAppPath);
+      return res.status(404).set("Content-Type", "text/html; charset=utf-8").send(
+        "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Ошибка</title></head><body><p>Mini App не найден (public/index.html). Путь: " + miniAppPath + "</p><p><a href=\"/\">Назад</a></p></body></html>"
+      );
+    }
+    let html = fs.readFileSync(miniAppPath, "utf8");
+    html = html.replace(
+      /window\.HEROES_API_BASE\s*=\s*'[^']*';\s*window\.BACKEND_URL\s*=\s*window\.HEROES_API_BASE;/,
+      "window.HEROES_API_BASE = window.location.origin; window.BACKEND_URL = window.HEROES_API_BASE;"
+    );
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.send(html);
+  } catch (err) {
+    console.error("[app] serve mini app:", err?.message || err);
+    res.status(500).send("Ошибка загрузки Mini App: " + (err?.message || err));
+  }
+});
 // Обработчик /api/me (чтобы не было 500 ошибки)
 app.get("/api/me", (_req, res) => {
   res.json({ ok: true, user: null, authenticated: false });

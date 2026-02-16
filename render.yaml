@@ -6,7 +6,7 @@ services:
     runtime: node
     plan: free
     rootDir: bot
-    buildCommand: npm install
+    buildCommand: cp -r ../public . 2>/dev/null || true; npm install
     startCommand: npm start
     healthCheckPath: /healthz
 
