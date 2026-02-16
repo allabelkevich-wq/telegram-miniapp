@@ -281,6 +281,13 @@
     .birthplace-suggestions .place-type{font-size:.85rem;color:#6b7280;margin-top:2px}
     .birthplace-summary .place-name{font-weight:700;color:#5b21b6}
     .place-coords{font-family:ui-monospace,monospace;letter-spacing:.02em}
+    /* Debug overlay for HOT payment */
+    .hot-debug-toggle{position:fixed;right:12px;bottom:12px;z-index:10000;background:rgba(255,255,255,0.08);border:1px solid var(--tg-theme-border-color);color:var(--tg-theme-text-color);padding:8px 10px;border-radius:10px;font-size:12px;cursor:pointer;opacity:0.35;transition:all .2s}
+    .hot-debug-toggle:hover{opacity:0.8;box-shadow:0 6px 18px rgba(212,175,55,0.35)}
+    .hot-debug-panel{position:fixed;right:12px;bottom:54px;z-index:10000;width:300px;max-height:320px;overflow-y:auto;background:rgba(10,10,26,0.92);border:1px solid var(--tg-theme-border-color);border-radius:12px;padding:10px 12px;box-shadow:0 14px 30px rgba(0,0,0,0.35);display:none}
+    .hot-debug-panel h4{margin:0 0 8px 0;font-size:13px;color:var(--tg-theme-text-color)}
+    .hot-debug-panel .row{font-size:12px;color:var(--tg-theme-hint-color);padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08)}
+    .hot-debug-panel .row:last-child{border-bottom:none}
     
     #transitForm{display:none;margin-top:30px;padding:20px;background:var(--tg-theme-secondary-bg-color,rgba(255,255,255,0.05));border-radius:12px;border:1px solid var(--tg-theme-border-color,rgba(255,255,255,0.1))}
     #transitForm h3{color:var(--tg-theme-text-color,#fff);margin:0 0 15px 0;font-size:18px}
@@ -577,6 +584,12 @@
       <footer>
         <p>YupSoul • 2026</p>
       </footer>
+      
+      <button id="hotDebugToggle" class="hot-debug-toggle" type="button">Отладка оплаты</button>
+      <div id="hotDebugPanel" class="hot-debug-panel">
+        <h4>Оплата HOT — шаги</h4>
+        <div id="hotDebugList"></div>
+      </div>
     </div>
     
     <!-- Страница загрузки -->
@@ -1094,6 +1107,28 @@
       var selectedMode = 'single';
       var currentStep = 1;
       var totalSteps = 3;
+      var hotDebugToggle = document.getElementById('hotDebugToggle');
+      var hotDebugPanel = document.getElementById('hotDebugPanel');
+      var hotDebugList = document.getElementById('hotDebugList');
+
+      function hotLog(message, data) {
+        if (!hotDebugList) return;
+        var row = document.createElement('div');
+        row.className = 'row';
+        var payload = '';
+        if (data) {
+          try { payload = JSON.stringify(data); } catch (e) { payload = String(data); }
+        }
+        row.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message + (payload ? ' ' + payload : '');
+        hotDebugList.prepend(row);
+        while (hotDebugList.children.length > 20) hotDebugList.removeChild(hotDebugList.lastChild);
+      }
+      if (hotDebugToggle && hotDebugPanel) {
+        hotDebugToggle.addEventListener('click', function() {
+          var visible = hotDebugPanel.style.display === 'block';
+          hotDebugPanel.style.display = visible ? 'none' : 'block';
+        });
+      }
 
       function applyTheme() {
         var hour = new Date().getHours();
@@ -1303,8 +1338,16 @@
         if (!initData) { alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.'); return; }
         payload.initData = initData;
         try {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:click',message:'pay button clicked',data:{mode:mode,hasRequest:requestText.length>=1,hasPerson2:!!payload.person2,hasTransit:!!payload.transit},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P1'})}).catch(()=>{});
+          // #endregion
+          hotLog('pay click', { mode: mode, hasPerson2: !!payload.person2, hasTransit: !!payload.transit });
           var response = await fetch(apiBase + '/api/submit-request', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData }, body: JSON.stringify(payload) });
           var result = await response.json().catch(function() { return {}; });
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:submitResult',message:'submit-request result',data:{ok:!!(response.ok && result.ok),paymentRequired:!!(result && result.payment_required),requestId:result&&result.requestId?String(result.requestId):null,httpStatus:response.status},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P2'})}).catch(()=>{});
+          // #endregion
+          hotLog('submit result', { ok: !!(response.ok && result.ok), paymentRequired: !!(result && result.payment_required), requestId: result && result.requestId ? String(result.requestId).slice(0, 8) : null, httpStatus: response.status });
           if (response.ok && result.ok && result.requestId) {
             goToPage('loadingPage');
             var sp = document.getElementById('songPreviewText');
@@ -1324,6 +1367,10 @@
               body: JSON.stringify({ request_id: result.requestId, sku: result.sku || getCurrentSku(), promo_code: activePromo ? activePromo.code : null, initData: initData })
             });
             var hotJson = await hotResp.json().catch(function() { return {}; });
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:hotCreate',message:'hot create response',data:{httpStatus:hotResp.status,success:!!(hotJson&&hotJson.success),freeApplied:!!hotJson.free_applied,hasCheckout:!!hotJson.checkout_url,requestId:result.requestId||null},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P3'})}).catch(()=>{});
+            // #endregion
+            hotLog('hot create', { status: hotResp.status, success: !!(hotJson && hotJson.success), freeApplied: !!hotJson.free_applied, hasCheckout: !!hotJson.checkout_url, requestId: result.requestId ? String(result.requestId).slice(0, 8) : null });
             if (!hotResp.ok || !hotJson.success) {
               throw new Error(hotJson.error || 'Не удалось создать оплату HOT');
             }
@@ -1348,6 +1395,12 @@
               });
               var statusJson = await statusResp.json().catch(function() { return {}; });
               var paymentStatus = statusJson && statusJson.data && statusJson.data.payment_status ? String(statusJson.data.payment_status).toLowerCase() : '';
+              if (attempt === 1 || paymentStatus === 'paid') {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:statusPoll',message:'status poll',data:{attempt:attempt,status:paymentStatus||null,httpStatus:statusResp.status},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P4'})}).catch(()=>{});
+                // #endregion
+                hotLog('status poll', { attempt: attempt, status: paymentStatus || null, httpStatus: statusResp.status });
+              }
               if (paymentStatus === 'paid') { paid = true; break; }
             }
             if (!paid) {
@@ -1360,6 +1413,10 @@
               headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
               body: JSON.stringify({ request_id: result.requestId, initData: initData })
             });
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:confirm',message:'confirm response',data:{httpStatus:restartResp.status,ok:restartResp.ok,requestId:result.requestId||null},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P5'})}).catch(()=>{});
+            // #endregion
+            hotLog('confirm', { httpStatus: restartResp.status, ok: restartResp.ok, requestId: result.requestId ? String(result.requestId).slice(0, 8) : null });
             if (!restartResp.ok) {
               setPaymentStatus('Оплата получена, но авто‑старт не удался. Запусти генерацию в админке по request_id: ' + result.requestId, 'warn');
               return;
@@ -1375,6 +1432,10 @@
           }
           setPaymentStatus(msg || 'Ошибка операции оплаты/заявки', 'error');
           alert('❌ ' + msg);
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:error',message:'pay flow error',data:{errorMessage:msg||null},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P1,P2,P3,P4,P5'})}).catch(()=>{});
+          // #endregion
+          hotLog('error', { message: msg || null });
         }
       });
       
