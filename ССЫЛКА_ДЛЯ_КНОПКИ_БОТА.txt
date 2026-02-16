@@ -2,7 +2,7 @@
 
 https://telegram-miniapp-ar09.onrender.com/app
 
-Vercel удалён — только Render. Как вставить:
+Как вставить:
 1. Telegram → @BotFather → /mybots → твой бот
 2. Bot Settings → Menu Button → Configure menu button
 3. Вставить ссылку выше (без пробелов)
