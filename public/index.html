@@ -291,7 +291,7 @@
     .hot-debug-panel h4{margin:0 0 8px 0;font-size:13px;color:var(--tg-theme-text-color)}
     .hot-debug-panel .row{font-size:12px;color:var(--tg-theme-hint-color);padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08)}
     .hot-debug-panel .row:last-child{border-bottom:none}
-    .payment-build-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(212,175,55,0.14);border:1px solid rgba(212,175,55,0.35);color:#f8e7b0;padding:6px 10px;border-radius:999px;font-size:12px;margin-bottom:12px}
+    .payment-build-badge{display:none;align-items:center;gap:6px;background:rgba(212,175,55,0.14);border:1px solid rgba(212,175,55,0.35);color:#f8e7b0;padding:6px 10px;border-radius:999px;font-size:12px;margin-bottom:12px}
     
     #transitForm{display:none;margin-top:30px;padding:20px;background:var(--tg-theme-secondary-bg-color,rgba(255,255,255,0.05));border-radius:12px;border:1px solid var(--tg-theme-border-color,rgba(255,255,255,0.1))}
     #transitForm h3{color:var(--tg-theme-text-color,#fff);margin:0 0 15px 0;font-size:18px}
@@ -567,20 +567,20 @@
         <p style="text-align:center;font-size:1.05rem;line-height:1.7;margin-bottom:16px">
           Первая песня  — в подарок. Дальше можно оплатить отдельный элемент или оформить подписку на полный доступ.
         </p>
-        <div id="pricingNotice" style="background:rgba(94,234,212,.12);border:1px solid rgba(94,234,212,.35);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:.92rem;color:#99f6e4;">
+        <div id="pricingNotice" style="background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.4);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:.92rem;color:rgba(255,255,255,0.95);">
           Загрузка тарифов...
         </div>
-        <div id="priceSummary" style="background:rgba(167,139,250,.12);border-radius:16px;padding:20px;margin:16px 0;border:1px solid rgba(167,139,250,.25);">
-          <div style="font-size:.95rem;color:#e9ddba;">Текущий элемент</div>
+        <div id="priceSummary" style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:20px;margin:16px 0;">
+          <div style="font-size:.95rem;color:rgba(255,255,255,0.9);">Текущий элемент</div>
           <div id="priceLabel" style="font-size:1.15rem;font-weight:700;color:#fff;margin-top:6px;">—</div>
-          <div id="priceValue" style="font-size:1.8rem;font-weight:800;color:#f5e9c9;margin-top:6px;">—</div>
-          <div id="priceHint" style="font-size:.88rem;color:#c4b5fd;margin-top:6px;"></div>
+          <div id="priceValue" style="font-size:1.8rem;font-weight:800;color:#fff;margin-top:6px;">—</div>
+          <div id="priceHint" style="font-size:.88rem;color:rgba(255,255,255,0.85);margin-top:6px;"></div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <input id="promoCodeInput" type="text" placeholder="Промокод" style="flex:1;min-width:180px;padding:10px 12px;border-radius:10px;border:1px solid rgba(167,139,250,.45);background:rgba(26,26,46,.95);color:#fff;text-transform:uppercase;">
+          <input id="promoCodeInput" type="text" placeholder="Промокод" style="flex:1;min-width:180px;padding:10px 12px;border-radius:10px;border:1px solid rgba(212,175,55,.4);background:var(--tg-theme-secondary-bg-color);color:var(--tg-theme-text-color);text-transform:uppercase;">
           <button id="promoApplyBtn" type="button" class="secondary" style="min-width:140px;margin-top:0;">Применить</button>
         </div>
-        <div id="paymentStatus" style="display:none;background:rgba(249,168,212,.1);border:1px solid rgba(249,168,212,.35);border-radius:12px;padding:12px 14px;margin:14px 0;font-size:.92rem;"></div>
+        <div id="paymentStatus" style="display:none;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.35);border-radius:12px;padding:12px 14px;margin:14px 0;font-size:.92rem;color:rgba(255,255,255,.95);"></div>
         <div class="btn-group">
           <button class="secondary" id="backFromPaymentBtn">← Назад</button>
           <button id="payBtn">Оформить и продолжить</button>
@@ -591,7 +591,7 @@
         <p>YupSoul • 2026</p>
       </footer>
       
-      <button id="hotDebugToggle" class="hot-debug-toggle" type="button">DBG HOT</button>
+      <button id="hotDebugToggle" class="hot-debug-toggle" type="button" style="display:none">DBG HOT</button>
       <div id="hotDebugPanel" class="hot-debug-panel">
         <h4>Оплата HOT — шаги</h4>
         <div id="hotDebugList"></div>
@@ -780,12 +780,12 @@
         if (!text) { el.style.display = 'none'; return; }
         el.style.display = 'block';
         el.textContent = text;
-        if (tone === 'ok') { el.style.borderColor = 'rgba(74,222,128,.45)'; el.style.background = 'rgba(74,222,128,.1)'; el.style.color = '#bbf7d0'; return; }
-        if (tone === 'warn') { el.style.borderColor = 'rgba(250,204,21,.45)'; el.style.background = 'rgba(250,204,21,.1)'; el.style.color = '#fde68a'; return; }
-        if (tone === 'error') { el.style.borderColor = 'rgba(248,113,113,.45)'; el.style.background = 'rgba(248,113,113,.1)'; el.style.color = '#fecaca'; return; }
-        el.style.borderColor = 'rgba(249,168,212,.35)';
-        el.style.background = 'rgba(249,168,212,.1)';
-        el.style.color = '#f5d0fe';
+        el.style.color = 'rgba(255,255,255,.95)';
+        if (tone === 'ok') { el.style.borderColor = 'rgba(212,175,55,.5)'; el.style.background = 'rgba(212,175,55,.15)'; return; }
+        if (tone === 'warn') { el.style.borderColor = 'rgba(212,175,55,.45)'; el.style.background = 'rgba(212,175,55,.12)'; return; }
+        if (tone === 'error') { el.style.borderColor = 'rgba(236,72,153,.5)'; el.style.background = 'rgba(236,72,153,.12)'; return; }
+        el.style.borderColor = 'rgba(212,175,55,.35)';
+        el.style.background = 'rgba(212,175,55,.1)';
       }
       function updatePaymentUiFromCatalog() {
         var sku = getCurrentSku();
@@ -811,15 +811,15 @@
         }
         if (notice) {
           if (freeTrialAvailable) {
-            notice.textContent = '🎁 Первый звуковой ключ доступен бесплатно.';
-            notice.style.borderColor = 'rgba(74,222,128,.45)';
-            notice.style.background = 'rgba(74,222,128,.1)';
-            notice.style.color = '#bbf7d0';
+            notice.textContent = 'Первый звуковой ключ доступен бесплатно.';
+            notice.style.borderColor = 'rgba(212,175,55,.4)';
+            notice.style.background = 'rgba(212,175,55,.12)';
+            notice.style.color = 'rgba(255,255,255,.95)';
           } else {
             notice.textContent = 'Оплата требуется для новых заявок.';
-            notice.style.borderColor = 'rgba(167,139,250,.35)';
-            notice.style.background = 'rgba(167,139,250,.12)';
-            notice.style.color = '#ddd6fe';
+            notice.style.borderColor = 'rgba(212,175,55,.35)';
+            notice.style.background = 'rgba(212,175,55,.1)';
+            notice.style.color = 'rgba(255,255,255,.95)';
           }
         }
       }
@@ -1188,7 +1188,7 @@
         while (hotDebugList.children.length > 20) hotDebugList.removeChild(hotDebugList.lastChild);
       }
       function ensureHotDebugVisible() {
-        if (hotDebugToggle) hotDebugToggle.style.display = 'block';
+        if (hotDebugToggle && !tg) hotDebugToggle.style.display = 'block';
       }
       if (hotDebugToggle && hotDebugPanel) {
         hotDebugToggle.addEventListener('click', function() {
