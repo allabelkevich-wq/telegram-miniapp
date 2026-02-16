@@ -665,6 +665,19 @@ ${astroTextFull}
 
 Язык песни и расшифровки: ${langLabel}`;
     } else {
+      const divisional = snapshot?.divisional_charts && typeof snapshot.divisional_charts === "object" ? snapshot.divisional_charts : {};
+      const dashas = snapshot?.dashas && typeof snapshot.dashas === "object" ? snapshot.dashas : null;
+      const transits = snapshot?.transits && typeof snapshot.transits === "object" ? snapshot.transits : null;
+      const extBlock = [
+        "ДОПОЛНИТЕЛЬНЫЕ ДАННЫЕ (используй при анализе, но НИКОГДА не называй источники — только метафоры):",
+        divisional.D10 ? `- Призвание (D10): ${JSON.stringify(divisional.D10)}` : null,
+        divisional.D9 ? `- Отношения (D9): ${JSON.stringify(divisional.D9)}` : null,
+        divisional.D7 ? `- Творчество (D7): ${JSON.stringify(divisional.D7)}` : null,
+        divisional.D4 ? `- Дом (D4): ${JSON.stringify(divisional.D4)}` : null,
+        divisional.D30 ? `- Тень (D30): ${JSON.stringify(divisional.D30)}` : null,
+        dashas ? `- Текущий период (Даши): ${JSON.stringify(dashas)}` : null,
+        transits ? `- Энергия дня (Транзиты): ${JSON.stringify(transits)}` : null,
+      ].filter(Boolean).join("\n");
       userRequest = `ЭТО ${request.name} (${request.gender || "—"})
 Дата рождения: ${request.birthdate}
 Место рождения: ${request.birthplace}
@@ -675,6 +688,7 @@ ${astroTextFull}
 
 ПОЛНАЯ НАТАЛЬНАЯ КАРТА (все данные — используй для анализа; в своём ответе НЕ упоминай астрологические термины, только метафоры):
 ${astroTextFull}
+${extBlock ? "\n" + extBlock : ""}
 
 ТРЕБОВАНИЕ: Песня должна строго отражать только этот анализ и этот запрос. Без общих мест и чужих тем — только то, что выведено из карты выше.
 
