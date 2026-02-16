@@ -1348,6 +1348,9 @@
       var payBtn = document.getElementById('payBtn');
       if (payBtn) payBtn.addEventListener('click', async function() {
         if (payBtn.disabled) return;
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:handlerEntered',message:'pay handler entered',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H1'})}).catch(()=>{});
+        // #endregion
         var mode = selectedMode || 'single';
         var name1 = document.getElementById('name').value.trim();
         var birthdate1 = document.getElementById('birthdate').value;
@@ -1399,10 +1402,23 @@
           if (!(document.getElementById('transitLocationConfirmed') && document.getElementById('transitLocationConfirmed').checked)) { alert('✨ Подтверди, что локация указана верно'); return; }
           payload.transit = { date: transitDate, time: transitTime || null, location: transitLocation, intent: transitIntent || null };
         }
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:validationPassed',message:'pay validation passed',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
+        // #endregion
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
-        if (!apiBase) { alert('Не настроен адрес API. Укажи HEROES_API_BASE.'); return; }
+        if (!apiBase) {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:earlyReturn',message:'early return no apiBase',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
+          // #endregion
+          alert('Не настроен адрес API. Укажи HEROES_API_BASE.'); return;
+        }
         var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
-        if (!initData) { alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.'); return; }
+        if (!initData) {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:earlyReturn',message:'early return no initData',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
+          // #endregion
+          alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.'); return;
+        }
         payload.initData = initData;
         try {
           // #region agent log
@@ -1451,6 +1467,11 @@
             }
             if (!hotJson.checkout_url) throw new Error('Checkout URL не получен');
             setPaymentStatus('Открыт HOT Checkout. После оплаты вернись в Mini App — статус обновится автоматически.', 'warn');
+            // #region agent log
+            var hasTg = !!(window.Telegram && window.Telegram.WebApp);
+            var hasOpenLink = !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink);
+            fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:aboutToOpenCheckout',message:'about to open checkout',data:{hasTelegramWebApp:hasTg,hasOpenLink:hasOpenLink,checkoutUrlLength:(hotJson.checkout_url||'').length},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H5'})}).catch(()=>{});
+            // #endregion
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) window.Telegram.WebApp.openLink(hotJson.checkout_url);
             else window.open(hotJson.checkout_url, '_blank');
             var maxAttempts = 60;

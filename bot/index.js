@@ -1948,8 +1948,10 @@ app.post("/suno-callback", express.json(), (req, res) => {
 // Запасной приём заявок: Mini App шлёт POST с initData + форма (если sendData в TG не срабатывает).
 app.post("/api/submit-request", express.json(), async (req, res) => {
   const initData = req.body?.initData || req.headers["x-telegram-init"];
+  console.log("[DEBUG submit-request] request received", { hasInitData: !!initData, bodyKeys: Object.keys(req.body || {}).slice(0, 12) });
   const telegramUserId = validateInitData(initData, BOT_TOKEN);
   if (telegramUserId == null) {
+    console.log("[DEBUG submit-request] 401 Unauthorized (invalid initData)");
     return res.status(401).json({ error: "Неверные или устаревшие данные. Открой приложение из чата с ботом и попробуй снова." });
   }
   const body = req.body || {};
@@ -2043,6 +2045,7 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   const access = await resolveAccessForRequest({ telegramUserId, mode: requestModeForAccess });
   if (!access.allowed) {
     console.log("[submit-request] payment_required", { requestId, sku: access.sku, telegramUserId });
+    console.log("[DEBUG submit-request] returning 402 payment_required", { requestId: String(requestId).slice(0, 8) });
     const skuPrice = await getSkuPrice(access.sku);
     await supabase.from("track_requests").update({
       payment_provider: "hot",
