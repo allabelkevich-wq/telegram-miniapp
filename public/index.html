@@ -1405,7 +1405,7 @@
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:validationPassed',message:'pay validation passed',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
         // #endregion
-        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || 'https://telegram-miniapp-ar09.onrender.com').replace(/\/$/, '');
         if (!apiBase) {
           // #region agent log
           fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:earlyReturn',message:'early return no apiBase',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
@@ -1425,7 +1425,7 @@
           fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:click',message:'pay button clicked',data:{mode:mode,hasRequest:requestText.length>=1,hasPerson2:!!payload.person2,hasTransit:!!payload.transit},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P1'})}).catch(()=>{});
           // #endregion
           ensureHotDebugVisible();
-          hotDebugPanel.style.display = 'block';
+          if (hotDebugPanel) hotDebugPanel.style.display = 'block';
           hotLog('pay click', { mode: mode, hasPerson2: !!payload.person2, hasTransit: !!payload.transit });
           var response = await fetch(apiBase + '/api/submit-request', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData }, body: JSON.stringify(payload) });
           var result = await response.json().catch(function() { return {}; });
