@@ -121,6 +121,7 @@
       background: var(--tg-theme-button-color, #8b5cf6); border: 1px solid var(--tg-theme-button-color, #8b5cf6);
       color: var(--tg-theme-button-text-color, #fff); padding: 10px 12px; border-radius: 8px; font-size: 12px;
       cursor: pointer; text-align: left; transition: all 0.2s; width: 100%;
+      white-space: normal; word-wrap: break-word; word-break: break-word;
     }
     .example-btn:hover { opacity: 0.9; transform: translateY(-1px); }
     .example-btn.special { background: var(--tg-theme-button-color, #8b5cf6); border-color: var(--tg-theme-button-color, #8b5cf6); }
@@ -226,7 +227,7 @@
     .request-label{font-size:1.3rem;text-align:center;margin-bottom:15px;color:#a78bfa;font-weight:700;letter-spacing:-0.5px}
     .request-help-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
     .request-help-row .request-label{margin-bottom:0;text-align:left;font-size:1.08rem;letter-spacing:-0.2px;line-height:1.2;max-width:68%}
-    .request-help-toggle{width:auto;min-height:auto;margin:0;padding:10px 12px;border-radius:14px;background:rgba(167,139,250,.14);color:#7c3aed;border:1px solid rgba(167,139,250,.45);box-shadow:none;text-transform:none;letter-spacing:0;font-size:.88rem;font-weight:700;flex:0 0 auto;white-space:nowrap}
+    .request-help-toggle{width:auto;min-height:auto;margin:0;padding:10px 12px;border-radius:14px;background:rgba(167,139,250,.14);color:#7c3aed;border:1px solid rgba(167,139,250,.45);box-shadow:none;text-transform:none;letter-spacing:0;font-size:.88rem;font-weight:700;flex:0 0 auto;white-space:normal;word-break:break-word;min-width:0}
     @media (max-width: 430px){
       .request-help-row{align-items:flex-start}
       .request-help-row .request-label{max-width:62%}
@@ -282,8 +283,11 @@
     .birthplace-suggestions li:last-child{border-bottom:none}
     .birthplace-suggestions li:hover,.birthplace-suggestions li.selected{background:rgba(167,139,250,.12);color:#6d28d9}
     .birthplace-suggestions .place-type{font-size:.85rem;color:#6b7280;margin-top:2px}
-    .birthplace-summary .place-name{font-weight:700;color:#5b21b6}
-    .place-coords{font-family:ui-monospace,monospace;letter-spacing:.02em}
+    .birthplace-wrap{position:relative}
+    #birthplace{padding-right:2.5rem;text-overflow:clip;min-width:0}
+    .birthplace-check{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:#4ade80;font-size:1.25rem;display:none;font-weight:700}
+    .birthplace-wrap.has-place .birthplace-check{display:block}
+    .birthplace-hint{margin-top:6px;font-size:.9rem;color:var(--tg-theme-hint-color,#6b7280)}
     /* Debug overlay for HOT payment */
     .hot-debug-toggle{position:fixed;right:12px;top:12px;z-index:100000;background:rgba(212,175,55,0.18);border:1px solid var(--tg-theme-border-color);color:var(--tg-theme-text-color);padding:8px 10px;border-radius:10px;font-size:12px;cursor:pointer;opacity:0.95;transition:all .2s;font-weight:700}
     .hot-debug-toggle:hover{opacity:1;box-shadow:0 6px 18px rgba(212,175,55,0.45)}
@@ -423,12 +427,12 @@
         </div>
         
         <div class="field">
-          <div class="birthplace-wrap">
+          <div id="birthplaceWrap" class="birthplace-wrap">
               <input type="text" id="birthplace" placeholder="Город или страна — выбери из подсказок" required autocomplete="off" aria-label="Локация рождения">
+              <span id="birthplaceCheck" class="birthplace-check" aria-hidden="true">✓</span>
             <ul id="birthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true"></ul>
           </div>
-          <div id="birthplaceSummary" class="field-summary birthplace-summary" style="display:none; margin-top:8px; padding:12px 14px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
-          <div id="placeCoords" class="place-coords" style="display:none; margin-top:6px; padding:10px 14px; background:rgba(94,234,212,.1); border-radius:10px; font-size:.9rem; color:#0d9488;"></div>
+          <div id="birthplaceHint" class="birthplace-hint" style="display:none;">Выбери локацию из списка подсказок — так подтянутся координаты.</div>
         </div>
         
         <div class="field">
@@ -955,7 +959,6 @@
         });
         var birthdateSummary = document.getElementById('birthdateSummary');
         var birthdateInput = document.getElementById('birthdate');
-        var birthplaceSummary = document.getElementById('birthplaceSummary');
         var birthplaceInput = document.getElementById('birthplace');
         var monthsRu = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
         function formatDateRu(dateStr) {
@@ -979,41 +982,29 @@
             birthdateSummary.style.display = 'block';
           }
         }
-        if (birthplaceInput && birthplaceSummary) {
+        if (birthplaceInput) {
           var suggestionsEl = document.getElementById('birthplaceSuggestions');
-          var placeCoordsEl = document.getElementById('placeCoords');
+          var wrap = document.getElementById('birthplaceWrap');
+          var checkEl = document.getElementById('birthplaceCheck');
+          var hintEl = document.getElementById('birthplaceHint');
           var debounceTimer = null;
           var lastSearch = '';
           function hideSuggestions() {
             if (suggestionsEl) { suggestionsEl.innerHTML = ''; suggestionsEl.setAttribute('aria-hidden', 'true'); suggestionsEl.style.display = 'none'; }
           }
-          function escapeHtml(s) {
-            if (!s) return '';
-            var d = document.createElement('div'); d.textContent = s; return d.innerHTML;
-          }
-          function formatLatLon(lat, lon) {
-            var la = parseFloat(lat); var lo = parseFloat(lon);
-            if (isNaN(la) || isNaN(lo)) return '';
-            var latStr = Math.abs(la).toFixed(2) + '° ' + (la >= 0 ? 'N' : 'S');
-            var lonStr = Math.abs(lo).toFixed(2) + '° ' + (lo >= 0 ? 'E' : 'W');
-            return latStr + ', ' + lonStr;
-          }
           function showPlaceConfirm(displayName) {}
           function selectPlace(displayName, lat, lon) {
-            birthplaceInput.value = displayName || '';
+            var full = (displayName || '').trim();
+            birthplaceInput.value = full;
+            birthplaceInput.setAttribute('title', full);
             birthplaceInput.setAttribute('data-place-selected', '1');
             if (lat != null && lon != null) {
               birthplaceInput.setAttribute('data-lat', String(lat));
               birthplaceInput.setAttribute('data-lon', String(lon));
             }
-            birthplaceSummary.innerHTML = '<span class="place-name">Место рождения:</span> ' + escapeHtml(displayName || '');
-            birthplaceSummary.style.display = 'block';
-            if (placeCoordsEl && lat != null && lon != null) {
-              placeCoordsEl.textContent = 'Координаты: ' + formatLatLon(lat, lon);
-              placeCoordsEl.style.display = 'block';
-            } else if (placeCoordsEl) {
-              placeCoordsEl.style.display = 'none';
-            }
+            if (wrap) wrap.classList.add('has-place');
+            if (checkEl) checkEl.setAttribute('aria-hidden', 'false');
+            if (hintEl) hintEl.style.display = 'none';
             showPlaceConfirm(displayName);
             hideSuggestions();
           }
@@ -1021,7 +1012,9 @@
             birthplaceInput.removeAttribute('data-place-selected');
             birthplaceInput.removeAttribute('data-lat');
             birthplaceInput.removeAttribute('data-lon');
-            if (placeCoordsEl) placeCoordsEl.style.display = 'none';
+            if (wrap) wrap.classList.remove('has-place');
+            if (checkEl) checkEl.setAttribute('aria-hidden', 'true');
+            if (hintEl) hintEl.style.display = 'none';
           }
           function fetchPlaces(q) {
             if (!q || q.length < 2) { hideSuggestions(); return; }
@@ -1054,50 +1047,21 @@
               lastSearch = v;
               clearTimeout(debounceTimer);
               debounceTimer = setTimeout(function() { fetchPlaces(v); }, 320);
-              if (!suggestionsEl || suggestionsEl.style.display !== 'block') {
-                birthplaceSummary.innerHTML = 'Выбери локацию из подсказок — нужны точные координаты для расчёта.';
-                birthplaceSummary.style.display = 'block';
-                showPlaceConfirm(v);
-              }
             } else {
               hideSuggestions();
-              birthplaceSummary.style.display = 'none';
             }
           });
           birthplaceInput.addEventListener('focus', function() {
+            if (hintEl) hintEl.style.display = 'none';
             var v = birthplaceInput.value.trim();
             if (v && v.length >= 2) { lastSearch = v; fetchPlaces(v); }
           });
           birthplaceInput.addEventListener('blur', function() {
             setTimeout(hideSuggestions, 200);
-            var v = birthplaceInput.value.trim();
-            if (v) {
-              if (birthplaceInput.getAttribute('data-place-selected')) {
-                birthplaceSummary.innerHTML = '<span class="place-name">Место рождения:</span> ' + escapeHtml(v);
-                if (placeCoordsEl && birthplaceInput.getAttribute('data-lat')) {
-                  placeCoordsEl.textContent = 'Координаты: ' + formatLatLon(birthplaceInput.getAttribute('data-lat'), birthplaceInput.getAttribute('data-lon'));
-                  placeCoordsEl.style.display = 'block';
-                }
-              } else {
-                birthplaceSummary.innerHTML = 'Выбери место из подсказок (клик по варианту в списке).';
-                if (placeCoordsEl) placeCoordsEl.style.display = 'none';
-              }
-              birthplaceSummary.style.display = 'block';
-              showPlaceConfirm(v);
-            }
           });
-          if (birthplaceInput.value.trim()) {
-            if (birthplaceInput.getAttribute('data-place-selected')) {
-              birthplaceSummary.innerHTML = '<span class="place-name">Место рождения:</span> ' + escapeHtml(birthplaceInput.value.trim());
-              if (placeCoordsEl && birthplaceInput.getAttribute('data-lat')) {
-                placeCoordsEl.textContent = 'Координаты: ' + formatLatLon(birthplaceInput.getAttribute('data-lat'), birthplaceInput.getAttribute('data-lon'));
-                placeCoordsEl.style.display = 'block';
-              }
-            } else {
-              birthplaceSummary.innerHTML = 'Выбери место из подсказок (клик по варианту в списке).';
-            }
-            birthplaceSummary.style.display = 'block';
-            showPlaceConfirm(birthplaceInput.value.trim());
+          if (birthplaceInput.value.trim() && birthplaceInput.getAttribute('data-place-selected') && wrap) {
+            wrap.classList.add('has-place');
+            if (checkEl) checkEl.setAttribute('aria-hidden', 'false');
           }
         }
         var birthplace2Input = document.getElementById('birthplace2');
@@ -1290,8 +1254,11 @@
           if (!birthdate) { alert('Выбери дату рождения'); return false; }
           if (birthplace.length < 3) { alert('Место рождения должно содержать минимум 3 символа'); return false; }
           var birthplaceField = document.getElementById('birthplace');
-          if (!(birthplaceField && birthplaceField.getAttribute('data-place-selected'))) {
-            alert('Выбери локацию из списка подсказок — так подтянутся координаты для расчёта.');
+          var hasCoords = birthplaceField && birthplaceField.getAttribute('data-lat') && birthplaceField.getAttribute('data-lon');
+          var hasPlaceSelected = birthplaceField && birthplaceField.getAttribute('data-place-selected');
+          if (!hasCoords && !hasPlaceSelected) {
+            var birthplaceHint = document.getElementById('birthplaceHint');
+            if (birthplaceHint) birthplaceHint.style.display = 'block';
             return false;
           }
           if (!birthtimeVal) { alert('Укажи время рождения или отметь \"Не знаю\"'); return false; }
@@ -1680,7 +1647,6 @@
           if (g) g.value = profileOrTgUser.gender || '';
           if (langEl && profileOrTgUser.language) langEl.value = profileOrTgUser.language;
           if (birthdateSummary) { birthdateSummary.textContent = profileOrTgUser.birthdate ? 'Выбрано: ' + formatDateRu(profileOrTgUser.birthdate) : ''; birthdateSummary.style.display = profileOrTgUser.birthdate ? 'block' : 'none'; }
-          if (birthplaceSummary) { birthplaceSummary.innerHTML = profileOrTgUser.birthplace ? '<span class="place-name">Место рождения:</span> ' + (profileOrTgUser.birthplace.replace(/</g, '&lt;')) : ''; birthplaceSummary.style.display = profileOrTgUser.birthplace ? 'block' : 'none'; }
         }
       }
       function fillFormFromHero(hero) {
@@ -1700,7 +1666,6 @@
         var langEl = document.getElementById('language');
         if (langEl && hero.language) langEl.value = hero.language;
         if (birthdateSummary) { birthdateSummary.textContent = hero.birth_date ? 'Выбрано: ' + formatDateRu(hero.birth_date) : ''; birthdateSummary.style.display = hero.birth_date ? 'block' : 'none'; }
-        if (birthplaceSummary) { birthplaceSummary.textContent = hero.birth_place ? 'Место рождения: ' + hero.birth_place : ''; birthplaceSummary.style.display = hero.birth_place ? 'block' : 'none'; }
       }
       function loadForWhoSelect() {
         var wrap = document.getElementById('forWhoWrap');
@@ -1744,7 +1709,12 @@
         if (langEl) langEl.value = '';
         if (r) r.value = '';
         if (birthdateSummary) birthdateSummary.style.display = 'none';
-        if (birthplaceSummary) birthplaceSummary.style.display = 'none';
+        var birthplaceHint = document.getElementById('birthplaceHint');
+        if (birthplaceHint) birthplaceHint.style.display = 'none';
+        var bpEl = document.getElementById('birthplace');
+        if (bpEl) { bpEl.removeAttribute('data-place-selected'); bpEl.removeAttribute('data-lat'); bpEl.removeAttribute('data-lon'); }
+        var wrap = document.getElementById('birthplaceWrap');
+        if (wrap) wrap.classList.remove('has-place');
         goToPage('formPage');
       });
       
