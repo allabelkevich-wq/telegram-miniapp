@@ -1192,6 +1192,10 @@ const app = express();
 const WEBHOOK_URL = (process.env.WEBHOOK_URL || "").replace(/\/$/, "");
 // Базовый URL для ссылки на админку. Одинаковое значение с WEBHOOK_URL — нормально (один сервис = один URL).
 const BOT_PUBLIC_URL = (process.env.BOT_PUBLIC_URL || process.env.WEBHOOK_URL || process.env.HEROES_API_BASE || "").replace(/\/webhook\/?$/i, "").replace(/\/$/, "");
+// Telegram webhook: приём апдейтов от Telegram (/start, /ping, /admin и т.д.)
+if (WEBHOOK_URL) {
+  app.post("/webhook", express.json(), webhookCallback(bot, "express"));
+}
 app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, res) => {
   try {
     const rawBody = Buffer.isBuffer(req.body) ? req.body.toString("utf8") : String(req.body || "");
