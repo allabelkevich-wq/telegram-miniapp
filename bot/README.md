@@ -18,7 +18,7 @@ Telegram-бот для приёма заявок из Mini App и уведомл
 2. В папке `bot/` создай файл `.env`:
    ```env
    BOT_TOKEN=твой_токен_от_BotFather
-   MINI_APP_URL=https://telegram-miniapp-six-teal.vercel.app
+   MINI_APP_URL=https://telegram-miniapp-ar09.onrender.com/app
    ADMIN_TELEGRAM_IDS=твой_telegram_id
    ```
    **Как узнать свой Telegram ID:** напиши в Telegram боту [@userinfobot](https://t.me/userinfobot) — он пришлёт твой ID (число). Вставь его в `ADMIN_TELEGRAM_IDS`. Несколько админов через запятую: `123456,789012`.

@@ -9,7 +9,7 @@
 
 1. **Запушить коммиты на GitHub** — локально есть 2 коммита (backend + vercel.json), нужно выполнить `git push origin main`.
 2. **Деплой бэкенда на Vercel** — в [Vercel](https://vercel.com): Import репо → Root Directory: `backend` → Deploy. В проекте задать **BOT_TOKEN** (Settings → Environment Variables) и сделать Redeploy.
-3. **Подключить фронт к бэкенду** — в `index.html` в начале страницы задать URL бэкенда: `window.HEROES_API_BASE = 'https://твой-проект.vercel.app';` (см. TELEGRAM_SETUP.md).
+3. **Подключить фронт к бэкенду** — в `index.html` уже задан `window.HEROES_API_BASE = 'https://telegram-miniapp-ar09.onrender.com';` (Render). См. TELEGRAM_SETUP.md.
 4. **Проверка** — открыть Mini App из бота, отправить заявку → в чате с ботом должна прийти песня.
 
 Дальше по плану — Этап 2 (реальный пайплайн генерации) или этапы 3–5 (сайт, админка, рефералка).

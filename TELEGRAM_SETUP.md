@@ -1,6 +1,6 @@
 # Как добавить YupSoul в Telegram
 
-Сайт приложения (Vercel): **https://telegram-miniapp-six-teal.vercel.app**
+Сайт приложения (Render): **https://telegram-miniapp-ar09.onrender.com/app**
 
 ## Вариант 1: У тебя уже есть бот (например @YupSoulBot)
 
@@ -11,7 +11,7 @@
 3. Выбери своего бота (например YupSoulBot).
 4. Нажми **Bot Settings** → **Menu Button** → **Configure menu button**.
 5. Введи URL:  
-   **`https://telegram-miniapp-six-teal.vercel.app`**
+   **`https://telegram-miniapp-ar09.onrender.com/app`**
 6. Введи текст кнопки, например: **Открыть приложение** или **YupSoul**.
 
 После этого у бота под полем ввода появится кнопка — по нажатию откроется твоё Mini App.
@@ -33,7 +33,7 @@
 
 Любой пользователь может открыть приложение по ссылке:
 
-- **https://telegram-miniapp-six-teal.vercel.app**
+- **https://telegram-miniapp-ar09.onrender.com/app**
 
 Чтобы открыть его **внутри Telegram** (как Mini App), ссылка должна быть в формате:
 
@@ -61,7 +61,7 @@
 
 1. **URL в BotFather**  
    @BotFather → `/mybots` → твой бот → **Bot Settings** → **Menu Button** → **Configure menu button**.  
-   URL должен быть **ровно**: `https://telegram-miniapp-six-teal.vercel.app` (без пробелов в конце). Либо задай его в `bot/.env` как `MINI_APP_URL` — тогда бот сам выставит кнопку при запуске.
+   URL должен быть **ровно**: `https://telegram-miniapp-ar09.onrender.com/app` (без пробелов в конце). Либо задай его в `bot/.env` как `MINI_APP_URL` — тогда бот сам выставит кнопку при запуске.
 
 2. **Кнопка под полем ввода**  
    Открывай приложение кнопкой **под полем ввода** в чате с ботом (кнопка меню), а не кнопкой под сообщением бота.
@@ -86,6 +86,6 @@
 
 1. Разверни бэкенд из папки **`backend/`** (см. `backend/README.md` и `backend/DEPLOY_VERCEL.md`). Нужен тот же **BOT_TOKEN**, что и у бота с Menu Button.
 2. В **`index.html`** задай URL бэкенда в начале страницы:  
-   `<script>window.HEROES_API_BASE = 'https://твой-бэкенд.vercel.app';</script>`  
+   `<script>window.HEROES_API_BASE = 'https://telegram-miniapp-ar09.onrender.com';</script>`  
    (или используй эндпоинт `/api/order` с заголовком `Authorization: tma <initData>` — см. `backend/README.md`).
 3. Открой Mini App **из бота** (кнопка меню). Заполни форму и отправь заявку — после обработки на бэкенде пользователю придёт сообщение в чат с ботом (название, текст и ссылка на трек).
