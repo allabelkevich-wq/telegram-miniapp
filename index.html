@@ -282,9 +282,9 @@
     .birthplace-summary .place-name{font-weight:700;color:#5b21b6}
     .place-coords{font-family:ui-monospace,monospace;letter-spacing:.02em}
     /* Debug overlay for HOT payment */
-    .hot-debug-toggle{position:fixed;right:12px;bottom:12px;z-index:10000;background:rgba(255,255,255,0.08);border:1px solid var(--tg-theme-border-color);color:var(--tg-theme-text-color);padding:8px 10px;border-radius:10px;font-size:12px;cursor:pointer;opacity:0.35;transition:all .2s}
-    .hot-debug-toggle:hover{opacity:0.8;box-shadow:0 6px 18px rgba(212,175,55,0.35)}
-    .hot-debug-panel{position:fixed;right:12px;bottom:54px;z-index:10000;width:300px;max-height:320px;overflow-y:auto;background:rgba(10,10,26,0.92);border:1px solid var(--tg-theme-border-color);border-radius:12px;padding:10px 12px;box-shadow:0 14px 30px rgba(0,0,0,0.35);display:none}
+    .hot-debug-toggle{position:fixed;right:12px;top:12px;z-index:100000;background:rgba(255,255,255,0.08);border:1px solid var(--tg-theme-border-color);color:var(--tg-theme-text-color);padding:8px 10px;border-radius:10px;font-size:12px;cursor:pointer;opacity:0.8;transition:all .2s}
+    .hot-debug-toggle:hover{opacity:1;box-shadow:0 6px 18px rgba(212,175,55,0.45)}
+    .hot-debug-panel{position:fixed;right:12px;top:52px;z-index:100000;width:320px;max-height:360px;overflow-y:auto;background:rgba(10,10,26,0.96);border:1px solid var(--tg-theme-border-color);border-radius:12px;padding:10px 12px;box-shadow:0 14px 30px rgba(0,0,0,0.45);display:none}
     .hot-debug-panel h4{margin:0 0 8px 0;font-size:13px;color:var(--tg-theme-text-color)}
     .hot-debug-panel .row{font-size:12px;color:var(--tg-theme-hint-color);padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08)}
     .hot-debug-panel .row:last-child{border-bottom:none}
@@ -1123,6 +1123,9 @@
         hotDebugList.prepend(row);
         while (hotDebugList.children.length > 20) hotDebugList.removeChild(hotDebugList.lastChild);
       }
+      function ensureHotDebugVisible() {
+        if (hotDebugToggle) hotDebugToggle.style.display = 'block';
+      }
       if (hotDebugToggle && hotDebugPanel) {
         hotDebugToggle.addEventListener('click', function() {
           var visible = hotDebugPanel.style.display === 'block';
@@ -1341,6 +1344,8 @@
           // #region agent log
           fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:click',message:'pay button clicked',data:{mode:mode,hasRequest:requestText.length>=1,hasPerson2:!!payload.person2,hasTransit:!!payload.transit},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P1'})}).catch(()=>{});
           // #endregion
+          ensureHotDebugVisible();
+          hotDebugPanel.style.display = 'block';
           hotLog('pay click', { mode: mode, hasPerson2: !!payload.person2, hasTransit: !!payload.transit });
           var response = await fetch(apiBase + '/api/submit-request', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData }, body: JSON.stringify(payload) });
           var result = await response.json().catch(function() { return {}; });
