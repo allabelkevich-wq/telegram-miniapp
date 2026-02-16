@@ -780,6 +780,7 @@
       var freeTrialAvailable = true;
       var activePromo = null;
       var pricingCatalogLoadFailed = false;
+      var selectedMode = 'single';
 
       function getCurrentSku() {
         var modeSku = selectedMode || 'single';
@@ -1207,7 +1208,6 @@
       var stepNext = document.getElementById('stepNext');
       var quickToggle = document.getElementById('quickRequestsToggle');
       var quickPanel = document.getElementById('quickRequestsPanel');
-      var selectedMode = 'single';
       var currentStep = 1;
       var totalSteps = 3;
       var hotDebugToggle = document.getElementById('hotDebugToggle');
