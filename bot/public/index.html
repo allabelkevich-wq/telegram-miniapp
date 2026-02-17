@@ -1775,13 +1775,19 @@
           return true;
         }
         if (step === 2) {
-          var name = document.getElementById('name').value.trim();
-          var birthdate = document.getElementById('birthdate').value;
-          var birthplace = document.getElementById('birthplace').value.trim();
+          var nameEl = document.getElementById('name');
+          var name = (nameEl ? nameEl.value : '').trim();
+          var birthdateEl = document.getElementById('birthdate');
+          var birthdate = birthdateEl ? birthdateEl.value : '';
+          var birthplaceEl = document.getElementById('birthplace');
+          var birthplace = (birthplaceEl ? birthplaceEl.value : '').trim();
           var unknownEl = document.getElementById('unknown');
-          var birthtimeVal = (unknownEl && unknownEl.checked) ? 'ok' : (document.getElementById('birthtime') ? document.getElementById('birthtime').value : '');
-          var gender = document.getElementById('gender').value;
-          var language = document.getElementById('language').value;
+          var birthtimeEl = document.getElementById('birthtime');
+          var birthtimeVal = (unknownEl && unknownEl.checked) ? 'ok' : (birthtimeEl ? birthtimeEl.value : '');
+          var genderEl = document.getElementById('gender');
+          var gender = genderEl ? genderEl.value : '';
+          var langEl = document.getElementById('language');
+          var language = langEl ? langEl.value : '';
           if (name.length < 2) { alert(t('alertNameShort')); return false; }
           if (!birthdate) { alert(t('alertBirthdate')); return false; }
           if (birthplace.length < 3) { alert(t('alertBirthplace')); return false; }
@@ -1826,11 +1832,23 @@
       });
 
       if (quickToggle && quickPanel) {
-        quickToggle.addEventListener('click', function() {
+        quickToggle.addEventListener('click', function(e) {
+          e.stopPropagation();
           var isOpen = quickPanel.classList.toggle('open');
           this.classList.toggle('open', isOpen);
           this.setAttribute('aria-expanded', String(isOpen));
           this.textContent = isOpen ? t('hide') : t('quickRequests');
+        });
+        document.addEventListener('click', function closeQuickPanel(e) {
+          if (!quickPanel.classList.contains('open')) return;
+          var drop = quickPanel.closest('.quick-dropdown');
+          if (drop && drop.contains(e.target)) return;
+          quickPanel.classList.remove('open');
+          if (quickToggle) {
+            quickToggle.classList.remove('open');
+            quickToggle.setAttribute('aria-expanded', 'false');
+            quickToggle.textContent = t('quickRequests');
+          }
         });
       }
       document.querySelectorAll('.example-btn').forEach(function(btn) {
@@ -1971,15 +1989,30 @@
               else sp.textContent = '✨ ' + name1 + ', Вселенная услышала твой запрос.\n\nЗвуковой ключ Энергии Дня формируется. Через 2-3 минуты он придёт в этот чат.';
             }
             if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
-          goToPage('successPage');
+            goToPage('successPage');
             console.log('[MiniApp] Заявка отправлена, requestId:', result.requestId);
           } else if (result && result.payment_required && result.requestId) {
             setPaymentStatus(t('paymentRequiredOpening'), 'warn');
-            var hotResp = await fetch(apiBase + '/api/payments/hot/create', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
-              body: JSON.stringify({ request_id: result.requestId, sku: result.sku || getCurrentSku(), promo_code: activePromo ? activePromo.code : null, initData: initData })
-            });
+            var hotCtrl = new AbortController();
+            var hotTimeout = setTimeout(function() { hotCtrl.abort(); }, 30000);
+            var hotResp;
+            try {
+              hotResp = await fetch(apiBase + '/api/payments/hot/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+                body: JSON.stringify({ request_id: result.requestId, sku: result.sku || getCurrentSku(), promo_code: activePromo ? activePromo.code : null, initData: initData }),
+                signal: hotCtrl.signal
+              });
+            } catch (hotErr) {
+              clearTimeout(hotTimeout);
+              if (hotErr && hotErr.name === 'AbortError') {
+                setPaymentStatus(t('alertServerSleep'), 'error');
+                alert(t('alertServerSleep'));
+                return;
+              }
+              throw hotErr;
+            }
+            clearTimeout(hotTimeout);
             var hotJson = await hotResp.json().catch(function() { return {}; });
             // #region agent log
             // #endregion
