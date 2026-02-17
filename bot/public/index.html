@@ -617,6 +617,8 @@
           <button id="promoApplyBtn" type="button" class="secondary" style="min-width:140px;margin-top:0;">Применить</button>
         </div>
         <div id="paymentStatus" style="display:none;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.35);border-radius:12px;padding:12px 14px;margin:14px 0;font-size:.92rem;color:rgba(255,255,255,.95);"></div>
+        <p id="paymentLinkHint" style="display:none;font-size:.9rem;color:rgba(255,255,255,0.85);margin:12px 0 8px 0;">Если окно оплаты не открылось (Telegram может блокировать), нажмите кнопку ниже и откройте ссылку в браузере.</p>
+        <button type="button" class="secondary" id="copyPaymentLinkBtn" style="display:none;margin-bottom:12px;">📋 Скопировать ссылку для оплаты</button>
         <div class="btn-group" style="margin-top:20px">
           <button class="secondary" id="backFromPaymentBtn">← Назад</button>
           <button id="payBtn">Оплатить через HOT Pay</button>
@@ -1713,6 +1715,10 @@
         if (pageId === 'paymentPage') {
           if (tg && tg.expand) try { tg.expand(); } catch (e) {}
           setPaymentStatus('', '');
+          var copyBtn = document.getElementById('copyPaymentLinkBtn');
+          var paymentLinkHint = document.getElementById('paymentLinkHint');
+          if (copyBtn) copyBtn.style.display = 'none';
+          if (paymentLinkHint) paymentLinkHint.style.display = 'none';
         }
         if (pageId === 'successPage') updateSoulChatHint();
         if (pageId === 'homePage' || pageId === 'formPage' || pageId === 'paymentPage') {
@@ -2126,10 +2132,30 @@
           var checkoutUrl = String(hotJson.checkout_url);
           setPaymentStatus('Открываю страницу оплаты...', 'warn');
 
+          var lastCheckoutUrl = checkoutUrl;
+          var hintEl = document.getElementById('paymentLinkHint');
+          var copyBtn = document.getElementById('copyPaymentLinkBtn');
+          if (copyBtn) {
+            copyBtn.style.display = 'block';
+            copyBtn.onclick = function() {
+              try {
+                navigator.clipboard.writeText(lastCheckoutUrl);
+                alert('✓ Ссылка скопирована. Вставьте её в Safari или Chrome и откройте.');
+              } catch (e) {
+                prompt('Скопируйте эту ссылку и откройте в браузере:', lastCheckoutUrl);
+              }
+            };
+          }
+          if (hintEl) hintEl.style.display = 'block';
+
           var opened = false;
           try {
             if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.openLink === 'function') {
-              window.Telegram.WebApp.openLink(checkoutUrl);
+              try {
+                window.Telegram.WebApp.openLink(checkoutUrl, { try_instant_view: false });
+              } catch (_) {
+                window.Telegram.WebApp.openLink(checkoutUrl);
+              }
               opened = true;
             }
           } catch (linkErr) {}
@@ -2138,21 +2164,13 @@
             if (newWindow) opened = true;
           }
           if (!opened) {
-            setPaymentStatus('⚠️ Не удалось открыть оплату автоматически', 'error');
-            if (confirm('Скопировать ссылку в буфер обмена?')) {
-              try {
-                navigator.clipboard.writeText(checkoutUrl);
-                alert('✓ Ссылка скопирована. Вставьте в браузер.');
-              } catch (e) {
-                alert('Откройте в браузере:\n\n' + checkoutUrl);
-              }
-            }
+            setPaymentStatus('⚠️ Не удалось открыть автоматически. Нажмите «Скопировать ссылку» ниже и откройте в браузере.', 'error');
             payBtn.disabled = false;
             payBtn.textContent = payOriginalText;
             return;
           }
 
-          setPaymentStatus(t('hotCheckoutOpened'), 'warn');
+          setPaymentStatus(t('hotCheckoutOpened') + ' Если окно не появилось — нажмите «Скопировать ссылку» ниже.', 'warn');
           var maxAttempts = 60;
           var attempt = 0;
           var paid = false;
