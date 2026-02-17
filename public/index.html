@@ -737,6 +737,8 @@
           submitAndContinue: 'Оформить и продолжить', submitRequest: 'Отправить заявку',
           firstFree: 'Первый звуковой ключ доступен бесплатно.',
           paymentRequired: 'Оплата требуется для новых заявок.',
+          subscriptionActive: 'У вас активная подписка — можно продолжить.',
+          catalogLoadFailed: 'Тарифы не загрузились. Нажмите «Оформить и продолжить» — стоимость определит бэкенд.',
           promoApplied: 'Промокод {code}: -{amount} {currency}',
           creatingKey: 'Создаю твой ключ...',
           creatingKeyDesc: 'Магия творится в реальном времени. Твой персональный звуковой ключ формируется на основе твоих уникальных данных.',
@@ -825,6 +827,8 @@
           submitAndContinue: 'Checkout & continue', submitRequest: 'Submit request',
           firstFree: 'Your first sound key is free.',
           paymentRequired: 'Payment required for new requests.',
+          subscriptionActive: 'You have an active subscription — continue.',
+          catalogLoadFailed: 'Pricing failed to load. Press «Continue» — backend will determine cost.',
           promoApplied: 'Promo {code}: -{amount} {currency}',
           creatingKey: 'Creating your key...',
           creatingKeyDesc: 'Magic happens in real time. Your personal sound key is being formed from your unique data.',
@@ -1283,6 +1287,8 @@
       var editingHeroId = null;
       var pricingCatalog = [];
       var freeTrialAvailable = true;
+      var hasSubscriptionActive = false;
+      var catalogLoadError = false;
       var activePromo = null;
       var selectedMode = 'single';
 
@@ -1305,46 +1311,68 @@
         el.style.borderColor = 'rgba(212,175,55,.35)';
         el.style.background = 'rgba(212,175,55,.1)';
       }
+      var DEFAULT_PRICES = { single_song: { title: 'Single song', price: '5.99', currency: 'USDT' }, couple_song: { title: 'Couple song', price: '8.99', currency: 'USDT' }, transit_energy_song: { title: 'Transit energy song', price: '6.99', currency: 'USDT' } };
       function updatePaymentUiFromCatalog() {
-        var sku = getCurrentSku();
-        var item = pricingCatalog.find(function(x) { return x && x.sku === sku; }) || null;
-        var priceLabel = document.getElementById('priceLabel');
-        var priceValue = document.getElementById('priceValue');
-        var priceHint = document.getElementById('priceHint');
-        var notice = document.getElementById('pricingNotice');
-        if (priceLabel) priceLabel.textContent = item ? (item.title || sku) : sku;
-        if (priceValue) {
-          if (item && activePromo && activePromo.sku === sku) {
-            priceValue.textContent = String(activePromo.amount_after) + ' ' + (activePromo.currency || item.currency || 'USDT');
-          } else {
-            priceValue.textContent = item ? (String(item.price) + ' ' + (item.currency || 'USDT')) : '—';
+        try {
+          var sku = getCurrentSku();
+          var item = pricingCatalog.find(function(x) { return x && x.sku === sku; }) || DEFAULT_PRICES[sku] || null;
+          var priceLabel = document.getElementById('priceLabel');
+          var priceValue = document.getElementById('priceValue');
+          var priceHint = document.getElementById('priceHint');
+          var notice = document.getElementById('pricingNotice');
+          if (priceLabel) priceLabel.textContent = item ? (item.title || sku) : sku;
+          if (priceValue) {
+            if (item && activePromo && activePromo.sku === sku) {
+              priceValue.textContent = String(activePromo.amount_after) + ' ' + (activePromo.currency || (item && item.currency) || 'USDT');
+            } else {
+              priceValue.textContent = item ? (String(item.price) + ' ' + (item.currency || 'USDT')) : '—';
+            }
           }
-        }
-        if (priceHint) {
-          if (item && activePromo && activePromo.sku === sku) {
-            priceHint.textContent = t('promoAppliedHint', { code: activePromo.code, amount: activePromo.discount_amount, currency: activePromo.currency || item.currency || 'USDT' });
-          } else {
-            priceHint.textContent = '';
+          if (priceHint) {
+            if (item && activePromo && activePromo.sku === sku) {
+              priceHint.textContent = t('promoAppliedHint', { code: activePromo.code, amount: activePromo.discount_amount, currency: activePromo.currency || (item && item.currency) || 'USDT' });
+            } else {
+              priceHint.textContent = '';
+            }
           }
-        }
-        if (notice) {
-          if (freeTrialAvailable) {
-            notice.textContent = t('firstFree');
-            notice.style.borderColor = 'rgba(212,175,55,.4)';
-            notice.style.background = 'rgba(212,175,55,.12)';
-            notice.style.color = 'rgba(255,255,255,.95)';
-          } else {
-            notice.textContent = t('paymentRequired');
-            notice.style.borderColor = 'rgba(212,175,55,.35)';
-            notice.style.background = 'rgba(212,175,55,.1)';
-            notice.style.color = 'rgba(255,255,255,.95)';
+          if (notice) {
+            if (catalogLoadError) {
+              notice.textContent = t('catalogLoadFailed');
+              notice.style.borderColor = 'rgba(212,175,55,.4)';
+              notice.style.background = 'rgba(212,175,55,.12)';
+              notice.style.color = 'rgba(255,255,255,.95)';
+            } else if (hasSubscriptionActive) {
+              notice.textContent = t('subscriptionActive');
+              notice.style.borderColor = 'rgba(16,185,129,.4)';
+              notice.style.background = 'rgba(16,185,129,.12)';
+              notice.style.color = 'rgba(255,255,255,.95)';
+            } else if (freeTrialAvailable) {
+              notice.textContent = t('firstFree');
+              notice.style.borderColor = 'rgba(212,175,55,.4)';
+              notice.style.background = 'rgba(212,175,55,.12)';
+              notice.style.color = 'rgba(255,255,255,.95)';
+            } else {
+              notice.textContent = t('paymentRequired');
+              notice.style.borderColor = 'rgba(212,175,55,.35)';
+              notice.style.background = 'rgba(212,175,55,.1)';
+              notice.style.color = 'rgba(255,255,255,.95)';
+            }
           }
+        } catch (e) {
+          console.warn('[updatePaymentUiFromCatalog]', e);
+          var n = document.getElementById('pricingNotice');
+          if (n) { n.textContent = t('catalogLoadFailed'); n.style.display = 'block'; }
         }
       }
       async function loadPricingCatalog() {
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
-        var initData = (tg && tg.initData) ? tg.initData : '';
-        if (!apiBase) return;
+        var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
+        catalogLoadError = false;
+        if (!apiBase) {
+          catalogLoadError = true;
+          updatePaymentUiFromCatalog();
+          return;
+        }
         try {
           var url = apiBase + '/api/pricing/catalog';
           var sep = url.indexOf('?') >= 0 ? '&' : '?';
@@ -1354,9 +1382,18 @@
           if (resp.ok && json.success) {
             pricingCatalog = Array.isArray(json.catalog) ? json.catalog : [];
             freeTrialAvailable = !!(json.free_trial && json.free_trial.available);
+            hasSubscriptionActive = !!(json.subscription_active);
+            catalogLoadError = false;
+            updatePaymentUiFromCatalog();
+          } else {
+            catalogLoadError = true;
             updatePaymentUiFromCatalog();
           }
-        } catch (_) {}
+        } catch (e) {
+          console.warn('[loadPricingCatalog]', e);
+          catalogLoadError = true;
+          updatePaymentUiFromCatalog();
+        }
       }
       async function applyPromoCode() {
         var input = document.getElementById('promoCodeInput');
@@ -1649,11 +1686,15 @@
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
         if (pageId === 'paymentPage') {
           try {
-            loadPricingCatalog();
+            if (tg && tg.expand) tg.expand();
+            catalogLoadError = false;
             updatePaymentUiFromCatalog();
             setPaymentStatus('','');
+            loadPricingCatalog();
           } catch (e) {
             console.error('[goToPage] paymentPage init error:', e);
+            var n = document.getElementById('pricingNotice');
+            if (n) { n.textContent = t('catalogLoadFailed'); n.style.display = 'block'; }
           }
         }
         if (pageId === 'successPage') updateSoulChatHint();
@@ -2075,8 +2116,17 @@
             }
             if (!hotJson.checkout_url) throw new Error('Checkout URL не получен');
             setPaymentStatus(t('hotCheckoutOpened'), 'warn');
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) window.Telegram.WebApp.openLink(hotJson.checkout_url);
-            else window.open(hotJson.checkout_url, '_blank');
+            var checkoutUrl = String(hotJson.checkout_url);
+            try {
+              if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.openLink === 'function') {
+                window.Telegram.WebApp.openLink(checkoutUrl);
+              } else {
+                window.open(checkoutUrl, '_blank');
+              }
+            } catch (linkErr) {
+              console.warn('[HOT openLink]', linkErr);
+              window.open(checkoutUrl, '_blank');
+            }
             var maxAttempts = 60;
             var attempt = 0;
             var paid = false;
