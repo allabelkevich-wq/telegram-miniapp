@@ -705,9 +705,6 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:DOMContentLoaded',message:'DOM загружен',data:{timestamp:Date.now()},timestamp:Date.now(),runId:'debug1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
       var tg = null;
       var INIT_DATA_STORAGE_KEY = 'tg_init_data';
       var LANG_STORAGE_KEY = 'yupsoul_lang';
@@ -925,7 +922,11 @@
           loadingPricing: 'Tarife laden...', currentItem: 'Aktuelles Element',
           promoCode: 'Gutscheincode', apply: 'Anwenden', backFromPayment: '← Zurück',
           submitAndContinue: 'Zur Kasse & weiter', submitRequest: 'Anfrage senden',
+          paymentPageIntroAfterSubmit: 'Anfrage gesendet. Gutscheincode eingeben oder unten tippen für Zahlung via HOT Pay.',
+          paymentPageTagline: 'Gutscheincode oder Zahlung',
           firstFree: 'Dein erster Klangschlüssel ist kostenlos.',
+          subscriptionActive: 'Du hast ein aktives Abo — fahre fort.',
+          catalogLoadFailed: 'Tarife konnten nicht geladen werden. Tippe «Zur Kasse» — der Backend bestimmt den Preis.',
           paymentRequired: 'Zahlung für neue Anfragen erforderlich.',
           promoApplied: 'Gutschein {code}: -{amount} {currency}',
           creatingKey: 'Dein Schlüssel wird erstellt...',
@@ -1013,7 +1014,11 @@
           loadingPricing: 'Chargement des tarifs...', currentItem: 'Élément actuel',
           promoCode: 'Code promo', apply: 'Appliquer', backFromPayment: '← Retour',
           submitAndContinue: 'Payer et continuer', submitRequest: 'Envoyer la demande',
+          paymentPageIntroAfterSubmit: 'Demande envoyée. Entre le code promo ou appuie ci-dessous pour payer via HOT Pay.',
+          paymentPageTagline: 'Code promo ou paiement',
           firstFree: 'Ta première clé sonore est gratuite.',
+          subscriptionActive: 'Tu as un abonnement actif — continue.',
+          catalogLoadFailed: 'Tarifs non chargés. Appuie sur «Payer» — le backend déterminera le prix.',
           paymentRequired: 'Paiement requis pour les nouvelles demandes.',
           promoApplied: 'Code promo {code}: -{amount} {currency}',
           creatingKey: 'Création de ta clé...',
@@ -1096,7 +1101,7 @@
         document.documentElement.lang = currentLang === 'en' ? 'en' : 'ru';
         var map = [
           ['tagline','#homeTagline'], ['startBtn','#startBtn'], ['myHeroes','#goHeroesBtn'], ['admin','#adminLinkBtn'],
-          ['heroesTitle','#heroesPage .page header h1'], ['heroesSubtitle','#heroesPage .subtitle'],
+          ['heroesTitle','#heroesPage header h1'], ['heroesSubtitle','#heroesPage .subtitle'],
           ['searchByName','#heroesPage label[for="heroesSearch"]'], ['searchPlaceholder','#heroesSearch'], ['searchBtn','#heroesSearchBtn'],
           ['addHero','#addHeroBtn'], ['heroName','#heroFormWrap label[for="heroName"]'], ['heroBirthdate','#heroFormWrap label[for="heroBirthdate"]'],
           ['heroBirthtime','#heroFormWrap label[for="heroBirthtime"]'], ['heroBirthplace','#heroFormWrap label[for="heroBirthplace"]'],
