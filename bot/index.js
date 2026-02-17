@@ -33,7 +33,7 @@ if (!MINI_APP_BASE || MINI_APP_BASE.includes("vercel.app")) {
   console.error("FATAL: RENDER_EXTERNAL_URL не задан или указывает на Vercel. Задай RENDER_EXTERNAL_URL в Render Dashboard.");
   process.exit(1);
 }
-const MINI_APP_URL = MINI_APP_BASE + "?v=18";
+const MINI_APP_URL = MINI_APP_BASE + "?v=19";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";
@@ -551,6 +551,18 @@ bot.command("start", async (ctx) => {
     `Привет, ${name}!\n\n` +
     `Заходи, когда захочешь вспомнить, кто ты.\n\n` +
     `Открой мини‑приложение и создай свой персональный звуковой ключ.`;
+  
+  // Принудительно обновляем Menu Button при каждом /start, чтобы избежать старых Vercel-ссылок
+  try {
+    await bot.api.setChatMenuButton({
+      chat_id: ctx.chat?.id,
+      menu_button: { type: "web_app", text: "YupSoul", web_app: { url: MINI_APP_URL } },
+    });
+    console.log("[start] Menu Button обновлён для chat", ctx.chat?.id, "→", MINI_APP_URL);
+  } catch (menuErr) {
+    console.warn("[start] Не удалось обновить Menu Button:", menuErr?.message);
+  }
+  
   const replyMarkup = {
     reply_markup: {
       inline_keyboard: [[
