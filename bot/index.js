@@ -545,6 +545,32 @@ bot.command("ping", async (ctx) => {
   await ctx.reply("Бот на связи. Команды работают.");
 });
 
+bot.command("fixurl", async (ctx) => {
+  const name = ctx.from?.first_name || "друг";
+  try {
+    await bot.api.setChatMenuButton({
+      chat_id: ctx.chat?.id,
+      menu_button: { type: "web_app", text: "YupSoul", web_app: { url: MINI_APP_URL } },
+    });
+    await ctx.reply(
+      `✅ ${name}, кнопка меню обновлена!\n\n` +
+      `Новый URL:\n${MINI_APP_URL}\n\n` +
+      `Теперь нажми на кнопку меню (☰) слева от поля ввода, или используй кнопку ниже:`,
+      {
+        reply_markup: {
+          inline_keyboard: [[
+            { text: "✨ Открыть приложение", web_app: { url: MINI_APP_URL } }
+          ]]
+        }
+      }
+    );
+    console.log("[fixurl] Menu Button обновлён для chat", ctx.chat?.id, "→", MINI_APP_URL);
+  } catch (err) {
+    await ctx.reply(`❌ Ошибка при обновлении кнопки: ${err?.message}`);
+    console.error("[fixurl] Ошибка:", err);
+  }
+});
+
 bot.command("start", async (ctx) => {
   const name = ctx.from?.first_name || "друг";
   const text =
