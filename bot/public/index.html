@@ -1747,12 +1747,16 @@
       }
 
       function applyTheme() {
-        var hour = new Date().getHours();
-        var theme = (hour >= 7 && hour < 19) ? 'theme-light' : 'theme-dark';
+        // Важно: фон приложения — тёмный. Поэтому всегда используем тёмную тему,
+        // иначе в светлой схеме Telegram текст/карточки могут стать "невидимыми".
+        var theme = 'theme-dark';
         document.body.classList.remove('theme-light', 'theme-dark');
         document.body.classList.add(theme);
       }
       applyTheme();
+      try {
+        if (tg && tg.onEvent) tg.onEvent('themeChanged', applyTheme);
+      } catch (_) {}
 
       function toggleFormsByMode(mode) {
         var secondForm = document.getElementById('secondPersonForm');
