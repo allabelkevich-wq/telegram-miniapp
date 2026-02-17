@@ -707,6 +707,9 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:DOMContentLoaded',message:'DOM загружен',data:{timestamp:Date.now()},timestamp:Date.now(),runId:'debug1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
       var tg = null;
       var INIT_DATA_STORAGE_KEY = 'tg_init_data';
       var LANG_STORAGE_KEY = 'yupsoul_lang';
@@ -1323,6 +1326,9 @@
           var priceValue = document.getElementById('priceValue');
           var priceHint = document.getElementById('priceHint');
           var notice = document.getElementById('pricingNotice');
+          // #region agent log
+          fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:updatePaymentUi_start',message:'updatePaymentUiFromCatalog начало',data:{sku:sku,itemExists:!!item,priceLabel:!!priceLabel,priceValue:!!priceValue,notice:!!notice,catalogLength:pricingCatalog?pricingCatalog.length:0},timestamp:Date.now(),runId:'debug1',hypothesisId:'C'})}).catch(()=>{});
+          // #endregion
           if (priceLabel) priceLabel.textContent = item ? (item.title || sku) : sku;
           if (priceValue) {
             if (item && activePromo && activePromo.sku === sku) {
@@ -1671,6 +1677,10 @@
       // Навигация по страницам
       function goToPage(pageId) {
         console.log('[goToPage] переход на', pageId, 'from', document.querySelector('.page.active')?.id || 'none');
+        // #region agent log
+        var currentPage = document.querySelector('.page.active');
+        fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:goToPage_start',message:'goToPage вызван',data:{pageId:pageId,currentPage:currentPage?currentPage.id:'none'},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
         if (pageId !== 'paymentPage') {
           var payBtnReset = document.getElementById('payBtn');
@@ -1682,14 +1692,27 @@
         var target = document.getElementById(pageId);
         if (target) {
           target.classList.add('active');
-          console.log('[goToPage] страница', pageId, 'активна, display:', getComputedStyle(target).display, 'visibility:', getComputedStyle(target).visibility);
+          var computed = getComputedStyle(target);
+          console.log('[goToPage] страница', pageId, 'активна, display:', computed.display, 'visibility:', computed.visibility);
+          // #region agent log
+          fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:goToPage_activated',message:'Страница активирована',data:{pageId:pageId,display:computed.display,visibility:computed.visibility,opacity:computed.opacity,zIndex:computed.zIndex},timestamp:Date.now(),runId:'debug1',hypothesisId:'B'})}).catch(()=>{});
+          // #endregion
         } else {
           console.warn('[goToPage] страница', pageId, 'не найдена в DOM');
+          // #region agent log
+          fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:goToPage_not_found',message:'Страница не найдена',data:{pageId:pageId},timestamp:Date.now(),runId:'debug1',hypothesisId:'D'})}).catch(()=>{});
+          // #endregion
         }
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
         if (pageId === 'paymentPage') {
           try {
             console.log('[goToPage] Активирую страницу оплаты...');
+            // #region agent log
+            var paymentPageEl = document.getElementById('paymentPage');
+            var section = paymentPageEl ? paymentPageEl.querySelector('.section') : null;
+            var greenBox = paymentPageEl ? paymentPageEl.querySelector('div[style*="background:#10b981"]') : null;
+            fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:paymentPage_init',message:'Инициализация paymentPage',data:{paymentPageExists:!!paymentPageEl,sectionExists:!!section,greenBoxExists:!!greenBox},timestamp:Date.now(),runId:'debug1',hypothesisId:'D'})}).catch(()=>{});
+            // #endregion
             if (tg && tg.expand) {
               console.log('[goToPage] Вызываю tg.expand()');
               tg.expand();
@@ -1701,8 +1724,14 @@
             console.log('[goToPage] Загружаю каталог цен...');
             loadPricingCatalog();
             console.log('[goToPage] Страница оплаты активирована успешно');
+            // #region agent log
+            fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:paymentPage_complete',message:'Инициализация завершена',data:{success:true},timestamp:Date.now(),runId:'debug1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
           } catch (e) {
             console.error('[goToPage] paymentPage init error:', e);
+            // #region agent log
+            fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:paymentPage_error',message:'Ошибка инициализации paymentPage',data:{error:e.message,stack:e.stack},timestamp:Date.now(),runId:'debug1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
             alert('Ошибка при открытии страницы оплаты: ' + e.message);
             var n = document.getElementById('pricingNotice');
             if (n) { n.textContent = t('catalogLoadFailed'); n.style.display = 'block'; }
@@ -1954,6 +1983,9 @@
 
       if (stepNext) stepNext.addEventListener('click', function() {
         console.log('[stepNext] Клик по кнопке "К оплате"');
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:stepNext_click',message:'Клик К оплате',data:{stepNextExists:!!stepNext},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         try {
           console.log('[stepNext] Валидация шага 1...');
           if (!validateStep(1)) { console.warn('[stepNext] Шаг 1 не прошёл валидацию'); return; }
@@ -1962,9 +1994,15 @@
           console.log('[stepNext] Валидация шага 3...');
           if (!validateStep(3)) { console.warn('[stepNext] Шаг 3 не прошёл валидацию'); return; }
           console.log('[stepNext] Все проверки пройдены, переход на paymentPage');
+          // #region agent log
+          fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:before_goToPage',message:'Перед вызовом goToPage',data:{validationPassed:true},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
+          // #endregion
           goToPage('paymentPage');
         } catch (e) {
           console.error('[stepNext] Ошибка при переходе на страницу оплаты:', e);
+          // #region agent log
+          fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:stepNext_error',message:'Ошибка в stepNext',data:{error:e.message,stack:e.stack},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
+          // #endregion
           alert('Ошибка: ' + e.message);
         }
       });
