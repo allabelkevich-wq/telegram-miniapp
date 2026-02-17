@@ -134,3 +134,9 @@ comment on column track_requests.suno_style_sent is 'Точная строка s
 -- 7. Обложка к генерации (URL от Suno Cover API, отправляется пользователю вместе с аудио)
 alter table track_requests add column if not exists cover_url text;
 comment on column track_requests.cover_url is 'URL обложки от Suno Cover API; отправляется в Telegram вместе с песней';
+
+-- =============================================================================
+-- 8. Платежи HOT и тарифы (pricing, entitlements, subscriptions)
+-- Выполни отдельно в SQL Editor: bot/supabase-migration-hot-monetization.sql
+-- Откат: bot/supabase-migration-hot-monetization-rollback.sql
+-- =============================================================================
