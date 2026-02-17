@@ -1229,7 +1229,6 @@ bot.command("admin", async (ctx) => {
 // Регистрация команд в Telegram (меню бота)
 const commands = [
   { command: "start", description: "Начать / открыть приложение" },
-  { command: "fixurl", description: "Обновить кнопку меню (если 404 при входе)" },
   { command: "ping", description: "Проверка связи с ботом" },
   { command: "get_analysis", description: "Расшифровка карты (после оплаты)" },
   { command: "soulchat", description: "Разговор по душам по заявке" },
