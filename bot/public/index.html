@@ -608,6 +608,7 @@
       </header>
       
       <div class="section">
+        <div class="payment-build-badge">Build: c4eee97+dbg</div>
         <div class="tagline" style="margin-bottom:15px">Оплата и доступ</div>
         <p id="paymentIntro" style="text-align:center;font-size:1.05rem;line-height:1.7;margin-bottom:16px">Первая песня — в подарок. Дальше можно оплатить отдельный элемент или оформить подписку на полный доступ.</p>
         <div id="pricingNotice" style="background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.4);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:.92rem;color:rgba(255,255,255,0.95);">
@@ -1747,8 +1748,8 @@
       }
 
       function applyTheme() {
-        // Важно: фон приложения — тёмный. Поэтому всегда используем тёмную тему,
-        // иначе в светлой схеме Telegram текст/карточки могут стать "невидимыми".
+        // Фон приложения тёмный, поэтому фиксируем тёмную тему,
+        // иначе в светлой теме Telegram элементы могут стать "невидимыми".
         var theme = 'theme-dark';
         document.body.classList.remove('theme-light', 'theme-dark');
         document.body.classList.add(theme);
