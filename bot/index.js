@@ -1359,6 +1359,12 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
   }
 });
 app.use(express.json());
+// Логирование всех входящих запросов для диагностики
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[REQUEST] ${timestamp} ${req.method} ${req.path} query:${JSON.stringify(req.query)}`);
+  next();
+});
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");

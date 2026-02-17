@@ -1320,15 +1320,25 @@
       var DEFAULT_PRICES = { single_song: { title: 'Single song', price: '5.99', currency: 'USDT' }, couple_song: { title: 'Couple song', price: '8.99', currency: 'USDT' }, transit_energy_song: { title: 'Transit energy song', price: '6.99', currency: 'USDT' } };
       function updatePaymentUiFromCatalog() {
         try {
+          console.log('[DEBUG-updatePaymentUi] =============== ОБНОВЛЕНИЕ UI ОПЛАТЫ ===============');
           var sku = getCurrentSku();
+          console.log('[DEBUG-updatePaymentUi] SKU:', sku);
+          console.log('[DEBUG-updatePaymentUi] pricingCatalog:', pricingCatalog);
+          console.log('[DEBUG-updatePaymentUi] DEFAULT_PRICES:', DEFAULT_PRICES);
+          
           var item = pricingCatalog.find(function(x) { return x && x.sku === sku; }) || DEFAULT_PRICES[sku] || null;
+          console.log('[DEBUG-updatePaymentUi] Выбранный item:', item);
+          
           var priceLabel = document.getElementById('priceLabel');
           var priceValue = document.getElementById('priceValue');
           var priceHint = document.getElementById('priceHint');
           var notice = document.getElementById('pricingNotice');
-          // #region agent log
-          fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:updatePaymentUi_start',message:'updatePaymentUiFromCatalog начало',data:{sku:sku,itemExists:!!item,priceLabel:!!priceLabel,priceValue:!!priceValue,notice:!!notice,catalogLength:pricingCatalog?pricingCatalog.length:0},timestamp:Date.now(),runId:'debug1',hypothesisId:'C'})}).catch(()=>{});
-          // #endregion
+          
+          console.log('[DEBUG-updatePaymentUi] DOM элементы:');
+          console.log('  - priceLabel:', !!priceLabel);
+          console.log('  - priceValue:', !!priceValue);
+          console.log('  - priceHint:', !!priceHint);
+          console.log('  - notice:', !!notice);
           if (priceLabel) priceLabel.textContent = item ? (item.title || sku) : sku;
           if (priceValue) {
             if (item && activePromo && activePromo.sku === sku) {
@@ -1676,62 +1686,63 @@
       }
       // Навигация по страницам
       function goToPage(pageId) {
-        console.log('[goToPage] переход на', pageId, 'from', document.querySelector('.page.active')?.id || 'none');
-        // #region agent log
+        console.log('[DEBUG-goToPage] =============== ПЕРЕХОД НА СТРАНИЦУ ===============');
         var currentPage = document.querySelector('.page.active');
-        fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:goToPage_start',message:'goToPage вызван',data:{pageId:pageId,currentPage:currentPage?currentPage.id:'none'},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
+        console.log('[DEBUG-goToPage] FROM:', currentPage ? currentPage.id : 'none', '→ TO:', pageId);
+        
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
         if (pageId !== 'paymentPage') {
           var payBtnReset = document.getElementById('payBtn');
           if (payBtnReset) { payBtnReset.disabled = false; payBtnReset.textContent = t('submitRequest'); }
         }
+        
+        console.log('[DEBUG-goToPage] Убираю .active со всех страниц...');
         document.querySelectorAll('.page').forEach(function(page) {
           page.classList.remove('active');
         });
+        
         var target = document.getElementById(pageId);
+        console.log('[DEBUG-goToPage] Целевая страница найдена:', !!target);
+        
         if (target) {
           target.classList.add('active');
           var computed = getComputedStyle(target);
-          console.log('[goToPage] страница', pageId, 'активна, display:', computed.display, 'visibility:', computed.visibility);
-          // #region agent log
-          fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:goToPage_activated',message:'Страница активирована',data:{pageId:pageId,display:computed.display,visibility:computed.visibility,opacity:computed.opacity,zIndex:computed.zIndex},timestamp:Date.now(),runId:'debug1',hypothesisId:'B'})}).catch(()=>{});
-          // #endregion
+          console.log('[DEBUG-goToPage] ✓ Страница активирована');
+          console.log('[DEBUG-goToPage] CSS: display=' + computed.display + ', visibility=' + computed.visibility + ', opacity=' + computed.opacity + ', zIndex=' + computed.zIndex);
         } else {
-          console.warn('[goToPage] страница', pageId, 'не найдена в DOM');
-          // #region agent log
-          fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:goToPage_not_found',message:'Страница не найдена',data:{pageId:pageId},timestamp:Date.now(),runId:'debug1',hypothesisId:'D'})}).catch(()=>{});
-          // #endregion
+          console.error('[DEBUG-goToPage] ❌ СТРАНИЦА НЕ НАЙДЕНА В DOM:', pageId);
         }
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
         if (pageId === 'paymentPage') {
           try {
-            console.log('[goToPage] Активирую страницу оплаты...');
-            // #region agent log
+            console.log('[DEBUG-paymentPage] =============== ИНИЦИАЛИЗАЦИЯ СТРАНИЦЫ ОПЛАТЫ ===============');
             var paymentPageEl = document.getElementById('paymentPage');
             var section = paymentPageEl ? paymentPageEl.querySelector('.section') : null;
             var greenBox = paymentPageEl ? paymentPageEl.querySelector('div[style*="background:#10b981"]') : null;
-            fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:paymentPage_init',message:'Инициализация paymentPage',data:{paymentPageExists:!!paymentPageEl,sectionExists:!!section,greenBoxExists:!!greenBox},timestamp:Date.now(),runId:'debug1',hypothesisId:'D'})}).catch(()=>{});
-            // #endregion
+            var header = paymentPageEl ? paymentPageEl.querySelector('header') : null;
+            
+            console.log('[DEBUG-paymentPage] DOM элементы:');
+            console.log('  - paymentPage:', !!paymentPageEl);
+            console.log('  - .section:', !!section);
+            console.log('  - greenBox (индикатор):', !!greenBox);
+            console.log('  - header:', !!header);
+            
             if (tg && tg.expand) {
-              console.log('[goToPage] Вызываю tg.expand()');
+              console.log('[DEBUG-paymentPage] Вызываю tg.expand()...');
               tg.expand();
             }
+            
             catalogLoadError = false;
-            console.log('[goToPage] Обновляю UI оплаты...');
+            console.log('[DEBUG-paymentPage] Вызываю updatePaymentUiFromCatalog()...');
             updatePaymentUiFromCatalog();
+            
             setPaymentStatus('','');
-            console.log('[goToPage] Загружаю каталог цен...');
+            console.log('[DEBUG-paymentPage] Вызываю loadPricingCatalog() (async)...');
             loadPricingCatalog();
-            console.log('[goToPage] Страница оплаты активирована успешно');
-            // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:paymentPage_complete',message:'Инициализация завершена',data:{success:true},timestamp:Date.now(),runId:'debug1',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
+            
+            console.log('[DEBUG-paymentPage] ✓ Инициализация завершена');
           } catch (e) {
-            console.error('[goToPage] paymentPage init error:', e);
-            // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:paymentPage_error',message:'Ошибка инициализации paymentPage',data:{error:e.message,stack:e.stack},timestamp:Date.now(),runId:'debug1',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
+            console.error('[DEBUG-paymentPage] ❌ ОШИБКА:', e.message, e.stack);
             alert('Ошибка при открытии страницы оплаты: ' + e.message);
             var n = document.getElementById('pricingNotice');
             if (n) { n.textContent = t('catalogLoadFailed'); n.style.display = 'block'; }
@@ -1982,28 +1993,22 @@
       });
 
       if (stepNext) stepNext.addEventListener('click', function() {
-        console.log('[stepNext] Клик по кнопке "К оплате"');
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:stepNext_click',message:'Клик К оплате',data:{stepNextExists:!!stepNext},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
+        console.log('[DEBUG-stepNext] =============== КЛИК К ОПЛАТЕ ===============');
+        console.log('[DEBUG-stepNext] stepNext button exists:', !!stepNext);
         try {
-          console.log('[stepNext] Валидация шага 1...');
-          if (!validateStep(1)) { console.warn('[stepNext] Шаг 1 не прошёл валидацию'); return; }
-          console.log('[stepNext] Валидация шага 2...');
-          if (!validateStep(2)) { console.warn('[stepNext] Шаг 2 не прошёл валидацию'); return; }
-          console.log('[stepNext] Валидация шага 3...');
-          if (!validateStep(3)) { console.warn('[stepNext] Шаг 3 не прошёл валидацию'); return; }
-          console.log('[stepNext] Все проверки пройдены, переход на paymentPage');
-          // #region agent log
-          fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:before_goToPage',message:'Перед вызовом goToPage',data:{validationPassed:true},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
-          // #endregion
+          console.log('[DEBUG-stepNext] Начало валидации...');
+          if (!validateStep(1)) { console.warn('[DEBUG-stepNext] ❌ Шаг 1 FAILED'); return; }
+          console.log('[DEBUG-stepNext] ✓ Шаг 1 OK');
+          if (!validateStep(2)) { console.warn('[DEBUG-stepNext] ❌ Шаг 2 FAILED'); return; }
+          console.log('[DEBUG-stepNext] ✓ Шаг 2 OK');
+          if (!validateStep(3)) { console.warn('[DEBUG-stepNext] ❌ Шаг 3 FAILED'); return; }
+          console.log('[DEBUG-stepNext] ✓ Шаг 3 OK - ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ');
+          console.log('[DEBUG-stepNext] Вызываю goToPage(paymentPage)...');
           goToPage('paymentPage');
+          console.log('[DEBUG-stepNext] goToPage вызван успешно');
         } catch (e) {
-          console.error('[stepNext] Ошибка при переходе на страницу оплаты:', e);
-          // #region agent log
-          fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:stepNext_error',message:'Ошибка в stepNext',data:{error:e.message,stack:e.stack},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
-          // #endregion
-          alert('Ошибка: ' + e.message);
+          console.error('[DEBUG-stepNext] ❌ ОШИБКА:', e.message, e.stack);
+          alert('Ошибка при переходе к оплате: ' + e.message);
         }
       });
       setMode('single');
