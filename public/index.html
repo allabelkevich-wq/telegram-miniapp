@@ -754,7 +754,7 @@
       var selectedMode = 'single';
 
       function getCurrentSku() {
-        var modeSku = selectedMode || 'single';
+        var modeSku = (typeof selectedMode !== 'undefined' && selectedMode) ? selectedMode : 'single';
         if (modeSku === 'couple') return 'couple_song';
         if (modeSku === 'transit') return 'transit_energy_song';
         return 'single_song';
