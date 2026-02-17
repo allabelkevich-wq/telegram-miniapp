@@ -8,8 +8,15 @@
   <meta http-equiv="Expires" content="0">
   <title>YupSoul</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- API Render. Жёстко telegram-miniapp-ar09 — проверено в Mini App. Для другого домена можно window.location.origin. -->
-  <script>window.HEROES_API_BASE='https://telegram-miniapp-ar09.onrender.com';window.BACKEND_URL=window.HEROES_API_BASE;</script>
+  <!-- API: на Render используем тот же origin, иначе хардкод. -->
+  <script>
+    (function(){
+      var origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
+      var isRender = /\.onrender\.com$/i.test(origin);
+      window.HEROES_API_BASE = isRender ? origin : 'https://telegram-miniapp-ar09.onrender.com';
+      window.BACKEND_URL = window.HEROES_API_BASE;
+    })();
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
     /* АДАПТИВНЫЕ СТИЛИ С ПОДДЕРЖКОЙ ТЕМЫ ТЕЛЕГРАМ */
@@ -1703,14 +1710,13 @@
         var target = document.getElementById(pageId);
         console.log('[DEBUG-goToPage] Целевая страница найдена:', !!target);
         
-        if (target) {
-          target.classList.add('active');
-          var computed = getComputedStyle(target);
-          console.log('[DEBUG-goToPage] ✓ Страница активирована');
-          console.log('[DEBUG-goToPage] CSS: display=' + computed.display + ', visibility=' + computed.visibility + ', opacity=' + computed.opacity + ', zIndex=' + computed.zIndex);
-        } else {
-          console.error('[DEBUG-goToPage] ❌ СТРАНИЦА НЕ НАЙДЕНА В DOM:', pageId);
+        if (!target) {
+          console.error('[DEBUG-goToPage] ❌ СТРАНИЦА НЕ НАЙДЕНА:', pageId, '- оставляю текущую страницу');
+          return;
         }
+        target.classList.add('active');
+        var computed = getComputedStyle(target);
+        console.log('[DEBUG-goToPage] ✓ Страница активирована');
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
         if (pageId === 'paymentPage') {
           if (tg && tg.expand) try { tg.expand(); } catch (e) {}
@@ -2052,16 +2058,18 @@
             goToPage('paymentPage');
             setPaymentStatus(t('paymentRequiredOpening'), 'warn');
           } else {
+            var errMsg = result.error || result.message || 'Не удалось отправить заявку.';
+            if (response.status === 503) errMsg = t('alertServerSleep');
             stepNext.disabled = false;
             stepNext.textContent = stepNextOriginalText;
-            alert(result.error || result.message || 'Не удалось отправить заявку.');
+            alert(errMsg);
             return;
           }
         } catch (e) {
           stepNext.disabled = false;
           stepNext.textContent = stepNextOriginalText;
           if (e && e.name === 'AbortError') { alert(t('alertServerSleep')); return; }
-          alert('Ошибка при отправке: ' + (e.message || e));
+          if (e && e.message) alert('Ошибка при отправке: ' + e.message);
           return;
         }
         stepNext.disabled = false;
