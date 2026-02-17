@@ -28,7 +28,7 @@ function normalizeUrlBase(raw) {
 // Важно: на Render MINI_APP_URL часто забывают задать, и бот начинает слать ссылку на старый домен.
 // Render автоматически прокидывает RENDER_EXTERNAL_URL — используем его как безопасный fallback.
 const MINI_APP_BASE = normalizeUrlBase(process.env.MINI_APP_URL || process.env.RENDER_EXTERNAL_URL || "https://telegram-miniapp-six-teal.vercel.app");
-const MINI_APP_URL = MINI_APP_BASE + "?v=12";
+const MINI_APP_URL = MINI_APP_BASE + "?v=13";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";
