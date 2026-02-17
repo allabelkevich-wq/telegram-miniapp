@@ -1,11 +1,16 @@
 /**
  * Точка входа для Render: сразу поднимаем порт и отвечаем на /healthz (без загрузки Express/бота).
  * После этого подгружается index.js; он отдаёт app через globalThis, мы подхватываем запросы.
- * Все ответы — HTML с текстом, чтобы в браузере не было пустого/серого экрана.
- * /webhook-info обрабатываем здесь через Telegram API, чтобы страница всегда открывалась.
+ * Mini App отдаём сразу из public/index.html — чтобы приложение открывалось без ожидания загрузки бота.
  */
 import "dotenv/config";
 import { createServer } from "http";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const MINI_APP_PATH = join(__dirname, "public", "index.html");
 
 process.env.RENDER_HEALTHZ_FIRST = "1";
 const PORT = Number(process.env.PORT) || 10000;
@@ -53,16 +58,49 @@ const server = createServer(async (req, res) => {
     expressApp(req, res);
     return;
   }
-  // Пока index.js не загрузился — не отдаём 404 для /, /app и админки (Mini App и возврат после оплаты открывают /app)
-  if (url === "/" || url === "/app" || url.startsWith("/admin")) {
-    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    res.end(page("YupSoul Bot", "<h1>Запуск…</h1><p>Бот загружается. Подожди 10–20 сек и обнови страницу (F5).</p><p>Если долго не грузится — смотри Render → Logs.</p><p><a href=\"/healthz\">/healthz</a></p>"));
+  // Mini App: отдаём сразу, не ждём загрузки бота — приложение открывается мгновенно
+  if (url === "/" || url === "/app") {
+    try {
+      const html = readFileSync(MINI_APP_PATH, "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(html);
+    } catch (err) {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(page("YupSoul Bot", "<h1>Запуск…</h1><p>Бот загружается. Подожди 10–20 сек и обнови страницу (F5).</p><p>Ошибка файла: " + (err?.message || err) + "</p><p><a href=\"/healthz\">/healthz</a></p>"));
+    }
     return;
+  }
+  if (url.startsWith("/admin")) {
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    res.end(page("YupSoul Bot", "<h1>Запуск…</h1><p>Админка загружается. Подожди 10–20 сек и обнови страницу (F5).</p><p><a href=\"/healthz\">/healthz</a></p>"));
+    return;
+  }
+  // Статика Mini App (/assets/*) пока бот грузится
+  if (url.startsWith("/assets/") && !url.includes("..")) {
+    try {
+      const subPath = (pathPart || "").replace(/^\//, ""); // убираем ведущий слэш
+      const filePath = join(__dirname, "public", subPath);
+      const data = readFileSync(filePath);
+      const ext = url.split(".").pop() || "";
+      const ct = ext === "png" ? "image/png" : ext === "jpg" || ext === "jpeg" ? "image/jpeg" : ext === "svg" ? "image/svg+xml" : "application/octet-stream";
+      res.writeHead(200, { "Content-Type": ct });
+      res.end(data);
+      return;
+    } catch (_) {}
   }
   if (url.startsWith("/api")) {
     res.writeHead(503, { "Content-Type": "application/json; charset=utf-8" });
     res.end(JSON.stringify({ success: false, error: "Сервис запускается. Подожди 20–30 сек и обнови страницу (F5)." }));
     return;
+  }
+  // Пути без расширения — отдаём Mini App (чтобы не было 404 после «Запуск…»)
+  if (!(pathPart || "").includes(".")) {
+    try {
+      const html = readFileSync(MINI_APP_PATH, "utf8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(html);
+      return;
+    } catch (_) {}
   }
   res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
   res.end(page("404", "<h1>404</h1><p>Страница не найдена.</p><p><a href=\"/\">Главная</a></p>"));
