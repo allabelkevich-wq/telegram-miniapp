@@ -792,7 +792,14 @@
           paymentConfirmed: 'Оплата подтверждена. Запускаю генерацию...',
           paymentReceivedNoStart: 'Оплата получена, но авто‑старт не удался. Запусти генерацию в админке по request_id: {id}',
           submitFailed: 'Не удалось отправить заявку. Подожди минуту и нажми «Отправить заявку» снова или открой Mini App заново из чата с ботом.',
-          errorOp: 'Ошибка операции оплаты/заявки'
+          errorOp: 'Ошибка операции оплаты/заявки',
+          alertTransitLocation: 'Укажи локацию события', alertTransitConfirm: 'Подтверди, что локация указана верно',
+          alertNoApi: 'Не настроен адрес API.', alertOpenFromBot: 'Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.',
+          alertOpenFromBotShort: 'Открой приложение из чата с ботом в Telegram.',
+          alertPaymentFirst: 'Сначала нажмите «Отправить заявку» на предыдущем шаге.',
+          alertLinkCopied: '✓ Ссылка скопирована. Вставьте её в Safari или Chrome и откройте.',
+          alertHeroName: 'Введите имя', alertError: 'Ошибка', alertDeleteConfirm: 'Удалить «{name}»? Это действие нельзя отменить.',
+          alertSubmitError: 'Ошибка при отправке'
         },
         en: {
           tagline: 'Explore your edges the way you want',
@@ -885,7 +892,14 @@
           paymentConfirmed: 'Payment confirmed. Starting generation...',
           paymentReceivedNoStart: 'Payment received, but auto-start failed. Start generation in admin by request_id: {id}',
           submitFailed: 'Could not submit request. Wait a minute and tap «Submit request» again or reopen the Mini App from the bot chat.',
-          errorOp: 'Payment/request operation error'
+          errorOp: 'Payment/request operation error',
+          alertTransitLocation: 'Enter event location', alertTransitConfirm: 'Confirm the location is correct',
+          alertNoApi: 'API address not configured.', alertOpenFromBot: 'Open the app from the bot chat in Telegram — otherwise the request cannot be accepted.',
+          alertOpenFromBotShort: 'Open the app from the bot chat in Telegram.',
+          alertPaymentFirst: 'First tap «Submit request» on the previous step.',
+          alertLinkCopied: '✓ Link copied. Paste it in Safari or Chrome and open.',
+          alertHeroName: 'Enter name', alertError: 'Error', alertDeleteConfirm: 'Delete «{name}»? This action cannot be undone.',
+          alertSubmitError: 'Submit error'
         },
         de: {
           tagline: 'Erkunde deine Facetten, wie du es möchtest',
@@ -978,7 +992,14 @@
           paymentConfirmed: 'Zahlung bestätigt. Generierung startet...',
           paymentReceivedNoStart: 'Zahlung erhalten, aber Auto-Start fehlgeschlagen. Starte Generierung in der Admin per request_id: {id}',
           submitFailed: 'Anfrage konnte nicht gesendet werden. Warte eine Minute und tippe erneut auf «Anfrage senden» oder öffne die Mini App neu aus dem Bot-Chat.',
-          errorOp: 'Fehler bei Zahlung/Anfrage'
+          errorOp: 'Fehler bei Zahlung/Anfrage',
+          alertTransitLocation: 'Ereignisort eingeben', alertTransitConfirm: 'Bestätige, dass der Ort korrekt ist',
+          alertNoApi: 'API-Adresse nicht konfiguriert.', alertOpenFromBot: 'Öffne die App aus dem Bot-Chat in Telegram — sonst wird die Anfrage nicht angenommen.',
+          alertOpenFromBotShort: 'Öffne die App aus dem Bot-Chat in Telegram.',
+          alertPaymentFirst: 'Tippe zuerst auf «Anfrage senden» im vorherigen Schritt.',
+          alertLinkCopied: '✓ Link kopiert. Füge ihn in Safari oder Chrome ein und öffne ihn.',
+          alertHeroName: 'Name eingeben', alertError: 'Fehler', alertDeleteConfirm: '«{name}» löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
+          alertSubmitError: 'Sendefehler'
         },
         fr: {
           tagline: 'Explore tes facettes comme tu le souhaites',
@@ -1071,7 +1092,14 @@
           paymentConfirmed: 'Paiement confirmé. Démarrage de la génération...',
           paymentReceivedNoStart: 'Paiement reçu, mais démarrage auto échoué. Lance la génération dans l\'admin par request_id: {id}',
           submitFailed: 'Demande non envoyée. Attends une minute et appuie à nouveau sur «Envoyer la demande» ou rouvre la Mini App depuis le chat du bot.',
-          errorOp: 'Erreur opération paiement/demande'
+          errorOp: 'Erreur opération paiement/demande',
+          alertTransitLocation: 'Entre le lieu de l\'événement', alertTransitConfirm: 'Confirme que le lieu est correct',
+          alertNoApi: 'Adresse API non configurée.', alertOpenFromBot: 'Ouvre l\'app depuis le chat du bot dans Telegram — sinon la demande ne peut pas être acceptée.',
+          alertOpenFromBotShort: 'Ouvre l\'app depuis le chat du bot dans Telegram.',
+          alertPaymentFirst: 'Appuie d\'abord sur «Envoyer la demande» à l\'étape précédente.',
+          alertLinkCopied: '✓ Lien copié. Colle-le dans Safari ou Chrome et ouvre-le.',
+          alertHeroName: 'Entre le nom', alertError: 'Erreur', alertDeleteConfirm: 'Supprimer «{name}» ? Cette action ne peut pas être annulée.',
+          alertSubmitError: 'Erreur d\'envoi'
         }
       };
       var currentLang = 'ru';
@@ -1850,14 +1878,14 @@
           if (selectedMode === 'transit') {
             var tDate = document.getElementById('transitDate').value;
             var tLoc = document.getElementById('transitLocation').value.trim();
-            if (!tDate) { alert('Укажи дату события'); return false; }
-            if (!tLoc) { alert('Укажи локацию события'); return false; }
+            if (!tDate) { alert(t('alertTransitDate')); return false; }
+            if (!tLoc) { alert(t('alertTransitLocation')); return false; }
           }
           return true;
         }
         if (step === 3) {
           var request = document.getElementById('request').value.trim();
-          if (request.length < 5) { alert('Добавь запрос (5+ символов)'); return false; }
+          if (request.length < 5) { alert(t('alertRequestShort')); return false; }
           return true;
         }
         return true;
@@ -1917,12 +1945,12 @@
         var birthtimeUnknown1 = document.getElementById('unknown').checked;
         var gender1 = document.getElementById('gender').value;
         var requestText = document.getElementById('request').value.trim();
-        if (name1.length < 2) { alert('✨ Имя должно содержать минимум 2 символа'); return; }
-        if (!birthdate1) { alert('✨ Выбери дату рождения'); return; }
-        if (birthplace1.length < 3) { alert('✨ Место рождения должно содержать минимум 3 символа'); return; }
-        if (!birthtimeUnknown1 && !birthtime1) { alert('✨ Укажи время рождения или отметь "Не знаю"'); return; }
-        if (!gender1) { alert('✨ Выбери свой путь'); return; }
-        if (requestText.length < 15) { alert('✨ Расскажи Вселенной подробнее (минимум 15 символов)'); return; }
+        if (name1.length < 2) { alert(t('alertNameShort')); return; }
+        if (!birthdate1) { alert(t('alertBirthdate')); return; }
+        if (birthplace1.length < 3) { alert(t('alertBirthplace')); return; }
+        if (!birthtimeUnknown1 && !birthtime1) { alert(t('alertBirthtime')); return; }
+        if (!gender1) { alert(t('alertGender')); return; }
+        if (requestText.length < 15) { alert(t('alertRequestLong')); return; }
         var payload = {
           mode: mode,
           person1: { name: name1, birthdate: birthdate1, birthplace: birthplace1, birthtime: birthtimeUnknown1 ? null : birthtime1, birthtimeUnknown: birthtimeUnknown1, gender: gender1 },
@@ -1943,11 +1971,11 @@
           var birthtime2 = document.getElementById('birthtime2').value;
           var birthtimeUnknown2 = document.getElementById('unknown2').checked;
           var gender2 = document.getElementById('gender2').value;
-          if (name2.length < 2) { alert('✨ Имя второго человека должно содержать минимум 2 символа'); return; }
-          if (!birthdate2) { alert('✨ Выбери дату рождения второго человека'); return; }
-          if (birthplace2.length < 3) { alert('✨ Место рождения второго человека должно содержать минимум 3 символа'); return; }
-          if (!birthtimeUnknown2 && !birthtime2) { alert('✨ Укажи время рождения второго человека'); return; }
-          if (!gender2) { alert('✨ Выбери пол второго человека'); return; }
+          if (name2.length < 2) { alert(t('alertName2Short')); return; }
+          if (!birthdate2) { alert(t('alertBirthdate2')); return; }
+          if (birthplace2.length < 3) { alert(t('alertBirthplace2')); return; }
+          if (!birthtimeUnknown2 && !birthtime2) { alert(t('alertBirthtime2')); return; }
+          if (!gender2) { alert(t('alertGender2')); return; }
           payload.person2 = { name: name2, birthdate: birthdate2, birthplace: birthplace2, birthtime: birthtimeUnknown2 ? null : birthtime2, birthtimeUnknown: birthtimeUnknown2, gender: gender2 };
         }
         if (mode === 'transit') {
@@ -1955,15 +1983,15 @@
           var transitTime = document.getElementById('transitTime').value;
           var transitLocation = (document.getElementById('transitLocation') && document.getElementById('transitLocation').value) ? document.getElementById('transitLocation').value.trim() : '';
           var transitIntent = (document.getElementById('transitIntent') && document.getElementById('transitIntent').value) ? document.getElementById('transitIntent').value.trim() : null;
-          if (!transitDate) { alert('✨ Выбери дату события'); return; }
-          if (!transitLocation) { alert('✨ Укажи локацию события'); return; }
-          if (!(document.getElementById('transitLocationConfirmed') && document.getElementById('transitLocationConfirmed').checked)) { alert('✨ Подтверди, что локация указана верно'); return; }
+          if (!transitDate) { alert(t('alertTransitDate')); return; }
+          if (!transitLocation) { alert(t('alertTransitLocation')); return; }
+          if (!(document.getElementById('transitLocationConfirmed') && document.getElementById('transitLocationConfirmed').checked)) { alert(t('alertTransitConfirm')); return; }
           payload.transit = { date: transitDate, time: transitTime || null, location: transitLocation, intent: transitIntent || null };
         }
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
-        if (!apiBase) { alert('Не настроен адрес API.'); return; }
+        if (!apiBase) { alert(t('alertNoApi')); return; }
         var initData = getInitData();
-        if (!initData) { alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.'); return; }
+        if (!initData) { alert(t('alertOpenFromBot')); return; }
         payload.initData = initData;
 
         var stepNextOriginalText = stepNext.textContent;
@@ -2006,7 +2034,7 @@
           stepNext.disabled = false;
           stepNext.textContent = stepNextOriginalText;
           if (e && e.name === 'AbortError') { alert(t('alertServerSleep')); return; }
-          if (e && e.message) alert('Ошибка при отправке: ' + e.message);
+          if (e && e.message) alert(t('alertSubmitError') + ': ' + e.message);
           return;
         }
         stepNext.disabled = false;
@@ -2028,13 +2056,13 @@
       if (payBtn) payBtn.addEventListener('click', async function() {
         if (payBtn.disabled) return;
         if (!pendingPaymentRequestId) {
-          alert('Сначала нажмите «Отправить заявку» на предыдущем шаге.');
+          alert(t('alertPaymentFirst'));
           return;
         }
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
-        if (!apiBase) { alert('Не настроен адрес API.'); return; }
+        if (!apiBase) { alert(t('alertNoApi')); return; }
         var initData = getInitData();
-        if (!initData) { alert('Открой приложение из чата с ботом в Telegram.'); return; }
+        if (!initData) { alert(t('alertOpenFromBotShort')); return; }
 
         var promoInput = document.getElementById('promoCodeInput');
         var promoCode = (promoInput && promoInput.value) ? promoInput.value.trim() : (activePromo ? activePromo.code : null);
@@ -2085,7 +2113,7 @@
             copyBtn.onclick = function() {
               try {
                 navigator.clipboard.writeText(lastCheckoutUrl);
-                alert('✓ Ссылка скопирована. Вставьте её в Safari или Chrome и откройте.');
+                alert(t('alertLinkCopied'));
               } catch (e) {
                 prompt('Скопируйте эту ссылку и откройте в браузере:', lastCheckoutUrl);
               }
@@ -2199,8 +2227,8 @@
             btn.addEventListener('click', function() {
               var id = btn.getAttribute('data-id');
               var name = btn.getAttribute('data-name') || 'этого героя';
-              if (!confirm('Удалить «' + name + '»? Это действие нельзя отменить.')) return;
-              heroesApi('/heroes/' + id, { method: 'DELETE' }).then(function() { loadHeroesList(); }).catch(function(e) { alert('Ошибка: ' + (e.message || e)); });
+              if (!confirm(t('alertDeleteConfirm', { name: name }))) return;
+              heroesApi('/heroes/' + id, { method: 'DELETE' }).then(function() { loadHeroesList(); }).catch(function(e) { alert(t('alertError') + ': ' + (e.message || e)); });
             });
           });
         }).catch(function(e) {
@@ -2225,7 +2253,7 @@
       var heroFormSave = document.getElementById('heroFormSave');
       if (heroFormSave) heroFormSave.addEventListener('click', function() {
         var name = (document.getElementById('heroName') || {}).value.trim();
-        if (!name) { alert('Введите имя'); return; }
+        if (!name) { alert(t('alertHeroName')); return; }
         var payload = {
           initData: (tg && tg.initData) || '',
           name: name,
@@ -2241,12 +2269,12 @@
             heroFormWrap.style.display = 'none';
             editingHeroId = null;
             loadHeroesList();
-          }).catch(function(e) { alert('Ошибка: ' + (e.message || e)); });
+          }).catch(function(e) { alert(t('alertError') + ': ' + (e.message || e)); });
         } else {
           heroesApi('/heroes', { method: 'POST', body: payload }).then(function() {
             heroFormWrap.style.display = 'none';
             loadHeroesList();
-          }).catch(function(e) { alert('Ошибка: ' + (e.message || e)); });
+          }).catch(function(e) { alert(t('alertError') + ': ' + (e.message || e)); });
         }
       });
       var heroesSearchBtn = document.getElementById('heroesSearchBtn');
