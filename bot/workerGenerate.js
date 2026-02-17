@@ -100,7 +100,7 @@ async function processOneRequest(row) {
   const name = row.name || "Друг";
   const language = row.language || "ru";
 
-  const langLabel = { ru: "Russian", en: "English", uk: "Ukrainian" }[language] || "Russian";
+  const langLabel = { ru: "Russian", en: "English", uk: "Ukrainian", de: "German", fr: "French" }[language] || "Russian";
 
   const { data: snapshotRow } = await supabase
     .from("astro_snapshots")

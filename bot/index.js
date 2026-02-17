@@ -422,6 +422,17 @@ async function getLastCompletedRequestForUser(telegramUserId) {
   return data ? data.id : null;
 }
 
+/** Доступ к Soul Chat: по подписке Soul Basic / Soul Plus (включают N диалогов в месяц). */
+async function getSoulChatAccess(telegramUserId) {
+  if (!telegramUserId) return { allowed: false, reason: "Нужна авторизация Telegram." };
+  const hasSub = await hasActiveSubscription(telegramUserId);
+  if (hasSub) return { allowed: true, source: "subscription" };
+  return {
+    allowed: false,
+    reason: "Soul Chat доступен по подписке Soul Basic или Soul Plus. Открой приложение → «К оплате» и выбери тариф с диалогами с душой.",
+  };
+}
+
 async function getRequestForSoulChat(requestId) {
   if (!supabase) return { error: "Supabase недоступен" };
   const { data: row, error } = await supabase
@@ -1683,16 +1694,34 @@ app.put("/api/admin/settings", express.json(), asyncApi(async (req, res) => {
   return res.json({ success: true, message: "Настройки сохранены" });
 }));
 
+app.get("/api/soul-chat/access", asyncApi(async (req, res) => {
+  const initData = req.headers["x-telegram-init"] || req.query?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, allowed: false, reason: "Нужна авторизация Telegram." });
+  const access = await getSoulChatAccess(telegramUserId);
+  return res.json({ success: true, allowed: !!access.allowed, reason: access.reason || null, source: access.source || null });
+}));
+
 app.post("/api/soul-chat", express.json(), asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const body = req.body || {};
   const requestId = String(body.request_id || "").trim();
   const question = String(body.question || "").trim();
-  const telegramUserId = Number(body.telegram_user_id || 0);
-  const adminToken = String(body.admin_token || "");
+  const adminToken = String(body.admin_token || "").trim();
   const isAdminCaller = !!ADMIN_SECRET && adminToken === ADMIN_SECRET;
-  if (!isAdminCaller && !telegramUserId) {
-    return res.status(403).json({ success: false, error: "Нужен admin_token или telegram_user_id" });
+  let telegramUserId = null;
+  if (isAdminCaller && body.telegram_user_id != null) {
+    telegramUserId = Number(body.telegram_user_id);
+  } else {
+    const initData = req.headers["x-telegram-init"] || body.initData || "";
+    telegramUserId = validateInitData(initData, BOT_TOKEN);
+    if (telegramUserId == null) {
+      return res.status(401).json({ success: false, error: "Нужна авторизация Telegram (initData). Открой Soul Chat из приложения или из бота." });
+    }
+  }
+  const access = await getSoulChatAccess(telegramUserId);
+  if (!access.allowed) {
+    return res.status(403).json({ success: false, error: access.reason });
   }
   const result = await runSoulChat({ requestId, question, telegramUserId, isAdminCaller });
   if (!result.ok) return res.status(400).json({ success: false, error: result.error });

@@ -445,6 +445,7 @@
           ${stepsDigest(steps) ? '<div class="details-section"><div class="section-title">🧭 Контроль новых этапов</div><div class="content-text" style="font-size:12px;">' + stepsDigest(steps) + '</div></div>' : ''}
           <div class="actions">
             <button class="btn btn-primary" onclick="showDetails('${(r.id || '').replace(/'/g, "\\'")}')">📋 Подробнее / Details</button>
+            ${['pending','requires_payment'].includes(String((r.payment_status || '').toLowerCase())) ? '<button class="btn btn-success" onclick="markPaid(\'' + (r.id || '').replace(/'/g, "\\'") + '\')">✅ Отметить оплаченным</button>' : ''}
             <button class="btn btn-warning" onclick="restart('${(r.id || '').replace(/'/g, "\\'")}')">${gs === 'completed' ? '🔄 Перегенерировать' : '🔄 Перезапустить / Restart'}</button>
             ${r.audio_url ? '<button class="btn btn-success" onclick="window.open(\'' + r.audio_url.replace(/'/g, "\\'") + '\')">▶️ Слушать / Listen</button>' : ''}
             ${r.audio_url ? '<button class="btn btn-success" onclick="deliver(\'' + (r.id || '').replace(/'/g, "\\'") + '\', this)">📤 Отправить пользователю</button>' : ''}
@@ -829,6 +830,18 @@
         const res = result.res;
         if (json.success) { alert('✅ Генерация перезапущена'); loadAdminData(); }
         else alert('Ошибка: ' + (json.error || res.status));
+      } catch (e) {
+        alert('Ошибка: ' + (e && e.message ? e.message : e));
+      }
+    }
+
+    window.markPaid = async function markPaid(id) {
+      if (!confirm('Отметить заявку как оплаченную? После этого можно нажать «Перезапустить».')) return;
+      try {
+        const result = await fetchJson(API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + '/mark-paid' + authQueryFromPath(), { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify({ provider: 'admin' }) });
+        const json = result.json;
+        if (result.res && result.res.ok && json.success) { alert('✅ Заявка отмечена как оплаченная'); loadAdminData(); }
+        else alert('Ошибка: ' + (json.error || result.res?.status || 'unknown'));
       } catch (e) {
         alert('Ошибка: ' + (e && e.message ? e.message : e));
       }

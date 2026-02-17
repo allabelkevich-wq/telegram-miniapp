@@ -596,7 +596,8 @@ export async function generateSoundKey(requestId) {
     }
     
     // Шаг 4: Формируем запрос — для одного или для двоих (полные натальные карты); в ответе ИИ НЕ упоминать термины
-    const langLabel = request.language || "русский";
+    const langMap = { ru: "Russian", en: "English", uk: "Ukrainian", de: "German", fr: "French" };
+    const langLabel = langMap[request.language] || request.language || "Russian";
     let userRequest;
     if (request.mode === "couple" && request.person2_name && astroTextPerson2) {
       const g1 = (request.gender || "").toLowerCase();

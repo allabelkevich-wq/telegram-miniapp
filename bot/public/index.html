@@ -118,32 +118,36 @@
     .request-examples h3 { font-size: 16px; color: var(--tg-theme-text-color, #fff); margin: 0 0 12px 0; font-weight: 500; }
     .examples-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
     .example-btn {
-      background: var(--tg-theme-button-color, #8b5cf6); border: 1px solid var(--tg-theme-button-color, #8b5cf6);
-      color: var(--tg-theme-button-text-color, #fff); padding: 10px 12px; border-radius: 8px; font-size: 12px;
+      background: linear-gradient(135deg, #d4af37, #ec4899, #d4af37); background-size: 200% 200%;
+      border: 1px solid rgba(212, 175, 55, 0.6); color: #0A0A1A;
+      padding: 10px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
       cursor: pointer; text-align: left; transition: all 0.2s; width: 100%;
       white-space: normal; word-wrap: break-word; word-break: break-word;
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.35);
     }
-    .example-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-    .example-btn.special { background: var(--tg-theme-button-color, #8b5cf6); border-color: var(--tg-theme-button-color, #8b5cf6); }
+    .example-btn:hover { opacity: 0.95; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(212, 175, 55, 0.45); }
+    .example-btn.special { background: linear-gradient(135deg, #d4af37, #ec4899); border-color: rgba(212, 175, 55, 0.6); }
     .mode-selector {
-      margin: 20px 0; padding: 15px; background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.05));
-      border-radius: 12px; border: 1px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1));
+      margin: 20px 0; padding: 18px; background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px);
+      border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.08);
     }
-    .mode-selector h3 { font-size: 16px; color: var(--tg-theme-text-color, #fff); margin: 0 0 15px 0; font-weight: 500; text-align: center; }
+    .mode-selector h3 { font-size: 16px; color: var(--tg-theme-text-color, #fff); margin: 0 0 6px 0; font-weight: 500; text-align: center; }
+    .mode-subtitle { font-size: 12px; color: var(--tg-theme-hint-color, rgba(255,255,255,.65)); margin: 0 0 14px 0; text-align: center; }
     .mode-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
     .mode-btn {
-      background: var(--tg-theme-bg-color, #1a1a1a); border: 2px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1));
-      color: var(--tg-theme-text-color, #fff); padding: 16px 12px; border-radius: 10px; cursor: pointer; transition: all 0.3s;
+      background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2);
+      color: var(--tg-theme-text-color, #fff); padding: 16px 12px; border-radius: 12px; cursor: pointer; transition: all 0.3s;
       text-align: center; font-size: 14px; line-height: 1.4;
     }
     .mode-btn:hover {
-      background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.1)); border-color: var(--tg-theme-button-color, #8b5cf6);
-      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.15); border-color: rgba(139, 92, 246, 0.5);
+      transform: translateY(-2px); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
     }
     .mode-btn.active {
       background: linear-gradient(135deg, var(--tg-theme-button-color, #8b5cf6), #ec4899);
       border-color: var(--tg-theme-button-color, #8b5cf6); color: var(--tg-theme-button-text-color, #fff);
-      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.35);
     }
     .mode-icon { font-size: 28px; display: block; margin: 0 auto 8px; }
     .mode-label { font-weight: 600; font-size: 14px; display: block; margin: 0 0 4px; }
@@ -205,7 +209,7 @@
     .container{max-width:600px;margin:0 auto;width:100%;position:relative;z-index:1}
     .page{display:none;min-height:100vh;padding-top:20px}
     .page.active{display:block}
-    header{text-align:center;margin:25px 0 20px}
+    header{text-align:center;margin:25px 0 20px;position:relative}
     h1{font-size:2.4rem;background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 4s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;letter-spacing:-1px;line-height:1.1}
     .subtitle{color:var(--subtitle-readable,var(--tg-theme-text-color));font-size:1.05rem;margin-top:8px;font-weight:400}
     .tagline{color:#d4af37;font-size:1.15rem;font-weight:600;margin:12px 0;letter-spacing:-0.2px}
@@ -217,11 +221,18 @@
     input,textarea,select{width:100%;padding:15px;border-radius:16px;border:1px solid var(--tg-theme-border-color,#e5e7eb);background:var(--tg-theme-secondary-bg-color,#fff);color:var(--tg-theme-text-color,#2d2d2d);font-size:16px;transition:all .3s ease;font-family:'Comfortaa',sans-serif}
     input:focus,textarea:focus,select:focus{outline:none;border-color:var(--tg-theme-button-color,#a78bfa);box-shadow:0 0 0 3px rgba(167,139,250,.15)}
     input.valid,textarea.valid{border-color:#4ade80}
-    .time-group{display:flex;flex-direction:column;gap:14px}
-    .checkbox{display:flex;align-items:center;gap:12px;margin-top:-6px}
-    .checkbox input{width:auto;height:20px;accent-color:#a78bfa}
-    .checkbox label{margin-bottom:0;font-weight:500;color:var(--tg-theme-text-color,#2d2d2d);font-size:1rem;display:flex;align-items:center;gap:8px}
-    .checkbox label::before{content:"❓";font-size:1.3rem}
+    .birthdate-wrap{position:relative}
+    #birthdate{padding-right:2.5rem;min-width:0}
+    .birthdate-check{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:#4ade80;font-size:1.25rem;display:none;font-weight:700}
+    .birthdate-wrap.has-date .birthdate-check{display:block}
+    .time-group{display:flex;flex-direction:row;align-items:center;gap:1rem;flex-wrap:wrap;margin:0}
+    .time-group-input{flex:0 1 auto;min-width:120px;max-width:10rem;width:140px}
+    .time-group-checkbox{margin:0;flex:0 0 auto;align-self:center}
+    .checkbox{display:flex;align-items:center;gap:10px;margin-top:0}
+    .checkbox input{width:22px;height:22px;min-width:22px;accent-color:#a78bfa;opacity:.75;background:rgba(255,255,255,.12);border-radius:6px}
+    .time-group .checkbox input{opacity:.6;background:rgba(255,255,255,.08)}
+    .checkbox label{margin-bottom:0;font-weight:500;color:var(--tg-theme-text-color,#2d2d2d);font-size:1rem;display:flex;align-items:center;gap:6px}
+    .checkbox label::before{content:"❓";font-size:1.2rem;opacity:.9}
     select{appearance:none;background:url("image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23a78bfa' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 16px center;background-size:20px;padding-right:48px}
     textarea{min-height:140px;line-height:1.6;resize:vertical}
     .request-label{font-size:1.3rem;text-align:center;margin-bottom:15px;color:#a78bfa;font-weight:700;letter-spacing:-0.5px}
@@ -328,18 +339,22 @@
     </div>
   </div>
 
+  <div id="langSwitcher" style="position:fixed;top:12px;right:16px;z-index:1000;font-size:13px;opacity:0.85;background:rgba(0,0,0,0.35);padding:4px 8px;border-radius:8px;">
+    <span id="langRu" style="cursor:pointer;padding:2px 6px;border-radius:4px;">RU</span>
+    <span style="opacity:0.5;">|</span>
+    <span id="langEn" style="cursor:pointer;padding:2px 6px;border-radius:4px;">EN</span>
+  </div>
   <div class="container">
     <!-- Главная страница -->
     <div class="page active" id="homePage">
       <header>
         <h1>YupSoul</h1>
-        <div class="subtitle">твоя жизнь — игра</div>
-        <div class="tagline">Отправь запрос во Вселенную</div>
+        <div id="homeTagline" class="tagline">Исследуй свои грани так, как ты этого захочешь</div>
       </header>
       
       <div class="section">
         <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="220" height="220">
-        <p id="homeGreeting" class="tagline" style="display:none;margin-bottom:12px"></p>
+        <p id="homeGreeting" class="tagline" style="margin-bottom:12px">Заходи, когда захочешь вспомнить, кто ты.</p>
         <button id="startBtn">Начать</button>
         <div id="masterNav" style="display:none; margin-top:20px">
           <button class="secondary" id="goHeroesBtn">👥 Мои герои</button>
@@ -392,13 +407,13 @@
     <div class="page" id="formPage">
       <header>
         <h1>YupSoul</h1>
-        <div class="subtitle">твоя жизнь — игра</div>
       </header>
       
       <div class="section">
         <div class="step-panel" data-step="1">
           <div class="mode-selector">
-            <h3>Выбери тип звукового ключа</h3>
+            <h3>Тип ключа</h3>
+            <p class="mode-subtitle">От этого зависят поля формы ниже</p>
             <div class="mode-buttons">
               <button type="button" class="mode-btn active" data-mode="single">
                 <span class="mode-label">Для себя</span>
@@ -422,8 +437,10 @@
         </div>
         
         <div class="field">
+          <div id="birthdateWrap" class="birthdate-wrap">
             <input type="date" id="birthdate" required aria-label="Дата рождения">
-          <div id="birthdateSummary" class="field-summary" style="display:none; margin-top:8px; padding:10px; background:rgba(167,139,250,.08); border-radius:12px; font-size:.95rem;"></div>
+            <span id="birthdateCheck" class="birthdate-check" aria-hidden="true">✓</span>
+          </div>
         </div>
         
         <div class="field">
@@ -436,10 +453,10 @@
         </div>
         
         <div class="field">
-          <div class="time-group">
-              <input type="time" id="birthtime" required aria-label="Время рождения">
-            <div class="checkbox">
-              <input type="checkbox" id="unknown">
+          <div class="time-group" role="group" aria-label="Время рождения">
+            <input type="time" id="birthtime" required aria-label="Время" class="time-group-input">
+            <div class="checkbox time-group-checkbox">
+              <input type="checkbox" id="unknown" aria-label="Не знаю точное время">
               <label for="unknown">Не знаю точное время</label>
             </div>
           </div>
@@ -454,10 +471,12 @@
         </div>
         
         <div class="field">
-            <select id="language" required aria-label="Язык песни и описания">
+            <select id="language" required aria-label="Язык песни и описания" title="Синхронизировано с языком интерфейса">
               <option value="">Язык песни</option>
             <option value="ru">Русский</option>
             <option value="en">English</option>
+            <option value="de">Deutsch</option>
+            <option value="fr">Français</option>
             <option value="uk">Українська</option>
           </select>
         </div>
@@ -560,14 +579,12 @@
       <div class="section">
         <div class="payment-build-badge">Build: c4eee97+dbg</div>
         <div class="tagline" style="margin-bottom:15px">Оплата и доступ</div>
-        <p style="text-align:center;font-size:1.05rem;line-height:1.7;margin-bottom:16px">
-          Первая песня  — в подарок. Дальше можно оплатить отдельный элемент или оформить подписку на полный доступ.
-        </p>
+        <p id="paymentIntro" style="text-align:center;font-size:1.05rem;line-height:1.7;margin-bottom:16px">Первая песня — в подарок. Дальше можно оплатить отдельный элемент или оформить подписку на полный доступ.</p>
         <div id="pricingNotice" style="background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.4);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:.92rem;color:rgba(255,255,255,0.95);">
           Загрузка тарифов...
         </div>
         <div id="priceSummary" style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:20px;margin:16px 0;">
-          <div style="font-size:.95rem;color:rgba(255,255,255,0.9);">Текущий элемент</div>
+          <div id="priceSummaryLabel" style="font-size:.95rem;color:rgba(255,255,255,0.9);">Текущий элемент</div>
           <div id="priceLabel" style="font-size:1.15rem;font-weight:700;color:#fff;margin-top:6px;">—</div>
           <div id="priceValue" style="font-size:1.8rem;font-weight:800;color:#fff;margin-top:6px;">—</div>
           <div id="priceHint" style="font-size:.88rem;color:rgba(255,255,255,0.85);margin-top:6px;"></div>
@@ -594,9 +611,7 @@
       <div class="loading">
         <div class="spinner"></div>
         <div class="loading-text">Создаю твой ключ...</div>
-        <div style="color:#6b7280;font-size:1.1rem;text-align:center;max-width:400px">
-          Магия творится в реальном времени. Твой персональный звуковой ключ формируется на основе твоих уникальных данных.
-        </div>
+        <div id="loadingDesc" style="color:#6b7280;font-size:1.1rem;text-align:center;max-width:400px">Магия творится в реальном времени. Твой персональный звуковой ключ формируется на основе твоих уникальных данных.</div>
       </div>
     </div>
     
@@ -626,7 +641,9 @@
           Открой бота <a href="https://t.me/Yup_Soul_bot" style="color:#a78bfa;text-decoration:underline">@Yup_Soul_bot</a> в Telegram — там тебя ждёт твой звуковой ключ.
         </div>
         
+        <div id="soulChatHint" class="soul-chat-hint" style="background:rgba(167,139,250,.06);border-radius:12px;padding:12px 14px;margin:12px 0 0 0;font-size:.95rem;line-height:1.5;color:var(--tg-theme-hint-color,#6b7280);display:none"></div>
         <button class="secondary" id="soulChatBtn" type="button" style="margin-top:15px">Поговорить с душой</button>
+        <button class="secondary" id="soulChatPayBtn" type="button" style="margin-top:8px;display:none;font-size:.9rem">К оплате — Soul Basic / Soul Plus</button>
         <button class="secondary" id="newKeyBtn" style="margin-top:15px">Создать ещё один ключ</button>
       </div>
       
@@ -639,13 +656,13 @@
     <div class="page" id="paymentThanksPage">
       <header>
         <h1>YupSoul</h1>
-        <div class="subtitle">оплата принята</div>
+        <div class="subtitle">заявка принята</div>
       </header>
       <div class="section" style="text-align:center; padding: 40px 20px">
         <div class="success-icon" style="font-size:4rem; margin-bottom:20px">✓</div>
         <h2 class="success-title" style="font-size:1.6rem; margin:0 0 16px 0">Спасибо за оплату</h2>
         <p class="success-text" id="paymentThanksMessage" style="margin:0 0 24px 0; font-size:1rem">
-          Проверяем оплату…
+          Песня ушла в генерацию. Через 2–3 минуты придёт в чат с ботом.
         </p>
         <button id="paymentThanksBackBtn">Готово</button>
       </div>
@@ -657,8 +674,463 @@
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       var tg = null;
-      // Persist initData to survive Telegram WebView re-open (sometimes initData becomes empty on 2nd open)
       var INIT_DATA_STORAGE_KEY = 'tg_init_data';
+      var LANG_STORAGE_KEY = 'yupsoul_lang';
+      var LANG = {
+        ru: {
+          tagline: 'Исследуй свои грани так, как ты этого захочешь',
+          startBtn: 'Начать', myHeroes: '👥 Мои герои', admin: '👑 Админка',
+          heroesTitle: 'Мои герои', heroesSubtitle: 'Картотека клиентов',
+          searchByName: 'Поиск по имени', searchPlaceholder: 'Введите имя...', searchBtn: 'Искать',
+          addHero: '➕ Добавить героя', heroName: 'Имя *', heroBirthdate: 'Дата рождения', heroBirthtime: 'Время рождения',
+          heroBirthplace: 'Место рождения', heroBirthplacePh: 'Город, страна', heroNotes: 'Досье / заметки', heroNotesPh: 'Заметки о клиенте',
+          unknownTime: 'Не знаю точное время', cancel: 'Отмена', save: 'Сохранить', back: '← Назад',
+          gender: 'Пол', genderSelect: 'Выбери', male: 'Мужской', female: 'Женский', other: 'Другой',
+          modeType: 'Тип ключа', modeSubtitle: 'От этого зависят поля формы ниже',
+          modeSingle: 'Для себя', modeSingleDesc: 'Глубокий анализ',
+          modeCouple: 'Для двоих', modeCoupleDesc: 'Дуэт/пара',
+          modeTransit: 'Энергия дня', modeTransitDesc: 'Энергия момента',
+          namePh: 'Как тебя зовут?', birthdateLabel: 'Дата рождения', birthplacePh: 'Город или страна — выбери из подсказок',
+          birthplaceHint: 'Выбери локацию из списка подсказок — так подтянутся координаты.',
+          unknownTimeShort: 'Не знаю', secondPersonTitle: 'Для двоих', name2Ph: 'Имя второго человека',
+          birthplace2Ph: 'Место рождения второго', birthtime2Ph: 'Время рождения',
+          transitTitle: 'Энергия момента', transitDatePh: 'Дата события', transitTimePh: 'Время события',
+          transitLocationPh: 'Город для энергии момента', transitLocationOk: 'Локация указана верно',
+          transitIntentPh: 'Намерение момента (опционально)',
+          sendRequest: 'Отправь запрос', quickRequests: 'Быстрые запросы', hide: 'Скрыть',
+          requestPh: 'Какую грань будем исследовать сегодня?', toPayment: 'К оплате',
+          paymentSubtitle: 'Твой звуковой ключ', paymentAndAccess: 'Оплата и доступ',
+          paymentIntro: 'Первая песня — в подарок. Дальше можно оплатить отдельный элемент или оформить подписку на полный доступ.',
+          loadingPricing: 'Загрузка тарифов...', currentItem: 'Текущий элемент',
+          promoCode: 'Промокод', apply: 'Применить', backFromPayment: '← Назад',
+          submitAndContinue: 'Оформить и продолжить', submitRequest: 'Отправить заявку',
+          firstFree: 'Первый звуковой ключ доступен бесплатно.',
+          paymentRequired: 'Оплата требуется для новых заявок.',
+          promoApplied: 'Промокод {code}: -{amount} {currency}',
+          creatingKey: 'Создаю твой ключ...',
+          creatingKeyDesc: 'Магия творится в реальном времени. Твой персональный звуковой ключ формируется на основе твоих уникальных данных.',
+          keyActivated: 'Ключ активирован!', done: 'Готово!',
+          successText: 'Твой персональный звуковой ключ создан! Это твой уникальный артефакт силы для игры жизни.',
+          yourSong: '🎵 Твоя песня',
+          songPreviewText: 'Твоя уникальная аудиокомпозиция уже ждёт тебя в боте. Слушай её каждое утро, чтобы настроиться на волну успеха.',
+          whatNext: 'Что дальше:', openBot: 'Открой бота',
+          soulChat: 'Поговорить с душой', soulChatPay: 'К оплате — Soul Basic / Soul Plus',
+          newKey: 'Создать ещё один ключ',
+          paymentThanks: 'Спасибо за оплату', thanksSubtitle: 'заявка принята',
+          songInProgress: 'Песня ушла в генерацию. Через 2–3 минуты придёт в чат с ботом.',
+          songInProgressConfirmed: 'Песня ушла в генерацию, заявка принята. Через 2–3 минуты придёт в чат с ботом.',
+          thanksDone: 'Готово',
+          notFromTelegram: 'Открой приложение из чата с ботом в Telegram (кнопка меню) — иначе заявка не отправится.',
+          notFound: 'Не найдено', searchError: 'Ошибка поиска',
+          soulChatLoad: 'Загрузка…',
+          soulChatHasAccess: 'У тебя есть доступ к Soul Chat. Нажми кнопку ниже — откроется бот. В боте напиши /soulchat и задай вопрос своей душе.',
+          soulChatNoAccess: 'Soul Chat — диалоги с душой. Доступ по подписке Soul Basic (10 диалогов/мес) или Soul Plus (30 диалогов/мес).',
+          soulChatDefault: 'Soul Chat — диалоги с душой по заявке. Доступ по подписке.',
+          soulChatNoApi: 'Soul Chat — диалоги с душой по заявке. Доступ по подписке Soul Basic или Soul Plus. Оформи в приложении: «К оплате».',
+          greeting: 'Привет, {name}! Заходи, когда захочешь вспомнить, кто ты.',
+          greetingDefault: 'Заходи, когда захочешь вспомнить, кто ты.',
+          alertNameShort: 'Имя должно содержать минимум 2 символа', alertBirthdate: 'Выбери дату рождения',
+          alertBirthplace: 'Место рождения должно содержать минимум 3 символа', alertBirthplaceHint: 'Выбери локацию из списка подсказок',
+          alertBirthtime: 'Укажи время рождения или отметь "Не знаю"', alertGender: 'Укажи пол', alertLanguage: 'Выбери язык',
+          alertName2Short: 'Имя второго человека — минимум 2 символа', alertBirthdate2: 'Укажи дату рождения второго человека',
+          alertBirthplace2: 'Место рождения второго человека должно содержать минимум 3 символа',
+          alertBirthtime2: 'Укажи время рождения второго человека', alertGender2: 'Выбери пол второго человека',
+          alertTransitDate: 'Укажи дату события', alertTransitLocation: 'Укажи локацию события', alertTransitConfirm: 'Подтверди, что локация указана верно',
+          alertRequestShort: 'Добавь запрос (5+ символов)', alertRequestLong: 'Расскажи Вселенной подробнее (минимум 15 символов)',
+          alertYourPath: 'Выбери свой путь', alertNoApi: 'Не настроен адрес API.', alertOpenFromBot: 'Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.',
+          alertServerSleep: 'Сервер проснулся не сразу. Подожди около минуты и нажми «Отправить заявку» снова.',
+          universeHeard: '✨ {name}, Вселенная услышала твой запрос.\n\nТвой звуковой ключ формируется. Через 2-3 минуты он придёт в этот чат.',
+          universeHeardCouple: '✨ {name} и {name2}, Вселенная услышала ваш запрос.\n\nВаш звуковой ключ формируется. Через 2-3 минуты он придёт в этот чат.',
+          universeHeardTransit: '✨ {name}, Вселенная услышала твой запрос.\n\nЗвуковой ключ Энергии Дня формируется. Через 2-3 минуты он придёт в этот чат.',
+          langSong: 'Язык песни', langRu: 'Русский', langEn: 'English', langDe: 'Deutsch', langFr: 'Français', langUk: 'Українська',
+          quick1: 'Гармония и любовь к себе', quick2: 'Уверенность и предназначение', quick3: 'Творческий потенциал', quick4: 'Отпустить прошлое',
+          quick5: 'Баланс жизни', quick6: 'Доверие и принятие', quick7: 'Исцеление и свобода', quick8: 'Путь к счастью',
+          quick9: 'Сила и преодоление', quick10: 'Глубина и тишина', quick11: 'Нежность и забота', quick12: 'Юмор и лёгкость',
+          quick1t: 'Гармония в отношениях и любовь к себе', quick2t: 'Уверенность, предназначение и опора на себя',
+          quick3t: 'Раскрыть творческий потенциал без страха', quick4t: 'Отпустить прошлое и открыть новые возможности',
+          quick5t: 'Баланс работы и личной жизни', quick6t: 'Доверять жизни и отпускать контроль',
+          quick7t: 'Исцелить детские травмы и обрести свободу', quick8t: 'Найти свой путь к счастью и спокойствию',
+          quick9t: 'Мощная песня о моей силе и преодолении', quick10t: 'Медитативная песня для практики и исцеления',
+          quick11t: 'Тёплая песня о заботе и нежности', quick12t: 'Весёлая песня с самоиронией про мои слабости',
+          promoError: 'Не удалось применить промокод',
+          promoCleared: 'Промокод очищен.', promoApplied: 'Промокод применён: итоговая сумма {amount} {currency}',
+          promoAppliedHint: 'Промокод {code}: -{amount} {currency}',
+          paymentRequiredOpening: 'Требуется оплата. Открываю HOT Checkout...',
+          promoFreeGen: 'Промокод дал бесплатную генерацию. Запуск...',
+          hotCheckoutOpened: 'Открыт HOT Checkout. После оплаты вернись в Mini App — статус обновится автоматически.',
+          paymentNotConfirmed: 'Оплата пока не подтверждена. Проверь статус позже или открой оплату повторно.',
+          paymentConfirmed: 'Оплата подтверждена. Запускаю генерацию...',
+          paymentReceivedNoStart: 'Оплата получена, но авто‑старт не удался. Запусти генерацию в админке по request_id: {id}',
+          submitFailed: 'Не удалось отправить заявку. Подожди минуту и нажми «Отправить заявку» снова или открой Mini App заново из чата с ботом.',
+          errorOp: 'Ошибка операции оплаты/заявки'
+        },
+        en: {
+          tagline: 'Explore your edges the way you want',
+          startBtn: 'Start', myHeroes: '👥 My Heroes', admin: '👑 Admin',
+          heroesTitle: 'My Heroes', heroesSubtitle: 'Client directory',
+          searchByName: 'Search by name', searchPlaceholder: 'Enter name...', searchBtn: 'Search',
+          addHero: '➕ Add Hero', heroName: 'Name *', heroBirthdate: 'Date of birth', heroBirthtime: 'Time of birth',
+          heroBirthplace: 'Place of birth', heroBirthplacePh: 'City, country', heroNotes: 'Notes', heroNotesPh: 'Client notes',
+          unknownTime: "I don't know exact time", cancel: 'Cancel', save: 'Save', back: '← Back',
+          gender: 'Gender', genderSelect: 'Choose', male: 'Male', female: 'Female', other: 'Other',
+          modeType: 'Key type', modeSubtitle: 'This determines the form fields below',
+          modeSingle: 'For myself', modeSingleDesc: 'Deep analysis',
+          modeCouple: 'For two', modeCoupleDesc: 'Duet / couple',
+          modeTransit: 'Day energy', modeTransitDesc: 'Energy of the moment',
+          namePh: "What's your name?", birthdateLabel: 'Date of birth', birthplacePh: 'City or country — choose from suggestions',
+          birthplaceHint: 'Pick a location from the suggestions — coordinates will be added automatically.',
+          unknownTimeShort: "Don't know", secondPersonTitle: 'For two', name2Ph: "Second person's name",
+          birthplace2Ph: "Second person's place of birth", birthtime2Ph: 'Time of birth',
+          transitTitle: 'Energy of the moment', transitDatePh: 'Event date', transitTimePh: 'Event time',
+          transitLocationPh: 'City for the moment energy', transitLocationOk: 'Location is correct',
+          transitIntentPh: 'Intention for this moment (optional)',
+          sendRequest: 'Send request', quickRequests: 'Quick requests', hide: 'Hide',
+          requestPh: 'What would you like to explore today?', toPayment: 'To payment',
+          paymentSubtitle: 'Your sound key', paymentAndAccess: 'Payment & access',
+          paymentIntro: 'First song is free. You can pay for individual items or subscribe for full access.',
+          loadingPricing: 'Loading plans...', currentItem: 'Current item',
+          promoCode: 'Promo code', apply: 'Apply', backFromPayment: '← Back',
+          submitAndContinue: 'Checkout & continue', submitRequest: 'Submit request',
+          firstFree: 'Your first sound key is free.',
+          paymentRequired: 'Payment required for new requests.',
+          promoApplied: 'Promo {code}: -{amount} {currency}',
+          creatingKey: 'Creating your key...',
+          creatingKeyDesc: 'Magic happens in real time. Your personal sound key is being formed from your unique data.',
+          keyActivated: 'Key activated!', done: 'Done!',
+          successText: 'Your personal sound key is created! Your unique artifact of strength for the game of life.',
+          yourSong: '🎵 Your song',
+          songPreviewText: 'Your unique audio piece is waiting for you in the bot. Listen every morning to tune into success.',
+          whatNext: 'What next:', openBot: 'Open the bot',
+          soulChat: 'Talk to your soul', soulChatPay: 'To payment — Soul Basic / Soul Plus',
+          newKey: 'Create another key',
+          paymentThanks: 'Thank you for payment', thanksSubtitle: 'request accepted',
+          songInProgress: 'Song is being generated. It will arrive in the bot chat in 2–3 minutes.',
+          songInProgressConfirmed: 'Song is being generated, request accepted. It will arrive in the bot chat in 2–3 minutes.',
+          thanksDone: 'Done',
+          notFromTelegram: 'Open the app from the bot chat in Telegram (menu button) — otherwise the request cannot be sent.',
+          notFound: 'Not found', searchError: 'Search error',
+          soulChatLoad: 'Loading…',
+          soulChatHasAccess: "You have Soul Chat access. Tap below — the bot will open. In the bot, type /soulchat and ask your soul a question.",
+          soulChatNoAccess: 'Soul Chat — dialogues with your soul. Available with Soul Basic (10/month) or Soul Plus (30/month) subscription.',
+          soulChatDefault: 'Soul Chat — dialogues with your soul per request. Available by subscription.',
+          soulChatNoApi: 'Soul Chat — dialogues with your soul. Available with Soul Basic or Soul Plus subscription. Go to «To payment» in the app.',
+          greeting: "Hi, {name}! Come back whenever you want to remember who you are.",
+          greetingDefault: "Come back whenever you want to remember who you are.",
+          alertNameShort: 'Name must be at least 2 characters', alertBirthdate: 'Choose date of birth',
+          alertBirthplace: 'Place of birth must be at least 3 characters', alertBirthplaceHint: 'Pick a location from the suggestions',
+          alertBirthtime: 'Enter time of birth or check "Don\'t know"', alertGender: 'Select gender', alertLanguage: 'Choose language',
+          alertName2Short: "Second person's name — at least 2 characters", alertBirthdate2: "Enter second person's date of birth",
+          alertBirthplace2: "Second person's place of birth must be at least 3 characters",
+          alertBirthtime2: "Enter second person's time of birth", alertGender2: "Select second person's gender",
+          alertTransitDate: 'Enter event date', alertTransitLocation: 'Enter event location', alertTransitConfirm: 'Confirm the location is correct',
+          alertRequestShort: 'Add a request (5+ characters)', alertRequestLong: 'Tell the Universe more (at least 15 characters)',
+          alertYourPath: 'Choose your path', alertNoApi: 'API address not configured.', alertOpenFromBot: 'Open the app from the bot chat in Telegram — otherwise the request cannot be accepted.',
+          alertServerSleep: 'Server was slow to wake up. Wait about a minute and tap «Submit request» again.',
+          universeHeard: '✨ {name}, the Universe heard your request.\n\nYour sound key is being created. It will arrive in this chat in 2–3 minutes.',
+          universeHeardCouple: '✨ {name} and {name2}, the Universe heard your request.\n\nYour sound key is being created. It will arrive in this chat in 2–3 minutes.',
+          universeHeardTransit: '✨ {name}, the Universe heard your request.\n\nYour Day Energy sound key is being created. It will arrive in this chat in 2–3 minutes.',
+          langSong: 'Song language', langRu: 'Russian', langEn: 'English', langDe: 'German', langFr: 'French', langUk: 'Ukrainian',
+          quick1: 'Harmony and self-love', quick2: 'Confidence and purpose', quick3: 'Creative potential', quick4: 'Let go of the past',
+          quick5: 'Life balance', quick6: 'Trust and acceptance', quick7: 'Healing and freedom', quick8: 'Path to happiness',
+          quick9: 'Strength and overcoming', quick10: 'Depth and silence', quick11: 'Tenderness and care', quick12: 'Humor and lightness',
+          quick1t: 'Harmony in relationships and self-love', quick2t: 'Confidence, purpose, and self-reliance',
+          quick3t: 'Unlock creative potential without fear', quick4t: 'Let go of the past and open to new possibilities',
+          quick5t: 'Balance of work and personal life', quick6t: 'Trust life and release control',
+          quick7t: 'Heal childhood wounds and find freedom', quick8t: 'Find your path to happiness and peace',
+          quick9t: 'Powerful song about my strength and overcoming', quick10t: 'Meditative song for practice and healing',
+          quick11t: 'Warm song about care and tenderness', quick12t: 'Playful song with self-irony about my quirks',
+          promoError: 'Could not apply promo code',
+          promoCleared: 'Promo code cleared.', promoApplied: 'Promo applied: final amount {amount} {currency}',
+          promoAppliedHint: 'Promo {code}: -{amount} {currency}',
+          paymentRequiredOpening: 'Payment required. Opening HOT Checkout...',
+          promoFreeGen: 'Promo gives free generation. Starting...',
+          hotCheckoutOpened: 'HOT Checkout opened. After payment, return to the Mini App — status will update automatically.',
+          paymentNotConfirmed: 'Payment not yet confirmed. Check status later or open payment again.',
+          paymentConfirmed: 'Payment confirmed. Starting generation...',
+          paymentReceivedNoStart: 'Payment received, but auto-start failed. Start generation in admin by request_id: {id}',
+          submitFailed: 'Could not submit request. Wait a minute and tap «Submit request» again or reopen the Mini App from the bot chat.',
+          errorOp: 'Payment/request operation error'
+        },
+        de: {
+          tagline: 'Erkunde deine Facetten, wie du es möchtest',
+          startBtn: 'Start', myHeroes: '👥 Meine Helden', admin: '👑 Admin',
+          heroesTitle: 'Meine Helden', heroesSubtitle: 'Klientenkartei',
+          searchByName: 'Suche nach Name', searchPlaceholder: 'Name eingeben...', searchBtn: 'Suchen',
+          addHero: '➕ Held hinzufügen', heroName: 'Name *', heroBirthdate: 'Geburtsdatum', heroBirthtime: 'Geburtszeit',
+          heroBirthplace: 'Geburtsort', heroBirthplacePh: 'Stadt, Land', heroNotes: 'Notizen', heroNotesPh: 'Klientennotizen',
+          unknownTime: 'Exakte Zeit unbekannt', cancel: 'Abbrechen', save: 'Speichern', back: '← Zurück',
+          gender: 'Geschlecht', genderSelect: 'Wählen', male: 'Männlich', female: 'Weiblich', other: 'Divers',
+          modeType: 'Schlüsseltyp', modeSubtitle: 'Das bestimmt die Formularfelder unten',
+          modeSingle: 'Für mich', modeSingleDesc: 'Tiefenanalyse',
+          modeCouple: 'Zu zweit', modeCoupleDesc: 'Duett / Paar',
+          modeTransit: 'Tagesenergie', modeTransitDesc: 'Energie des Augenblicks',
+          namePh: 'Wie heißt du?', birthdateLabel: 'Geburtsdatum', birthplacePh: 'Stadt oder Land — wähle aus den Vorschlägen',
+          birthplaceHint: 'Wähle einen Ort aus der Liste — so werden die Koordinaten ergänzt.',
+          unknownTimeShort: 'Unbekannt', secondPersonTitle: 'Zu zweit', name2Ph: 'Name der zweiten Person',
+          birthplace2Ph: 'Geburtsort der zweiten Person', birthtime2Ph: 'Geburtszeit',
+          transitTitle: 'Energie des Augenblicks', transitDatePh: 'Ereignisdatum', transitTimePh: 'Ereigniszeit',
+          transitLocationPh: 'Stadt für die Momentenergie', transitLocationOk: 'Ort ist korrekt',
+          transitIntentPh: 'Absicht für diesen Moment (optional)',
+          sendRequest: 'Anfrage senden', quickRequests: 'Schnellanfragen', hide: 'Ausblenden',
+          requestPh: 'Was möchtest du heute erkunden?', toPayment: 'Zur Kasse',
+          paymentSubtitle: 'Dein Klangschlüssel', paymentAndAccess: 'Zahlung & Zugang',
+          paymentIntro: 'Das erste Lied ist gratis. Du kannst Einzelelemente kaufen oder ein Abo für vollen Zugang abschließen.',
+          loadingPricing: 'Tarife laden...', currentItem: 'Aktuelles Element',
+          promoCode: 'Gutscheincode', apply: 'Anwenden', backFromPayment: '← Zurück',
+          submitAndContinue: 'Zur Kasse & weiter', submitRequest: 'Anfrage senden',
+          firstFree: 'Dein erster Klangschlüssel ist kostenlos.',
+          paymentRequired: 'Zahlung für neue Anfragen erforderlich.',
+          promoApplied: 'Gutschein {code}: -{amount} {currency}',
+          creatingKey: 'Dein Schlüssel wird erstellt...',
+          creatingKeyDesc: 'Magie passiert in Echtzeit. Dein persönlicher Klangschlüssel wird aus deinen einzigartigen Daten geformt.',
+          keyActivated: 'Schlüssel aktiviert!', done: 'Fertig!',
+          successText: 'Dein persönlicher Klangschlüssel ist erstellt! Dein einzigartiges Kraftartefakt für das Spiel des Lebens.',
+          yourSong: '🎵 Dein Lied',
+          songPreviewText: 'Deine einzigartige Komposition wartet im Bot. Höre sie jeden Morgen, um dich auf Erfolg einzustimmen.',
+          whatNext: 'Was weiter:', openBot: 'Bot öffnen',
+          soulChat: 'Mit deiner Seele sprechen', soulChatPay: 'Zur Kasse — Soul Basic / Soul Plus',
+          newKey: 'Weiteren Schlüssel erstellen',
+          paymentThanks: 'Danke für die Zahlung', thanksSubtitle: 'Anfrage angenommen',
+          songInProgress: 'Das Lied wird generiert. In 2–3 Minuten kommt es im Bot-Chat.',
+          songInProgressConfirmed: 'Lied wird generiert, Anfrage angenommen. In 2–3 Minuten im Bot-Chat.',
+          thanksDone: 'Fertig',
+          notFromTelegram: 'Öffne die App aus dem Bot-Chat in Telegram (Menü) — sonst kann die Anfrage nicht gesendet werden.',
+          notFound: 'Nicht gefunden', searchError: 'Suchfehler',
+          soulChatLoad: 'Laden…',
+          soulChatHasAccess: 'Du hast Soul Chat. Tippe unten — der Bot öffnet sich. Im Bot: /soulchat und stelle deiner Seele eine Frage.',
+          soulChatNoAccess: 'Soul Chat — Dialoge mit deiner Seele. Mit Soul Basic (10/Monat) oder Soul Plus (30/Monat) Abo.',
+          soulChatDefault: 'Soul Chat — Dialoge mit deiner Seele pro Anfrage. Per Abo.',
+          soulChatNoApi: 'Soul Chat — Dialoge mit deiner Seele. Mit Soul Basic oder Soul Plus Abo. Gehe zu «Zur Kasse» in der App.',
+          greeting: 'Hallo, {name}! Komm zurück, wann immer du dich erinnern willst, wer du bist.',
+          greetingDefault: 'Komm zurück, wann immer du dich erinnern willst, wer du bist.',
+          alertNameShort: 'Name muss mindestens 2 Zeichen haben', alertBirthdate: 'Wähle Geburtsdatum',
+          alertBirthplace: 'Geburtsort muss mindestens 3 Zeichen haben', alertBirthplaceHint: 'Wähle einen Ort aus den Vorschlägen',
+          alertBirthtime: 'Geburtszeit eingeben oder "Unbekannt" wählen', alertGender: 'Geschlecht wählen', alertLanguage: 'Sprache wählen',
+          alertName2Short: 'Name der zweiten Person — mindestens 2 Zeichen', alertBirthdate2: 'Geburtsdatum der zweiten Person eingeben',
+          alertBirthplace2: 'Geburtsort der zweiten Person muss mindestens 3 Zeichen haben',
+          alertBirthtime2: 'Geburtszeit der zweiten Person eingeben', alertGender2: 'Geschlecht der zweiten Person wählen',
+          alertTransitDate: 'Ereignisdatum eingeben', alertTransitLocation: 'Ereignisort eingeben', alertTransitConfirm: 'Bestätige, dass der Ort korrekt ist',
+          alertRequestShort: 'Anfrage hinzufügen (5+ Zeichen)', alertRequestLong: 'Erzähle dem Universum mehr (mindestens 15 Zeichen)',
+          alertYourPath: 'Wähle deinen Weg', alertNoApi: 'API-Adresse nicht konfiguriert.', alertOpenFromBot: 'Öffne die App aus dem Bot-Chat in Telegram — sonst wird die Anfrage nicht angenommen.',
+          alertServerSleep: 'Server brauchte etwas zum Aufwachen. Warte etwa eine Minute und tippe erneut auf «Anfrage senden».',
+          universeHeard: '✨ {name}, das Universum hat deine Anfrage gehört.\n\nDein Klangschlüssel wird erstellt. In 2–3 Minuten kommt er in diesen Chat.',
+          universeHeardCouple: '✨ {name} und {name2}, das Universum hat eure Anfrage gehört.\n\nEuer Klangschlüssel wird erstellt. In 2–3 Minuten kommt er in diesen Chat.',
+          universeHeardTransit: '✨ {name}, das Universum hat deine Anfrage gehört.\n\nDein Tagesenergie-Klangschlüssel wird erstellt. In 2–3 Minuten kommt er in diesen Chat.',
+          langSong: 'Liedsprache', langRu: 'Russisch', langEn: 'Englisch', langDe: 'Deutsch', langFr: 'Französisch', langUk: 'Ukrainisch',
+          quick1: 'Harmonie und Selbstliebe', quick2: 'Selbstvertrauen und Bestimmung', quick3: 'Kreatives Potenzial', quick4: 'Vergangenheit loslassen',
+          quick5: 'Lebensbalance', quick6: 'Vertrauen und Akzeptanz', quick7: 'Heilung und Freiheit', quick8: 'Weg zum Glück',
+          quick9: 'Kraft und Überwindung', quick10: 'Tiefe und Stille', quick11: 'Zärtlichkeit und Fürsorge', quick12: 'Humor und Leichtigkeit',
+          quick1t: 'Harmonie in Beziehungen und Selbstliebe', quick2t: 'Selbstvertrauen, Bestimmung und Selbstständigkeit',
+          quick3t: 'Kreatives Potenzial ohne Angst entfalten', quick4t: 'Vergangenheit loslassen und neue Möglichkeiten öffnen',
+          quick5t: 'Balance von Arbeit und Privatleben', quick6t: 'Dem Leben vertrauen und Kontrolle loslassen',
+          quick7t: 'Kindheitstraumen heilen und Freiheit finden', quick8t: 'Deinen Weg zu Glück und Frieden finden',
+          quick9t: 'Kraftvolles Lied über meine Stärke und Überwindung', quick10t: 'Meditatives Lied für Praxis und Heilung',
+          quick11t: 'Warmes Lied über Fürsorge und Zärtlichkeit', quick12t: 'Verspieltes Lied mit Selbstironie über meine Eigenheiten',
+          promoError: 'Gutscheincode konnte nicht angewendet werden',
+          promoCleared: 'Gutscheincode entfernt.', promoApplied: 'Gutschein angewendet: Endsumme {amount} {currency}',
+          promoAppliedHint: 'Gutschein {code}: -{amount} {currency}',
+          paymentRequiredOpening: 'Zahlung erforderlich. Öffne HOT Checkout...',
+          promoFreeGen: 'Gutschein ermöglicht kostenlose Generierung. Starte...',
+          hotCheckoutOpened: 'HOT Checkout geöffnet. Nach der Zahlung kehre zur Mini App zurück — der Status wird automatisch aktualisiert.',
+          paymentNotConfirmed: 'Zahlung noch nicht bestätigt. Später prüfen oder Zahlung erneut öffnen.',
+          paymentConfirmed: 'Zahlung bestätigt. Generierung startet...',
+          paymentReceivedNoStart: 'Zahlung erhalten, aber Auto-Start fehlgeschlagen. Starte Generierung in der Admin per request_id: {id}',
+          submitFailed: 'Anfrage konnte nicht gesendet werden. Warte eine Minute und tippe erneut auf «Anfrage senden» oder öffne die Mini App neu aus dem Bot-Chat.',
+          errorOp: 'Fehler bei Zahlung/Anfrage'
+        },
+        fr: {
+          tagline: 'Explore tes facettes comme tu le souhaites',
+          startBtn: 'Commencer', myHeroes: '👥 Mes héros', admin: '👑 Admin',
+          heroesTitle: 'Mes héros', heroesSubtitle: 'Répertoire des clients',
+          searchByName: 'Rechercher par nom', searchPlaceholder: 'Entrer le nom...', searchBtn: 'Rechercher',
+          addHero: '➕ Ajouter un héros', heroName: 'Nom *', heroBirthdate: 'Date de naissance', heroBirthtime: 'Heure de naissance',
+          heroBirthplace: 'Lieu de naissance', heroBirthplacePh: 'Ville, pays', heroNotes: 'Notes', heroNotesPh: 'Notes client',
+          unknownTime: "Heure exacte inconnue", cancel: 'Annuler', save: 'Enregistrer', back: '← Retour',
+          gender: 'Genre', genderSelect: 'Choisir', male: 'Homme', female: 'Femme', other: 'Autre',
+          modeType: "Type de clé", modeSubtitle: 'Cela détermine les champs du formulaire ci-dessous',
+          modeSingle: 'Pour moi', modeSingleDesc: 'Analyse approfondie',
+          modeCouple: 'À deux', modeCoupleDesc: 'Duo / couple',
+          modeTransit: "Énergie du jour", modeTransitDesc: "Énergie du moment",
+          namePh: "Comment tu t'appelles ?", birthdateLabel: 'Date de naissance', birthplacePh: 'Ville ou pays — choisis parmi les suggestions',
+          birthplaceHint: 'Choisis un lieu dans la liste — les coordonnées seront ajoutées automatiquement.',
+          unknownTimeShort: 'Inconnu', secondPersonTitle: 'À deux', name2Ph: "Nom de la deuxième personne",
+          birthplace2Ph: "Lieu de naissance de la deuxième personne", birthtime2Ph: 'Heure de naissance',
+          transitTitle: "Énergie du moment", transitDatePh: 'Date de l\'événement', transitTimePh: "Heure de l'événement",
+          transitLocationPh: 'Ville pour l\'énergie du moment', transitLocationOk: 'Le lieu est correct',
+          transitIntentPh: 'Intention pour ce moment (optionnel)',
+          sendRequest: 'Envoyer la demande', quickRequests: 'Demandes rapides', hide: 'Masquer',
+          requestPh: 'Que souhaites-tu explorer aujourd\'hui ?', toPayment: 'Paiement',
+          paymentSubtitle: 'Ta clé sonore', paymentAndAccess: 'Paiement et accès',
+          paymentIntro: 'La première chanson est offerte. Tu peux payer des éléments individuels ou t\'abonner pour un accès complet.',
+          loadingPricing: 'Chargement des tarifs...', currentItem: 'Élément actuel',
+          promoCode: 'Code promo', apply: 'Appliquer', backFromPayment: '← Retour',
+          submitAndContinue: 'Payer et continuer', submitRequest: 'Envoyer la demande',
+          firstFree: 'Ta première clé sonore est gratuite.',
+          paymentRequired: 'Paiement requis pour les nouvelles demandes.',
+          promoApplied: 'Code promo {code}: -{amount} {currency}',
+          creatingKey: 'Création de ta clé...',
+          creatingKeyDesc: 'La magie opère en temps réel. Ta clé sonore personnelle se forme à partir de tes données uniques.',
+          keyActivated: 'Clé activée !', done: 'Terminé !',
+          successText: 'Ta clé sonore personnelle est créée ! Ton artefact unique de force pour le jeu de la vie.',
+          yourSong: '🎵 Ta chanson',
+          songPreviewText: 'Ta composition unique t\'attend dans le bot. Écoute-la chaque matin pour te mettre sur la voie du succès.',
+          whatNext: 'Et après :', openBot: 'Ouvre le bot',
+          soulChat: 'Parler à ton âme', soulChatPay: 'Paiement — Soul Basic / Soul Plus',
+          newKey: 'Créer une autre clé',
+          paymentThanks: 'Merci pour le paiement', thanksSubtitle: 'demande acceptée',
+          songInProgress: 'La chanson est en cours de génération. Elle arrivera dans le chat du bot dans 2–3 minutes.',
+          songInProgressConfirmed: 'Chanson en génération, demande acceptée. Elle arrivera dans le chat du bot dans 2–3 minutes.',
+          thanksDone: 'Terminé',
+          notFromTelegram: 'Ouvre l\'app depuis le chat du bot dans Telegram (bouton menu) — sinon la demande ne peut pas être envoyée.',
+          notFound: 'Non trouvé', searchError: 'Erreur de recherche',
+          soulChatLoad: 'Chargement…',
+          soulChatHasAccess: "Tu as accès à Soul Chat. Appuie ci-dessous — le bot s'ouvrira. Dans le bot, tape /soulchat et pose une question à ton âme.",
+          soulChatNoAccess: 'Soul Chat — dialogues avec ton âme. Avec abonnement Soul Basic (10/mois) ou Soul Plus (30/mois).',
+          soulChatDefault: 'Soul Chat — dialogues avec ton âme par demande. Sur abonnement.',
+          soulChatNoApi: 'Soul Chat — dialogues avec ton âme. Avec abonnement Soul Basic ou Soul Plus. Va dans «Paiement» dans l\'app.',
+          greeting: 'Salut, {name} ! Reviens quand tu veux te souvenir de qui tu es.',
+          greetingDefault: 'Reviens quand tu veux te souvenir de qui tu es.',
+          alertNameShort: 'Le nom doit contenir au moins 2 caractères', alertBirthdate: 'Choisis la date de naissance',
+          alertBirthplace: 'Le lieu de naissance doit contenir au moins 3 caractères', alertBirthplaceHint: 'Choisis un lieu dans les suggestions',
+          alertBirthtime: 'Entre l\'heure de naissance ou coche "Inconnu"', alertGender: 'Choisis le genre', alertLanguage: 'Choisis la langue',
+          alertName2Short: 'Le nom de la 2e personne — au moins 2 caractères', alertBirthdate2: 'Entre la date de naissance de la 2e personne',
+          alertBirthplace2: 'Le lieu de naissance de la 2e personne doit contenir au moins 3 caractères',
+          alertBirthtime2: 'Entre l\'heure de naissance de la 2e personne', alertGender2: 'Choisis le genre de la 2e personne',
+          alertTransitDate: 'Entre la date de l\'événement', alertTransitLocation: 'Entre le lieu de l\'événement', alertTransitConfirm: 'Confirme que le lieu est correct',
+          alertRequestShort: 'Ajoute une demande (5+ caractères)', alertRequestLong: 'Dis-en plus à l\'Univers (au moins 15 caractères)',
+          alertYourPath: 'Choisis ton chemin', alertNoApi: 'Adresse API non configurée.', alertOpenFromBot: 'Ouvre l\'app depuis le chat du bot dans Telegram — sinon la demande ne peut pas être acceptée.',
+          alertServerSleep: 'Le serveur s\'est réveillé lentement. Attends environ une minute et appuie à nouveau sur «Envoyer la demande».',
+          universeHeard: '✨ {name}, l\'Univers a entendu ta demande.\n\nTa clé sonore est en cours de création. Elle arrivera dans ce chat dans 2–3 minutes.',
+          universeHeardCouple: '✨ {name} et {name2}, l\'Univers a entendu votre demande.\n\nVotre clé sonore est en cours de création. Elle arrivera dans ce chat dans 2–3 minutes.',
+          universeHeardTransit: '✨ {name}, l\'Univers a entendu ta demande.\n\nTa clé sonore Énergie du jour est en cours de création. Elle arrivera dans ce chat dans 2–3 minutes.',
+          langSong: 'Langue de la chanson', langRu: 'Russe', langEn: 'Anglais', langDe: 'Allemand', langFr: 'Français', langUk: 'Ukrainien',
+          quick1: 'Harmonie et amour de soi', quick2: 'Confiance et but', quick3: 'Potentiel créatif', quick4: 'Lâcher le passé',
+          quick5: 'Équilibre de vie', quick6: 'Confiance et acceptation', quick7: 'Guérison et liberté', quick8: 'Chemin vers le bonheur',
+          quick9: 'Force et dépassement', quick10: 'Profondeur et silence', quick11: 'Tendresse et soin', quick12: 'Humor et légèreté',
+          quick1t: 'Harmonie dans les relations et amour de soi', quick2t: 'Confiance, but et autonomie',
+          quick3t: 'Libérer ton potentiel créatif sans peur', quick4t: 'Lâcher le passé et ouvrir de nouvelles possibilités',
+          quick5t: 'Équilibre travail et vie personnelle', quick6t: 'Faire confiance à la vie et lâcher le contrôle',
+          quick7t: 'Guérir les blessures d\'enfance et trouver la liberté', quick8t: 'Trouver ton chemin vers le bonheur et la paix',
+          quick9t: 'Chanson puissante sur ma force et mon dépassement', quick10t: 'Chanson méditative pour la pratique et la guérison',
+          quick11t: 'Chanson chaleureuse sur le soin et la tendresse', quick12t: 'Chanson ludique avec auto-ironie sur mes travers',
+          promoError: 'Code promo non appliqué',
+          promoCleared: 'Code promo effacé.', promoApplied: 'Code promo appliqué: montant final {amount} {currency}',
+          promoAppliedHint: 'Code promo {code}: -{amount} {currency}',
+          paymentRequiredOpening: 'Paiement requis. Ouverture de HOT Checkout...',
+          promoFreeGen: 'Le code promo donne une génération gratuite. Démarrage...',
+          hotCheckoutOpened: 'HOT Checkout ouvert. Après paiement, reviens dans la Mini App — le statut se mettra à jour automatiquement.',
+          paymentNotConfirmed: 'Paiement pas encore confirmé. Vérifie plus tard ou rouvre le paiement.',
+          paymentConfirmed: 'Paiement confirmé. Démarrage de la génération...',
+          paymentReceivedNoStart: 'Paiement reçu, mais démarrage auto échoué. Lance la génération dans l\'admin par request_id: {id}',
+          submitFailed: 'Demande non envoyée. Attends une minute et appuie à nouveau sur «Envoyer la demande» ou rouvre la Mini App depuis le chat du bot.',
+          errorOp: 'Erreur opération paiement/demande'
+        }
+      };
+      var currentLang = 'ru';
+      function detectLang() {
+        try {
+          var stored = localStorage.getItem(LANG_STORAGE_KEY);
+          if (stored === 'ru' || stored === 'en') return stored;
+          var lc = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code) || '';
+          if (lc && /^en/.test(lc)) return 'en';
+          return 'ru';
+        } catch (_) { return 'ru'; }
+      }
+      function t(k, vars) {
+        var s = (LANG[currentLang] && LANG[currentLang][k]) || (LANG.ru && LANG.ru[k]) || k;
+        if (vars && typeof s === 'string') {
+          Object.keys(vars).forEach(function(key) { s = s.replace(new RegExp('\\{' + key + '\\}', 'g'), vars[key]); });
+        }
+        return s;
+      }
+      function applyTranslations() {
+        document.documentElement.lang = currentLang === 'en' ? 'en' : 'ru';
+        var map = [
+          ['tagline','#homeTagline'], ['startBtn','#startBtn'], ['myHeroes','#goHeroesBtn'], ['admin','#adminLinkBtn'],
+          ['heroesTitle','#heroesPage .page header h1'], ['heroesSubtitle','#heroesPage .subtitle'],
+          ['searchByName','#heroesPage label[for="heroesSearch"]'], ['searchPlaceholder','#heroesSearch'], ['searchBtn','#heroesSearchBtn'],
+          ['addHero','#addHeroBtn'], ['heroName','#heroFormWrap label[for="heroName"]'], ['heroBirthdate','#heroFormWrap label[for="heroBirthdate"]'],
+          ['heroBirthtime','#heroFormWrap label[for="heroBirthtime"]'], ['heroBirthplace','#heroFormWrap label[for="heroBirthplace"]'],
+          ['heroNotes','#heroFormWrap label[for="heroNotes"]'], ['unknownTime','#heroFormWrap label[for="heroBirthtimeUnknown"]'],
+          ['cancel','#heroFormCancel'], ['save','#heroFormSave'], ['back','#heroesBackBtn'],
+          ['modeType','.mode-selector h3'], ['modeSubtitle','.mode-subtitle'],
+          ['modeSingle','.mode-btn[data-mode="single"] .mode-label'], ['modeSingleDesc','.mode-btn[data-mode="single"] .mode-desc'],
+          ['modeCouple','.mode-btn[data-mode="couple"] .mode-label'], ['modeCoupleDesc','.mode-btn[data-mode="couple"] .mode-desc'],
+          ['modeTransit','.mode-btn[data-mode="transit"] .mode-label'], ['modeTransitDesc','.mode-btn[data-mode="transit"] .mode-desc'],
+          ['secondPersonTitle','#secondPersonForm h3'], ['transitTitle','#transitForm h3'],
+          ['quickRequests','#quickRequestsToggle'], ['sendRequest','.request-label'], ['toPayment','#stepNext'],
+          ['paymentSubtitle','#paymentPage .subtitle'], ['paymentAndAccess','#paymentPage .tagline'],
+          ['promoCode','#promoCodeInput'], ['apply','#promoApplyBtn'], ['backFromPayment','#backFromPaymentBtn'],
+          ['paymentIntro','#paymentIntro'], ['loadingDesc','#loadingDesc'], ['priceSummaryLabel','#priceSummaryLabel'],
+          ['submitAndContinue','#payBtn'], ['creatingKey','.loading-text'], ['keyActivated','#successPage .subtitle'],
+          ['done','.success-title'], ['soulChat','#soulChatBtn'], ['soulChatPay','#soulChatPayBtn'], ['newKey','#newKeyBtn'],
+          ['paymentThanks','#paymentThanksPage .success-title'], ['thanksSubtitle','#paymentThanksPage .subtitle'],
+          ['thanksDone','#paymentThanksBackBtn'], ['gender','#gender'], ['genderSelect','#gender option[value=""]']
+        ];
+        map.forEach(function(pair) {
+          var el = document.querySelector(pair[1]);
+          if (el) {
+            if (pair[1].indexOf('placeholder') === -1 && (pair[1].indexOf('#') === 0 || pair[1].indexOf('label') >= 0 || pair[1].indexOf('h3') >= 0 || pair[1].indexOf('.') >= 0)) {
+              if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = t(pair[0]);
+              else el.textContent = t(pair[0]);
+            } else if (pair[1].indexOf('placeholder') >= 0 || (el.tagName === 'INPUT' && pair[0] === 'searchPlaceholder')) el.placeholder = t(pair[0]);
+            else el.textContent = t(pair[0]);
+          }
+        });
+        var phMap = [
+          ['namePh','#name'], ['birthplacePh','#birthplace'], ['name2Ph','#name2'], ['birthplace2Ph','#birthplace2'],
+          ['transitDatePh','#transitDate'], ['transitTimePh','#transitTime'], ['transitLocationPh','#transitLocation'],
+          ['transitIntentPh','#transitIntent'], ['requestPh','#request'], ['heroBirthplacePh','#heroBirthplace'],
+          ['heroNotesPh','#heroNotes'], ['heroName','#heroName'], ['promoCode','#promoCodeInput']
+        ];
+        phMap.forEach(function(p) { var e = document.querySelector(p[1]); if (e) e.placeholder = t(p[0]); });
+        var selectOpts = [['genderSelect','gender'],['male','male'],['female','female'],['other','other'],['langSong','language'],['langRu','ru'],['langEn','en'],['langUk','uk']];
+        var genderSelect = document.getElementById('gender'); if (genderSelect) {
+          var opts = genderSelect.querySelectorAll('option'); if (opts[0]) opts[0].textContent = t('genderSelect');
+          if (opts[1]) opts[1].textContent = t('male'); if (opts[2]) opts[2].textContent = t('female');
+          var o3 = genderSelect.querySelector('option[value="other"]'); if (o3) o3.textContent = t('other');
+        }
+        var gender2 = document.getElementById('gender2'); if (gender2) {
+          var o2 = gender2.querySelectorAll('option'); if (o2[0]) o2[0].textContent = t('genderSelect');
+          if (o2[1]) o2[1].textContent = t('female'); if (o2[2]) o2[2].textContent = t('male');
+        }
+        var langSelect = document.getElementById('language'); if (langSelect) {
+          var lo = langSelect.querySelectorAll('option');
+          if (lo[0]) lo[0].textContent = t('langSong');
+          if (lo[1]) lo[1].textContent = t('langRu'); if (lo[2]) lo[2].textContent = t('langEn');
+          if (lo[3]) lo[3].textContent = t('langDe');
+          if (lo[4]) lo[4].textContent = t('langFr');
+          if (lo[5]) lo[5].textContent = t('langUk');
+          var langMap = { ru: 'ru', en: 'en', de: 'de', fr: 'fr' };
+          var songLang = langMap[currentLang] || langSelect.value || 'ru';
+          if (langSelect.querySelector('option[value="' + songLang + '"]')) langSelect.value = songLang;
+        }
+        var heroOpt = document.querySelector('#heroGender option[value=""]'); if (heroOpt) heroOpt.textContent = t('genderSelect');
+        var heroMale = document.querySelector('#heroGender option[value="male"]'); if (heroMale) heroMale.textContent = t('male');
+        var heroFemale = document.querySelector('#heroGender option[value="female"]'); if (heroFemale) heroFemale.textContent = t('female');
+        document.getElementById('birthplaceHint') && (document.getElementById('birthplaceHint').textContent = t('birthplaceHint'));
+        document.querySelector('label[for="transitLocationConfirmed"]') && (document.querySelector('label[for="transitLocationConfirmed"]').textContent = t('transitLocationOk'));
+        document.querySelector('label[for="unknown"]') && (document.querySelector('label[for="unknown"]').textContent = t('unknownTime'));
+        document.querySelector('label[for="unknown2"]') && (document.querySelector('label[for="unknown2"]').textContent = t('unknownTimeShort'));
+        var quickBtns = document.querySelectorAll('.example-btn'); var quickK = ['quick1','quick2','quick3','quick4','quick5','quick6','quick7','quick8','quick9','quick10','quick11','quick12']; var quickT = ['quick1t','quick2t','quick3t','quick4t','quick5t','quick6t','quick7t','quick8t','quick9t','quick10t','quick11t','quick12t'];
+        quickBtns.forEach(function(btn, i) { if (btn) { btn.textContent = t(quickK[i]); btn.setAttribute('data-text', t(quickT[i])); } });
+        var gh = document.getElementById('homeGreeting');
+        if (gh) gh.textContent = (userProfile && userProfile.name) ? t('greeting', { name: userProfile.name }) : t('greetingDefault');
+        var lr = document.getElementById('langRu'); var le = document.getElementById('langEn');
+        if (lr) { lr.style.fontWeight = currentLang === 'ru' ? '700' : '400'; lr.style.opacity = currentLang === 'ru' ? '1' : '0.7'; }
+        if (le) { le.style.fontWeight = currentLang === 'en' ? '700' : '400'; le.style.opacity = currentLang === 'en' ? '1' : '0.7'; }
+      }
+      function setLang(lang) {
+        currentLang = lang;
+        try { localStorage.setItem(LANG_STORAGE_KEY, lang); } catch (_) {}
+        var langMap = { ru: 'ru', en: 'en', de: 'de', fr: 'fr' };
+        var songLang = langMap[lang] || 'ru';
+        var langSelect = document.getElementById('language');
+        if (langSelect && langSelect.querySelector('option[value="' + songLang + '"]')) {
+          langSelect.value = songLang;
+        }
+        applyTranslations();
+      }
       function isTelegramWebApp() {
         return !!(window.Telegram && window.Telegram.WebApp);
       }
@@ -719,7 +1191,7 @@
         var banner = document.createElement('div');
         banner.id = 'not-telegram-banner';
         banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fef3c7;color:#92400e;padding:12px 16px;text-align:center;font-size:0.95rem;border-bottom:1px solid #f59e0b;';
-        banner.textContent = 'Открой приложение из чата с ботом в Telegram (кнопка меню) — иначе заявка не отправится.';
+        banner.textContent = t('notFromTelegram');
         document.body.insertBefore(banner, document.body.firstChild);
       }
       async function showLocationSuggestions(inputElement, suggestionsContainerId, confirmCheckboxId) {
@@ -734,7 +1206,7 @@
           var locations = await response.json();
           if (locations.length === 0) {
             if (suggestionsContainer) {
-              suggestionsContainer.innerHTML = '<div style="padding: 10px; color: var(--tg-theme-hint-color, rgba(255,255,255,0.6)); text-align: center;">Не найдено</div>';
+              suggestionsContainer.innerHTML = '<div style="padding: 10px; color: var(--tg-theme-hint-color, rgba(255,255,255,0.6)); text-align: center;">' + t('notFound') + '</div>';
               suggestionsContainer.style.display = 'block';
             }
             return;
@@ -760,7 +1232,7 @@
         } catch (err) {
           console.error('Ошибка поиска местоположения:', err);
           if (suggestionsContainer) {
-            suggestionsContainer.innerHTML = '<div style="padding: 10px; color: #ef4444; text-align: center;">Ошибка поиска</div>';
+            suggestionsContainer.innerHTML = '<div style="padding: 10px; color: #ef4444; text-align: center;">' + t('searchError') + '</div>';
             suggestionsContainer.style.display = 'block';
           }
         }
@@ -814,19 +1286,19 @@
         }
         if (priceHint) {
           if (item && activePromo && activePromo.sku === sku) {
-            priceHint.textContent = 'Промокод ' + activePromo.code + ': -' + activePromo.discount_amount + ' ' + (activePromo.currency || item.currency || 'USDT');
+            priceHint.textContent = t('promoAppliedHint', { code: activePromo.code, amount: activePromo.discount_amount, currency: activePromo.currency || item.currency || 'USDT' });
           } else {
             priceHint.textContent = '';
           }
         }
         if (notice) {
           if (freeTrialAvailable) {
-            notice.textContent = 'Первый звуковой ключ доступен бесплатно.';
+            notice.textContent = t('firstFree');
             notice.style.borderColor = 'rgba(212,175,55,.4)';
             notice.style.background = 'rgba(212,175,55,.12)';
             notice.style.color = 'rgba(255,255,255,.95)';
           } else {
-            notice.textContent = 'Оплата требуется для новых заявок.';
+            notice.textContent = t('paymentRequired');
             notice.style.borderColor = 'rgba(212,175,55,.35)';
             notice.style.background = 'rgba(212,175,55,.1)';
             notice.style.color = 'rgba(255,255,255,.95)';
@@ -857,7 +1329,7 @@
         if (!code) {
           activePromo = null;
           updatePaymentUiFromCatalog();
-          setPaymentStatus('Промокод очищен.', 'warn');
+          setPaymentStatus(t('promoCleared'), 'warn');
           return;
         }
         var sku = getCurrentSku();
@@ -884,9 +1356,9 @@
             currency: json.currency || 'USDT'
           };
           updatePaymentUiFromCatalog();
-          setPaymentStatus('Промокод применён: итоговая сумма ' + json.amount_after + ' ' + (json.currency || 'USDT'), 'ok');
+          setPaymentStatus(t('promoApplied', { amount: json.amount_after, currency: json.currency || 'USDT' }), 'ok');
         } catch (e) {
-          setPaymentStatus((e && e.message) ? e.message : 'Не удалось применить промокод', 'error');
+          setPaymentStatus((e && e.message) ? e.message : t('promoError'), 'error');
         }
       }
       function heroesApi(path, opts) {
@@ -927,6 +1399,12 @@
         } catch (e) { return null; }
       }
       if (tg) loadMe();
+      currentLang = detectLang();
+      applyTranslations();
+      var langRuEl = document.getElementById('langRu');
+      var langEnEl = document.getElementById('langEn');
+      if (langRuEl) langRuEl.addEventListener('click', function() { setLang('ru'); });
+      if (langEnEl) langEnEl.addEventListener('click', function() { setLang('en'); });
 
       setTimeout(function() {
         try {
@@ -935,8 +1413,8 @@
           fetchUserProfile().then(function(p) {
             userProfile = p;
             var greetEl = document.getElementById('homeGreeting');
-            if (greetEl && p && p.name) {
-              greetEl.textContent = 'Привет, ' + p.name + '! Твои данные уже здесь.';
+            if (greetEl) {
+              greetEl.textContent = (p && p.name) ? t('greeting', { name: p.name }) : t('greetingDefault');
               greetEl.style.display = 'block';
             }
           });
@@ -958,7 +1436,8 @@
         if (unknown && birthtime) unknown.addEventListener('change', function() {
         birthtime.required = !unknown.checked;
         });
-        var birthdateSummary = document.getElementById('birthdateSummary');
+        var birthdateWrap = document.getElementById('birthdateWrap');
+        var birthdateCheck = document.getElementById('birthdateCheck');
         var birthdateInput = document.getElementById('birthdate');
         var birthplaceInput = document.getElementById('birthplace');
         var monthsRu = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
@@ -968,19 +1447,19 @@
           if (isNaN(d.getTime())) return dateStr;
           return d.getDate() + ' ' + monthsRu[d.getMonth()] + ' ' + d.getFullYear() + ' г.';
         }
-        if (birthdateInput && birthdateSummary) {
+        if (birthdateInput && birthdateWrap) {
           birthdateInput.addEventListener('change', function() {
-            var v = birthdateInput.value;
-            if (v) {
-              birthdateSummary.textContent = 'Выбрано: ' + formatDateRu(v);
-              birthdateSummary.style.display = 'block';
+            if (birthdateInput.value) {
+              birthdateWrap.classList.add('has-date');
+              if (birthdateCheck) birthdateCheck.setAttribute('aria-hidden', 'false');
             } else {
-              birthdateSummary.style.display = 'none';
+              birthdateWrap.classList.remove('has-date');
+              if (birthdateCheck) birthdateCheck.setAttribute('aria-hidden', 'true');
             }
           });
           if (birthdateInput.value) {
-            birthdateSummary.textContent = 'Выбрано: ' + formatDateRu(birthdateInput.value);
-            birthdateSummary.style.display = 'block';
+            birthdateWrap.classList.add('has-date');
+            if (birthdateCheck) birthdateCheck.setAttribute('aria-hidden', 'false');
           }
         }
         if (birthplaceInput) {
@@ -1086,12 +1565,39 @@
         var formPage = document.getElementById('formPage');
         if (formPage && userTariff === 'master') loadForWhoSelect();
       
+      // Подсказка Soul Chat: есть ли доступ и как оплатить
+      function updateSoulChatHint() {
+        var hintEl = document.getElementById('soulChatHint');
+        if (!hintEl) return;
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        if (!apiBase) { hintEl.style.display = 'block'; hintEl.textContent = t('soulChatNoApi'); return; }
+        var initData = typeof getInitData === 'function' ? getInitData() : '';
+        hintEl.textContent = t('soulChatLoad');
+        hintEl.style.display = 'block';
+        fetch(apiBase + '/api/soul-chat/access', { headers: { 'X-Telegram-Init': initData } })
+          .then(function(r) { return r.json(); })
+          .then(function(d) {
+            var payBtn = document.getElementById('soulChatPayBtn');
+            if (d && d.allowed) {
+              hintEl.textContent = t('soulChatHasAccess');
+              if (payBtn) payBtn.style.display = 'none';
+            } else {
+              hintEl.textContent = (d && d.reason) ? d.reason : t('soulChatNoAccess');
+              if (payBtn) payBtn.style.display = 'block';
+            }
+          })
+          .catch(function() {
+            hintEl.textContent = t('soulChatDefault');
+            var payBtn = document.getElementById('soulChatPayBtn');
+            if (payBtn) payBtn.style.display = 'block';
+          });
+      }
       // Навигация по страницам
       function goToPage(pageId) {
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
         if (pageId !== 'paymentPage') {
           var payBtnReset = document.getElementById('payBtn');
-          if (payBtnReset) { payBtnReset.disabled = false; payBtnReset.textContent = 'Отправить заявку'; }
+          if (payBtnReset) { payBtnReset.disabled = false; payBtnReset.textContent = t('submitRequest'); }
         }
         document.querySelectorAll('.page').forEach(function(page) {
           page.classList.remove('active');
@@ -1100,6 +1606,7 @@
         if (target) target.classList.add('active');
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
         if (pageId === 'paymentPage') { loadPricingCatalog(); updatePaymentUiFromCatalog(); setPaymentStatus('',''); }
+        if (pageId === 'successPage') updateSoulChatHint();
         if (pageId === 'homePage' || pageId === 'formPage' || pageId === 'paymentPage') {
           logColorSnapshot('go-to-page', pageId);
         }
@@ -1123,13 +1630,13 @@
         (async function checkPaymentAndConfirm() {
           if (!paymentThanksMsg) return;
           if (!thanksRequestId) {
-            paymentThanksMsg.textContent = 'Оплата подтверждена. Песня в генерации. Через 2–3 минуты придёт в чат с ботом.';
+            paymentThanksMsg.textContent = t('songInProgress');
             return;
           }
           var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
           var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
           if (!apiBase || !initData) {
-            if (paymentThanksMsg) paymentThanksMsg.textContent = 'Оплата получена. Песня в генерации. Через 2–3 минуты придёт в чат с ботом.';
+            if (paymentThanksMsg) paymentThanksMsg.textContent = t('songInProgress');
             return;
           }
           try {
@@ -1151,9 +1658,9 @@
               });
               confirmResp.json().catch(function() {});
             }
-            paymentThanksMsg.textContent = 'Оплата подтверждена. Песня ушла в генерацию, заявка принята! Через 2–3 минуты придёт в чат с ботом.';
+            paymentThanksMsg.textContent = t('songInProgressConfirmed');
           } catch (e) {
-            paymentThanksMsg.textContent = 'Оплата получена. Песня в генерации. Через 2–3 минуты придёт в чат с ботом.';
+            paymentThanksMsg.textContent = t('songInProgress');
           }
         })();
         if (window.history && window.history.replaceState) {
@@ -1240,8 +1747,7 @@
 
       function validateStep(step) {
         if (step === 1) {
-          var activeMode = document.querySelector('.mode-btn.active');
-          if (!activeMode) { alert('Выбери тип звукового ключа'); return false; }
+          selectedMode = selectedMode || 'single';
           return true;
         }
         if (step === 2) {
@@ -1251,25 +1757,26 @@
           var birthtimeVal = (unknown && unknown.checked) ? 'ok' : (document.getElementById('birthtime') ? document.getElementById('birthtime').value : '');
           var gender = document.getElementById('gender').value;
           var language = document.getElementById('language').value;
-          if (name.length < 2) { alert('Имя должно содержать минимум 2 символа'); return false; }
-          if (!birthdate) { alert('Выбери дату рождения'); return false; }
-          if (birthplace.length < 3) { alert('Место рождения должно содержать минимум 3 символа'); return false; }
+          if (name.length < 2) { alert(t('alertNameShort')); return false; }
+          if (!birthdate) { alert(t('alertBirthdate')); return false; }
+          if (birthplace.length < 3) { alert(t('alertBirthplace')); return false; }
           var birthplaceField = document.getElementById('birthplace');
           var hasCoords = birthplaceField && birthplaceField.getAttribute('data-lat') && birthplaceField.getAttribute('data-lon');
           var hasPlaceSelected = birthplaceField && birthplaceField.getAttribute('data-place-selected');
-          if (!hasCoords && !hasPlaceSelected) {
+          var fromProfile = birthplaceField && birthplaceField.getAttribute('data-from-profile') === '1';
+          if (!hasCoords && !hasPlaceSelected && !fromProfile) {
             var birthplaceHint = document.getElementById('birthplaceHint');
             if (birthplaceHint) birthplaceHint.style.display = 'block';
             return false;
           }
-          if (!birthtimeVal) { alert('Укажи время рождения или отметь \"Не знаю\"'); return false; }
-          if (!gender) { alert('Укажи пол'); return false; }
-          if (!language) { alert('Выбери язык'); return false; }
+          if (!birthtimeVal) { alert(t('alertBirthtime')); return false; }
+          if (!gender) { alert(t('alertGender')); return false; }
+          if (!language) { alert(t('alertLanguage')); return false; }
           if (selectedMode === 'couple') {
             var name2 = (document.getElementById('name2').value || '').trim();
             var birthdate2 = document.getElementById('birthdate2').value;
-            if (name2.length < 2) { alert('Имя второго человека — минимум 2 символа'); return false; }
-            if (!birthdate2) { alert('Укажи дату рождения второго человека'); return false; }
+            if (name2.length < 2) { alert(t('alertName2Short')); return false; }
+            if (!birthdate2) { alert(t('alertBirthdate2')); return false; }
           }
           if (selectedMode === 'transit') {
             var tDate = document.getElementById('transitDate').value;
@@ -1332,7 +1839,7 @@
       if (backFromPaymentBtn) backFromPaymentBtn.addEventListener('click', function() {
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
         var payBtnEl = document.getElementById('payBtn');
-        if (payBtnEl) { payBtnEl.disabled = false; payBtnEl.textContent = 'Отправить заявку'; }
+        if (payBtnEl) { payBtnEl.disabled = false; payBtnEl.textContent = t('submitRequest'); }
         goToPage('formPage');
       });
       var payBtn = document.getElementById('payBtn');
@@ -1359,7 +1866,7 @@
           mode: mode,
           person1: { name: name1, birthdate: birthdate1, birthplace: birthplace1, birthtime: birthtimeUnknown1 ? null : birthtime1, birthtimeUnknown: birthtimeUnknown1, gender: gender1 },
           request: requestText,
-          language: (document.getElementById('language') && document.getElementById('language').value) || 'ru'
+          language: currentLang || 'ru'
         };
         var birthplaceField = document.getElementById('birthplace');
         if (birthplaceField && birthplaceField.getAttribute('data-lat') && birthplaceField.getAttribute('data-lon')) {
@@ -1415,7 +1922,22 @@
           fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:click',message:'pay button clicked',data:{mode:mode,hasRequest:requestText.length>=1,hasPerson2:!!payload.person2,hasTransit:!!payload.transit},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P1'})}).catch(()=>{});
           // #endregion
           hotLog('pay click', { mode: mode, hasPerson2: !!payload.person2, hasTransit: !!payload.transit });
-          var response = await fetch(apiBase + '/api/submit-request', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData }, body: JSON.stringify(payload) });
+          var submitTimeoutMs = 90000;
+          var controller = new AbortController();
+          var timeoutId = setTimeout(function() { controller.abort(); }, submitTimeoutMs);
+          var response;
+          try {
+            response = await fetch(apiBase + '/api/submit-request', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData }, body: JSON.stringify(payload), signal: controller.signal });
+          } catch (e) {
+            clearTimeout(timeoutId);
+            if (e && e.name === 'AbortError') {
+              setPaymentStatus(t('alertServerSleep'), 'error');
+              alert(t('alertServerSleep'));
+              return;
+            }
+            throw e;
+          }
+          clearTimeout(timeoutId);
           var result = await response.json().catch(function() { return {}; });
           // #region agent log
           fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:submitResult',message:'submit-request result',data:{ok:!!(response.ok && result.ok),paymentRequired:!!(result && result.payment_required),requestId:result&&result.requestId?String(result.requestId):null,httpStatus:response.status},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P2'})}).catch(()=>{});
@@ -1433,7 +1955,7 @@
           goToPage('successPage');
             console.log('[MiniApp] Заявка отправлена, requestId:', result.requestId);
           } else if (result && result.payment_required && result.requestId) {
-            setPaymentStatus('Требуется оплата. Открываю HOT Checkout...', 'warn');
+            setPaymentStatus(t('paymentRequiredOpening'), 'warn');
             var hotResp = await fetch(apiBase + '/api/payments/hot/create', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
@@ -1448,13 +1970,13 @@
               throw new Error(hotJson.error || 'Не удалось создать оплату HOT');
             }
             if (hotJson.free_applied) {
-              setPaymentStatus('Промокод дал бесплатную генерацию. Запуск...', 'ok');
+              setPaymentStatus(t('promoFreeGen'), 'ok');
               goToPage('loadingPage');
               setTimeout(function() { goToPage('successPage'); }, 1800);
               return;
             }
             if (!hotJson.checkout_url) throw new Error('Checkout URL не получен');
-            setPaymentStatus('Открыт HOT Checkout. После оплаты вернись в Mini App — статус обновится автоматически.', 'warn');
+            setPaymentStatus(t('hotCheckoutOpened'), 'warn');
             // #region agent log
             var hasTg = !!(window.Telegram && window.Telegram.WebApp);
             var hasOpenLink = !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink);
@@ -1482,10 +2004,10 @@
               if (paymentStatus === 'paid') { paid = true; break; }
             }
             if (!paid) {
-              setPaymentStatus('Оплата пока не подтверждена. Проверь статус позже или открой оплату повторно.', 'warn');
+              setPaymentStatus(t('paymentNotConfirmed'), 'warn');
               return;
             }
-            setPaymentStatus('Оплата подтверждена. Запускаю генерацию...', 'ok');
+            setPaymentStatus(t('paymentConfirmed'), 'ok');
             var restartResp = await fetch(apiBase + '/api/payments/hot/confirm', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
@@ -1496,23 +2018,26 @@
             // #endregion
             hotLog('confirm', { httpStatus: restartResp.status, ok: restartResp.ok, requestId: result.requestId ? String(result.requestId).slice(0, 8) : null });
             if (!restartResp.ok) {
-              setPaymentStatus('Оплата получена, но авто‑старт не удался. Запусти генерацию в админке по request_id: ' + result.requestId, 'warn');
+              setPaymentStatus(t('paymentReceivedNoStart', { id: result.requestId }), 'warn');
               return;
             }
             goToPage('loadingPage');
             setTimeout(function() { goToPage('successPage'); }, 1800);
           } else {
             var errMsg = (result && result.error) ? String(result.error) : (result && result.message) ? String(result.message) : ('HTTP ' + response.status);
+            if (response.status === 401) {
+              errMsg = (result && result.error) ? String(result.error) : 'Сессия устарела. Закрой Mini App и открой снова из чата с ботом, затем отправь заявку.';
+            }
             throw new Error(errMsg);
           }
         } catch (error) {
           console.error('[MiniApp] Ошибка:', error);
           var msg = (error && error.message) ? String(error.message) : '';
           if (!msg || /^HTTP\s+\d+$/i.test(msg)) {
-            msg = 'Не удалось отправить заявку. Попробуй открыть Mini App заново из чата с ботом и отправить ещё раз.';
+            msg = t('submitFailed');
           }
-          setPaymentStatus(msg || 'Ошибка операции оплаты/заявки', 'error');
-          alert('❌ ' + msg);
+          setPaymentStatus(msg || t('errorOp'), 'error');
+          alert('❌ ' + (msg || t('errorOp')));
           // #region agent log
           fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:error',message:'pay flow error',data:{errorMessage:msg||null},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P1,P2,P3,P4,P5'})}).catch(()=>{});
           // #endregion
@@ -1643,11 +2168,27 @@
         if (isProfile) {
           if (bd) bd.value = (profileOrTgUser.birthdate || '').toString().slice(0, 10);
           if (bt) bt.value = (profileOrTgUser.birthtime || '').toString().slice(0, 5);
-          if (bp) bp.value = profileOrTgUser.birthplace || '';
+          if (bp) {
+            bp.value = profileOrTgUser.birthplace || '';
+            if (profileOrTgUser.birthplace && profileOrTgUser.birthplace.length >= 3) {
+              bp.setAttribute('data-from-profile', '1');
+              bp.setAttribute('data-place-selected', '1');
+              var bw = document.getElementById('birthplaceWrap'); if (bw) bw.classList.add('has-place');
+              var bch = document.getElementById('birthplaceCheck'); if (bch) bch.setAttribute('aria-hidden', 'false');
+              if (profileOrTgUser.birthplace_lat != null && profileOrTgUser.birthplace_lon != null) {
+                bp.setAttribute('data-lat', String(profileOrTgUser.birthplace_lat));
+                bp.setAttribute('data-lon', String(profileOrTgUser.birthplace_lon));
+              }
+            } else { bp.removeAttribute('data-from-profile'); bp.removeAttribute('data-place-selected'); }
+          }
           if (unk) unk.checked = !!profileOrTgUser.birthtime_unknown;
           if (g) g.value = profileOrTgUser.gender || '';
           if (langEl && profileOrTgUser.language) langEl.value = profileOrTgUser.language;
-          if (birthdateSummary) { birthdateSummary.textContent = profileOrTgUser.birthdate ? 'Выбрано: ' + formatDateRu(profileOrTgUser.birthdate) : ''; birthdateSummary.style.display = profileOrTgUser.birthdate ? 'block' : 'none'; }
+          var bdWrap = document.getElementById('birthdateWrap');
+          if (bdWrap) {
+            if (profileOrTgUser.birthdate) { bdWrap.classList.add('has-date'); var bc = document.getElementById('birthdateCheck'); if (bc) bc.setAttribute('aria-hidden', 'false'); }
+            else { bdWrap.classList.remove('has-date'); var bc = document.getElementById('birthdateCheck'); if (bc) bc.setAttribute('aria-hidden', 'true'); }
+          }
         }
       }
       function fillFormFromHero(hero) {
@@ -1666,7 +2207,11 @@
         if (g) g.value = hero.gender || '';
         var langEl = document.getElementById('language');
         if (langEl && hero.language) langEl.value = hero.language;
-        if (birthdateSummary) { birthdateSummary.textContent = hero.birth_date ? 'Выбрано: ' + formatDateRu(hero.birth_date) : ''; birthdateSummary.style.display = hero.birth_date ? 'block' : 'none'; }
+        var bdWrap = document.getElementById('birthdateWrap');
+        if (bdWrap) {
+          if (hero.birth_date) { bdWrap.classList.add('has-date'); var bc = document.getElementById('birthdateCheck'); if (bc) bc.setAttribute('aria-hidden', 'false'); }
+          else { bdWrap.classList.remove('has-date'); var bc = document.getElementById('birthdateCheck'); if (bc) bc.setAttribute('aria-hidden', 'true'); }
+        }
       }
       function loadForWhoSelect() {
         var wrap = document.getElementById('forWhoWrap');
@@ -1692,6 +2237,8 @@
         if (tg && tg.openTelegramLink) tg.openTelegramLink(botUrl);
         else window.open(botUrl, '_blank');
       });
+      var soulChatPayBtn = document.getElementById('soulChatPayBtn');
+      if (soulChatPayBtn) soulChatPayBtn.addEventListener('click', function() { goToPage('formPage'); setTimeout(function() { var stepNext = document.getElementById('stepNext'); if (stepNext) stepNext.click(); }, 100); });
       var newKeyBtn = document.getElementById('newKeyBtn');
       if (newKeyBtn) newKeyBtn.addEventListener('click', function() {
         var n = document.getElementById('name');
@@ -1709,7 +2256,8 @@
         if (g) g.value = '';
         if (langEl) langEl.value = '';
         if (r) r.value = '';
-        if (birthdateSummary) birthdateSummary.style.display = 'none';
+        var bdWrap = document.getElementById('birthdateWrap');
+        if (bdWrap) { bdWrap.classList.remove('has-date'); var bc = document.getElementById('birthdateCheck'); if (bc) bc.setAttribute('aria-hidden', 'true'); }
         var birthplaceHint = document.getElementById('birthplaceHint');
         if (birthplaceHint) birthplaceHint.style.display = 'none';
         var bpEl = document.getElementById('birthplace');
