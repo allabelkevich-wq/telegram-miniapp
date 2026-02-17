@@ -70,30 +70,6 @@ const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
 const memoryRequests = [];
 const pendingSoulChatByUser = new Map();
 
-// Rate limit создания платежей: макс. PAYMENTS_CREATE_RATE_LIMIT (по умолчанию 5) запросов на пользователя за окно (10 мин)
-const PAYMENTS_CREATE_RATE_WINDOW_MS = 10 * 60 * 1000;
-const PAYMENTS_CREATE_RATE_MAX = parseInt(process.env.PAYMENTS_CREATE_RATE_LIMIT || "5", 10) || 5;
-const paymentsCreateRateByUser = new Map();
-
-function checkPaymentsCreateRateLimit(telegramUserId) {
-  const now = Date.now();
-  const key = String(telegramUserId);
-  let entry = paymentsCreateRateByUser.get(key);
-  if (entry && entry.resetAt < now) {
-    paymentsCreateRateByUser.delete(key);
-    entry = null;
-  }
-  if (!entry) {
-    entry = { count: 0, resetAt: now + PAYMENTS_CREATE_RATE_WINDOW_MS };
-    paymentsCreateRateByUser.set(key, entry);
-  }
-  entry.count += 1;
-  if (entry.count > PAYMENTS_CREATE_RATE_MAX) {
-    return { allowed: false, retryAfter: Math.ceil((entry.resetAt - now) / 1000) };
-  }
-  return { allowed: true };
-}
-
 const DEFAULT_PRICING_CATALOG = [
   { sku: "single_song", title: "Single song", description: "Персональный звуковой ключ", price: "5.99", currency: "USDT", active: true, limits_json: { requests: 1 } },
   { sku: "transit_energy_song", title: "Transit energy song", description: "Энергия дня (транзит)", price: "6.99", currency: "USDT", active: true, limits_json: { requests: 1 } },
@@ -263,44 +239,6 @@ async function hasActiveSubscription(telegramUserId) {
   return !!data;
 }
 
-/** Использование подписки в текущем периоде (треки за месяц). Период: от (renew_at - 30 дней) до сейчас. */
-async function getSubscriptionUsage(telegramUserId) {
-  if (!supabase) return null;
-  const now = new Date();
-  const nowIso = now.toISOString();
-  const { data: sub, error: subErr } = await supabase
-    .from("subscriptions")
-    .select("id,plan_sku,renew_at")
-    .eq("telegram_user_id", Number(telegramUserId))
-    .eq("status", "active")
-    .gte("renew_at", nowIso)
-    .order("renew_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (subErr || !sub) return null;
-  const renewAt = new Date(sub.renew_at);
-  const periodStart = new Date(renewAt.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const periodStartIso = periodStart.toISOString();
-  const priceRow = await getSkuPrice(sub.plan_sku);
-  const limits = priceRow?.limits_json && typeof priceRow.limits_json === "object" ? priceRow.limits_json : {};
-  const monthlyTracks = Number(limits.monthly_tracks) || (sub.plan_sku === "soul_plus_sub" ? 7 : 3);
-  const { count, error: countErr } = await supabase
-    .from("track_requests")
-    .select("id", { count: "exact", head: true })
-    .eq("telegram_user_id", Number(telegramUserId))
-    .in("payment_status", ["paid", "gift_used", "subscription_active"])
-    .gte("created_at", periodStartIso)
-    .lte("created_at", nowIso);
-  if (countErr) return { used: 0, limit: monthlyTracks, plan_sku: sub.plan_sku, period_start: periodStartIso, period_end: nowIso };
-  return {
-    used: typeof count === "number" ? count : 0,
-    limit: monthlyTracks,
-    plan_sku: sub.plan_sku,
-    period_start: periodStartIso,
-    period_end: nowIso,
-  };
-}
-
 async function consumeEntitlementIfExists(telegramUserId, sku) {
   if (!supabase) return { ok: false };
   const nowIso = new Date().toISOString();
@@ -327,9 +265,7 @@ async function consumeEntitlementIfExists(telegramUserId, sku) {
 
 async function resolveAccessForRequest({ telegramUserId, mode }) {
   const sku = resolveSkuByMode(mode);
-  const subUsage = await getSubscriptionUsage(telegramUserId);
-  if (subUsage && subUsage.used < subUsage.limit) return { allowed: true, source: "subscription", sku, subscription_usage: subUsage };
-  if (subUsage && subUsage.used >= subUsage.limit) return { allowed: false, source: "subscription_limit_reached", sku, subscription_usage: subUsage };
+  if (await hasActiveSubscription(telegramUserId)) return { allowed: true, source: "subscription", sku };
   const ent = await consumeEntitlementIfExists(telegramUserId, sku);
   if (ent.ok) return { allowed: true, source: "entitlement", sku };
   const trialAvailable = await isTrialAvailable(telegramUserId, "first_song_gift");
@@ -1279,17 +1215,34 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
     const body = parseJsonSafe(rawBody, {});
     // HOT присылает memo (см. Webhook Payload Example), order_id может отсутствовать.
     const orderId = String(body.memo || body.order_id || body.orderId || body.data?.order_id || "").trim();
+    const requestId = String(body.request_id || body.requestId || body.data?.request_id || body.data?.requestId || "").trim();
     const status = String(body.payment_status || body.status || body.event || "").toLowerCase();
     const txId = String(body.tx_id || body.txId || body.near_trx || body.transaction_id || body.data?.tx_id || "").trim() || null;
-    if (!orderId) return res.status(400).json({ success: false, error: "memo or order_id is required" });
+    if (!orderId && !requestId) return res.status(400).json({ success: false, error: "memo/order_id or request_id is required" });
     if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
 
-    const { data: row, error: rowErr } = await supabase
-      .from("track_requests")
-      .select("id,telegram_user_id,payment_status,payment_order_id,mode,payment_raw,payment_tx_id,generation_status,status")
-      .eq("payment_order_id", orderId)
-      .maybeSingle();
+    // 1) Основной поиск: по payment_order_id (memo). 2) Фолбек: по request_id (если HOT прислал не memo).
+    let row = null;
+    let rowErr = null;
+    if (orderId) {
+      const r1 = await supabase
+        .from("track_requests")
+        .select("id,telegram_user_id,payment_status,payment_order_id,mode,payment_raw,payment_tx_id,generation_status,status")
+        .eq("payment_order_id", orderId)
+        .maybeSingle();
+      row = r1.data || null;
+      rowErr = r1.error || null;
+    }
     if (rowErr) return res.status(500).json({ success: false, error: rowErr.message });
+    if (!row && requestId) {
+      const r2 = await supabase
+        .from("track_requests")
+        .select("id,telegram_user_id,payment_status,payment_order_id,mode,payment_raw,payment_tx_id,generation_status,status")
+        .eq("id", requestId)
+        .maybeSingle();
+      if (r2.error) return res.status(500).json({ success: false, error: r2.error.message });
+      row = r2.data || null;
+    }
     if (!row) return res.status(404).json({ success: false, error: "Order not found" });
     if ((row.payment_status || "").toLowerCase() === "paid") return res.json({ success: true, message: "Already processed" });
 
@@ -1316,6 +1269,7 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
     const updatePayload = {
       payment_provider: "hot",
       payment_status: paymentStatus,
+      ...(orderId && (!row.payment_order_id || String(row.payment_order_id).trim() !== orderId) ? { payment_order_id: orderId } : {}),
       payment_tx_id: txId,
       payment_amount: Number.isFinite(paymentAmount) ? paymentAmount : null,
       payment_currency: paymentCurrency,
@@ -1768,11 +1722,9 @@ app.get("/api/pricing/catalog", asyncApi(async (req, res) => {
   const catalog = await getPricingCatalog();
   let trialAvailable = true;
   let hasSubscription = false;
-  let subscriptionUsage = null;
   if (telegramUserId != null) {
     trialAvailable = await isTrialAvailable(telegramUserId, "first_song_gift");
     hasSubscription = await hasActiveSubscription(telegramUserId);
-    subscriptionUsage = await getSubscriptionUsage(telegramUserId);
   }
   return res.json({
     success: true,
@@ -1783,7 +1735,6 @@ app.get("/api/pricing/catalog", asyncApi(async (req, res) => {
       description: "Первый звуковой ключ в подарок",
     },
     subscription_active: hasSubscription,
-    subscription_usage: subscriptionUsage,
     display_currency: "USDT",
     alt_currencies: ["TON", "USD", "RUB"],
   });
@@ -1818,7 +1769,7 @@ app.post("/api/promos/validate", express.json(), asyncApi(async (req, res) => {
   });
 }));
 
-// create: owner-check (заявка принадлежит telegram_user_id), идемпотентность (already_paid + тот же payment_order_id), rate limit
+// create: owner-check (заявка принадлежит telegram_user_id), идемпотентность (already_paid + тот же payment_order_id)
 app.post("/api/payments/hot/create", express.json(), asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const initData = req.headers["x-telegram-init"] || req.body?.initData || "";
@@ -1841,12 +1792,6 @@ app.post("/api/payments/hot/create", express.json(), asyncApi(async (req, res) =
   }
   if ((requestRow.payment_status || "").toLowerCase() === "paid") {
     return res.json({ success: true, already_paid: true, payment_status: "paid" });
-  }
-
-  const rate = checkPaymentsCreateRateLimit(telegramUserId);
-  if (!rate.allowed) {
-    res.setHeader("Retry-After", String(rate.retryAfter || 60));
-    return res.status(429).json({ success: false, error: "Слишком много запросов на оплату. Подождите минуту." });
   }
 
   const sku = String(req.body?.sku || resolveSkuByMode(requestRow.mode)).trim();
@@ -2152,10 +2097,8 @@ app.post("/suno-callback", express.json(), (req, res) => {
 // Запасной приём заявок: Mini App шлёт POST с initData + форма (если sendData в TG не срабатывает).
 app.post("/api/submit-request", express.json(), async (req, res) => {
   const initData = req.body?.initData || req.headers["x-telegram-init"];
-  console.log("[DEBUG submit-request] request received", { hasInitData: !!initData, bodyKeys: Object.keys(req.body || {}).slice(0, 12) });
   const telegramUserId = validateInitData(initData, BOT_TOKEN);
   if (telegramUserId == null) {
-    console.log("[DEBUG submit-request] 401 Unauthorized (invalid initData)");
     return res.status(401).json({ error: "Неверные или устаревшие данные. Открой приложение из чата с ботом и попробуй снова." });
   }
   const body = req.body || {};
@@ -2250,8 +2193,7 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   const requestModeForAccess = isNewFormat && (body.mode === "couple" || body.mode === "transit") ? body.mode : "single";
   const access = await resolveAccessForRequest({ telegramUserId, mode: requestModeForAccess });
   if (!access.allowed) {
-    const isLimitReached = access.source === "subscription_limit_reached";
-    console.log("[submit-request] payment_required", { requestId, sku: access.sku, telegramUserId, subscription_limit_reached: isLimitReached });
+    console.log("[submit-request] payment_required", { requestId, sku: access.sku, telegramUserId });
     const skuPrice = await getSkuPrice(access.sku);
     await supabase.from("track_requests").update({
       payment_provider: "hot",
@@ -2261,18 +2203,13 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
       generation_status: "pending_payment",
       updated_at: new Date().toISOString(),
     }).eq("id", requestId);
-    const message = isLimitReached
-      ? "Лимит подписки на этот месяц исчерпан. Можно докупить трек или дождаться обновления лимита."
-      : "Для этой заявки нужна оплата. Откройте оплату HOT.";
     return res.status(402).json({
       ok: false,
       payment_required: true,
       requestId,
       sku: access.sku,
       price: skuPrice || null,
-      message,
-      subscription_limit_reached: isLimitReached,
-      subscription_usage: access.subscription_usage || null,
+      message: "Для этой заявки нужна оплата. Откройте оплату HOT.",
     });
   }
   if (access.source === "trial") {

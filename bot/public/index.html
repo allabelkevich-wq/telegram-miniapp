@@ -150,15 +150,15 @@
     .example-btn:hover { opacity: 0.95; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(212, 175, 55, 0.5); background: linear-gradient(135deg, #e0b83a, #f0d050, #e0b83a); }
     .example-btn.special { background: linear-gradient(135deg, #d4af37, #e8c547); border-color: rgba(212, 175, 55, 0.7); }
     .mode-selector {
-      margin: 20px 0; padding: 18px; background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px);
-      border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.18);
-      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.08);
+      margin: 20px 0; padding: 18px; background: rgba(255, 255, 255, 0.06); backdrop-filter: blur(12px);
+      border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 4px 18px rgba(139, 92, 246, 0.06);
     }
     .mode-selector h3 { font-size: 16px; color: var(--tg-theme-text-color, #fff); margin: 0 0 6px 0; font-weight: 500; text-align: center; }
     .mode-subtitle { font-size: 12px; color: var(--tg-theme-hint-color, rgba(255,255,255,.65)); margin: 0 0 14px 0; text-align: center; }
     .mode-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
     .mode-btn {
-      background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08); border: 2px solid rgba(255, 255, 255, 0.18);
       color: var(--tg-theme-text-color, #fff); padding: 16px 12px; border-radius: 12px; cursor: pointer; transition: all 0.3s;
       text-align: center; font-size: 14px; line-height: 1.4;
     }
@@ -247,14 +247,18 @@
     #birthdate{padding-right:2.5rem;min-width:0}
     .birthdate-check{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:#4ade80;font-size:1.25rem;display:none;font-weight:700}
     .birthdate-wrap.has-date .birthdate-check{display:block}
-    .time-group{display:flex;flex-direction:row;align-items:center;gap:1rem;flex-wrap:wrap;margin:0}
-    .time-group-input{flex:0 1 auto;min-width:0;width:100%;max-width:140px}
-    .time-group-checkbox{margin:0;flex:0 0 auto;align-self:center}
+    .time-group{display:flex;flex-direction:row;align-items:center;gap:var(--spacing-sm);flex-wrap:wrap;margin:0}
+    .time-group-input{flex:0 0 auto;min-width:0;width:140px;max-width:160px}
+    .time-group-checkbox{margin:0;flex:1 1 auto;align-self:center}
+    @media (max-width: 420px){
+      .time-group{flex-direction:column;align-items:stretch}
+      .time-group-input{width:100%;max-width:none}
+      .time-group-checkbox{justify-content:flex-start}
+    }
     .checkbox{display:flex;align-items:center;gap:10px;margin-top:0}
-    .checkbox input{width:22px;height:22px;min-width:22px;accent-color:#a78bfa;opacity:.75;background:rgba(255,255,255,.12);border-radius:6px}
-    .time-group .checkbox input{opacity:.6;background:rgba(255,255,255,.08)}
-    .checkbox label{margin-bottom:0;font-weight:500;color:var(--tg-theme-text-color,#2d2d2d);font-size:1rem;display:flex;align-items:center;gap:6px}
-    .checkbox label::before{content:"❓";font-size:1.2rem;opacity:.9}
+    .checkbox input{width:22px;height:22px;min-width:22px;accent-color:rgba(167,139,250,0.65);opacity:.55}
+    .time-group .checkbox input{opacity:.45}
+    .checkbox label{margin-bottom:0;font-weight:500;color:var(--tg-theme-text-color,#fff);font-size:1rem;display:flex;align-items:center;gap:6px;opacity:.88}
     select{appearance:none;background:url("image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23a78bfa' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 16px center;background-size:20px;padding-right:48px}
     textarea{min-height:140px;line-height:1.6;resize:vertical}
     .request-label{font-size:var(--fluid-md);text-align:center;margin-bottom:var(--spacing-sm);color:#a78bfa;font-weight:700;letter-spacing:-0.5px}
@@ -491,6 +495,7 @@
               <option value="">Выбери</option>
             <option value="male">Мужской</option>
             <option value="female">Женский</option>
+            <option value="other">Другой</option>
           </select>
         </div>
         
@@ -518,11 +523,11 @@
             <div id="birthplaceSuggestions2" class="location-suggestions"></div>
           </div>
           <div class="field">
-            <div class="time-group">
-                <input type="time" id="birthtime2" style="flex:1" placeholder="Время рождения">
-              <div class="checkbox" style="margin:0 0 0 15px">
-                <input type="checkbox" id="unknown2">
-                <label for="unknown2">Не знаю</label>
+            <div class="time-group" role="group" aria-label="Время рождения (второй человек)">
+              <input type="time" id="birthtime2" aria-label="Время" class="time-group-input" placeholder="Время рождения">
+              <div class="checkbox time-group-checkbox">
+                <input type="checkbox" id="unknown2" aria-label="Не знаю точное время">
+                <label for="unknown2">Не знаю точное время</label>
               </div>
             </div>
           </div>
@@ -531,6 +536,7 @@
                 <option value="">Пол</option>
               <option value="female">Женский</option>
               <option value="male">Мужской</option>
+              <option value="other">Другой</option>
             </select>
           </div>
         </div>
@@ -764,6 +770,7 @@
           alertRequestShort: 'Добавь запрос (5+ символов)', alertRequestLong: 'Расскажи Вселенной подробнее (минимум 15 символов)',
           alertYourPath: 'Выбери свой путь', alertNoApi: 'Не настроен адрес API.', alertOpenFromBot: 'Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.',
           alertServerSleep: 'Сервер проснулся не сразу. Подожди около минуты и нажми «Отправить заявку» снова.',
+          sending: 'Отправляю…',
           universeHeard: '✨ {name}, Вселенная услышала твой запрос.\n\nТвой звуковой ключ формируется. Через 2-3 минуты он придёт в этот чат.',
           universeHeardCouple: '✨ {name} и {name2}, Вселенная услышала ваш запрос.\n\nВаш звуковой ключ формируется. Через 2-3 минуты он придёт в этот чат.',
           universeHeardTransit: '✨ {name}, Вселенная услышала твой запрос.\n\nЗвуковой ключ Энергии Дня формируется. Через 2-3 минуты он придёт в этот чат.',
@@ -851,6 +858,7 @@
           alertRequestShort: 'Add a request (5+ characters)', alertRequestLong: 'Tell the Universe more (at least 15 characters)',
           alertYourPath: 'Choose your path', alertNoApi: 'API address not configured.', alertOpenFromBot: 'Open the app from the bot chat in Telegram — otherwise the request cannot be accepted.',
           alertServerSleep: 'Server was slow to wake up. Wait about a minute and tap «Submit request» again.',
+          sending: 'Sending…',
           universeHeard: '✨ {name}, the Universe heard your request.\n\nYour sound key is being created. It will arrive in this chat in 2–3 minutes.',
           universeHeardCouple: '✨ {name} and {name2}, the Universe heard your request.\n\nYour sound key is being created. It will arrive in this chat in 2–3 minutes.',
           universeHeardTransit: '✨ {name}, the Universe heard your request.\n\nYour Day Energy sound key is being created. It will arrive in this chat in 2–3 minutes.',
@@ -938,6 +946,7 @@
           alertRequestShort: 'Anfrage hinzufügen (5+ Zeichen)', alertRequestLong: 'Erzähle dem Universum mehr (mindestens 15 Zeichen)',
           alertYourPath: 'Wähle deinen Weg', alertNoApi: 'API-Adresse nicht konfiguriert.', alertOpenFromBot: 'Öffne die App aus dem Bot-Chat in Telegram — sonst wird die Anfrage nicht angenommen.',
           alertServerSleep: 'Server brauchte etwas zum Aufwachen. Warte etwa eine Minute und tippe erneut auf «Anfrage senden».',
+          sending: 'Sende…',
           universeHeard: '✨ {name}, das Universum hat deine Anfrage gehört.\n\nDein Klangschlüssel wird erstellt. In 2–3 Minuten kommt er in diesen Chat.',
           universeHeardCouple: '✨ {name} und {name2}, das Universum hat eure Anfrage gehört.\n\nEuer Klangschlüssel wird erstellt. In 2–3 Minuten kommt er in diesen Chat.',
           universeHeardTransit: '✨ {name}, das Universum hat deine Anfrage gehört.\n\nDein Tagesenergie-Klangschlüssel wird erstellt. In 2–3 Minuten kommt er in diesen Chat.',
@@ -1025,6 +1034,7 @@
           alertRequestShort: 'Ajoute une demande (5+ caractères)', alertRequestLong: 'Dis-en plus à l\'Univers (au moins 15 caractères)',
           alertYourPath: 'Choisis ton chemin', alertNoApi: 'Adresse API non configurée.', alertOpenFromBot: 'Ouvre l\'app depuis le chat du bot dans Telegram — sinon la demande ne peut pas être acceptée.',
           alertServerSleep: 'Le serveur s\'est réveillé lentement. Attends environ une minute et appuie à nouveau sur «Envoyer la demande».',
+          sending: 'Envoi…',
           universeHeard: '✨ {name}, l\'Univers a entendu ta demande.\n\nTa clé sonore est en cours de création. Elle arrivera dans ce chat dans 2–3 minutes.',
           universeHeardCouple: '✨ {name} et {name2}, l\'Univers a entendu votre demande.\n\nVotre clé sonore est en cours de création. Elle arrivera dans ce chat dans 2–3 minutes.',
           universeHeardTransit: '✨ {name}, l\'Univers a entendu ta demande.\n\nTa clé sonore Énergie du jour est en cours de création. Elle arrivera dans ce chat dans 2–3 minutes.',
@@ -1118,6 +1128,7 @@
         var gender2 = document.getElementById('gender2'); if (gender2) {
           var o2 = gender2.querySelectorAll('option'); if (o2[0]) o2[0].textContent = t('genderSelect');
           if (o2[1]) o2[1].textContent = t('female'); if (o2[2]) o2[2].textContent = t('male');
+          var o23 = gender2.querySelector('option[value="other"]'); if (o23) o23.textContent = t('other');
         }
         var langSelect = document.getElementById('language'); if (langSelect) {
           var lo = langSelect.querySelectorAll('option');
@@ -1193,7 +1204,6 @@
         tg.ready();
             tg.expand();
             if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
-            // cache initData early for Telegram WebView re-opens
             getInitData();
             logColorSnapshot('init-app', 'homePage');
             return true;
@@ -1799,6 +1809,8 @@
           if (!hasCoords && !hasPlaceSelected && !fromProfile) {
             var birthplaceHint = document.getElementById('birthplaceHint');
             if (birthplaceHint) birthplaceHint.style.display = 'block';
+            try { birthplaceField && birthplaceField.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+            alert(t('alertBirthplaceHint'));
             return false;
           }
           if (!birthtimeVal) { alert(t('alertBirthtime')); return false; }
@@ -1953,6 +1965,26 @@
           alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.'); return;
         }
         payload.initData = initData;
+        var restorePayBtn = null;
+        if (payBtn) {
+          var payOriginalText = payBtn.textContent;
+          payBtn.disabled = true;
+          payBtn.textContent = t('sending');
+          restorePayBtn = function() {
+            try {
+              var paymentPage = document.getElementById('paymentPage');
+              if (paymentPage && paymentPage.classList.contains('active')) {
+                payBtn.disabled = false;
+                payBtn.textContent = t('submitAndContinue');
+              } else {
+                payBtn.disabled = false;
+                payBtn.textContent = payOriginalText || t('submitAndContinue');
+              }
+            } catch (_) {
+              try { payBtn.disabled = false; } catch (__) {}
+            }
+          };
+        }
         try {
           // #region agent log
           // #endregion
@@ -2082,6 +2114,8 @@
           // #region agent log
           // #endregion
           hotLog('error', { message: msg || null });
+        } finally {
+          if (typeof restorePayBtn === 'function') restorePayBtn();
         }
       });
       
@@ -2218,8 +2252,18 @@
               if (profileOrTgUser.birthplace_lat != null && profileOrTgUser.birthplace_lon != null) {
                 bp.setAttribute('data-lat', String(profileOrTgUser.birthplace_lat));
                 bp.setAttribute('data-lon', String(profileOrTgUser.birthplace_lon));
+              } else {
+                bp.removeAttribute('data-lat');
+                bp.removeAttribute('data-lon');
               }
-            } else { bp.removeAttribute('data-from-profile'); bp.removeAttribute('data-place-selected'); }
+            } else {
+              bp.removeAttribute('data-from-profile');
+              bp.removeAttribute('data-place-selected');
+              bp.removeAttribute('data-lat');
+              bp.removeAttribute('data-lon');
+              var bw = document.getElementById('birthplaceWrap'); if (bw) bw.classList.remove('has-place');
+              var bch = document.getElementById('birthplaceCheck'); if (bch) bch.setAttribute('aria-hidden', 'true');
+            }
           }
           if (unk) unk.checked = !!profileOrTgUser.birthtime_unknown;
           if (g) g.value = profileOrTgUser.gender || '';
@@ -2242,7 +2286,22 @@
         if (nameEl) nameEl.value = hero.name || '';
         if (bd) bd.value = hero.birth_date || '';
         if (bt) bt.value = (hero.birth_time || '').substring(0, 5);
-        if (bp) bp.value = hero.birth_place || '';
+        if (bp) {
+          bp.value = hero.birth_place || '';
+          bp.removeAttribute('data-lat');
+          bp.removeAttribute('data-lon');
+          if (hero.birth_place && String(hero.birth_place).trim().length >= 3) {
+            bp.setAttribute('data-from-profile', '1');
+            bp.setAttribute('data-place-selected', '1');
+            var bw = document.getElementById('birthplaceWrap'); if (bw) bw.classList.add('has-place');
+            var bch = document.getElementById('birthplaceCheck'); if (bch) bch.setAttribute('aria-hidden', 'false');
+          } else {
+            bp.removeAttribute('data-from-profile');
+            bp.removeAttribute('data-place-selected');
+            var bw = document.getElementById('birthplaceWrap'); if (bw) bw.classList.remove('has-place');
+            var bch = document.getElementById('birthplaceCheck'); if (bch) bch.setAttribute('aria-hidden', 'true');
+          }
+        }
         if (unk) unk.checked = !!hero.birthtime_unknown;
         if (g) g.value = hero.gender || '';
         var langEl = document.getElementById('language');

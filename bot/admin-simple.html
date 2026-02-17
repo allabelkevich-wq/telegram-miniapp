@@ -472,9 +472,6 @@
       if (promoBody) promoBody.innerHTML = '<tr><td colspan="10" class="mono-muted">Загрузка…</td></tr>';
       if (paymentsBody) paymentsBody.innerHTML = '<tr><td colspan="10" class="mono-muted">Загрузка…</td></tr>';
       setMonoMsg('monetizationGlobalMsg', 'Обновляю данные монетизации…', null);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:monetizationRefresh:start',message:'loadMonetizationData start',data:{apiBase:API_BASE||null},timestamp:Date.now(),runId:'monetization-refresh-debug',hypothesisId:'H2'})}).catch(()=>{});
-      // #endregion
       try {
         const [pricingResult, promoResult, paymentsResult] = await Promise.all([
           fetchJson(API_BASE + '/api/admin/pricing' + authQueryFromPath(), { headers: authHeaders() }),
@@ -485,14 +482,8 @@
         renderPromoRows((promoResult.json && promoResult.json.data) || []);
         renderPaymentsRows((paymentsResult.json && paymentsResult.json.data) || []);
         setMonoMsg('monetizationGlobalMsg', 'Данные монетизации обновлены.', true);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:monetizationRefresh:success',message:'loadMonetizationData success',data:{pricingOk:!!(pricingResult.json&&pricingResult.json.catalog),promoOk:!!(promoResult.json&&promoResult.json.data),paymentsOk:!!(paymentsResult.json&&paymentsResult.json.data)},timestamp:Date.now(),runId:'monetization-refresh-debug',hypothesisId:'H2'})}).catch(()=>{});
-        // #endregion
       } catch (e) {
         setMonoMsg('monetizationGlobalMsg', 'Не удалось загрузить монетизацию: ' + ((e && e.message) || String(e)), false);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:monetizationRefresh:error',message:'loadMonetizationData failed',data:{errorMessage:e&&e.message?String(e.message):String(e)},timestamp:Date.now(),runId:'monetization-refresh-debug',hypothesisId:'H2'})}).catch(()=>{});
-        // #endregion
       }
     }
 
@@ -697,9 +688,6 @@
       }
     });
     document.getElementById('monetization-refresh-btn')?.addEventListener('click', function() {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:monetizationRefresh:click',message:'monetization refresh clicked',data:{hasLoadMonetizationData:typeof loadMonetizationData==='function'},timestamp:Date.now(),runId:'monetization-refresh-debug',hypothesisId:'H1,H2'})}).catch(()=>{});
-      // #endregion
       loadMonetizationData();
     });
 
@@ -758,9 +746,6 @@
         ['delivery_done', 'Доставка'],
         ['pipeline_done', 'Финальный статус'],
       ];
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bot/admin-simple.html:showDetails:build',message:'building details modal',data:{id:r&&r.id?String(r.id):'',generationStatus:String(genStatus||''),hasGenerationSteps:!!(r&&r.generation_steps),stepsKeys:steps&&typeof steps==='object'?Object.keys(steps).length:0,hasDeepseek:!!deepseekFull},timestamp:Date.now(),runId:'details-modal-debug',hypothesisId:'H4'})}).catch(()=>{});
-      // #endregion
       const allStepsBlock = '<div class="details-section" style="margin-bottom:24px;"><div class="section-title" style="color:#fbbf24;">🧭 Контроль всех этапов расчёта</div><div class="content-text" style="font-size:12px;line-height:1.7;">' +
         stepMap.map(function (pair) {
           var k = pair[0], label = pair[1];
