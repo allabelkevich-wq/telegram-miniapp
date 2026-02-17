@@ -1284,6 +1284,7 @@
       var pricingCatalog = [];
       var freeTrialAvailable = true;
       var activePromo = null;
+      var selectedMode = 'single';
 
       function getCurrentSku() {
         var modeSku = selectedMode || 'single';
@@ -1726,7 +1727,6 @@
       var stepNext = document.getElementById('stepNext');
       var quickToggle = document.getElementById('quickRequestsToggle');
       var quickPanel = document.getElementById('quickRequestsPanel');
-      var selectedMode = 'single';
       var hotDebugToggle = document.getElementById('hotDebugToggle');
       var hotDebugPanel = document.getElementById('hotDebugPanel');
       var hotDebugList = document.getElementById('hotDebugList');
