@@ -467,8 +467,9 @@
         </div>
         
         <div class="field">
-          <select id="gender" required>
-              <option value="">Пол</option>
+          <label for="gender" id="genderLabel">Пол</label>
+          <select id="gender" required aria-label="Пол">
+              <option value="">Выбери</option>
             <option value="male">Мужской</option>
             <option value="female">Женский</option>
           </select>
@@ -1069,7 +1070,7 @@
           ['submitAndContinue','#payBtn'], ['creatingKey','.loading-text'], ['keyActivated','#successPage .subtitle'],
           ['done','.success-title'], ['soulChat','#soulChatBtn'], ['soulChatPay','#soulChatPayBtn'], ['newKey','#newKeyBtn'],
           ['paymentThanks','#paymentThanksPage .success-title'], ['thanksSubtitle','#paymentThanksPage .subtitle'],
-          ['thanksDone','#paymentThanksBackBtn'], ['genderSelect','#gender option[value=""]']
+          ['thanksDone','#paymentThanksBackBtn'], ['gender','#genderLabel'], ['genderSelect','#gender option[value=""]']
         ];
         map.forEach(function(pair) {
           var el = document.querySelector(pair[1]);
