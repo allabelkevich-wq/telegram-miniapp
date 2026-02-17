@@ -43,7 +43,7 @@ export async function computeAndSaveAstroSnapshot(supabase, trackRequestId, prov
 
   const { data: req, error: fetchErr } = await supabase
     .from("track_requests")
-    .select("id, mode, birthdate, birthplace, birthtime, birthtime_unknown, person2_name, person2_birthdate, person2_birthplace, person2_birthtime, person2_birthtime_unknown")
+    .select("id, mode, birthdate, birthplace, birthtime, birthtime_unknown, birthplace_lat, birthplace_lon, person2_name, person2_birthdate, person2_birthplace, person2_birthtime, person2_birthtime_unknown")
     .eq("id", trackRequestId)
     .single();
 
@@ -51,11 +51,14 @@ export async function computeAndSaveAstroSnapshot(supabase, trackRequestId, prov
     return { ok: false, error: fetchErr?.message || "Заявка не найдена" };
   }
 
-  // Используем переданные координаты, если есть, иначе геокодим
+  // Используем координаты: переданные → из заявки (Mini App) → геокодинг
   let coords = null;
   if (providedCoords && typeof providedCoords.lat === 'number' && typeof providedCoords.lon === 'number') {
     coords = { lat: providedCoords.lat, lon: providedCoords.lon };
     console.log("[workerAstro] Используем переданные координаты:", coords);
+  } else if (req.birthplace_lat != null && req.birthplace_lon != null) {
+    coords = { lat: Number(req.birthplace_lat), lon: Number(req.birthplace_lon) };
+    console.log("[workerAstro] Координаты из заявки (Mini App):", coords);
   } else {
     coords = await geocode(req.birthplace || "");
     if (!coords) {

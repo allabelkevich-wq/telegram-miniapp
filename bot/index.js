@@ -19,8 +19,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Лог всегда в корне проекта (workspace), чтобы его можно было прочитать при любом cwd
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const MINI_APP_BASE = (process.env.MINI_APP_URL || "https://telegram-miniapp-six-teal.vercel.app").replace(/\?.*$/, "").replace(/\/$/, "");
-const MINI_APP_URL = MINI_APP_BASE + "?v=11";
+function normalizeUrlBase(raw) {
+  return String(raw || "")
+    .trim()
+    .replace(/\?.*$/, "")
+    .replace(/\/$/, "");
+}
+// Важно: на Render MINI_APP_URL часто забывают задать, и бот начинает слать ссылку на старый домен.
+// Render автоматически прокидывает RENDER_EXTERNAL_URL — используем его как безопасный fallback.
+const MINI_APP_BASE = normalizeUrlBase(process.env.MINI_APP_URL || process.env.RENDER_EXTERNAL_URL || "https://telegram-miniapp-six-teal.vercel.app");
+const MINI_APP_URL = MINI_APP_BASE + "?v=12";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";
@@ -465,6 +473,10 @@ async function saveRequest(data) {
     transit_location: emptyToNull(data.transit_location),
     transit_intent: emptyToNull(data.transit_intent),
   };
+  if (data.birthplaceLat != null && data.birthplaceLon != null) {
+    row.birthplace_lat = Number(data.birthplaceLat);
+    row.birthplace_lon = Number(data.birthplaceLon);
+  }
   if (data.client_id && supabase) {
     const { data: client, error: clientErr } = await supabase.from("clients").select("name, birth_date, birth_time, birth_place, birthtime_unknown, gender").eq("id", data.client_id).maybeSingle();
     if (!clientErr && client) {
@@ -520,8 +532,9 @@ async function getRequestsForAdmin(limit = 30) {
   }
 }
 
-// Кнопку меню (слева от поля ввода) задаём только в @BotFather → Bot Settings → Menu Button.
-// Бот НЕ вызывает setChatMenuButton — иначе перезаписывает настройку и кнопка «слетает».
+// Кнопку меню (слева от поля ввода) можно задать в @BotFather → Bot Settings → Menu Button.
+// Но на Render часто забывают MINI_APP_URL, и Telegram продолжает открывать старый домен (404/DEPLOYMENT_NOT_FOUND).
+// Поэтому дополнительно авто-фиксируем Menu Button на MINI_APP_URL при старте бота.
 
 bot.command("ping", async (ctx) => {
   await ctx.reply("Бот на связи. Команды работают.");
@@ -530,9 +543,9 @@ bot.command("ping", async (ctx) => {
 bot.command("start", async (ctx) => {
   const name = ctx.from?.first_name || "друг";
   const text =
-    `Привет, ${name}! 👋\n\n` +
-    `Я — YupSoul. Твоя жизнь — игра.\n\n` +
-    `Нажми кнопку меню ниже, чтобы открыть приложение и создать свой персональный звуковой ключ — уникальную аудиокомпозицию по твоим данным и запросу.`;
+    `Привет, ${name}!\n\n` +
+    `Заходи, когда захочешь вспомнить, кто ты.\n\n` +
+    `Открой мини‑приложение и создай свой персональный звуковой ключ.`;
   const replyMarkup = {
     reply_markup: {
       inline_keyboard: [[
@@ -1301,18 +1314,9 @@ app.get("/healthz", (_req, res) =>
 // Mini App: корень / и /app — чтобы работало при любом URL в кнопке меню
 const publicDir = path.join(__dirname, "public");
 const appHtmlPath = path.join(publicDir, "index.html");
-// #region agent log
-(globalThis.fetch ? fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H_PATH',location:'bot/index.js:miniapp_startup',message:'MiniApp paths resolved',data:{__dirname,publicDir,appHtmlPath,publicDirExists:fs.existsSync(publicDir),htmlExists:fs.existsSync(appHtmlPath)},timestamp:Date.now()})}).catch(()=>{}) : void 0);
-// #endregion
 function serveMiniApp(req, res) {
-  // #region agent log
-  (globalThis.fetch ? fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H_PATH',location:'bot/index.js:serveMiniApp:entry',message:'serveMiniApp called',data:{url:req.originalUrl||req.url,appHtmlPath,htmlExists:fs.existsSync(appHtmlPath)},timestamp:Date.now()})}).catch(()=>{}) : void 0);
-  // #endregion
   res.sendFile(appHtmlPath, (err) => {
     if (err) {
-      // #region agent log
-      (globalThis.fetch ? fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H_SEND',location:'bot/index.js:serveMiniApp:sendFile',message:'sendFile failed',data:{url:req.originalUrl||req.url,appHtmlPath,code:err?.code||null,message:String(err?.message||err)},timestamp:Date.now()})}).catch(()=>{}) : void 0);
-      // #endregion
       res.status(404).send("Mini App не найден. Проверь деплой и папку public.");
     }
   });
@@ -2258,6 +2262,16 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
 
 async function onBotStart(info) {
   console.log("Бот запущен:", info.username);
+  try {
+    if (process.env.RENDER_EXTERNAL_URL || process.env.MINI_APP_URL) {
+      await bot.api.setChatMenuButton({
+        menu_button: { type: "web_app", text: "YupSoul", web_app: { url: MINI_APP_URL } },
+      });
+      console.log("[Bot] Menu Button обновлён:", MINI_APP_URL);
+    }
+  } catch (e) {
+    console.warn("[Bot] Не удалось обновить Menu Button:", e?.message || e);
+  }
   if (ADMIN_IDS.length) console.log("Админы (ID):", ADMIN_IDS.join(", "));
   else console.warn("ADMIN_TELEGRAM_IDS не задан — команда /admin недоступна.");
   if (supabase) {

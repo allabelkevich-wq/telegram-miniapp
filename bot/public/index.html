@@ -687,9 +687,9 @@
         <div class="success-icon" style="font-size:4rem; margin-bottom:20px">✓</div>
         <h2 class="success-title" style="font-size:1.6rem; margin:0 0 16px 0">Спасибо за оплату</h2>
         <p class="success-text" id="paymentThanksMessage" style="margin:0 0 24px 0; font-size:1rem">
-          Песня ушла в генерацию. Через 2–3 минуты придёт в чат с ботом.
+          Заявка принята. Песня ушла в генерацию — повторно оплачивать не нужно. Через 2–3 минуты придёт в чат с ботом.
         </p>
-        <button id="paymentThanksBackBtn">Готово</button>
+        <button id="paymentThanksBackBtn" class="primary">Готово</button>
       </div>
       <footer><p>YupSoul • 2026</p></footer>
     </div>
@@ -743,7 +743,7 @@
           newKey: 'Создать ещё один ключ',
           paymentThanks: 'Спасибо за оплату', thanksSubtitle: 'заявка принята',
           songInProgress: 'Песня ушла в генерацию. Через 2–3 минуты придёт в чат с ботом.',
-          songInProgressConfirmed: 'Песня ушла в генерацию, заявка принята. Через 2–3 минуты придёт в чат с ботом.',
+          songInProgressConfirmed: 'Заявка принята. Песня ушла в генерацию — повторно оплачивать не нужно. Через 2–3 минуты придёт в чат с ботом.',
           thanksDone: 'Готово',
           notFromTelegram: 'Открой приложение из чата с ботом в Telegram (кнопка меню) — иначе заявка не отправится.',
           notFound: 'Не найдено', searchError: 'Ошибка поиска',
@@ -830,7 +830,7 @@
           newKey: 'Create another key',
           paymentThanks: 'Thank you for payment', thanksSubtitle: 'request accepted',
           songInProgress: 'Song is being generated. It will arrive in the bot chat in 2–3 minutes.',
-          songInProgressConfirmed: 'Song is being generated, request accepted. It will arrive in the bot chat in 2–3 minutes.',
+          songInProgressConfirmed: 'Request accepted. Song is being generated — no need to pay again. It will arrive in the bot chat in 2–3 minutes.',
           thanksDone: 'Done',
           notFromTelegram: 'Open the app from the bot chat in Telegram (menu button) — otherwise the request cannot be sent.',
           notFound: 'Not found', searchError: 'Search error',
@@ -917,7 +917,7 @@
           newKey: 'Weiteren Schlüssel erstellen',
           paymentThanks: 'Danke für die Zahlung', thanksSubtitle: 'Anfrage angenommen',
           songInProgress: 'Das Lied wird generiert. In 2–3 Minuten kommt es im Bot-Chat.',
-          songInProgressConfirmed: 'Lied wird generiert, Anfrage angenommen. In 2–3 Minuten im Bot-Chat.',
+          songInProgressConfirmed: 'Anfrage angenommen. Lied wird generiert — erneute Zahlung nicht nötig. In 2–3 Minuten im Bot-Chat.',
           thanksDone: 'Fertig',
           notFromTelegram: 'Öffne die App aus dem Bot-Chat in Telegram (Menü) — sonst kann die Anfrage nicht gesendet werden.',
           notFound: 'Nicht gefunden', searchError: 'Suchfehler',
@@ -1004,7 +1004,7 @@
           newKey: 'Créer une autre clé',
           paymentThanks: 'Merci pour le paiement', thanksSubtitle: 'demande acceptée',
           songInProgress: 'La chanson est en cours de génération. Elle arrivera dans le chat du bot dans 2–3 minutes.',
-          songInProgressConfirmed: 'Chanson en génération, demande acceptée. Elle arrivera dans le chat du bot dans 2–3 minutes.',
+          songInProgressConfirmed: 'Demande acceptée. Chanson en génération — pas besoin de payer à nouveau. Elle arrivera dans le chat du bot dans 2–3 minutes.',
           thanksDone: 'Terminé',
           notFromTelegram: 'Ouvre l\'app depuis le chat du bot dans Telegram (bouton menu) — sinon la demande ne peut pas être envoyée.',
           notFound: 'Non trouvé', searchError: 'Erreur de recherche',
@@ -1160,10 +1160,10 @@
         return !!(window.Telegram && window.Telegram.WebApp);
       }
       function getInitData() {
-        if (!isTelegramWebApp()) return '';
         var current = '';
         try {
-          current = (tg && tg.initData) ? String(tg.initData) : String((window.Telegram.WebApp && window.Telegram.WebApp.initData) || '');
+          var wa = window.Telegram && window.Telegram.WebApp;
+          current = (wa && wa.initData) ? String(wa.initData) : (tg && tg.initData) ? String(tg.initData) : '';
         } catch (_) { current = ''; }
         if (current) {
           try { localStorage.setItem(INIT_DATA_STORAGE_KEY, current); } catch (_) {}
@@ -1941,12 +1941,8 @@
           if (!(document.getElementById('transitLocationConfirmed') && document.getElementById('transitLocationConfirmed').checked)) { alert('✨ Подтверди, что локация указана верно'); return; }
           payload.transit = { date: transitDate, time: transitTime || null, location: transitLocation, intent: transitIntent || null };
         }
-        // #region agent log
-        // #endregion
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         if (!apiBase) {
-          // #region agent log
-          // #endregion
           alert('Не настроен адрес API. Укажи HEROES_API_BASE.'); return;
         }
         var initData = getInitData();
@@ -2028,10 +2024,6 @@
             }
             if (!hotJson.checkout_url) throw new Error('Checkout URL не получен');
             setPaymentStatus(t('hotCheckoutOpened'), 'warn');
-            // #region agent log
-            var hasTg = !!(window.Telegram && window.Telegram.WebApp);
-            var hasOpenLink = !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink);
-            // #endregion
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) window.Telegram.WebApp.openLink(hotJson.checkout_url);
             else window.open(hotJson.checkout_url, '_blank');
             var maxAttempts = 60;

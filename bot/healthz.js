@@ -53,8 +53,8 @@ const server = createServer(async (req, res) => {
     expressApp(req, res);
     return;
   }
-  // Пока index.js не загрузился — не отдаём 404 для /api и админки, иначе админка думает «не тот домен»
-  if (url === "/" || url.startsWith("/admin")) {
+  // Пока index.js не загрузился — не отдаём 404 для /, /app и админки (Mini App и возврат после оплаты открывают /app)
+  if (url === "/" || url === "/app" || url.startsWith("/admin")) {
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
     res.end(page("YupSoul Bot", "<h1>Запуск…</h1><p>Бот загружается. Подожди 10–20 сек и обнови страницу (F5).</p><p>Если долго не грузится — смотри Render → Logs.</p><p><a href=\"/healthz\">/healthz</a></p>"));
     return;
