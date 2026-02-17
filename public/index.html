@@ -229,8 +229,8 @@
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Comfortaa',sans-serif}
     body::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(1,6,26,.62) 0%,rgba(8,10,38,.78) 100%);z-index:0}
     .container{max-width:min(600px,100%);margin:0 auto;width:100%;position:relative;z-index:1;padding:0 var(--spacing-md)}
-    .page{display:none !important;min-height:100vh;padding-top:var(--spacing-lg)}
-    .page.active{display:block !important}
+    .page{display:none !important;min-height:100vh;padding-top:var(--spacing-lg);visibility:visible !important;opacity:1 !important}
+    .page.active{display:block !important;visibility:visible !important;opacity:1 !important}
     header{text-align:center;margin:var(--spacing-xl) 0 var(--spacing-lg);position:relative}
     h1{font-size:var(--fluid-2xl);background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 4s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;letter-spacing:-1px;line-height:1.1}
     .subtitle{color:var(--subtitle-readable,var(--tg-theme-text-color));font-size:var(--fluid-base);margin-top:8px;font-weight:400}
@@ -1689,13 +1689,21 @@
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
         if (pageId === 'paymentPage') {
           try {
-            if (tg && tg.expand) tg.expand();
+            console.log('[goToPage] Активирую страницу оплаты...');
+            if (tg && tg.expand) {
+              console.log('[goToPage] Вызываю tg.expand()');
+              tg.expand();
+            }
             catalogLoadError = false;
+            console.log('[goToPage] Обновляю UI оплаты...');
             updatePaymentUiFromCatalog();
             setPaymentStatus('','');
+            console.log('[goToPage] Загружаю каталог цен...');
             loadPricingCatalog();
+            console.log('[goToPage] Страница оплаты активирована успешно');
           } catch (e) {
             console.error('[goToPage] paymentPage init error:', e);
+            alert('Ошибка при открытии страницы оплаты: ' + e.message);
             var n = document.getElementById('pricingNotice');
             if (n) { n.textContent = t('catalogLoadFailed'); n.style.display = 'block'; }
           }
@@ -1945,10 +1953,20 @@
       });
 
       if (stepNext) stepNext.addEventListener('click', function() {
-        if (!validateStep(1)) return;
-        if (!validateStep(2)) return;
-        if (!validateStep(3)) return;
-        goToPage('paymentPage');
+        console.log('[stepNext] Клик по кнопке "К оплате"');
+        try {
+          console.log('[stepNext] Валидация шага 1...');
+          if (!validateStep(1)) { console.warn('[stepNext] Шаг 1 не прошёл валидацию'); return; }
+          console.log('[stepNext] Валидация шага 2...');
+          if (!validateStep(2)) { console.warn('[stepNext] Шаг 2 не прошёл валидацию'); return; }
+          console.log('[stepNext] Валидация шага 3...');
+          if (!validateStep(3)) { console.warn('[stepNext] Шаг 3 не прошёл валидацию'); return; }
+          console.log('[stepNext] Все проверки пройдены, переход на paymentPage');
+          goToPage('paymentPage');
+        } catch (e) {
+          console.error('[stepNext] Ошибка при переходе на страницу оплаты:', e);
+          alert('Ошибка: ' + e.message);
+        }
       });
       setMode('single');
       updateStepUI();
