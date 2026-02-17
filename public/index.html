@@ -1102,6 +1102,7 @@
       
       // Навигация по страницам
       function goToPage(pageId) {
+        console.log('[goToPage] переход на', pageId, 'from', document.querySelector('.page.active')?.id || 'none');
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
         if (pageId !== 'paymentPage') {
           var payBtnReset = document.getElementById('payBtn');
@@ -1111,7 +1112,12 @@
           page.classList.remove('active');
         });
         var target = document.getElementById(pageId);
-        if (target) target.classList.add('active');
+        if (target) {
+          target.classList.add('active');
+          console.log('[goToPage] страница', pageId, 'активна, display:', getComputedStyle(target).display, 'visibility:', getComputedStyle(target).visibility);
+        } else {
+          console.warn('[goToPage] страница', pageId, 'не найдена в DOM');
+        }
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
         if (pageId === 'paymentPage') { loadPricingCatalog(); updatePaymentUiFromCatalog(); setPaymentStatus('',''); }
         if (pageId === 'homePage' || pageId === 'formPage' || pageId === 'paymentPage') {
