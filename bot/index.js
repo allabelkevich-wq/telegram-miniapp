@@ -1575,20 +1575,43 @@ app.post("/api/admin/requests/:id/restart", asyncApi(async (req, res) => {
   const id = sanitizeRequestId(req.params.id);
   if (!id) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
   if (!isValidRequestId(id)) return res.status(400).json({ success: false, error: "Используйте полный UUID заявки (с дефисами), не обрезанный ID" });
+  const { data: row } = await supabase.from("track_requests").select("payment_status").eq("id", id).maybeSingle();
+  const ps = String(row?.payment_status || "").toLowerCase();
+  const needsPaymentOverride = ["pending", "requires_payment"].includes(ps);
+  const updatePayload = {
+    status: "pending",
+    generation_status: "pending",
+    error_message: null,
+    updated_at: new Date().toISOString(),
+  };
+  if (needsPaymentOverride) updatePayload.payment_status = "paid";
   const { error: updateError } = await supabase
     .from("track_requests")
-    .update({
-      status: "pending",
-      generation_status: "pending",
-      error_message: null,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updatePayload)
     .eq("id", id);
   if (updateError) return res.status(500).json({ success: false, error: updateError.message });
   import("./workerSoundKey.js").then(({ generateSoundKey }) => {
     generateSoundKey(id).catch((err) => console.error("[admin] restart generateSoundKey:", err?.message || err));
   }).catch((err) => console.error("[admin] restart import workerSoundKey:", err?.message || err));
   return res.json({ success: true, message: "Перезапущено" });
+}));
+
+app.post("/api/admin/requests/:id/mark-paid", express.json(), asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const id = sanitizeRequestId(req.params.id);
+  if (!id || !isValidRequestId(id)) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
+  const { error: updErr } = await supabase
+    .from("track_requests")
+    .update({
+      payment_status: "paid",
+      payment_provider: req.body?.provider || "admin",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (updErr) return res.status(500).json({ success: false, error: updErr.message });
+  return res.json({ success: true, message: "Заявка отмечена как оплаченная" });
 }));
 
 app.post("/api/admin/requests/:id/deliver", asyncApi(async (req, res) => {

@@ -18,6 +18,22 @@
       --secondary-color: #ec4899;
       --success-color: #10b981;
       --subtitle-readable: rgba(255,255,255,0.92);
+      /* Fluid scaling — пропорции Apple: уменьшается пропорционально экрану */
+      --fluid-xs: clamp(0.7rem, 1.8vw, 0.8rem);
+      --fluid-sm: clamp(0.8rem, 2.2vw, 0.95rem);
+      --fluid-base: clamp(0.9rem, 2.8vw, 1.05rem);
+      --fluid-md: clamp(1rem, 3.2vw, 1.2rem);
+      --fluid-lg: clamp(1.1rem, 3.8vw, 1.4rem);
+      --fluid-xl: clamp(1.2rem, 4.5vw, 1.6rem);
+      --fluid-2xl: clamp(1.4rem, 5.5vw, 2.4rem);
+      --spacing-xs: clamp(4px, 1.2vw, 8px);
+      --spacing-sm: clamp(6px, 1.8vw, 12px);
+      --spacing-md: clamp(10px, 2.5vw, 18px);
+      --spacing-lg: clamp(14px, 3.5vw, 24px);
+      --spacing-xl: clamp(18px, 4.5vw, 28px);
+      --radius-sm: clamp(6px, 1.8vw, 10px);
+      --radius-md: clamp(8px, 2.2vw, 14px);
+      --radius-lg: clamp(12px, 3vw, 20px);
       /* базовые переменные темы по умолчанию (dark premium) */
       --tg-theme-bg-color: #0A0A1A;
       --tg-theme-secondary-bg-color: rgba(255,255,255,0.08);
@@ -56,11 +72,12 @@
       background: var(--tg-theme-bg-color) url('assets/bg-yupsoul.png') center/cover no-repeat fixed !important;
       color: var(--tg-theme-text-color) !important;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: var(--fluid-base);
       margin: 0;
-      padding: 20px 15px;
-      padding-left: max(15px, env(safe-area-inset-left));
-      padding-right: max(15px, env(safe-area-inset-right));
-      padding-bottom: max(20px, env(safe-area-inset-bottom));
+      padding: var(--spacing-lg) var(--spacing-md);
+      padding-left: max(var(--spacing-md), env(safe-area-inset-left));
+      padding-right: max(var(--spacing-md), env(safe-area-inset-right));
+      padding-bottom: max(var(--spacing-lg), env(safe-area-inset-bottom));
       min-height: 100vh;
       min-height: -webkit-fill-available;
       display: flex;
@@ -88,7 +105,7 @@
       pointer-events:none;
     }
     @keyframes stars { 0%{opacity:0.3;} 50%{opacity:0.8;} 100%{opacity:0.3;} }
-    .content-wrapper { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .content-wrapper { max-width: min(600px,100%); margin: 0 auto; padding: var(--spacing-lg); width: 100%; }
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; color: var(--tg-theme-text-color, #fff); font-size: 14px; margin-bottom: 8px; font-weight: 500; }
     input::placeholder, textarea::placeholder { color: var(--tg-theme-hint-color, rgba(255,255,255,.45)); opacity: .85; }
@@ -211,19 +228,19 @@
     /* Остальные стили приложения */
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Comfortaa',sans-serif}
     body::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(1,6,26,.62) 0%,rgba(8,10,38,.78) 100%);z-index:0}
-    .container{max-width:600px;margin:0 auto;width:100%;position:relative;z-index:1}
-    .page{display:none;min-height:100vh;padding-top:20px}
+    .container{max-width:min(600px,100%);margin:0 auto;width:100%;position:relative;z-index:1;padding:0 var(--spacing-md)}
+    .page{display:none;min-height:100vh;padding-top:var(--spacing-lg)}
     .page.active{display:block}
-    header{text-align:center;margin:25px 0 20px;position:relative}
-    h1{font-size:2.4rem;background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 4s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;letter-spacing:-1px;line-height:1.1}
-    .subtitle{color:var(--subtitle-readable,var(--tg-theme-text-color));font-size:1.05rem;margin-top:8px;font-weight:400}
-    .tagline{color:#d4af37;font-size:1.15rem;font-weight:600;margin:12px 0;letter-spacing:-0.2px}
-    .section{background:var(--tg-theme-secondary-bg-color);backdrop-filter:blur(20px);border-radius:24px;padding:30px 25px;box-shadow:0 15px 45px rgba(212,175,55,0.28);border:1px solid var(--tg-theme-border-color);position:relative;overflow:hidden;margin-bottom:25px}
+    header{text-align:center;margin:var(--spacing-xl) 0 var(--spacing-lg);position:relative}
+    h1{font-size:var(--fluid-2xl);background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 4s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;letter-spacing:-1px;line-height:1.1}
+    .subtitle{color:var(--subtitle-readable,var(--tg-theme-text-color));font-size:var(--fluid-base);margin-top:8px;font-weight:400}
+    .tagline{color:#d4af37;font-size:var(--fluid-md);font-weight:600;margin:12px 0;letter-spacing:-0.2px}
+    .section{background:var(--tg-theme-secondary-bg-color);backdrop-filter:blur(20px);border-radius:var(--radius-lg);padding:var(--spacing-xl) var(--spacing-lg);box-shadow:0 15px 45px rgba(212,175,55,0.28);border:1px solid var(--tg-theme-border-color);position:relative;overflow:hidden;margin-bottom:var(--spacing-lg)}
     .section::before{display:none}
-    .field{margin-bottom:22px;text-align:left}
+    .field{margin-bottom:var(--spacing-lg);text-align:left}
     label{display:block;margin-bottom:10px;color:var(--tg-theme-text-color,#2d2d2d);font-weight:600;font-size:1.05rem;display:flex;align-items:center;gap:10px}
     label::before{content:attr(data-icon);font-size:1.25rem}
-    input,textarea,select{width:100%;padding:15px;border-radius:16px;border:1px solid var(--tg-theme-border-color,#e5e7eb);background:var(--tg-theme-secondary-bg-color,#fff);color:var(--tg-theme-text-color,#2d2d2d);font-size:16px;transition:all .3s ease;font-family:'Comfortaa',sans-serif}
+    input,textarea,select{width:100%;padding:var(--spacing-md);border-radius:var(--radius-md);border:1px solid var(--tg-theme-border-color,#e5e7eb);background:var(--tg-theme-secondary-bg-color,#fff);color:var(--tg-theme-text-color,#2d2d2d);font-size:var(--fluid-base);transition:all .3s ease;font-family:'Comfortaa',sans-serif}
     input:focus,textarea:focus,select:focus{outline:none;border-color:var(--tg-theme-button-color,#a78bfa);box-shadow:0 0 0 3px rgba(167,139,250,.15)}
     input.valid,textarea.valid{border-color:#4ade80}
     .birthdate-wrap{position:relative}
@@ -240,22 +257,24 @@
     .checkbox label::before{content:"❓";font-size:1.2rem;opacity:.9}
     select{appearance:none;background:url("image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23a78bfa' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 16px center;background-size:20px;padding-right:48px}
     textarea{min-height:140px;line-height:1.6;resize:vertical}
-    .request-label{font-size:1.3rem;text-align:center;margin-bottom:15px;color:#a78bfa;font-weight:700;letter-spacing:-0.5px}
-    .request-help-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-    .request-help-row .request-label{margin-bottom:0;text-align:left;font-size:1.08rem;letter-spacing:-0.2px;line-height:1.2;flex:1;min-width:0}
-    .request-help-toggle{width:auto;min-height:auto;margin:0;padding:10px 14px;border-radius:14px;background:rgba(167,139,250,.14);color:#7c3aed;border:1px solid rgba(167,139,250,.45);box-shadow:none;text-transform:none;letter-spacing:0;font-size:.9rem;font-weight:700;flex:0 0 auto;white-space:nowrap;min-width:max-content}
-    @media (max-width: 430px){
-      .request-help-row{align-items:center;flex-wrap:wrap}
-      .request-help-row .request-label{flex:1 1 100%;margin-bottom:8px}
-      .request-help-toggle{padding:9px 12px;font-size:.85rem;white-space:normal;min-width:0}
+    .request-label{font-size:var(--fluid-md);text-align:center;margin-bottom:var(--spacing-sm);color:#a78bfa;font-weight:700;letter-spacing:-0.5px}
+    .request-help-row{display:flex;align-items:center;justify-content:space-between;gap:var(--spacing-sm);margin-bottom:var(--spacing-sm)}
+    .request-help-row .request-label{margin-bottom:0;text-align:left;font-size:var(--fluid-base);letter-spacing:-0.2px;line-height:1.2;flex:1;min-width:0}
+    /* Компактная откидная кнопка быстрых запросов — стиль Apple */
+    .quick-dropdown{position:relative;flex:1 1 auto;min-width:0;margin-bottom:var(--spacing-sm);min-width:120px}
+    @media (max-width: 380px){
+      .request-help-row{flex-wrap:wrap}
+      .request-help-row .request-label{flex:1 1 100%;margin-bottom:var(--spacing-xs)}
+      .quick-dropdown{flex:1 1 100%}
     }
-    .request-help-toggle::after{display:none}
-    .request-help-toggle:hover{transform:none;background:rgba(167,139,250,.2);box-shadow:none}
-    .request-examples{display:none;margin:10px 0 0 0;padding:10px;background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.22);border-radius:14px}
+    .request-help-toggle{width:100%;min-height:auto;margin:0;padding:var(--spacing-sm) var(--spacing-md);border-radius:var(--radius-md);background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.12));color:#d4af37;border:1px solid rgba(212,175,55,0.5);box-shadow:none;text-transform:none;letter-spacing:0;font-size:var(--fluid-sm);font-weight:600;flex:0 0 auto;white-space:nowrap;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all .2s}
+    .request-help-toggle::after{content:'';width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid currentColor;margin-left:6px;opacity:.8;transition:transform .2s}
+    .request-help-toggle.open::after{transform:rotate(180deg)}
+    .request-help-toggle:hover{background:rgba(212,175,55,.25)}
+    .request-examples{display:none;position:absolute;top:100%;left:0;right:0;margin-top:4px;padding:var(--spacing-xs);background:var(--tg-theme-bg-color);border:1px solid rgba(212,175,55,.35);border-radius:var(--radius-md);box-shadow:0 8px 24px rgba(0,0,0,.4);max-height:min(45vh,220px);overflow-y:auto;z-index:100;-webkit-overflow-scrolling:touch}
     .request-examples.open{display:block}
-    .request-examples h3{font-size:.95rem;margin:0 0 8px 0;color:#7c3aed}
-    .quick-list{display:flex;flex-direction:column;gap:8px;width:100%}
-    .quick-list .example-btn{width:100% !important;min-width:0 !important;max-width:none !important;flex-shrink:0;white-space:normal;word-wrap:break-word;word-break:break-word;overflow:visible;text-overflow:unset;text-align:left;padding:12px 16px;font-size:.95rem;line-height:1.4;box-sizing:border-box}
+    .quick-list{display:flex;flex-direction:column;gap:2px;width:100%}
+    .quick-list .example-btn{width:100% !important;padding:var(--spacing-sm) var(--spacing-md) !important;font-size:var(--fluid-sm) !important;line-height:1.3 !important;min-height:auto !important;border-radius:var(--radius-sm) !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box}
     .example-btn{width:auto;min-width:0;max-width:none;flex-shrink:0;white-space:normal;text-transform:none;letter-spacing:0;font-size:.95rem;font-weight:600;padding:12px 16px;margin:0;min-height:auto;border-radius:12px;box-shadow:none;word-wrap:break-word;word-break:break-word;overflow:visible}
     .example-btn::after{display:none}
     .example-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(212,175,55,0.45)}
@@ -325,7 +344,7 @@
     .preview-nav button:hover{background:#a78bfa;color:white;transform:translateY(-2px)}
     .preview-nav button.active{background:linear-gradient(90deg,#a78bfa,#f9a8d4);color:white;border-color:transparent;box-shadow:0 4px 15px rgba(167,139,250,.3)}
     
-    @media (max-width:480px){.container{padding:0 12px}h1{font-size:2.1rem}.subtitle{font-size:1.05rem}.tagline{font-size:1.2rem}.section{padding:25px 20px}.btn-group{flex-direction:column}.btn-group button{width:100%}button{font-size:1.15rem;padding:16px;min-height:60px}.price-tag{font-size:1.25rem;padding:10px 15px}.success-icon{font-size:4rem}.success-title{font-size:1.9rem}.success-text{font-size:1.05rem}.preview-nav-buttons{flex-direction:column;align-items:center}.preview-nav button{width:100%;max-width:200px}}
+    @media (max-width:480px){.container{padding:0 var(--spacing-sm)}h1{font-size:var(--fluid-2xl)}.subtitle{font-size:var(--fluid-base)}.tagline{font-size:var(--fluid-md)}.section{padding:var(--spacing-lg) var(--spacing-md)}.btn-group{flex-direction:column}.btn-group button{width:100%}button{font-size:1.15rem;padding:16px;min-height:60px}.price-tag{font-size:1.25rem;padding:10px 15px}.success-icon{font-size:4rem}.success-title{font-size:1.9rem}.success-text{font-size:1.05rem}.preview-nav-buttons{flex-direction:column;align-items:center}.preview-nav button{width:100%;max-width:200px}}
   </style>
 </head>
 <body>
@@ -542,10 +561,9 @@
         <div class="field">
           <div class="request-help-row">
               <div class="request-label">Отправь запрос</div>
-              <button type="button" id="quickRequestsToggle" class="request-help-toggle" aria-expanded="false">Быстрые запросы</button>
-          </div>
-            <textarea id="request" placeholder="Какую грань будем исследовать сегодня?" aria-label="Запрос" rows="4"></textarea>
-            <div class="request-examples" id="quickRequestsPanel">
+              <div class="quick-dropdown">
+                <button type="button" id="quickRequestsToggle" class="request-help-toggle" aria-expanded="false">Быстрые запросы</button>
+                <div class="request-examples" id="quickRequestsPanel">
               <div class="quick-list" id="quickRequestsList" style="display:flex;flex-direction:column;gap:8px;">
                 <button type="button" class="example-btn" data-text="Гармония в отношениях и любовь к себе">Гармония и любовь к себе</button>
                 <button type="button" class="example-btn" data-text="Уверенность, предназначение и опора на себя">Уверенность и предназначение</button>
@@ -560,8 +578,10 @@
                 <button type="button" class="example-btn" data-text="Тёплая песня о заботе и нежности">Нежность и забота</button>
                 <button type="button" class="example-btn" data-text="Весёлая песня с самоиронией про мои слабости">Юмор и лёгкость</button>
               </div>
-            </div>
+                </div>
+              </div>
           </div>
+            <textarea id="request" placeholder="Какую грань будем исследовать сегодня?" aria-label="Запрос" rows="4"></textarea>
         </div>
         
         <div class="step-nav">
@@ -1161,9 +1181,9 @@
           var fieldEl = scope.querySelector('input,select,textarea');
           var requestLabelEl = scope.querySelector('.request-label');
           var tgParams = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.themeParams) ? window.Telegram.WebApp.themeParams : {};
-          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:theme:colorSnapshot',message:'runtime color snapshot',data:{stage:String(stage||''),pageId:String(pageId||''),activePage:(document.querySelector('.page.active')||{}).id||null,tgTextColor:tgParams.text_color||null,tgBgColor:tgParams.bg_color||null,cssVarTextColor:(rootStyles.getPropertyValue('--tg-theme-text-color')||'').trim()||null,cssVarBgColor:(rootStyles.getPropertyValue('--tg-theme-bg-color')||'').trim()||null,bodyColor:bodyStyles.color||null,bodyBgColor:bodyStyles.backgroundColor||null,labelColor:labelEl?getComputedStyle(labelEl).color:null,fieldColor:fieldEl?getComputedStyle(fieldEl).color:null,fieldBgColor:fieldEl?getComputedStyle(fieldEl).backgroundColor:null,requestLabelColor:requestLabelEl?getComputedStyle(requestLabelEl).color:null,locationHref:window.location.href||null},timestamp:Date.now(),runId:'color-drift-debug',hypothesisId:'H1,H2,H3,H4'})}).catch(()=>{});
+          void 0;
         } catch (e) {
-          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:theme:colorSnapshot',message:'runtime color snapshot failed',data:{stage:String(stage||''),pageId:String(pageId||''),errorMessage:e&&e.message?String(e.message):String(e)},timestamp:Date.now(),runId:'color-drift-debug',hypothesisId:'H4'})}).catch(()=>{});
+          void 0;
         }
       }
       function initApp() {
@@ -1809,8 +1829,9 @@
       if (quickToggle && quickPanel) {
         quickToggle.addEventListener('click', function() {
           var isOpen = quickPanel.classList.toggle('open');
+          this.classList.toggle('open', isOpen);
           this.setAttribute('aria-expanded', String(isOpen));
-          this.textContent = isOpen ? 'Скрыть' : 'Быстрые запросы';
+          this.textContent = isOpen ? t('hide') : t('quickRequests');
         });
       }
       document.querySelectorAll('.example-btn').forEach(function(btn) {
@@ -1823,8 +1844,9 @@
           if (quickPanel) {
             quickPanel.classList.remove('open');
             if (quickToggle) {
+              quickToggle.classList.remove('open');
               quickToggle.setAttribute('aria-expanded', 'false');
-              quickToggle.textContent = 'Быстрые запросы';
+              quickToggle.textContent = t('quickRequests');
             }
           }
         });
@@ -1851,9 +1873,6 @@
       var payBtn = document.getElementById('payBtn');
       if (payBtn) payBtn.addEventListener('click', async function() {
         if (payBtn.disabled) return;
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:handlerEntered',message:'pay handler entered',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H1'})}).catch(()=>{});
-        // #endregion
         var mode = selectedMode || 'single';
         var name1 = document.getElementById('name').value.trim();
         var birthdate1 = document.getElementById('birthdate').value;
@@ -1906,26 +1925,22 @@
           payload.transit = { date: transitDate, time: transitTime || null, location: transitLocation, intent: transitIntent || null };
         }
         // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:validationPassed',message:'pay validation passed',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
         // #endregion
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         if (!apiBase) {
           // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:earlyReturn',message:'early return no apiBase',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
           // #endregion
           alert('Не настроен адрес API. Укажи HEROES_API_BASE.'); return;
         }
         var initData = getInitData();
         if (!initData) {
           // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:earlyReturn',message:'early return no initData',data:{},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H2'})}).catch(()=>{});
           // #endregion
           alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.'); return;
         }
         payload.initData = initData;
         try {
           // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:click',message:'pay button clicked',data:{mode:mode,hasRequest:requestText.length>=1,hasPerson2:!!payload.person2,hasTransit:!!payload.transit},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P1'})}).catch(()=>{});
           // #endregion
           hotLog('pay click', { mode: mode, hasPerson2: !!payload.person2, hasTransit: !!payload.transit });
           var submitTimeoutMs = 90000;
@@ -1946,7 +1961,6 @@
           clearTimeout(timeoutId);
           var result = await response.json().catch(function() { return {}; });
           // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:submitResult',message:'submit-request result',data:{ok:!!(response.ok && result.ok),paymentRequired:!!(result && result.payment_required),requestId:result&&result.requestId?String(result.requestId):null,httpStatus:response.status},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P2'})}).catch(()=>{});
           // #endregion
           hotLog('submit result', { ok: !!(response.ok && result.ok), paymentRequired: !!(result && result.payment_required), requestId: result && result.requestId ? String(result.requestId).slice(0, 8) : null, httpStatus: response.status });
           if (response.ok && result.ok && result.requestId) {
@@ -1969,7 +1983,6 @@
             });
             var hotJson = await hotResp.json().catch(function() { return {}; });
             // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:hotCreate',message:'hot create response',data:{httpStatus:hotResp.status,success:!!(hotJson&&hotJson.success),freeApplied:!!hotJson.free_applied,hasCheckout:!!hotJson.checkout_url,requestId:result.requestId||null},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P3'})}).catch(()=>{});
             // #endregion
             hotLog('hot create', { status: hotResp.status, success: !!(hotJson && hotJson.success), freeApplied: !!hotJson.free_applied, hasCheckout: !!hotJson.checkout_url, requestId: result.requestId ? String(result.requestId).slice(0, 8) : null });
             if (!hotResp.ok || !hotJson.success) {
@@ -1986,7 +1999,6 @@
             // #region agent log
             var hasTg = !!(window.Telegram && window.Telegram.WebApp);
             var hasOpenLink = !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink);
-            fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:aboutToOpenCheckout',message:'about to open checkout',data:{hasTelegramWebApp:hasTg,hasOpenLink:hasOpenLink,checkoutUrlLength:(hotJson.checkout_url||'').length},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'H5'})}).catch(()=>{});
             // #endregion
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) window.Telegram.WebApp.openLink(hotJson.checkout_url);
             else window.open(hotJson.checkout_url, '_blank');
@@ -2003,7 +2015,6 @@
               var paymentStatus = statusJson && statusJson.data && statusJson.data.payment_status ? String(statusJson.data.payment_status).toLowerCase() : '';
               if (attempt === 1 || paymentStatus === 'paid') {
                 // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:statusPoll',message:'status poll',data:{attempt:attempt,status:paymentStatus||null,httpStatus:statusResp.status},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P4'})}).catch(()=>{});
                 // #endregion
                 hotLog('status poll', { attempt: attempt, status: paymentStatus || null, httpStatus: statusResp.status });
               }
@@ -2020,7 +2031,6 @@
               body: JSON.stringify({ request_id: result.requestId, initData: initData })
             });
             // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:confirm',message:'confirm response',data:{httpStatus:restartResp.status,ok:restartResp.ok,requestId:result.requestId||null},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P5'})}).catch(()=>{});
             // #endregion
             hotLog('confirm', { httpStatus: restartResp.status, ok: restartResp.ok, requestId: result.requestId ? String(result.requestId).slice(0, 8) : null });
             if (!restartResp.ok) {
@@ -2045,7 +2055,6 @@
           setPaymentStatus(msg || t('errorOp'), 'error');
           alert('❌ ' + (msg || t('errorOp')));
           // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:pay:error',message:'pay flow error',data:{errorMessage:msg||null},timestamp:Date.now(),runId:'hot-payment-debug',hypothesisId:'P1,P2,P3,P4,P5'})}).catch(()=>{});
           // #endregion
           hotLog('error', { message: msg || null });
         }
