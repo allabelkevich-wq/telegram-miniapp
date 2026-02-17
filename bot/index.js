@@ -11,6 +11,7 @@ import { createHeroesRouter, getOrCreateAppUser, validateInitData } from "./hero
 import { chatCompletion } from "./deepseek.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import fs from "node:fs";
 import crypto from "node:crypto";
 import "dotenv/config";
 
@@ -355,6 +356,17 @@ async function getLastCompletedRequestForUser(telegramUserId) {
     .limit(1)
     .maybeSingle();
   return data ? data.id : null;
+}
+
+/** Доступ к Soul Chat: по подписке Soul Basic / Soul Plus (включают N диалогов в месяц). */
+async function getSoulChatAccess(telegramUserId) {
+  if (!telegramUserId) return { allowed: false, reason: "Нужна авторизация Telegram." };
+  const hasSub = await hasActiveSubscription(telegramUserId);
+  if (hasSub) return { allowed: true, source: "subscription" };
+  return {
+    allowed: false,
+    reason: "Soul Chat доступен по подписке Soul Basic или Soul Plus. Открой приложение → «К оплате» и выбери тариф с диалогами с душой.",
+  };
 }
 
 async function getRequestForSoulChat(requestId) {
@@ -1179,6 +1191,7 @@ const app = express();
 const WEBHOOK_URL = (process.env.WEBHOOK_URL || "").replace(/\/$/, "");
 // Базовый URL для ссылки на админку. Одинаковое значение с WEBHOOK_URL — нормально (один сервис = один URL).
 const BOT_PUBLIC_URL = (process.env.BOT_PUBLIC_URL || process.env.WEBHOOK_URL || process.env.HEROES_API_BASE || "").replace(/\/webhook\/?$/i, "").replace(/\/$/, "");
+// HOT webhook: верификация подписи (X-HOT-Signature), идемпотентность по payment_order_id и payment_tx_id
 app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, res) => {
   try {
     const rawBody = Buffer.isBuffer(req.body) ? req.body.toString("utf8") : String(req.body || "");
@@ -1233,8 +1246,16 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
       paid_at: normalizedPaid ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
     };
-    const { error: updErr } = await supabase.from("track_requests").update(updatePayload).eq("id", row.id);
+    // Идемпотентность: обновляем только если заказ ещё не в статусе paid (защита от двойного grant при повторных webhook)
+    const { data: updatedRow, error: updErr } = await supabase
+      .from("track_requests")
+      .update(updatePayload)
+      .eq("id", row.id)
+      .or("payment_status.is.null,payment_status.neq.paid")
+      .select("id")
+      .maybeSingle();
     if (updErr && !/does not exist|column/i.test(updErr.message)) return res.status(500).json({ success: false, error: updErr.message });
+    if (!updatedRow) return res.json({ success: true, message: "Already processed" });
 
     if (normalizedPaid) {
       const promoFromOrder = String(parseJsonSafe(row.payment_raw, {})?.promo_code || "").trim();
@@ -1280,9 +1301,20 @@ app.get("/healthz", (_req, res) =>
 // Mini App: корень / и /app — чтобы работало при любом URL в кнопке меню
 const publicDir = path.join(__dirname, "public");
 const appHtmlPath = path.join(publicDir, "index.html");
+// #region agent log
+(globalThis.fetch ? fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H_PATH',location:'bot/index.js:miniapp_startup',message:'MiniApp paths resolved',data:{__dirname,publicDir,appHtmlPath,publicDirExists:fs.existsSync(publicDir),htmlExists:fs.existsSync(appHtmlPath)},timestamp:Date.now()})}).catch(()=>{}) : void 0);
+// #endregion
 function serveMiniApp(req, res) {
+  // #region agent log
+  (globalThis.fetch ? fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H_PATH',location:'bot/index.js:serveMiniApp:entry',message:'serveMiniApp called',data:{url:req.originalUrl||req.url,appHtmlPath,htmlExists:fs.existsSync(appHtmlPath)},timestamp:Date.now()})}).catch(()=>{}) : void 0);
+  // #endregion
   res.sendFile(appHtmlPath, (err) => {
-    if (err) res.status(404).send("Mini App не найден. Проверь деплой и папку public.");
+    if (err) {
+      // #region agent log
+      (globalThis.fetch ? fetch('http://127.0.0.1:7242/ingest/bc4e8ff4-db81-496d-b979-bb86841a5db1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H_SEND',location:'bot/index.js:serveMiniApp:sendFile',message:'sendFile failed',data:{url:req.originalUrl||req.url,appHtmlPath,code:err?.code||null,message:String(err?.message||err)},timestamp:Date.now()})}).catch(()=>{}) : void 0);
+      // #endregion
+      res.status(404).send("Mini App не найден. Проверь деплой и папку public.");
+    }
   });
 }
 app.get(["/", "/app", "/app/"], serveMiniApp);
@@ -1598,16 +1630,34 @@ app.put("/api/admin/settings", express.json(), asyncApi(async (req, res) => {
   return res.json({ success: true, message: "Настройки сохранены" });
 }));
 
+app.get("/api/soul-chat/access", asyncApi(async (req, res) => {
+  const initData = req.headers["x-telegram-init"] || req.query?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, allowed: false, reason: "Нужна авторизация Telegram." });
+  const access = await getSoulChatAccess(telegramUserId);
+  return res.json({ success: true, allowed: !!access.allowed, reason: access.reason || null, source: access.source || null });
+}));
+
 app.post("/api/soul-chat", express.json(), asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const body = req.body || {};
   const requestId = String(body.request_id || "").trim();
   const question = String(body.question || "").trim();
-  const telegramUserId = Number(body.telegram_user_id || 0);
-  const adminToken = String(body.admin_token || "");
+  const adminToken = String(body.admin_token || "").trim();
   const isAdminCaller = !!ADMIN_SECRET && adminToken === ADMIN_SECRET;
-  if (!isAdminCaller && !telegramUserId) {
-    return res.status(403).json({ success: false, error: "Нужен admin_token или telegram_user_id" });
+  let telegramUserId = null;
+  if (isAdminCaller && body.telegram_user_id != null) {
+    telegramUserId = Number(body.telegram_user_id);
+  } else {
+    const initData = req.headers["x-telegram-init"] || body.initData || "";
+    telegramUserId = validateInitData(initData, BOT_TOKEN);
+    if (telegramUserId == null) {
+      return res.status(401).json({ success: false, error: "Нужна авторизация Telegram (initData). Открой Soul Chat из приложения или из бота." });
+    }
+  }
+  const access = await getSoulChatAccess(telegramUserId);
+  if (!access.allowed) {
+    return res.status(403).json({ success: false, error: access.reason });
   }
   const result = await runSoulChat({ requestId, question, telegramUserId, isAdminCaller });
   if (!result.ok) return res.status(400).json({ success: false, error: result.error });
@@ -1674,6 +1724,7 @@ app.post("/api/promos/validate", express.json(), asyncApi(async (req, res) => {
   });
 }));
 
+// create: owner-check (заявка принадлежит telegram_user_id), идемпотентность (already_paid + тот же payment_order_id)
 app.post("/api/payments/hot/create", express.json(), asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const initData = req.headers["x-telegram-init"] || req.body?.initData || "";
@@ -1819,6 +1870,7 @@ app.post("/api/payments/hot/create", express.json(), asyncApi(async (req, res) =
   });
 }));
 
+// status: owner-check (доступ только к своей заявке), GET идемпотентен
 app.get("/api/payments/hot/status", asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const initData = req.headers["x-telegram-init"] || req.query?.initData || "";
