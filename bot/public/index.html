@@ -593,7 +593,7 @@
         </div>
         
         <div class="step-nav">
-          <button id="stepNext">К оплате</button>
+          <button id="stepNext">Отправить заявку</button>
         </div>
       </div>
       
@@ -610,27 +610,16 @@
       </header>
       
       <div class="section" style="position:relative;z-index:20">
-        <div style="background:#10b981;color:#fff;padding:12px;border-radius:8px;margin-bottom:15px;font-weight:700;text-align:center;font-size:1.1rem">✓ Страница оплаты загружена</div>
-        <div class="payment-build-badge">Build: c4eee97+dbg</div>
-        <div class="tagline" style="margin-bottom:15px">Оплата и доступ</div>
-        <p id="paymentIntro" style="text-align:center;font-size:1.05rem;line-height:1.7;margin-bottom:16px">Первая песня — в подарок. Дальше можно оплатить отдельный элемент или оформить подписку на полный доступ.</p>
-        <div id="pricingNotice" style="background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.4);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:.92rem;color:rgba(255,255,255,0.95);">
-          Загрузка тарифов...
-        </div>
-        <div id="priceSummary" style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:20px;margin:16px 0;">
-          <div id="priceSummaryLabel" style="font-size:.95rem;color:rgba(255,255,255,0.9);">Текущий элемент</div>
-          <div id="priceLabel" style="font-size:1.15rem;font-weight:700;color:#fff;margin-top:6px;">—</div>
-          <div id="priceValue" style="font-size:1.8rem;font-weight:800;color:#fff;margin-top:6px;">—</div>
-          <div id="priceHint" style="font-size:.88rem;color:rgba(255,255,255,0.85);margin-top:6px;"></div>
-        </div>
+        <div class="tagline" style="margin-bottom:15px">Промокод или оплата</div>
+        <p id="paymentIntro" style="text-align:center;font-size:1.05rem;line-height:1.7;margin-bottom:16px">Заявка отправлена. Введите промокод или нажмите кнопку ниже для оплаты через HOT Pay.</p>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <input id="promoCodeInput" type="text" placeholder="Промокод" style="flex:1;min-width:180px;padding:10px 12px;border-radius:10px;border:1px solid rgba(212,175,55,.4);background:var(--tg-theme-secondary-bg-color);color:var(--tg-theme-text-color);text-transform:uppercase;">
           <button id="promoApplyBtn" type="button" class="secondary" style="min-width:140px;margin-top:0;">Применить</button>
         </div>
         <div id="paymentStatus" style="display:none;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.35);border-radius:12px;padding:12px 14px;margin:14px 0;font-size:.92rem;color:rgba(255,255,255,.95);"></div>
-        <div class="btn-group">
+        <div class="btn-group" style="margin-top:20px">
           <button class="secondary" id="backFromPaymentBtn">← Назад</button>
-          <button id="payBtn">Оформить и продолжить</button>
+          <button id="payBtn">Оплатить через HOT Pay</button>
         </div>
       </div>
       
@@ -741,6 +730,9 @@
           loadingPricing: 'Загрузка тарифов...', currentItem: 'Текущий элемент',
           promoCode: 'Промокод', apply: 'Применить', backFromPayment: '← Назад',
           submitAndContinue: 'Оформить и продолжить', submitRequest: 'Отправить заявку',
+          paymentPageIntroAfterSubmit: 'Заявка отправлена. Введите промокод или нажмите кнопку ниже для оплаты через HOT Pay.',
+          paymentPageTagline: 'Промокод или оплата',
+          payWithHot: 'Оплатить через HOT Pay',
           firstFree: 'Первый звуковой ключ доступен бесплатно.',
           paymentRequired: 'Оплата требуется для новых заявок.',
           subscriptionActive: 'У вас активная подписка — можно продолжить.',
@@ -831,6 +823,9 @@
           loadingPricing: 'Loading plans...', currentItem: 'Current item',
           promoCode: 'Promo code', apply: 'Apply', backFromPayment: '← Back',
           submitAndContinue: 'Checkout & continue', submitRequest: 'Submit request',
+          paymentPageIntroAfterSubmit: 'Request submitted. Enter a promo code or tap the button below to pay via HOT Pay.',
+          paymentPageTagline: 'Promo code or payment',
+          payWithHot: 'Pay via HOT Pay',
           firstFree: 'Your first sound key is free.',
           paymentRequired: 'Payment required for new requests.',
           subscriptionActive: 'You have an active subscription — continue.',
@@ -1103,11 +1098,11 @@
           ['modeCouple','.mode-btn[data-mode="couple"] .mode-label'], ['modeCoupleDesc','.mode-btn[data-mode="couple"] .mode-desc'],
           ['modeTransit','.mode-btn[data-mode="transit"] .mode-label'], ['modeTransitDesc','.mode-btn[data-mode="transit"] .mode-desc'],
           ['secondPersonTitle','#secondPersonForm h3'], ['transitTitle','#transitForm h3'],
-          ['quickRequests','#quickRequestsToggle'], ['sendRequest','.request-label'], ['toPayment','#stepNext'],
-          ['paymentSubtitle','#paymentPage .subtitle'], ['paymentAndAccess','#paymentPage .tagline'],
+          ['quickRequests','#quickRequestsToggle'], ['sendRequest','.request-label'], ['submitRequest','#stepNext'],
+          ['paymentSubtitle','#paymentPage .subtitle'], ['paymentPageTagline','#paymentPage .tagline'],
           ['promoCode','#promoCodeInput'], ['apply','#promoApplyBtn'], ['backFromPayment','#backFromPaymentBtn'],
-          ['paymentIntro','#paymentIntro'], ['loadingDesc','#loadingDesc'], ['priceSummaryLabel','#priceSummaryLabel'],
-          ['submitAndContinue','#payBtn'], ['creatingKey','.loading-text'], ['keyActivated','#successPage .subtitle'],
+          ['paymentPageIntroAfterSubmit','#paymentIntro'], ['loadingDesc','#loadingDesc'], ['priceSummaryLabel','#priceSummaryLabel'],
+          ['payWithHot','#payBtn'], ['creatingKey','.loading-text'], ['keyActivated','#successPage .subtitle'],
           ['done','.success-title'], ['soulChat','#soulChatBtn'], ['soulChatPay','#soulChatPayBtn'], ['newKey','#newKeyBtn'],
           ['paymentThanks','#paymentThanksPage .success-title'], ['thanksSubtitle','#paymentThanksPage .subtitle'],
           ['thanksDone','#paymentThanksBackBtn'], ['gender','#genderLabel'], ['genderSelect','#gender option[value=""]']
@@ -1296,6 +1291,8 @@
       var hasSubscriptionActive = false;
       var catalogLoadError = false;
       var activePromo = null;
+      var pendingPaymentRequestId = null;
+      var pendingPaymentSku = null;
       var selectedMode = 'single';
 
       function getCurrentSku() {
@@ -1693,7 +1690,7 @@
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
         if (pageId !== 'paymentPage') {
           var payBtnReset = document.getElementById('payBtn');
-          if (payBtnReset) { payBtnReset.disabled = false; payBtnReset.textContent = t('submitRequest'); }
+          if (payBtnReset) { payBtnReset.disabled = false; payBtnReset.textContent = t('payWithHot'); }
         }
         
         console.log('[DEBUG-goToPage] Убираю .active со всех страниц...');
@@ -1714,39 +1711,8 @@
         }
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
         if (pageId === 'paymentPage') {
-          try {
-            console.log('[DEBUG-paymentPage] =============== ИНИЦИАЛИЗАЦИЯ СТРАНИЦЫ ОПЛАТЫ ===============');
-            var paymentPageEl = document.getElementById('paymentPage');
-            var section = paymentPageEl ? paymentPageEl.querySelector('.section') : null;
-            var greenBox = paymentPageEl ? paymentPageEl.querySelector('div[style*="background:#10b981"]') : null;
-            var header = paymentPageEl ? paymentPageEl.querySelector('header') : null;
-            
-            console.log('[DEBUG-paymentPage] DOM элементы:');
-            console.log('  - paymentPage:', !!paymentPageEl);
-            console.log('  - .section:', !!section);
-            console.log('  - greenBox (индикатор):', !!greenBox);
-            console.log('  - header:', !!header);
-            
-            if (tg && tg.expand) {
-              console.log('[DEBUG-paymentPage] Вызываю tg.expand()...');
-              tg.expand();
-            }
-            
-            catalogLoadError = false;
-            console.log('[DEBUG-paymentPage] Вызываю updatePaymentUiFromCatalog()...');
-            updatePaymentUiFromCatalog();
-            
-            setPaymentStatus('','');
-            console.log('[DEBUG-paymentPage] Вызываю loadPricingCatalog() (async)...');
-            loadPricingCatalog();
-            
-            console.log('[DEBUG-paymentPage] ✓ Инициализация завершена');
-          } catch (e) {
-            console.error('[DEBUG-paymentPage] ❌ ОШИБКА:', e.message, e.stack);
-            alert('Ошибка при открытии страницы оплаты: ' + e.message);
-            var n = document.getElementById('pricingNotice');
-            if (n) { n.textContent = t('catalogLoadFailed'); n.style.display = 'block'; }
-          }
+          if (tg && tg.expand) try { tg.expand(); } catch (e) {}
+          setPaymentStatus('', '');
         }
         if (pageId === 'successPage') updateSoulChatHint();
         if (pageId === 'homePage' || pageId === 'formPage' || pageId === 'paymentPage') {
@@ -1992,40 +1958,8 @@
         });
       });
 
-      if (stepNext) stepNext.addEventListener('click', function() {
-        console.log('[DEBUG-stepNext] =============== КЛИК К ОПЛАТЕ ===============');
-        console.log('[DEBUG-stepNext] stepNext button exists:', !!stepNext);
-        try {
-          console.log('[DEBUG-stepNext] Начало валидации...');
-          if (!validateStep(1)) { console.warn('[DEBUG-stepNext] ❌ Шаг 1 FAILED'); return; }
-          console.log('[DEBUG-stepNext] ✓ Шаг 1 OK');
-          if (!validateStep(2)) { console.warn('[DEBUG-stepNext] ❌ Шаг 2 FAILED'); return; }
-          console.log('[DEBUG-stepNext] ✓ Шаг 2 OK');
-          if (!validateStep(3)) { console.warn('[DEBUG-stepNext] ❌ Шаг 3 FAILED'); return; }
-          console.log('[DEBUG-stepNext] ✓ Шаг 3 OK - ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ');
-          console.log('[DEBUG-stepNext] Вызываю goToPage(paymentPage)...');
-          goToPage('paymentPage');
-          console.log('[DEBUG-stepNext] goToPage вызван успешно');
-        } catch (e) {
-          console.error('[DEBUG-stepNext] ❌ ОШИБКА:', e.message, e.stack);
-          alert('Ошибка при переходе к оплате: ' + e.message);
-        }
-      });
-      setMode('single');
-      updateStepUI();
-      var promoApplyBtn = document.getElementById('promoApplyBtn');
-      if (promoApplyBtn) promoApplyBtn.addEventListener('click', applyPromoCode);
-      
-      var backFromPaymentBtn = document.getElementById('backFromPaymentBtn');
-      if (backFromPaymentBtn) backFromPaymentBtn.addEventListener('click', function() {
-        if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
-        var payBtnEl = document.getElementById('payBtn');
-        if (payBtnEl) { payBtnEl.disabled = false; payBtnEl.textContent = t('submitRequest'); }
-        goToPage('formPage');
-      });
-      var payBtn = document.getElementById('payBtn');
-      if (payBtn) payBtn.addEventListener('click', async function() {
-        if (payBtn.disabled) return;
+      if (stepNext) stepNext.addEventListener('click', async function() {
+        if (!validateStep(1) || !validateStep(2) || !validateStep(3)) return;
         var mode = selectedMode || 'single';
         var name1 = document.getElementById('name').value.trim();
         var birthdate1 = document.getElementById('birthdate').value;
@@ -2078,61 +2012,22 @@
           payload.transit = { date: transitDate, time: transitTime || null, location: transitLocation, intent: transitIntent || null };
         }
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
-        if (!apiBase) {
-          alert('Не настроен адрес API. Укажи HEROES_API_BASE.'); return;
-        }
+        if (!apiBase) { alert('Не настроен адрес API.'); return; }
         var initData = getInitData();
-        if (!initData) {
-          // #region agent log
-          // #endregion
-          alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.'); return;
-        }
+        if (!initData) { alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.'); return; }
         payload.initData = initData;
-        var restorePayBtn = null;
-        if (payBtn) {
-          var payOriginalText = payBtn.textContent;
-          payBtn.disabled = true;
-          payBtn.textContent = t('sending');
-          restorePayBtn = function() {
-            try {
-              var paymentPage = document.getElementById('paymentPage');
-              if (paymentPage && paymentPage.classList.contains('active')) {
-                payBtn.disabled = false;
-                payBtn.textContent = t('submitAndContinue');
-              } else {
-                payBtn.disabled = false;
-                payBtn.textContent = payOriginalText || t('submitAndContinue');
-              }
-            } catch (_) {
-              try { payBtn.disabled = false; } catch (__) {}
-            }
-          };
-        }
+
+        var stepNextOriginalText = stepNext.textContent;
+        stepNext.disabled = true;
+        stepNext.textContent = t('sending');
         try {
-          // #region agent log
-          // #endregion
-          hotLog('pay click', { mode: mode, hasPerson2: !!payload.person2, hasTransit: !!payload.transit });
-          var submitTimeoutMs = 90000;
           var controller = new AbortController();
-          var timeoutId = setTimeout(function() { controller.abort(); }, submitTimeoutMs);
-          var response;
-          try {
-            response = await fetch(apiBase + '/api/submit-request', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData }, body: JSON.stringify(payload), signal: controller.signal });
-          } catch (e) {
-            clearTimeout(timeoutId);
-            if (e && e.name === 'AbortError') {
-              setPaymentStatus(t('alertServerSleep'), 'error');
-              alert(t('alertServerSleep'));
-              return;
-            }
-            throw e;
-          }
+          var timeoutId = setTimeout(function() { controller.abort(); }, 90000);
+          var response = await fetch(apiBase + '/api/submit-request', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData }, body: JSON.stringify(payload), signal: controller.signal });
           clearTimeout(timeoutId);
           var result = await response.json().catch(function() { return {}; });
-          // #region agent log
-          // #endregion
-          hotLog('submit result', { ok: !!(response.ok && result.ok), paymentRequired: !!(result && result.payment_required), requestId: result && result.requestId ? String(result.requestId).slice(0, 8) : null, httpStatus: response.status });
-          if (response.ok && result.ok && result.requestId) {
+
+          if (response.ok && result.ok && result.requestId && !result.payment_required) {
             goToPage('loadingPage');
             var sp = document.getElementById('songPreviewText');
             if (sp) {
@@ -2142,166 +2037,156 @@
             }
             if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
             goToPage('successPage');
-            console.log('[MiniApp] Заявка отправлена, requestId:', result.requestId);
           } else if (result && result.payment_required && result.requestId) {
-            console.log('[HOT] Требуется оплата, requestId:', result.requestId);
+            pendingPaymentRequestId = result.requestId;
+            pendingPaymentSku = result.sku || getCurrentSku();
+            activePromo = null;
+            setPaymentStatus('', '');
+            if (tg && tg.expand) try { tg.expand(); } catch (e) {}
+            goToPage('paymentPage');
             setPaymentStatus(t('paymentRequiredOpening'), 'warn');
-            var hotCtrl = new AbortController();
-            var hotTimeout = setTimeout(function() { hotCtrl.abort(); }, 30000);
-            var hotResp;
-            var hotPayload = { 
-              request_id: result.requestId, 
-              sku: result.sku || getCurrentSku(), 
-              promo_code: activePromo ? activePromo.code : null, 
-              initData: initData 
-            };
-            console.log('[HOT] Отправляю запрос на /api/payments/hot/create', { request_id: result.requestId, sku: hotPayload.sku });
-            try {
-              hotResp = await fetch(apiBase + '/api/payments/hot/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
-                body: JSON.stringify(hotPayload),
-                signal: hotCtrl.signal
-              });
-              console.log('[HOT] Ответ получен, status:', hotResp.status, 'ok:', hotResp.ok);
-            } catch (hotErr) {
-              clearTimeout(hotTimeout);
-              console.error('[HOT] Ошибка при запросе /api/payments/hot/create:', hotErr);
-              if (hotErr && hotErr.name === 'AbortError') {
-                setPaymentStatus(t('alertServerSleep'), 'error');
-                alert(t('alertServerSleep'));
-                return;
-              }
-              throw hotErr;
-            }
-            clearTimeout(hotTimeout);
-            var hotJson = await hotResp.json().catch(function() { 
-              console.error('[HOT] Не удалось распарсить JSON ответ');
-              return {}; 
-            });
-            console.log('[HOT] Распарсенный ответ:', { success: hotJson.success, hasCheckoutUrl: !!hotJson.checkout_url, freeApplied: hotJson.free_applied });
-            // #region agent log
-            // #endregion
-            hotLog('hot create', { status: hotResp.status, success: !!(hotJson && hotJson.success), freeApplied: !!hotJson.free_applied, hasCheckout: !!hotJson.checkout_url, requestId: result.requestId ? String(result.requestId).slice(0, 8) : null });
-            if (!hotResp.ok || !hotJson.success) {
-              throw new Error(hotJson.error || 'Не удалось создать оплату HOT');
-            }
-            if (hotJson.free_applied) {
-              setPaymentStatus(t('promoFreeGen'), 'ok');
-              goToPage('loadingPage');
-              setTimeout(function() { goToPage('successPage'); }, 1800);
-              return;
-            }
-            if (!hotJson.checkout_url) throw new Error('Checkout URL не получен');
-            var checkoutUrl = String(hotJson.checkout_url);
-            console.log('[HOT] Получен checkout_url:', checkoutUrl);
-            setPaymentStatus('Открываю страницу оплаты HOT...', 'warn');
-            
-            // Попытка 1: Telegram.WebApp.openLink (рекомендуемый способ для Mini App)
-            var opened = false;
-            try {
-              if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.openLink === 'function') {
-                console.log('[HOT] Использую Telegram.WebApp.openLink');
-                window.Telegram.WebApp.openLink(checkoutUrl);
-                opened = true;
-                console.log('[HOT] openLink вызван успешно');
-              }
-            } catch (linkErr) {
-              console.warn('[HOT] Telegram.WebApp.openLink failed:', linkErr);
-            }
-            
-            // Попытка 2: window.open (fallback для браузера или если openLink не сработал)
-            if (!opened) {
-              try {
-                console.log('[HOT] Использую window.open fallback');
-                var newWindow = window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
-                if (newWindow) {
-                  console.log('[HOT] window.open успешно открыл новое окно');
-                  opened = true;
-                } else {
-                  console.warn('[HOT] window.open вернул null (возможно заблокировано popup)');
-                }
-              } catch (openErr) {
-                console.error('[HOT] window.open failed:', openErr);
-              }
-            }
-            
-            // Попытка 3: Показать ссылку пользователю, если ничего не сработало
-            if (!opened) {
-              console.error('[HOT] Все попытки открыть ссылку провалились');
-              setPaymentStatus('⚠️ Не удалось открыть оплату автоматически', 'error');
-              if (confirm('Не удалось открыть страницу оплаты автоматически. Скопировать ссылку в буфер обмена?')) {
-                try {
-                  navigator.clipboard.writeText(checkoutUrl).then(function() {
-                    alert('✓ Ссылка скопирована! Вставьте её в браузер:\n' + checkoutUrl);
-                  }).catch(function() {
-                    alert('Откройте эту ссылку в браузере:\n\n' + checkoutUrl);
-                  });
-                } catch (e) {
-                  alert('Откройте эту ссылку в браузере:\n\n' + checkoutUrl);
-                }
-              }
-              return;
-            }
-            
-            setPaymentStatus(t('hotCheckoutOpened'), 'warn');
-            var maxAttempts = 60;
-            var attempt = 0;
-            var paid = false;
-            while (attempt < maxAttempts) {
-              attempt += 1;
-              await new Promise(function(resolve) { setTimeout(resolve, 3000); });
-              var statusResp = await fetch(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(result.requestId), {
-                headers: { 'X-Telegram-Init': initData }
-              });
-              var statusJson = await statusResp.json().catch(function() { return {}; });
-              var paymentStatus = statusJson && statusJson.data && statusJson.data.payment_status ? String(statusJson.data.payment_status).toLowerCase() : '';
-              if (attempt === 1 || paymentStatus === 'paid') {
-                // #region agent log
-                // #endregion
-                hotLog('status poll', { attempt: attempt, status: paymentStatus || null, httpStatus: statusResp.status });
-              }
-              if (paymentStatus === 'paid') { paid = true; break; }
-            }
-            if (!paid) {
-              setPaymentStatus(t('paymentNotConfirmed'), 'warn');
-              return;
-            }
-            setPaymentStatus(t('paymentConfirmed'), 'ok');
-            var restartResp = await fetch(apiBase + '/api/payments/hot/confirm', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
-              body: JSON.stringify({ request_id: result.requestId, initData: initData })
-            });
-            // #region agent log
-            // #endregion
-            hotLog('confirm', { httpStatus: restartResp.status, ok: restartResp.ok, requestId: result.requestId ? String(result.requestId).slice(0, 8) : null });
-            if (!restartResp.ok) {
-              setPaymentStatus(t('paymentReceivedNoStart', { id: result.requestId }), 'warn');
-              return;
-            }
+          } else {
+            stepNext.disabled = false;
+            stepNext.textContent = stepNextOriginalText;
+            alert(result.error || result.message || 'Не удалось отправить заявку.');
+            return;
+          }
+        } catch (e) {
+          stepNext.disabled = false;
+          stepNext.textContent = stepNextOriginalText;
+          if (e && e.name === 'AbortError') { alert(t('alertServerSleep')); return; }
+          alert('Ошибка при отправке: ' + (e.message || e));
+          return;
+        }
+        stepNext.disabled = false;
+        stepNext.textContent = stepNextOriginalText;
+      });
+      setMode('single');
+      updateStepUI();
+      var promoApplyBtn = document.getElementById('promoApplyBtn');
+      if (promoApplyBtn) promoApplyBtn.addEventListener('click', applyPromoCode);
+      
+      var backFromPaymentBtn = document.getElementById('backFromPaymentBtn');
+      if (backFromPaymentBtn) backFromPaymentBtn.addEventListener('click', function() {
+        if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
+        var payBtnEl = document.getElementById('payBtn');
+        if (payBtnEl) { payBtnEl.disabled = false; payBtnEl.textContent = t('payWithHot'); }
+        goToPage('formPage');
+      });
+      var payBtn = document.getElementById('payBtn');
+      if (payBtn) payBtn.addEventListener('click', async function() {
+        if (payBtn.disabled) return;
+        if (!pendingPaymentRequestId) {
+          alert('Сначала нажмите «Отправить заявку» на предыдущем шаге.');
+          return;
+        }
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        if (!apiBase) { alert('Не настроен адрес API.'); return; }
+        var initData = getInitData();
+        if (!initData) { alert('Открой приложение из чата с ботом в Telegram.'); return; }
+
+        var promoInput = document.getElementById('promoCodeInput');
+        var promoCode = (promoInput && promoInput.value) ? promoInput.value.trim() : (activePromo ? activePromo.code : null);
+        var hotPayload = {
+          request_id: pendingPaymentRequestId,
+          sku: pendingPaymentSku,
+          promo_code: promoCode || null,
+          initData: initData
+        };
+
+        var payOriginalText = payBtn.textContent;
+        payBtn.disabled = true;
+        payBtn.textContent = t('sending');
+        try {
+          var hotCtrl = new AbortController();
+          var hotTimeout = setTimeout(function() { hotCtrl.abort(); }, 30000);
+          var hotResp = await fetch(apiBase + '/api/payments/hot/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+            body: JSON.stringify(hotPayload),
+            signal: hotCtrl.signal
+          });
+          clearTimeout(hotTimeout);
+          var hotJson = await hotResp.json().catch(function() { return {}; });
+
+          if (!hotResp.ok || !hotJson.success) {
+            throw new Error(hotJson.error || 'Не удалось создать оплату HOT');
+          }
+          if (hotJson.free_applied) {
+            setPaymentStatus(t('promoFreeGen'), 'ok');
+            pendingPaymentRequestId = null;
+            pendingPaymentSku = null;
             goToPage('loadingPage');
             setTimeout(function() { goToPage('successPage'); }, 1800);
-          } else {
-            var errMsg = (result && result.error) ? String(result.error) : (result && result.message) ? String(result.message) : ('HTTP ' + response.status);
-            if (response.status === 401) {
-              errMsg = (result && result.error) ? String(result.error) : 'Сессия устарела. Закрой Mini App и открой снова из чата с ботом, затем отправь заявку.';
+            payBtn.disabled = false;
+            payBtn.textContent = payOriginalText;
+            return;
+          }
+          if (!hotJson.checkout_url) throw new Error('Checkout URL не получен');
+          var checkoutUrl = String(hotJson.checkout_url);
+          setPaymentStatus('Открываю страницу оплаты...', 'warn');
+
+          var opened = false;
+          try {
+            if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.openLink === 'function') {
+              window.Telegram.WebApp.openLink(checkoutUrl);
+              opened = true;
             }
-            throw new Error(errMsg);
+          } catch (linkErr) {}
+          if (!opened) {
+            var newWindow = window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
+            if (newWindow) opened = true;
           }
+          if (!opened) {
+            setPaymentStatus('⚠️ Не удалось открыть оплату автоматически', 'error');
+            if (confirm('Скопировать ссылку в буфер обмена?')) {
+              try {
+                navigator.clipboard.writeText(checkoutUrl);
+                alert('✓ Ссылка скопирована. Вставьте в браузер.');
+              } catch (e) {
+                alert('Откройте в браузере:\n\n' + checkoutUrl);
+              }
+            }
+            payBtn.disabled = false;
+            payBtn.textContent = payOriginalText;
+            return;
+          }
+
+          setPaymentStatus(t('hotCheckoutOpened'), 'warn');
+          var maxAttempts = 60;
+          var attempt = 0;
+          var paid = false;
+          while (attempt < maxAttempts) {
+            attempt += 1;
+            await new Promise(function(resolve) { setTimeout(resolve, 3000); });
+            var statusResp = await fetch(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(pendingPaymentRequestId), { headers: { 'X-Telegram-Init': initData } });
+            var statusJson = await statusResp.json().catch(function() { return {}; });
+            var paymentStatus = statusJson && statusJson.data && statusJson.data.payment_status ? String(statusJson.data.payment_status).toLowerCase() : '';
+            if (paymentStatus === 'paid') { paid = true; break; }
+          }
+          if (!paid) {
+            setPaymentStatus(t('paymentNotConfirmed'), 'warn');
+            payBtn.disabled = false;
+            payBtn.textContent = payOriginalText;
+            return;
+          }
+          setPaymentStatus(t('paymentConfirmed'), 'ok');
+          await fetch(apiBase + '/api/payments/hot/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+            body: JSON.stringify({ request_id: pendingPaymentRequestId, initData: initData })
+          });
+          pendingPaymentRequestId = null;
+          pendingPaymentSku = null;
+          goToPage('loadingPage');
+          setTimeout(function() { goToPage('successPage'); }, 1800);
         } catch (error) {
-          console.error('[MiniApp] Ошибка:', error);
-          var msg = (error && error.message) ? String(error.message) : '';
-          if (!msg || /^HTTP\s+\d+$/i.test(msg)) {
-            msg = t('submitFailed');
-          }
-          setPaymentStatus(msg || t('errorOp'), 'error');
-          alert('❌ ' + (msg || t('errorOp')));
-          // #region agent log
-          // #endregion
-          hotLog('error', { message: msg || null });
+          var msg = (error && error.message) ? String(error.message) : t('errorOp');
+          setPaymentStatus(msg, 'error');
+          alert('❌ ' + msg);
         } finally {
-          if (typeof restorePayBtn === 'function') restorePayBtn();
+          payBtn.disabled = false;
+          payBtn.textContent = payOriginalText;
         }
       });
       
