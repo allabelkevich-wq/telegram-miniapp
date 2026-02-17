@@ -1385,15 +1385,20 @@ app.get("/api/miniapp-url", (_req, res) => {
 const publicDir = path.join(__dirname, "public");
 const appHtmlPath = path.join(publicDir, "index.html");
 function serveMiniApp(req, res) {
+  console.log("[serveMiniApp] Запрос к Mini App:", req.path, "query:", req.query);
   // Диагностические заголовки: помогают понять, какой именно билд сейчас на Render/в кеше.
   try {
     res.setHeader("X-MiniApp-Url", MINI_APP_URL);
     res.setHeader("X-MiniApp-Base", MINI_APP_BASE);
     res.setHeader("X-Render-Commit", process.env.RENDER_GIT_COMMIT || "");
   } catch (_) {}
+  console.log("[serveMiniApp] Отправка файла:", appHtmlPath);
   res.sendFile(appHtmlPath, (err) => {
     if (err) {
+      console.error("[serveMiniApp] Ошибка отправки файла:", err);
       res.status(404).send("Mini App не найден. Проверь деплой и папку public.");
+    } else {
+      console.log("[serveMiniApp] Файл успешно отправлен");
     }
   });
 }
