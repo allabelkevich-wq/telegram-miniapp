@@ -1,6 +1,6 @@
 Ссылка для кнопки меню в @BotFather (если слетела):
 
-https://telegram-miniapp-ar09.onrender.com/app
+https://allabelkevich-wq.github.io/telegram-miniapp/
 
 Как вставить:
 1. Telegram → @BotFather → /mybots → твой бот

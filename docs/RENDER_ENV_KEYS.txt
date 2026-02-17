@@ -25,5 +25,20 @@ DEEPSEEK_API_KEY
 Key №7:
 SUNO_API_KEY
 
+Key №8:
+HOT_WEBHOOK_SECRET
+
+Key №9:
+HOT_ITEM_ID_DEFAULT
+
+Key №10:
+RENDER_EXTERNAL_URL
+(Value: https://telegram-miniapp-ar09.onrender.com — без слэша в конце)
+
 ---
-Итого: 7 переменных. Значения (Value) бери из bot/.env — там такие же названия слева от знака =
+Итого: 10 переменных. Значения (Value) бери из bot/.env — там такие же названия слева от знака =
+
+ВАЖНО для HOT оплат:
+- HOT_WEBHOOK_SECRET: получить в личном кабинете HOT Pay
+- HOT_ITEM_ID_DEFAULT: ID платёжной ссылки из HOT Pay (создать в админке)
+- RENDER_EXTERNAL_URL: обязательно для корректной работы мини-приложения
