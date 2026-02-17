@@ -2101,19 +2101,29 @@
             goToPage('successPage');
             console.log('[MiniApp] Заявка отправлена, requestId:', result.requestId);
           } else if (result && result.payment_required && result.requestId) {
+            console.log('[HOT] Требуется оплата, requestId:', result.requestId);
             setPaymentStatus(t('paymentRequiredOpening'), 'warn');
             var hotCtrl = new AbortController();
             var hotTimeout = setTimeout(function() { hotCtrl.abort(); }, 30000);
             var hotResp;
+            var hotPayload = { 
+              request_id: result.requestId, 
+              sku: result.sku || getCurrentSku(), 
+              promo_code: activePromo ? activePromo.code : null, 
+              initData: initData 
+            };
+            console.log('[HOT] Отправляю запрос на /api/payments/hot/create', { request_id: result.requestId, sku: hotPayload.sku });
             try {
               hotResp = await fetch(apiBase + '/api/payments/hot/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
-                body: JSON.stringify({ request_id: result.requestId, sku: result.sku || getCurrentSku(), promo_code: activePromo ? activePromo.code : null, initData: initData }),
+                body: JSON.stringify(hotPayload),
                 signal: hotCtrl.signal
               });
+              console.log('[HOT] Ответ получен, status:', hotResp.status, 'ok:', hotResp.ok);
             } catch (hotErr) {
               clearTimeout(hotTimeout);
+              console.error('[HOT] Ошибка при запросе /api/payments/hot/create:', hotErr);
               if (hotErr && hotErr.name === 'AbortError') {
                 setPaymentStatus(t('alertServerSleep'), 'error');
                 alert(t('alertServerSleep'));
@@ -2122,7 +2132,11 @@
               throw hotErr;
             }
             clearTimeout(hotTimeout);
-            var hotJson = await hotResp.json().catch(function() { return {}; });
+            var hotJson = await hotResp.json().catch(function() { 
+              console.error('[HOT] Не удалось распарсить JSON ответ');
+              return {}; 
+            });
+            console.log('[HOT] Распарсенный ответ:', { success: hotJson.success, hasCheckoutUrl: !!hotJson.checkout_url, freeApplied: hotJson.free_applied });
             // #region agent log
             // #endregion
             hotLog('hot create', { status: hotResp.status, success: !!(hotJson && hotJson.success), freeApplied: !!hotJson.free_applied, hasCheckout: !!hotJson.checkout_url, requestId: result.requestId ? String(result.requestId).slice(0, 8) : null });
@@ -2136,18 +2150,58 @@
               return;
             }
             if (!hotJson.checkout_url) throw new Error('Checkout URL не получен');
-            setPaymentStatus(t('hotCheckoutOpened'), 'warn');
             var checkoutUrl = String(hotJson.checkout_url);
+            console.log('[HOT] Получен checkout_url:', checkoutUrl);
+            setPaymentStatus('Открываю страницу оплаты HOT...', 'warn');
+            
+            // Попытка 1: Telegram.WebApp.openLink (рекомендуемый способ для Mini App)
+            var opened = false;
             try {
               if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.openLink === 'function') {
+                console.log('[HOT] Использую Telegram.WebApp.openLink');
                 window.Telegram.WebApp.openLink(checkoutUrl);
-              } else {
-                window.open(checkoutUrl, '_blank');
+                opened = true;
+                console.log('[HOT] openLink вызван успешно');
               }
             } catch (linkErr) {
-              console.warn('[HOT openLink]', linkErr);
-              window.open(checkoutUrl, '_blank');
+              console.warn('[HOT] Telegram.WebApp.openLink failed:', linkErr);
             }
+            
+            // Попытка 2: window.open (fallback для браузера или если openLink не сработал)
+            if (!opened) {
+              try {
+                console.log('[HOT] Использую window.open fallback');
+                var newWindow = window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
+                if (newWindow) {
+                  console.log('[HOT] window.open успешно открыл новое окно');
+                  opened = true;
+                } else {
+                  console.warn('[HOT] window.open вернул null (возможно заблокировано popup)');
+                }
+              } catch (openErr) {
+                console.error('[HOT] window.open failed:', openErr);
+              }
+            }
+            
+            // Попытка 3: Показать ссылку пользователю, если ничего не сработало
+            if (!opened) {
+              console.error('[HOT] Все попытки открыть ссылку провалились');
+              setPaymentStatus('⚠️ Не удалось открыть оплату автоматически', 'error');
+              if (confirm('Не удалось открыть страницу оплаты автоматически. Скопировать ссылку в буфер обмена?')) {
+                try {
+                  navigator.clipboard.writeText(checkoutUrl).then(function() {
+                    alert('✓ Ссылка скопирована! Вставьте её в браузер:\n' + checkoutUrl);
+                  }).catch(function() {
+                    alert('Откройте эту ссылку в браузере:\n\n' + checkoutUrl);
+                  });
+                } catch (e) {
+                  alert('Откройте эту ссылку в браузере:\n\n' + checkoutUrl);
+                }
+              }
+              return;
+            }
+            
+            setPaymentStatus(t('hotCheckoutOpened'), 'warn');
             var maxAttempts = 60;
             var attempt = 0;
             var paid = false;
