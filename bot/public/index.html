@@ -8,8 +8,8 @@
   <meta http-equiv="Expires" content="0">
   <title>YupSoul</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- API: тот же хост, с которого открыта страница (Render). Работает при любом домене. -->
-  <script>(function(){var o=(window.location.origin||'').replace(/\/$/,'');window.HEROES_API_BASE=o;window.BACKEND_URL=o;})();</script>
+  <!-- API Render. Жёстко telegram-miniapp-ar09 — проверено в Mini App. Для другого домена можно window.location.origin. -->
+  <script>window.HEROES_API_BASE='https://telegram-miniapp-ar09.onrender.com';window.BACKEND_URL=window.HEROES_API_BASE;</script>
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
     /* АДАПТИВНЫЕ СТИЛИ С ПОДДЕРЖКОЙ ТЕМЫ ТЕЛЕГРАМ */

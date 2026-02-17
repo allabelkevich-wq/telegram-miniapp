@@ -5,9 +5,11 @@
 Актуальный URL — в Render Dashboard или:
   https://<твой-сервис>.onrender.com/api/miniapp-url
 
-Варианты по имени сервиса:
+Рабочая ссылка (проверено в Mini App):
+  https://telegram-miniapp-ar09.onrender.com
+
+Другие варианты по имени сервиса:
   • yupsoul-bot → https://yupsoul-bot.onrender.com
-  • telegram-miniapp-ar09 → https://telegram-miniapp-ar09.onrender.com
 
 (без слеша в конце, без пробелов)
 
