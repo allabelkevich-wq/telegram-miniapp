@@ -1,6 +1,12 @@
 Ссылка для кнопки меню в @BotFather (если слетела):
 
-https://allabelkevich-wq.github.io/telegram-miniapp/
+https://telegram-miniapp-ar09.onrender.com/
+
+Приложение раздаётся с Render (бот уже отдаёт Mini App с сервера).
+GitHub Pages не используется.
+
+Важно: на бесплатном плане Render сервис «засыпает» после ~15 мин без активности.
+При первом открытии может занять 30–60 сек — это нормально.
 
 Как вставить:
 1. Telegram → @BotFather → /mybots → твой бот
