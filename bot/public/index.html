@@ -617,7 +617,7 @@
           <button id="promoApplyBtn" type="button" class="secondary" style="min-width:140px;margin-top:0;">Применить</button>
         </div>
         <div id="paymentStatus" style="display:none;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.35);border-radius:12px;padding:12px 14px;margin:14px 0;font-size:.92rem;color:rgba(255,255,255,.95);"></div>
-        <p id="paymentLinkHint" style="display:none;font-size:.9rem;color:rgba(255,255,255,0.85);margin:12px 0 8px 0;">Если окно оплаты не открылось (Telegram может блокировать), нажмите кнопку ниже и откройте ссылку в браузере.</p>
+        <p id="paymentLinkHint" style="display:none;font-size:.9rem;color:rgba(255,255,255,0.85);margin:12px 0 8px 0;">Если окно оплаты не открылось — нажмите кнопку ниже и откройте ссылку в браузере.</p>
         <button type="button" class="secondary" id="copyPaymentLinkBtn" style="display:none;margin-bottom:12px;">📋 Скопировать ссылку для оплаты</button>
         <div class="btn-group" style="margin-top:20px">
           <button class="secondary" id="backFromPaymentBtn">← Назад</button>
@@ -2170,7 +2170,7 @@
             return;
           }
 
-          setPaymentStatus(t('hotCheckoutOpened') + ' Если окно не появилось — нажмите «Скопировать ссылку» ниже.', 'warn');
+          setPaymentStatus(t('hotCheckoutOpened'), 'warn');
           var maxAttempts = 60;
           var attempt = 0;
           var paid = false;
