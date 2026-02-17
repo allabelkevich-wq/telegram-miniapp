@@ -1333,6 +1333,12 @@ app.get("/healthz", (_req, res) =>
 const publicDir = path.join(__dirname, "public");
 const appHtmlPath = path.join(publicDir, "index.html");
 function serveMiniApp(req, res) {
+  // Диагностические заголовки: помогают понять, какой именно билд сейчас на Render/в кеше.
+  try {
+    res.setHeader("X-MiniApp-Url", MINI_APP_URL);
+    res.setHeader("X-MiniApp-Base", MINI_APP_BASE);
+    res.setHeader("X-Render-Commit", process.env.RENDER_GIT_COMMIT || "");
+  } catch (_) {}
   res.sendFile(appHtmlPath, (err) => {
     if (err) {
       res.status(404).send("Mini App не найден. Проверь деплой и папку public.");

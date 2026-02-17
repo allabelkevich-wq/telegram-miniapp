@@ -6,7 +6,8 @@ services:
     runtime: node
     plan: free
     rootDir: bot
-    buildCommand: cp -r ../public . 2>/dev/null || true; npm install
+    # Важно: НЕ перезаписываем bot/public/index.html из корневого public/ (иначе улетают фиксы Mini App).
+    buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /healthz
 
