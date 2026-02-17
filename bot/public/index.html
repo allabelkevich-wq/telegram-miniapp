@@ -335,14 +335,6 @@
     .birthplace-check{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:#4ade80;font-size:1.25rem;display:none;font-weight:700}
     .birthplace-wrap.has-place .birthplace-check{display:block}
     .birthplace-hint{margin-top:6px;font-size:.9rem;color:var(--tg-theme-hint-color,#6b7280)}
-    /* Debug overlay for HOT payment */
-    .hot-debug-toggle{position:fixed;right:12px;top:12px;z-index:100000;background:rgba(212,175,55,0.18);border:1px solid var(--tg-theme-border-color);color:var(--tg-theme-text-color);padding:8px 10px;border-radius:10px;font-size:12px;cursor:pointer;opacity:0.95;transition:all .2s;font-weight:700}
-    .hot-debug-toggle:hover{opacity:1;box-shadow:0 6px 18px rgba(212,175,55,0.45)}
-    .hot-debug-panel{position:fixed;right:12px;top:52px;z-index:100000;width:320px;max-height:360px;overflow-y:auto;background:rgba(10,10,26,0.96);border:1px solid var(--tg-theme-border-color);border-radius:12px;padding:10px 12px;box-shadow:0 14px 30px rgba(0,0,0,0.45);display:none}
-    .hot-debug-panel h4{margin:0 0 8px 0;font-size:13px;color:var(--tg-theme-text-color)}
-    .hot-debug-panel .row{font-size:12px;color:var(--tg-theme-hint-color);padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08)}
-    .hot-debug-panel .row:last-child{border-bottom:none}
-    .payment-build-badge{display:none;align-items:center;gap:6px;background:rgba(212,175,55,0.14);border:1px solid rgba(212,175,55,0.35);color:#f8e7b0;padding:6px 10px;border-radius:999px;font-size:12px;margin-bottom:12px}
     
     #transitForm{display:none;margin-top:30px;padding:20px;background:var(--tg-theme-secondary-bg-color,rgba(255,255,255,0.05));border-radius:12px;border:1px solid var(--tg-theme-border-color,rgba(255,255,255,0.1))}
     #transitForm h3{color:var(--tg-theme-text-color,#fff);margin:0 0 15px 0;font-size:18px}
@@ -1201,21 +1193,6 @@
         }
         try { return localStorage.getItem(INIT_DATA_STORAGE_KEY) || ''; } catch (_) { return ''; }
       }
-      function logColorSnapshot(stage, pageId) {
-        try {
-          var rootStyles = getComputedStyle(document.documentElement);
-          var bodyStyles = getComputedStyle(document.body);
-          var formPage = document.getElementById('formPage');
-          var scope = formPage || document;
-          var labelEl = scope.querySelector('label');
-          var fieldEl = scope.querySelector('input,select,textarea');
-          var requestLabelEl = scope.querySelector('.request-label');
-          var tgParams = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.themeParams) ? window.Telegram.WebApp.themeParams : {};
-          void 0;
-        } catch (e) {
-          void 0;
-        }
-      }
       function initApp() {
         try {
       if (window.Telegram && window.Telegram.WebApp) {
@@ -1224,7 +1201,6 @@
             tg.expand();
             if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
             getInitData();
-            logColorSnapshot('init-app', 'homePage');
             return true;
           }
         } catch (e) { console.warn('Telegram init:', e); }
@@ -1237,7 +1213,6 @@
           if (initApp() || attempts >= 50) {
             clearInterval(t);
             if (!tg) showNotFromTelegramBanner();
-            logColorSnapshot('init-retry-finished', 'homePage');
           }
         }, 100);
       }
@@ -1331,25 +1306,14 @@
       var DEFAULT_PRICES = { single_song: { title: 'Single song', price: '5.99', currency: 'USDT' }, couple_song: { title: 'Couple song', price: '8.99', currency: 'USDT' }, transit_energy_song: { title: 'Transit energy song', price: '6.99', currency: 'USDT' } };
       function updatePaymentUiFromCatalog() {
         try {
-          console.log('[DEBUG-updatePaymentUi] =============== ОБНОВЛЕНИЕ UI ОПЛАТЫ ===============');
           var sku = getCurrentSku();
-          console.log('[DEBUG-updatePaymentUi] SKU:', sku);
-          console.log('[DEBUG-updatePaymentUi] pricingCatalog:', pricingCatalog);
-          console.log('[DEBUG-updatePaymentUi] DEFAULT_PRICES:', DEFAULT_PRICES);
-          
           var item = pricingCatalog.find(function(x) { return x && x.sku === sku; }) || DEFAULT_PRICES[sku] || null;
-          console.log('[DEBUG-updatePaymentUi] Выбранный item:', item);
           
           var priceLabel = document.getElementById('priceLabel');
           var priceValue = document.getElementById('priceValue');
           var priceHint = document.getElementById('priceHint');
           var notice = document.getElementById('pricingNotice');
           
-          console.log('[DEBUG-updatePaymentUi] DOM элементы:');
-          console.log('  - priceLabel:', !!priceLabel);
-          console.log('  - priceValue:', !!priceValue);
-          console.log('  - priceHint:', !!priceHint);
-          console.log('  - notice:', !!notice);
           if (priceLabel) priceLabel.textContent = item ? (item.title || sku) : sku;
           if (priceValue) {
             if (item && activePromo && activePromo.sku === sku) {
@@ -1697,9 +1661,7 @@
       }
       // Навигация по страницам
       function goToPage(pageId) {
-        console.log('[DEBUG-goToPage] =============== ПЕРЕХОД НА СТРАНИЦУ ===============');
         var currentPage = document.querySelector('.page.active');
-        console.log('[DEBUG-goToPage] FROM:', currentPage ? currentPage.id : 'none', '→ TO:', pageId);
         
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
         if (pageId !== 'paymentPage') {
@@ -1707,21 +1669,17 @@
           if (payBtnReset) { payBtnReset.disabled = false; payBtnReset.textContent = t('payWithHot'); }
         }
         
-        console.log('[DEBUG-goToPage] Убираю .active со всех страниц...');
         document.querySelectorAll('.page').forEach(function(page) {
           page.classList.remove('active');
         });
         
         var target = document.getElementById(pageId);
-        console.log('[DEBUG-goToPage] Целевая страница найдена:', !!target);
         
         if (!target) {
-          console.error('[DEBUG-goToPage] ❌ СТРАНИЦА НЕ НАЙДЕНА:', pageId, '- оставляю текущую страницу');
           return;
         }
         target.classList.add('active');
         var computed = getComputedStyle(target);
-        console.log('[DEBUG-goToPage] ✓ Страница активирована');
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
         if (pageId === 'paymentPage') {
           if (tg && tg.expand) try { tg.expand(); } catch (e) {}
@@ -1732,9 +1690,6 @@
           if (paymentLinkHint) paymentLinkHint.style.display = 'none';
         }
         if (pageId === 'successPage') updateSoulChatHint();
-        if (pageId === 'homePage' || pageId === 'formPage' || pageId === 'paymentPage') {
-          logColorSnapshot('go-to-page', pageId);
-        }
         if (document.getElementById('previewNav') && document.getElementById('previewNav').classList.contains('show')) {
           document.querySelectorAll('.preview-nav button').forEach(function(btn) {
             btn.classList.remove('active');
@@ -1810,31 +1765,6 @@
       var stepNext = document.getElementById('stepNext');
       var quickToggle = document.getElementById('quickRequestsToggle');
       var quickPanel = document.getElementById('quickRequestsPanel');
-      var hotDebugToggle = document.getElementById('hotDebugToggle');
-      var hotDebugPanel = document.getElementById('hotDebugPanel');
-      var hotDebugList = document.getElementById('hotDebugList');
-
-      function hotLog(message, data) {
-        if (!hotDebugList) return;
-        var row = document.createElement('div');
-        row.className = 'row';
-        var payload = '';
-        if (data) {
-          try { payload = JSON.stringify(data); } catch (e) { payload = String(data); }
-        }
-        row.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message + (payload ? ' ' + payload : '');
-        hotDebugList.prepend(row);
-        while (hotDebugList.children.length > 20) hotDebugList.removeChild(hotDebugList.lastChild);
-      }
-      function ensureHotDebugVisible() {
-        if (hotDebugToggle && !tg) hotDebugToggle.style.display = 'block';
-      }
-      if (hotDebugToggle && hotDebugPanel) {
-        hotDebugToggle.addEventListener('click', function() {
-          var visible = hotDebugPanel.style.display === 'block';
-          hotDebugPanel.style.display = visible ? 'none' : 'block';
-        });
-      }
 
       function applyTheme() {
         // Фон приложения тёмный, поэтому фиксируем тёмную тему,
