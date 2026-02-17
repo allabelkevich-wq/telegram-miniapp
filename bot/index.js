@@ -1346,6 +1346,15 @@ const healthHtml =
 app.get("/healthz", (_req, res) =>
   res.status(200).set("Content-Type", "text/html; charset=utf-8").send(healthHtml)
 );
+// Эндпоинт для проверки URL Mini App (для кнопки в Telegram)
+app.get("/api/miniapp-url", (_req, res) => {
+  res.json({
+    ok: true,
+    url: MINI_APP_URL,
+    base: MINI_APP_BASE,
+    message: "Используй url в качестве Web App URL в кнопке меню бота.",
+  });
+});
 // Mini App: корень / и /app — чтобы работало при любом URL в кнопке меню
 const publicDir = path.join(__dirname, "public");
 const appHtmlPath = path.join(publicDir, "index.html");
