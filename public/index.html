@@ -1106,13 +1106,21 @@
       function detectLang() {
         try {
           var stored = localStorage.getItem(LANG_STORAGE_KEY);
-          if (stored === 'ru' || stored === 'en') return stored;
+          if (stored === 'ru' || stored === 'en' || stored === 'de' || stored === 'fr') return stored;
           var lc = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code) || '';
           if (lc && /^en/.test(lc)) return 'en';
+          if (lc && /^de/.test(lc)) return 'de';
+          if (lc && /^fr/.test(lc)) return 'fr';
           return 'ru';
         } catch (_) { return 'ru'; }
       }
       function t(k, vars) {
+        // Защита от неподдерживаемых языков
+        if (!LANG[currentLang]) {
+          console.warn('[i18n] Неподдерживаемый язык:', currentLang, '- переключаюсь на русский');
+          currentLang = 'ru';
+          try { localStorage.setItem(LANG_STORAGE_KEY, 'ru'); } catch (_) {}
+        }
         var s = (LANG[currentLang] && LANG[currentLang][k]) || (LANG.ru && LANG.ru[k]) || k;
         if (vars && typeof s === 'string') {
           Object.keys(vars).forEach(function(key) { s = s.replace(new RegExp('\\{' + key + '\\}', 'g'), vars[key]); });
@@ -1120,7 +1128,7 @@
         return s;
       }
       function applyTranslations() {
-        document.documentElement.lang = currentLang === 'en' ? 'en' : 'ru';
+        document.documentElement.lang = currentLang || 'ru';
         var map = [
           ['tagline','#homeTagline'], ['startBtn','#startBtn'], ['myHeroes','#goHeroesBtn'], ['admin','#adminLinkBtn'],
           ['heroesTitle','#heroesPage header h1'], ['heroesSubtitle','#heroesPage .subtitle'],
@@ -1160,7 +1168,7 @@
           ['heroNotesPh','#heroNotes'], ['heroName','#heroName'], ['promoCode','#promoCodeInput']
         ];
         phMap.forEach(function(p) { var e = document.querySelector(p[1]); if (e) e.placeholder = t(p[0]); });
-        var selectOpts = [['genderSelect','gender'],['male','male'],['female','female'],['other','other'],['langSong','language'],['langRu','ru'],['langEn','en'],['langUk','uk']];
+        var selectOpts = [['genderSelect','gender'],['male','male'],['female','female'],['other','other'],['langSong','language'],['langRu','ru'],['langEn','en'],['langDe','de'],['langFr','fr'],['langUk','uk']];
         var genderSelect = document.getElementById('gender'); if (genderSelect) {
           var opts = genderSelect.querySelectorAll('option'); if (opts[0]) opts[0].textContent = t('genderSelect');
           if (opts[1]) opts[1].textContent = t('male'); if (opts[2]) opts[2].textContent = t('female');
@@ -1198,6 +1206,12 @@
         if (le) { le.style.fontWeight = currentLang === 'en' ? '700' : '400'; le.style.opacity = currentLang === 'en' ? '1' : '0.7'; }
       }
       function setLang(lang) {
+        // Валидация поддерживаемых языков
+        var supportedLangs = ['ru', 'en', 'de', 'fr'];
+        if (supportedLangs.indexOf(lang) === -1) {
+          console.warn('[i18n] Попытка установить неподдерживаемый язык:', lang, '- используется русский');
+          lang = 'ru';
+        }
         currentLang = lang;
         try { localStorage.setItem(LANG_STORAGE_KEY, lang); } catch (_) {}
         var langMap = { ru: 'ru', en: 'en', de: 'de', fr: 'fr' };
