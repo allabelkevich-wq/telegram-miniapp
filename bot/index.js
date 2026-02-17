@@ -27,8 +27,13 @@ function normalizeUrlBase(raw) {
 }
 // Важно: если MINI_APP_URL в Render задан неверно (например, старый Vercel),
 // Telegram будет открывать 404. Поэтому приоритет всегда у RENDER_EXTERNAL_URL.
-const MINI_APP_BASE = normalizeUrlBase(process.env.RENDER_EXTERNAL_URL || process.env.MINI_APP_URL || "https://telegram-miniapp-six-teal.vercel.app");
-const MINI_APP_URL = MINI_APP_BASE + "?v=17";
+// Vercel fallback убран — если нет RENDER_EXTERNAL_URL, бот не запустится (fail-fast).
+const MINI_APP_BASE = normalizeUrlBase(process.env.RENDER_EXTERNAL_URL || process.env.MINI_APP_URL || "");
+if (!MINI_APP_BASE || MINI_APP_BASE.includes("vercel.app")) {
+  console.error("FATAL: RENDER_EXTERNAL_URL не задан или указывает на Vercel. Задай RENDER_EXTERNAL_URL в Render Dashboard.");
+  process.exit(1);
+}
+const MINI_APP_URL = MINI_APP_BASE + "?v=18";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";
