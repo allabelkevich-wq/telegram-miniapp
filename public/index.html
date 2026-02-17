@@ -554,7 +554,6 @@
       </header>
       
       <div class="section">
-        <div class="payment-build-badge">Build: c4eee97+dbg</div>
         <div class="tagline" style="margin-bottom:15px">Оплата и доступ</div>
         <p style="text-align:center;font-size:1.05rem;line-height:1.7;margin-bottom:16px">
           Первая песня  — в подарок. Дальше можно оплатить отдельный элемент или оформить подписку на полный доступ.
@@ -1221,12 +1220,16 @@
       }
 
       function applyTheme() {
-        var hour = new Date().getHours();
-        var theme = (hour >= 7 && hour < 19) ? 'theme-light' : 'theme-dark';
+        // Фон приложения тёмный, поэтому фиксируем тёмную тему,
+        // иначе в светлой теме Telegram элементы могут стать "невидимыми".
+        var theme = 'theme-dark';
         document.body.classList.remove('theme-light', 'theme-dark');
         document.body.classList.add(theme);
       }
       applyTheme();
+      try {
+        if (tg && tg.onEvent) tg.onEvent('themeChanged', applyTheme);
+      } catch (_) {}
 
       function toggleFormsByMode(mode) {
         var secondForm = document.getElementById('secondPersonForm');
@@ -1410,6 +1413,26 @@
           alert('Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.'); return;
         }
         payload.initData = initData;
+        var restorePayBtn = null;
+        if (payBtn) {
+          var payOriginalText = payBtn.textContent;
+          payBtn.disabled = true;
+          payBtn.textContent = 'Отправляю…';
+          restorePayBtn = function() {
+            try {
+              var paymentPage = document.getElementById('paymentPage');
+              if (paymentPage && paymentPage.classList.contains('active')) {
+                payBtn.disabled = false;
+                payBtn.textContent = 'Оформить и продолжить';
+              } else {
+                payBtn.disabled = false;
+                payBtn.textContent = payOriginalText || 'Оформить и продолжить';
+              }
+            } catch (_) {
+              try { payBtn.disabled = false; } catch (__) {}
+            }
+          };
+        }
         try {
           hotLog('pay click', { mode: mode, hasPerson2: !!payload.person2, hasTransit: !!payload.transit });
           var response = await fetch(apiBase + '/api/submit-request', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData }, body: JSON.stringify(payload) });
@@ -1494,6 +1517,8 @@
           setPaymentStatus(msg || 'Ошибка операции оплаты/заявки', 'error');
           alert('❌ ' + msg);
           hotLog('error', { message: msg || null });
+        } finally {
+          if (typeof restorePayBtn === 'function') restorePayBtn();
         }
       });
       
