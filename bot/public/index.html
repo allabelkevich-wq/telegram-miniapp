@@ -717,7 +717,7 @@
           heroBirthplace: 'Место рождения', heroBirthplacePh: 'Город, страна', heroNotes: 'Досье / заметки', heroNotesPh: 'Заметки о клиенте',
           unknownTime: 'Не знаю точное время', cancel: 'Отмена', save: 'Сохранить', back: '← Назад',
           gender: 'Пол', genderSelect: 'Выбери', male: 'Мужской', female: 'Женский', other: 'Другой',
-          modeType: 'Тип ключа', modeSubtitle: 'От этого зависят поля формы ниже',
+          modeType: 'Тип ключа', modeSubtitle: 'Выбери тип генерации',
           modeSingle: 'Для себя', modeSingleDesc: 'Глубокий анализ',
           modeCouple: 'Для двоих', modeCoupleDesc: 'Дуэт/пара',
           modeTransit: 'Энергия дня', modeTransitDesc: 'Энергия момента',
@@ -805,7 +805,7 @@
           heroBirthplace: 'Place of birth', heroBirthplacePh: 'City, country', heroNotes: 'Notes', heroNotesPh: 'Client notes',
           unknownTime: "I don't know exact time", cancel: 'Cancel', save: 'Save', back: '← Back',
           gender: 'Gender', genderSelect: 'Choose', male: 'Male', female: 'Female', other: 'Other',
-          modeType: 'Key type', modeSubtitle: 'This determines the form fields below',
+          modeType: 'Key type', modeSubtitle: 'Choose generation type',
           modeSingle: 'For myself', modeSingleDesc: 'Deep analysis',
           modeCouple: 'For two', modeCoupleDesc: 'Duet / couple',
           modeTransit: 'Day energy', modeTransitDesc: 'Energy of the moment',
@@ -1647,7 +1647,15 @@
           console.warn('[goToPage] страница', pageId, 'не найдена в DOM');
         }
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
-        if (pageId === 'paymentPage') { loadPricingCatalog(); updatePaymentUiFromCatalog(); setPaymentStatus('',''); }
+        if (pageId === 'paymentPage') {
+          try {
+            loadPricingCatalog();
+            updatePaymentUiFromCatalog();
+            setPaymentStatus('','');
+          } catch (e) {
+            console.error('[goToPage] paymentPage init error:', e);
+          }
+        }
         if (pageId === 'successPage') updateSoulChatHint();
         if (pageId === 'homePage' || pageId === 'formPage' || pageId === 'paymentPage') {
           logColorSnapshot('go-to-page', pageId);

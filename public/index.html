@@ -1120,7 +1120,15 @@
           console.warn('[goToPage] страница', pageId, 'не найдена в DOM');
         }
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
-        if (pageId === 'paymentPage') { loadPricingCatalog(); updatePaymentUiFromCatalog(); setPaymentStatus('',''); }
+        if (pageId === 'paymentPage') {
+          try {
+            loadPricingCatalog();
+            updatePaymentUiFromCatalog();
+            setPaymentStatus('','');
+          } catch (e) {
+            console.error('[goToPage] paymentPage init error:', e);
+          }
+        }
         if (pageId === 'homePage' || pageId === 'formPage' || pageId === 'paymentPage') {
           logColorSnapshot('go-to-page', pageId);
         }
