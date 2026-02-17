@@ -33,7 +33,9 @@ if (!MINI_APP_BASE || MINI_APP_BASE.includes("vercel.app")) {
   console.error("FATAL: RENDER_EXTERNAL_URL не задан или указывает на Vercel. Задай RENDER_EXTERNAL_URL в Render Dashboard.");
   process.exit(1);
 }
-const MINI_APP_URL = MINI_APP_BASE + "?v=19";
+// Явный путь /app — чтобы все кнопки (меню, inline) вели на один и тот же рабочий адрес.
+// BotFather и кнопка «Открыть» в сообщениях должны использовать этот же URL.
+const MINI_APP_URL = MINI_APP_BASE.replace(/\/app\/?$/, "") + "/app?v=22";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";

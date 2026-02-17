@@ -2,39 +2,34 @@
   РАБОЧАЯ ССЫЛКА ДЛЯ TELEGRAM MINI APP (кнопка меню бота)
 ═══════════════════════════════════════════════════════════════
 
-Актуальный URL — в Render Dashboard или:
-  https://<твой-сервис>.onrender.com/api/miniapp-url
+ВАЖНО: Используй URL с путём /app — и для Menu Button, и для BotFather.
+Иначе одна кнопка может вести на 404, а другая — работать.
 
-Рабочая ссылка (проверено в Mini App):
-  https://telegram-miniapp-ar09.onrender.com
+Рабочая ссылка (с путём /app):
+  https://telegram-miniapp-ar09.onrender.com/app
 
-Другие варианты по имени сервиса:
-  • yupsoul-bot → https://yupsoul-bot.onrender.com
-
-(без слеша в конце, без пробелов)
+Актуальный URL можно проверить:
+  https://твой-сервис.onrender.com/api/miniapp-url
 
 ───────────────────────────────────────────────────────────────
-Приложение раздаётся с Render. Бот при каждом /start и при деплое
-автоматически обновляет кнопку меню на этот URL.
+Синхронизация: BotFather и бот должны использовать ОДИН И ТОТ ЖЕ URL.
 ───────────────────────────────────────────────────────────────
 
 ВАРИАНТ 1 — Автоматически (рекомендуется):
-  Напиши боту /start — кнопка обновится сама.
+  Напиши боту /start или /fixurl — кнопка меню обновится на правильный URL.
 
-ВАРИАНТ 2 — Вручную через @BotFather:
-  1. Открой @BotFather в Telegram
-  2. Напиши команду: /setmenubutton
-  3. Выбери своего бота
-  4. Configure menu button
-  5. Вставь URL (см. варианты выше — твой .onrender.com)
-  6. Текст кнопки: YupSoul (или «Открыть приложение»)
+ВАРИАНТ 2 — Вручную в @BotFather (если кнопка «Открыть» даёт 404):
+  1. @BotFather → /setmenubutton
+  2. Выбери своего бота → Configure menu button
+  3. Вставь URL: https://telegram-miniapp-ar09.onrender.com/app
+  4. Текст кнопки: YupSoul
 
-ВАРИАНТ 3 — Через Bot Settings (если /setmenubutton не сработал):
+ВАРИАНТ 3 — Через Bot Settings:
   1. @BotFather → /mybots → твой бот
   2. Bot Settings → Menu Button → Configure menu button
-  3. Вставь свой URL (как в вариантах выше)
+  3. Вставь: https://telegram-miniapp-ar09.onrender.com/app
 
 ───────────────────────────────────────────────────────────────
-Проверка актуального URL:
-  Открой в браузере: https://твой-сервис.onrender.com/api/miniapp-url
-  В ответе будет url — это и есть рабочая ссылка для кнопки.
+Почему 404: Если в BotFather указан другой URL (старый домен, без /app),
+кнопка «Открыть» из BotFather ведёт на 404. Кнопка меню от бота — работает.
+Решение: вставь в BotFather тот же URL, что и в /api/miniapp-url.
