@@ -617,7 +617,7 @@
           <button id="promoApplyBtn" type="button" class="secondary" style="min-width:140px;margin-top:0;">Применить</button>
         </div>
         <div id="paymentStatus" style="display:none;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.35);border-radius:12px;padding:12px 14px;margin:14px 0;font-size:.92rem;color:rgba(255,255,255,.95);"></div>
-        <p id="paymentLinkHint" style="display:none;font-size:.9rem;color:rgba(255,255,255,0.85);margin:12px 0 8px 0;">Если окно оплаты не открылось — нажмите кнопку ниже и откройте ссылку в браузере.</p>
+        <p id="paymentLinkHint" style="display:none;font-size:.9rem;color:rgba(255,255,255,0.85);margin:12px 0 8px 0;">Если окно не открылось или экран пустой — нажмите «Скопировать ссылку» ниже и откройте в Safari или Chrome.</p>
         <button type="button" class="secondary" id="copyPaymentLinkBtn" style="display:none;margin-bottom:12px;">📋 Скопировать ссылку для оплаты</button>
         <div class="btn-group" style="margin-top:20px">
           <button class="secondary" id="backFromPaymentBtn">← Назад</button>
@@ -791,7 +791,7 @@
           promoAppliedHint: 'Промокод {code}: -{amount} {currency}',
           paymentRequiredOpening: 'Требуется оплата. Открываю HOT Checkout...',
           promoFreeGen: 'Промокод дал бесплатную генерацию. Запуск...',
-          hotCheckoutOpened: 'Открыт HOT Checkout. После оплаты вернись в Mini App — статус обновится автоматически.',
+          hotCheckoutOpened: 'Открыт HOT Checkout. Если экран пустой — скопируй ссылку ниже и открой в Safari/Chrome. После оплаты вернись в Mini App.',
           paymentNotConfirmed: 'Оплата пока не подтверждена. Проверь статус позже или открой оплату повторно.',
           paymentConfirmed: 'Оплата подтверждена. Запускаю генерацию...',
           paymentReceivedNoStart: 'Оплата получена, но авто‑старт не удался. Запусти генерацию в админке по request_id: {id}',
@@ -884,7 +884,7 @@
           promoAppliedHint: 'Promo {code}: -{amount} {currency}',
           paymentRequiredOpening: 'Payment required. Opening HOT Checkout...',
           promoFreeGen: 'Promo gives free generation. Starting...',
-          hotCheckoutOpened: 'HOT Checkout opened. After payment, return to the Mini App — status will update automatically.',
+          hotCheckoutOpened: 'HOT Checkout opened. If the screen is blank — copy the link below and open in Safari/Chrome. After payment return to the Mini App.',
           paymentNotConfirmed: 'Payment not yet confirmed. Check status later or open payment again.',
           paymentConfirmed: 'Payment confirmed. Starting generation...',
           paymentReceivedNoStart: 'Payment received, but auto-start failed. Start generation in admin by request_id: {id}',
@@ -972,7 +972,7 @@
           promoAppliedHint: 'Gutschein {code}: -{amount} {currency}',
           paymentRequiredOpening: 'Zahlung erforderlich. Öffne HOT Checkout...',
           promoFreeGen: 'Gutschein ermöglicht kostenlose Generierung. Starte...',
-          hotCheckoutOpened: 'HOT Checkout geöffnet. Nach der Zahlung kehre zur Mini App zurück — der Status wird automatisch aktualisiert.',
+          hotCheckoutOpened: 'HOT Checkout geöffnet. Wenn der Bildschirm leer ist — kopiere den Link unten und öffne in Safari/Chrome. Nach der Zahlung zur Mini App zurückkehren.',
           paymentNotConfirmed: 'Zahlung noch nicht bestätigt. Später prüfen oder Zahlung erneut öffnen.',
           paymentConfirmed: 'Zahlung bestätigt. Generierung startet...',
           paymentReceivedNoStart: 'Zahlung erhalten, aber Auto-Start fehlgeschlagen. Starte Generierung in der Admin per request_id: {id}',
@@ -1060,7 +1060,7 @@
           promoAppliedHint: 'Code promo {code}: -{amount} {currency}',
           paymentRequiredOpening: 'Paiement requis. Ouverture de HOT Checkout...',
           promoFreeGen: 'Le code promo donne une génération gratuite. Démarrage...',
-          hotCheckoutOpened: 'HOT Checkout ouvert. Après paiement, reviens dans la Mini App — le statut se mettra à jour automatiquement.',
+          hotCheckoutOpened: 'HOT Checkout ouvert. Si l\'écran est vide — copie le lien ci-dessous et ouvre dans Safari/Chrome. Après paiement, reviens dans la Mini App.',
           paymentNotConfirmed: 'Paiement pas encore confirmé. Vérifie plus tard ou rouvre le paiement.',
           paymentConfirmed: 'Paiement confirmé. Démarrage de la génération...',
           paymentReceivedNoStart: 'Paiement reçu, mais démarrage auto échoué. Lance la génération dans l\'admin par request_id: {id}',
