@@ -33,10 +33,11 @@ if (!MINI_APP_BASE || MINI_APP_BASE.includes("vercel.app")) {
   console.error("FATAL: RENDER_EXTERNAL_URL не задан или указывает на Vercel. Задай RENDER_EXTERNAL_URL в Render Dashboard.");
   process.exit(1);
 }
-// Явный путь /app — чтобы все кнопки (меню, inline) вели на один и тот же рабочий адрес.
-// BotFather и кнопка «Открыть» в сообщениях должны использовать этот же URL.
-const APP_BUILD = Date.now(); // Меняется при каждом перезапуске — браузер всегда берёт свежий HTML
+const APP_BUILD = Date.now(); // Меняется при каждом перезапуске — для cache-busting в браузере
+// MINI_APP_URL — с timestamp для menu button и /start (принудительный сброс кеша)
 const MINI_APP_URL = MINI_APP_BASE.replace(/\/app\/?$/, "") + "/app?v=" + APP_BUILD;
+// MINI_APP_STABLE_URL — без timestamp, для bot-сообщений с кнопками (не меняется при деплоях)
+const MINI_APP_STABLE_URL = MINI_APP_BASE.replace(/\/app\/?$/, "") + "/app";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";
@@ -587,7 +588,8 @@ async function getRequestsForAdmin(limit = 30) {
 
 // Отправляет пользователю сообщение с кнопками "Оплатить" / "Отменить" когда заявка не оплачена.
 async function sendPendingPaymentBotMessage(telegramUserId, requestId) {
-  const payUrl = MINI_APP_URL + "&requestId=" + encodeURIComponent(requestId);
+  // Используем СТАБИЛЬНЫЙ URL (без timestamp) — кнопки в сообщениях живут дольше одного деплоя
+  const payUrl = MINI_APP_STABLE_URL + "?requestId=" + encodeURIComponent(requestId);
   const shortId = String(requestId || "").substring(0, 8);
   try {
     await bot.api.sendMessage(
@@ -648,35 +650,34 @@ bot.command("ping", async (ctx) => {
 bot.command("fixurl", async (ctx) => {
   const name = ctx.from?.first_name || "друг";
   try {
-    // Обновляем Menu Button (кнопка в меню)
+    // Обновляем menu button для этого чата (per-chat)
     await bot.api.setChatMenuButton({
       chat_id: ctx.chat?.id,
       menu_button: { type: "web_app", text: "YupSoul", web_app: { url: MINI_APP_URL } },
     });
+
+    // Обновляем глобальный menu button (для всех новых чатов)
+    await bot.api.setChatMenuButton({
+      menu_button: { type: "web_app", text: "YupSoul", web_app: { url: MINI_APP_URL } },
+    });
     
-    // Обновляем Web App URL для кнопки "Открыть" (глобально)
-    const webhookInfo = await bot.api.getWebhookInfo();
-    if (webhookInfo.url) {
-      await bot.api.setWebhook(webhookInfo.url, { web_app: { url: MINI_APP_URL } });
-      console.log("[fixurl] Web App URL для кнопки 'Открыть' обновлён:", MINI_APP_URL);
-    }
-    
+    // Отправляем НОВОЕ сообщение с кнопкой — это обновит "Открыть" в списке чатов Telegram.
+    // Кнопка "Открыть" в превью чата = web_app кнопка из ПОСЛЕДНЕГО сообщения бота.
+    // Используем стабильный URL (без timestamp) чтобы кнопка работала после следующего деплоя.
     await ctx.reply(
-      `✅ ${name}, все кнопки обновлены!\n\n` +
-      `🔗 Новый URL:\n${MINI_APP_URL}\n\n` +
-      `✨ Обновлено:\n` +
-      `• Кнопка меню (☰)\n` +
-      `• Кнопка "Открыть" рядом с ботом\n\n` +
-      `Теперь нажми на любую из этих кнопок или используй кнопку ниже:`,
+      `✅ *${name}, ссылки обновлены!*\n\n` +
+      `Кнопка *YupSoul* в меню чата теперь ведёт на рабочее приложение.\n\n` +
+      `Также нажми кнопку ниже — это обновит "Открыть" в списке чатов Telegram:`,
       {
+        parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: [[
-            { text: "✨ Открыть приложение", web_app: { url: MINI_APP_URL } }
+            { text: "🎵 Открыть YupSoul", web_app: { url: MINI_APP_STABLE_URL } }
           ]]
         }
       }
     );
-    console.log("[fixurl] Menu Button и Web App URL обновлены для chat", ctx.chat?.id, "→", MINI_APP_URL);
+    console.log("[fixurl] Menu Button обновлён для chat", ctx.chat?.id, "и глобально →", MINI_APP_URL);
   } catch (err) {
     await ctx.reply(`❌ Ошибка при обновлении кнопок: ${err?.message}`);
     console.error("[fixurl] Ошибка:", err);
@@ -704,7 +705,8 @@ bot.command("start", async (ctx) => {
   const replyMarkup = {
     reply_markup: {
       inline_keyboard: [[
-        { text: "✨ Открыть приложение", web_app: { url: MINI_APP_URL } }
+        // Стабильный URL (без timestamp) — кнопка в сообщениях живёт после следующих деплоев
+        { text: "🎵 Открыть YupSoul", web_app: { url: MINI_APP_STABLE_URL } }
       ]]
     }
   };
