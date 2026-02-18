@@ -229,12 +229,10 @@ async function isTrialAvailable(telegramUserId, trialKey = "first_song_gift") {
   
   if (error) {
     console.error("[Trial] Ошибка запроса к user_trials:", error.message);
-    if (/does not exist|relation/i.test(error.message)) {
-      console.log("[Trial] Таблица user_trials не существует, разрешаем пробную версию");
-      return true;
-    }
-    console.log("[Trial] Неизвестная ошибка, запрещаем пробную версию");
-    return false;
+    // При любой ошибке БД разрешаем пробную версию —
+    // consumeTrial защитит от повторного использования через duplicate key
+    console.log("[Trial] Ошибка БД → разрешаем пробную версию (consumeTrial проверит дубль)");
+    return true;
   }
   
   const available = !data;
@@ -251,9 +249,11 @@ async function consumeTrial(telegramUserId, trialKey = "first_song_gift") {
     trial_key: trialKey,
     consumed_at: new Date().toISOString(),
   });
-  if (error && /does not exist|relation/i.test(error.message)) return { ok: true };
-  if (error && /duplicate key value/i.test(error.message)) return { ok: false, reason: "already_consumed" };
-  if (error) return { ok: false, reason: error.message };
+  if (!error) return { ok: true };
+  if (/does not exist|relation/i.test(error.message)) return { ok: true };
+  if (/duplicate key value/i.test(error.message)) return { ok: false, reason: "already_consumed" };
+  // При любой другой ошибке — разрешаем (лучше дать бесплатный запрос, чем заблокировать)
+  console.warn("[Trial] consumeTrial неизвестная ошибка, разрешаем:", error.message);
   return { ok: true };
 }
 
@@ -1312,11 +1312,11 @@ const BOT_PUBLIC_URL = (process.env.BOT_PUBLIC_URL || process.env.WEBHOOK_URL ||
 if (WEBHOOK_URL) {
   console.log("[Bot] Настройка webhook обработчика для пути /webhook");
   
-  // express.json() ОБЯЗАТЕЛЕН до webhookCallback — Grammy читает req.body
-  app.post("/webhook", express.json(), (req, res, next) => {
+  // Добавляем middleware для логирования webhook запросов
+  app.post("/webhook", (req, res, next) => {
     console.log("[Webhook] Получен запрос от Telegram");
-    const bodyLen = req.body ? JSON.stringify(req.body).length : 0;
-    console.log("[Webhook] Body length:", bodyLen, "update_id:", req.body && req.body.update_id);
+    console.log("[Webhook] Headers:", JSON.stringify(req.headers, null, 2));
+    console.log("[Webhook] Body length:", req.body ? req.body.length : 0);
     next();
   }, webhookCallback(bot, "express"));
   
