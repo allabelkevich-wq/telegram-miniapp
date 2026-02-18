@@ -1312,11 +1312,11 @@ const BOT_PUBLIC_URL = (process.env.BOT_PUBLIC_URL || process.env.WEBHOOK_URL ||
 if (WEBHOOK_URL) {
   console.log("[Bot] Настройка webhook обработчика для пути /webhook");
   
-  // Добавляем middleware для логирования webhook запросов
-  app.post("/webhook", (req, res, next) => {
+  // express.json() ОБЯЗАТЕЛЕН до webhookCallback — Grammy читает req.body
+  app.post("/webhook", express.json(), (req, res, next) => {
     console.log("[Webhook] Получен запрос от Telegram");
-    console.log("[Webhook] Headers:", JSON.stringify(req.headers, null, 2));
-    console.log("[Webhook] Body length:", req.body ? req.body.length : 0);
+    const bodyLen = req.body ? JSON.stringify(req.body).length : 0;
+    console.log("[Webhook] Body length:", bodyLen, "update_id:", req.body && req.body.update_id);
     next();
   }, webhookCallback(bot, "express"));
   
