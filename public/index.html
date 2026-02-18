@@ -2131,15 +2131,36 @@
       });
       var payBtn = document.getElementById('payBtn');
       if (payBtn) payBtn.addEventListener('click', async function() {
-        if (payBtn.disabled) return;
+        console.log('[HOT Pay] Нажата кнопка оплаты');
+        
+        if (payBtn.disabled) {
+          console.log('[HOT Pay] Кнопка отключена, игнорируем клик');
+          return;
+        }
+        
         if (!pendingPaymentRequestId) {
+          console.error('[HOT Pay] Нет pendingPaymentRequestId');
           alert(t('alertPaymentFirst'));
           return;
         }
+        
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
-        if (!apiBase) { alert(t('alertNoApi')); return; }
+        if (!apiBase) { 
+          console.error('[HOT Pay] Нет API базового URL');
+          alert(t('alertNoApi')); 
+          return; 
+        }
+        
         var initData = getInitData();
-        if (!initData) { alert(t('alertOpenFromBotShort')); return; }
+        if (!initData) { 
+          console.error('[HOT Pay] Нет initData');
+          alert(t('alertOpenFromBotShort')); 
+          return; 
+        }
+        
+        console.log('[HOT Pay] Все проверки пройдены, apiBase:', apiBase);
+        console.log('[HOT Pay] pendingPaymentRequestId:', pendingPaymentRequestId);
+        console.log('[HOT Pay] Telegram WebApp доступен:', !!(window.Telegram && window.Telegram.WebApp));
 
         var promoInput = document.getElementById('promoCodeInput');
         var promoCode = (promoInput && promoInput.value) ? promoInput.value.trim() : (activePromo ? activePromo.code : null);
@@ -2152,9 +2173,13 @@
 
         payBtn.disabled = true;
         payBtn.textContent = t('sending');
+        console.log('[HOT Pay] Начинаем создание платежа, payload:', hotPayload);
+        
         try {
           var hotCtrl = new AbortController();
           var hotTimeout = setTimeout(function() { hotCtrl.abort(); }, 30000);
+          console.log('[HOT Pay] Отправляем запрос на:', apiBase + '/api/payments/hot/create');
+          
           var hotResp = await fetch(apiBase + '/api/payments/hot/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
@@ -2162,10 +2187,18 @@
             signal: hotCtrl.signal
           });
           clearTimeout(hotTimeout);
-          var hotJson = await hotResp.json().catch(function() { return {}; });
+          
+          console.log('[HOT Pay] Ответ сервера, статус:', hotResp.status, hotResp.ok);
+          var hotJson = await hotResp.json().catch(function(e) { 
+            console.error('[HOT Pay] Ошибка парсинга JSON:', e); 
+            return {}; 
+          });
+          console.log('[HOT Pay] Данные ответа:', hotJson);
 
           if (!hotResp.ok || !hotJson.success) {
-            throw new Error(hotJson.error || 'Не удалось создать оплату HOT');
+            var errorMsg = hotJson.error || 'Не удалось создать оплату HOT';
+            console.error('[HOT Pay] Ошибка создания платежа:', errorMsg);
+            throw new Error(errorMsg);
           }
           if (hotJson.free_applied) {
             setPaymentStatus(t('promoFreeGen'), 'ok');
@@ -2177,8 +2210,12 @@
             payBtn.textContent = t('payWithHot');
             return;
           }
-          if (!hotJson.checkout_url) throw new Error('Checkout URL не получен');
+          if (!hotJson.checkout_url) {
+            console.error('[HOT Pay] Checkout URL не получен в ответе:', hotJson);
+            throw new Error('Checkout URL не получен');
+          }
           var checkoutUrl = String(hotJson.checkout_url);
+          console.log('[HOT Pay] Получен checkout_url:', checkoutUrl);
           setPaymentStatus('Открываю страницу оплаты...', 'warn');
 
           var lastCheckoutUrl = checkoutUrl;
@@ -2198,25 +2235,55 @@
           if (hintEl) hintEl.style.display = 'block';
 
           var opened = false;
+          console.log('[HOT Pay] Пытаемся открыть ссылку оплаты:', checkoutUrl);
+          
           try {
             if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.openLink === 'function') {
+              console.log('[HOT Pay] Используем Telegram.WebApp.openLink');
               try {
                 window.Telegram.WebApp.openLink(checkoutUrl, { try_instant_view: false });
-              } catch (_) {
+                console.log('[HOT Pay] openLink с try_instant_view: false - успешно');
+              } catch (e1) {
+                console.log('[HOT Pay] openLink с try_instant_view: false - ошибка:', e1);
                 window.Telegram.WebApp.openLink(checkoutUrl);
+                console.log('[HOT Pay] openLink без параметров - успешно');
               }
               opened = true;
+            } else {
+              console.log('[HOT Pay] Telegram.WebApp.openLink недоступен');
             }
-          } catch (linkErr) {}
-          if (!opened) {
-            var newWindow = window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
-            if (newWindow) opened = true;
+          } catch (linkErr) {
+            console.error('[HOT Pay] Ошибка Telegram.WebApp.openLink:', linkErr);
           }
+          
           if (!opened) {
+            console.log('[HOT Pay] Пытаемся открыть через window.open');
+            var newWindow = window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
+            if (newWindow) {
+              opened = true;
+              console.log('[HOT Pay] window.open - успешно');
+            } else {
+              console.log('[HOT Pay] window.open - заблокировано браузером');
+              // Пытаемся открыть через location.href как последний вариант
+              console.log('[HOT Pay] Пытаемся открыть через location.href');
+              try {
+                window.location.href = checkoutUrl;
+                opened = true;
+                console.log('[HOT Pay] location.href - успешно');
+              } catch (e) {
+                console.error('[HOT Pay] location.href - ошибка:', e);
+              }
+            }
+          }
+          
+          if (!opened) {
+            console.error('[HOT Pay] Не удалось открыть ссылку ни одним способом');
             setPaymentStatus('⚠️ Не удалось открыть автоматически. Нажмите «Скопировать ссылку» ниже и откройте в браузере.', 'error');
             payBtn.disabled = false;
             payBtn.textContent = t('payWithHot');
             return;
+          } else {
+            console.log('[HOT Pay] Ссылка успешно открыта, начинаем проверку статуса оплаты');
           }
 
           setPaymentStatus(t('hotCheckoutOpened'), 'warn');
@@ -2248,10 +2315,20 @@
           goToPage('loadingPage');
           setTimeout(function() { goToPage('successPage'); }, 1800);
         } catch (error) {
+          console.error('[HOT Pay] Критическая ошибка:', error);
           var msg = (error && error.message) ? String(error.message) : t('errorOp');
-          setPaymentStatus(msg, 'error');
-          alert('❌ ' + msg);
+          setPaymentStatus('❌ ' + msg, 'error');
+          
+          // Показываем детальную ошибку пользователю
+          var detailedError = '❌ Ошибка оплаты:\n' + msg;
+          if (error.name === 'AbortError') {
+            detailedError += '\n\n⏰ Превышено время ожидания. Попробуйте еще раз.';
+          } else if (error.message && error.message.includes('fetch')) {
+            detailedError += '\n\n🌐 Проблема с сетью. Проверьте подключение к интернету.';
+          }
+          alert(detailedError);
         } finally {
+          console.log('[HOT Pay] Завершение обработки, восстанавливаем кнопку');
           payBtn.disabled = false;
           payBtn.textContent = t('payWithHot');
         }
