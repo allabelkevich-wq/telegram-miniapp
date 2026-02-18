@@ -371,6 +371,10 @@
     <span id="langRu" style="cursor:pointer;padding:2px 6px;border-radius:4px;">RU</span>
     <span style="opacity:0.5;">|</span>
     <span id="langEn" style="cursor:pointer;padding:2px 6px;border-radius:4px;">EN</span>
+    <span style="opacity:0.5;">|</span>
+    <span id="langDe" style="cursor:pointer;padding:2px 6px;border-radius:4px;">DE</span>
+    <span style="opacity:0.5;">|</span>
+    <span id="langFr" style="cursor:pointer;padding:2px 6px;border-radius:4px;">FR</span>
   </div>
   <div class="container">
     <!-- Главная страница -->
@@ -1242,8 +1246,11 @@
         var gh = document.getElementById('homeGreeting');
         if (gh) gh.textContent = (userProfile && userProfile.name) ? t('greeting', { name: userProfile.name }) : t('greetingDefault');
         var lr = document.getElementById('langRu'); var le = document.getElementById('langEn');
+        var ld = document.getElementById('langDe'); var lf = document.getElementById('langFr');
         if (lr) { lr.style.fontWeight = currentLang === 'ru' ? '700' : '400'; lr.style.opacity = currentLang === 'ru' ? '1' : '0.7'; }
         if (le) { le.style.fontWeight = currentLang === 'en' ? '700' : '400'; le.style.opacity = currentLang === 'en' ? '1' : '0.7'; }
+        if (ld) { ld.style.fontWeight = currentLang === 'de' ? '700' : '400'; ld.style.opacity = currentLang === 'de' ? '1' : '0.7'; }
+        if (lf) { lf.style.fontWeight = currentLang === 'fr' ? '700' : '400'; lf.style.opacity = currentLang === 'fr' ? '1' : '0.7'; }
         // Убеждаемся, что кнопка оплаты имеет правильный текст после применения переводов
         ensurePayButtonText();
       }
@@ -1564,8 +1571,12 @@
       applyTranslations();
       var langRuEl = document.getElementById('langRu');
       var langEnEl = document.getElementById('langEn');
+      var langDeEl = document.getElementById('langDe');
+      var langFrEl = document.getElementById('langFr');
       if (langRuEl) langRuEl.addEventListener('click', function() { setLang('ru'); });
       if (langEnEl) langEnEl.addEventListener('click', function() { setLang('en'); });
+      if (langDeEl) langDeEl.addEventListener('click', function() { setLang('de'); });
+      if (langFrEl) langFrEl.addEventListener('click', function() { setLang('fr'); });
 
       setTimeout(function() {
         try {
