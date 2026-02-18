@@ -1614,7 +1614,8 @@
           if (!resp.ok || !json.success || !json.valid) {
             activePromo = null;
             updatePaymentUiFromCatalog();
-            throw new Error(json.error || 'Промокод не принят');
+            var errMsg = json.error || (json.reason === 'not_found' ? 'Промокод не найден' : json.reason === 'expired' ? 'Срок действия промокода истёк' : json.reason === 'user_limit_reached' ? 'Вы уже использовали этот промокод' : 'Промокод недействителен');
+            throw new Error(errMsg);
           }
           activePromo = {
             code: code,
@@ -2872,15 +2873,16 @@
         </p>
 
         <!-- Промокод -->
-        <div style="margin-bottom:6px;font-size:0.82rem;color:rgba(255,255,255,0.55);letter-spacing:0.3px;">Промокод</div>
-        <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <div style="margin-bottom:8px;">
+          <label style="display:block;font-size:0.82rem;color:rgba(255,255,255,0.6);margin-bottom:6px;letter-spacing:0.3px;">🏷 Промокод</label>
           <input id="payOvPromoInput" type="text" placeholder="Введите промокод"
-            style="flex:1;padding:11px 13px;border-radius:10px;border:1.5px solid rgba(212,175,55,0.65);background:rgba(255,255,255,0.13);color:#fff;font-size:0.95rem;font-family:inherit;text-transform:uppercase;outline:none;-webkit-appearance:none;">
+            style="display:block;width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(212,175,55,0.65);background:rgba(255,255,255,0.14);color:#fff;font-size:1rem;font-family:inherit;text-transform:uppercase;outline:none;-webkit-appearance:none;margin-bottom:8px;">
           <button id="payOvPromoBtn" type="button"
-            style="padding:11px 16px;border-radius:10px;background:rgba(212,175,55,0.2);border:1.5px solid rgba(212,175,55,0.55);color:#d4af37;font-weight:600;font-size:0.9rem;cursor:pointer;white-space:nowrap;font-family:inherit;">
-            Применить
+            style="display:block;width:100%;box-sizing:border-box;padding:11px;border-radius:10px;background:rgba(212,175,55,0.18);border:1.5px solid rgba(212,175,55,0.55);color:#d4af37;font-weight:600;font-size:0.9rem;cursor:pointer;font-family:inherit;">
+            Применить промокод
           </button>
         </div>
+        <div style="height:10px;"></div>
 
         <!-- Статус (промокод / оплата) -->
         <div id="payOvStatus" style="display:none;border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:0.88rem;line-height:1.5;"></div>

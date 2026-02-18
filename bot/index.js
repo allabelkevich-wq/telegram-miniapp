@@ -2002,7 +2002,18 @@ app.post("/api/promos/validate", express.json(), asyncApi(async (req, res) => {
   const price = await getSkuPrice(sku);
   if (!price) return res.status(404).json({ success: false, error: "SKU не найден" });
   const checked = await validatePromoForOrder({ promoCode: code, sku, telegramUserId });
-  if (!checked.ok) return res.status(400).json({ success: false, valid: false, reason: checked.reason });
+  if (!checked.ok) {
+    const reasonText = {
+      not_found: "Промокод не найден",
+      inactive: "Промокод неактивен",
+      expired: "Срок действия промокода истёк",
+      not_started: "Промокод ещё не активен",
+      sku_mismatch: "Промокод не подходит для этого продукта",
+      global_limit_reached: "Промокод уже использован максимальное количество раз",
+      user_limit_reached: "Вы уже использовали этот промокод",
+    }[checked.reason] || "Промокод недействителен";
+    return res.status(400).json({ success: false, valid: false, reason: checked.reason, error: reasonText });
+  }
   const applied = applyPromoToAmount(Number(price.price), checked.promo);
   return res.json({
     success: true,
