@@ -244,15 +244,15 @@ async function isTrialAvailable(telegramUserId, trialKey = "first_song_gift") {
 
 async function consumeTrial(telegramUserId, trialKey = "first_song_gift") {
   if (!supabase) return { ok: true };
-  const available = await isTrialAvailable(telegramUserId, trialKey);
-  if (!available) return { ok: false, reason: "already_consumed" };
+  // Сразу пробуем INSERT — уникальный индекс сам защитит от повторного использования.
+  // Убрана двойная проверка isTrialAvailable во избежание состояния гонки и ложного 402.
   const { error } = await supabase.from("user_trials").insert({
     telegram_user_id: Number(telegramUserId),
     trial_key: trialKey,
     consumed_at: new Date().toISOString(),
   });
   if (!error) return { ok: true };
-  if (/does not exist|relation/i.test(error.message)) return { ok: true };
+  if (/does not exist|relation/i.test(error.message)) return { ok: true }; // таблицы нет — разрешаем
   if (/duplicate key value/i.test(error.message)) return { ok: false, reason: "already_consumed" };
   // При любой другой ошибке — разрешаем (лучше дать бесплатный запрос, чем заблокировать)
   console.warn("[Trial] consumeTrial неизвестная ошибка, разрешаем:", error.message);

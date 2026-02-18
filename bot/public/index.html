@@ -252,6 +252,8 @@
     .page{display:none !important}
     .page.active{
       display:block !important;
+      position:relative;
+      z-index:2;
       width:100% !important;
       min-height:100vh !important;
       padding:var(--spacing-lg) var(--spacing-md) calc(var(--spacing-lg)*2);
@@ -484,10 +486,12 @@
 
         <div class="step-panel" data-step="2">
         <div class="field">
+          <label for="name" data-icon="👤">Имя</label>
             <input type="text" id="name" placeholder="Как тебя зовут?" required aria-label="Имя">
         </div>
         
         <div class="field">
+          <label for="birthdate" data-icon="📅">Дата рождения</label>
           <div id="birthdateWrap" class="birthdate-wrap">
             <input type="date" id="birthdate" required aria-label="Дата рождения">
             <span id="birthdateCheck" class="birthdate-check" aria-hidden="true">✓</span>
@@ -495,6 +499,7 @@
         </div>
         
         <div class="field">
+          <label for="birthplace" data-icon="📍">Место рождения</label>
           <div id="birthplaceWrap" class="birthplace-wrap">
               <input type="text" id="birthplace" placeholder="Город или страна — выбери из подсказок" required autocomplete="off" aria-label="Локация рождения">
               <span id="birthplaceCheck" class="birthplace-check" aria-hidden="true">✓</span>
@@ -504,6 +509,7 @@
         </div>
         
         <div class="field">
+          <label data-icon="🕐">Время рождения</label>
           <div class="time-group" role="group" aria-label="Время рождения">
             <input type="time" id="birthtime" required aria-label="Время" class="time-group-input">
             <div class="checkbox time-group-checkbox">
@@ -537,18 +543,22 @@
           <div id="secondPersonForm" style="display:none">
             <h3 style="margin-bottom:12px;">Для двоих</h3>
           <div class="field">
-            <input type="text" id="name2" placeholder="Имя второго человека" maxlength="50">
+            <label for="name2" data-icon="👤">Имя второго человека</label>
+            <input type="text" id="name2" placeholder="Имя" maxlength="50">
           </div>
           <div class="field">
-              <input type="date" id="birthdate2" max="2010-12-31" placeholder="Дата рождения">
+            <label for="birthdate2" data-icon="📅">Дата рождения второго</label>
+            <input type="date" id="birthdate2" max="2010-12-31">
           </div>
           <div class="field form-group location-input-wrapper">
-              <input type="text" id="birthplace2" class="location-input" placeholder="Место рождения второго" maxlength="100" autocomplete="off">
+            <label for="birthplace2" data-icon="📍">Место рождения второго</label>
+              <input type="text" id="birthplace2" class="location-input" placeholder="Город или страна" maxlength="100" autocomplete="off">
             <div id="birthplaceSuggestions2" class="location-suggestions"></div>
           </div>
           <div class="field">
-            <div class="time-group" role="group" aria-label="Время рождения (второй человек)">
-              <input type="time" id="birthtime2" aria-label="Время" class="time-group-input" placeholder="Время рождения">
+            <label data-icon="🕐">Время рождения второго</label>
+            <div class="time-group" role="group">
+              <input type="time" id="birthtime2" aria-label="Время" class="time-group-input">
               <div class="checkbox time-group-checkbox">
                 <input type="checkbox" id="unknown2" aria-label="Не знаю точное время">
                 <label for="unknown2">Не знаю точное время</label>
@@ -556,8 +566,9 @@
             </div>
           </div>
           <div class="field">
+            <label for="gender2" data-icon="⚧">Пол второго человека</label>
             <select id="gender2">
-                <option value="">Пол</option>
+                <option value="">Выбери</option>
               <option value="female">Женский</option>
               <option value="male">Мужской</option>
               <option value="other">Другой</option>
@@ -1323,7 +1334,7 @@
       function ensurePayButtonText() {
         var payBtn = document.getElementById('payOvPayBtn');
         if (payBtn && !payBtn.disabled) {
-          var isFree = activePromo && activePromo.sku === getCurrentSku() && Number(activePromo.amount_after) === 0;
+          var isFree = activePromo && Number(activePromo.amount_after) === 0;
           if (!isFree) {
             payBtn.textContent = '💳 Оплатить через HOT Pay';
             payBtn.style.background = 'linear-gradient(135deg,#7c3aed,#a855f7)';
@@ -1587,14 +1598,14 @@
           
           if (priceLabel) priceLabel.textContent = item ? (item.title || sku) : sku;
           if (priceValue) {
-            if (item && activePromo && activePromo.sku === sku) {
+            if (activePromo) {
               priceValue.textContent = String(activePromo.amount_after) + ' ' + (activePromo.currency || (item && item.currency) || 'USDT');
             } else {
               priceValue.textContent = item ? (String(item.price) + ' ' + (item.currency || 'USDT')) : '—';
             }
           }
           if (priceHint) {
-            if (item && activePromo && activePromo.sku === sku) {
+            if (activePromo) {
               priceHint.textContent = t('promoAppliedHint', { code: activePromo.code, amount: activePromo.discount_amount, currency: activePromo.currency || (item && item.currency) || 'USDT' });
             } else {
               priceHint.textContent = '';
@@ -1623,11 +1634,10 @@
               notice.style.color = 'rgba(255,255,255,.95)';
             }
           }
-          // Кнопка оплаты: меняем текст если промокод даёт 0
+          // Кнопка оплаты: зелёная если промокод даёт 0 (без проверки SKU — promo уже привязан к заявке)
           var payBtnUpd = document.getElementById('payOvPayBtn');
           if (payBtnUpd && !payBtnUpd.disabled) {
-            var sku2 = getCurrentSku();
-            var isFreePromo = activePromo && activePromo.sku === sku2 && Number(activePromo.amount_after) === 0;
+            var isFreePromo = activePromo && Number(activePromo.amount_after) === 0;
             payBtnUpd.textContent = isFreePromo ? '🎁 Получить бесплатно' : '💳 Оплатить через HOT Pay';
             payBtnUpd.style.background = isFreePromo
               ? 'linear-gradient(135deg,#059669,#10b981)'
@@ -2125,6 +2135,10 @@
       });
       // Навигация по страницам
       function goToPage(pageId) {
+        if (!pageId) {
+          console.warn('[goToPage] pageId пустой — переходим на homePage');
+          pageId = 'homePage';
+        }
         var currentPage = document.querySelector('.page.active');
         
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
@@ -2138,7 +2152,9 @@
         var target = document.getElementById(pageId);
         
         if (!target) {
-          return;
+          console.warn('[goToPage] Страница не найдена:', pageId, '— переходим на homePage');
+          target = document.getElementById('homePage');
+          if (!target) return;
         }
         target.classList.add('active');
         // Задаём min-height через реальную высоту вьюпорта Telegram (100vh ненадёжен в WebView)
@@ -2817,7 +2833,7 @@
           console.log('[HOT Pay] Завершение обработки, восстанавливаем кнопку');
           payBtn.disabled = false;
           // Текст кнопки: сбрасываем в HOT Pay (активный промокод уже очищен при ошибке промокода)
-          var isFreeAfterError = activePromo && activePromo.sku === pendingPaymentSku && Number(activePromo.amount_after) === 0;
+          var isFreeAfterError = activePromo && Number(activePromo.amount_after) === 0;
           payBtn.textContent = isFreeAfterError ? '🎁 Получить бесплатно' : '💳 Оплатить через HOT Pay';
           payBtn.style.background = isFreeAfterError ? 'linear-gradient(135deg,#059669,#10b981)' : 'linear-gradient(135deg,#7c3aed,#a855f7)';
         }
