@@ -213,16 +213,33 @@ async function redeemPromoUsage({ promo, telegramUserId, requestId, orderId, dis
 }
 
 async function isTrialAvailable(telegramUserId, trialKey = "first_song_gift") {
-  if (!supabase) return true;
+  console.log("[Trial] Проверка доступности пробной версии для пользователя:", telegramUserId, "ключ:", trialKey);
+  
+  if (!supabase) {
+    console.log("[Trial] Supabase не подключен, разрешаем пробную версию");
+    return true;
+  }
+  
   const { data, error } = await supabase
     .from("user_trials")
     .select("id")
     .eq("telegram_user_id", Number(telegramUserId))
     .eq("trial_key", trialKey)
     .maybeSingle();
-  if (error && /does not exist|relation/i.test(error.message)) return true;
-  if (error) return false;
-  return !data;
+  
+  if (error) {
+    console.error("[Trial] Ошибка запроса к user_trials:", error.message);
+    if (/does not exist|relation/i.test(error.message)) {
+      console.log("[Trial] Таблица user_trials не существует, разрешаем пробную версию");
+      return true;
+    }
+    console.log("[Trial] Неизвестная ошибка, запрещаем пробную версию");
+    return false;
+  }
+  
+  const available = !data;
+  console.log("[Trial] Результат проверки:", available ? "доступна" : "уже использована", "данные:", data);
+  return available;
 }
 
 async function consumeTrial(telegramUserId, trialKey = "first_song_gift") {
@@ -281,12 +298,24 @@ async function consumeEntitlementIfExists(telegramUserId, sku) {
 }
 
 async function resolveAccessForRequest({ telegramUserId, mode }) {
+  console.log("[Access] Проверка доступа для пользователя:", telegramUserId, "режим:", mode);
+  
   const sku = resolveSkuByMode(mode);
-  if (await hasActiveSubscription(telegramUserId)) return { allowed: true, source: "subscription", sku };
+  console.log("[Access] Определен SKU:", sku);
+  
+  const hasSubscription = await hasActiveSubscription(telegramUserId);
+  console.log("[Access] Проверка подписки:", hasSubscription ? "активна" : "неактивна");
+  if (hasSubscription) return { allowed: true, source: "subscription", sku };
+  
   const ent = await consumeEntitlementIfExists(telegramUserId, sku);
+  console.log("[Access] Проверка entitlement:", ent.ok ? "найден и потреблен" : "не найден");
   if (ent.ok) return { allowed: true, source: "entitlement", sku };
+  
   const trialAvailable = await isTrialAvailable(telegramUserId, "first_song_gift");
+  console.log("[Access] Проверка пробной версии:", trialAvailable ? "доступна" : "недоступна");
   if (trialAvailable) return { allowed: true, source: "trial", sku };
+  
+  console.log("[Access] Доступ запрещен, требуется оплата");
   return { allowed: false, source: "payment_required", sku };
 }
 
