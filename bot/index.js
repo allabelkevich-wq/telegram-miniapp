@@ -346,15 +346,22 @@ function buildHotCheckoutUrl({ itemId, orderId, amount, currency, requestId, sku
   const url = new URL(HOT_PAYMENT_URL || "https://pay.hot-labs.org/payment");
   if (itemId) url.searchParams.set("item_id", itemId);
   if (orderId) url.searchParams.set("order_id", orderId);
-  // HOT официально: memo — идентификатор заказа, приходит в webhook (Verify income payments with HOT PAY).
+  // HOT официально: memo — идентификатор заказа, приходит в webhook.
   if (orderId) url.searchParams.set("memo", orderId);
   if (amount != null) url.searchParams.set("amount", String(amount));
   if (currency) url.searchParams.set("currency", String(currency));
   if (requestId) url.searchParams.set("request_id", requestId);
   if (sku) url.searchParams.set("sku", sku);
-  // По умолчанию — мини-апп с параметрами для страницы «Спасибо за оплату» и авто-проверки статуса.
-  const redirectUrl = process.env.HOT_REDIRECT_URL || (MINI_APP_BASE + "?payment=success&request_id=" + encodeURIComponent(requestId || ""));
+  // redirect_url: после оплаты HOT отправляет пользователя сюда.
+  // Используем /app путь, чтобы мини-апп открылся и определил payment=success.
+  const redirectUrl = process.env.HOT_REDIRECT_URL ||
+    (MINI_APP_STABLE_URL + "?payment=success&request_id=" + encodeURIComponent(requestId || ""));
   if (redirectUrl) url.searchParams.set("redirect_url", redirectUrl);
+  // notify_url: HOT шлёт webhook сюда при изменении статуса платежа.
+  // Без этого параметра — webhook нужно настраивать вручную в кабинете HOT.
+  const notifyUrl = process.env.HOT_NOTIFY_URL ||
+    (MINI_APP_BASE.replace(/\/app\/?$/, "") + "/api/payments/hot/webhook");
+  url.searchParams.set("notify_url", notifyUrl);
   return url.toString();
 }
 
@@ -1483,6 +1490,22 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
         import("./workerSoundKey.js").then(({ generateSoundKey }) => {
           generateSoundKey(row.id).catch((err) => console.error("[payments/hot/webhook] generate:", err?.message || err));
         }).catch((err) => console.error("[payments/hot/webhook] import worker:", err?.message || err));
+      }
+
+      // Уведомляем пользователя в Telegram что оплата принята и заявка в работе
+      const shortId = String(row.id || "").slice(0, 8);
+      bot.api.sendMessage(
+        row.telegram_user_id,
+        `✅ *Оплата подтверждена!*\n\nЗаявка ID: \`${shortId}\` принята в работу.\n🎵 Твой звуковой ключ создаётся — отправлю, как только будет готово!`,
+        { parse_mode: "Markdown" }
+      ).catch((e) => console.warn("[webhook] notify user paid:", e?.message));
+
+      // Уведомляем администраторов
+      for (const adminId of ADMIN_IDS) {
+        bot.api.sendMessage(
+          adminId,
+          `💰 *Оплата получена*\nЗаявка: \`${shortId}\`\nСумма: ${body.amount || "?"} ${body.currency || "USDT"}\nSKU: ${purchasedSku}`
+        , { parse_mode: "Markdown" }).catch(() => {});
       }
     }
     return res.json({ success: true, paid: normalizedPaid, sku: purchasedSku });

@@ -2252,6 +2252,45 @@
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
       });
 
+      // ── Overlay: кнопка «Я уже оплатил» ────────────────────────────────
+      var payOvCheckBtn = document.getElementById('payOvCheckBtn');
+      if (payOvCheckBtn) payOvCheckBtn.addEventListener('click', async function() {
+        if (!pendingPaymentRequestId) { setPaymentStatus('Нет активной заявки для проверки', 'error'); return; }
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        var initData = getInitData();
+        if (!apiBase || !initData) { setPaymentStatus('Нет соединения с сервером', 'error'); return; }
+        payOvCheckBtn.disabled = true;
+        payOvCheckBtn.textContent = '⏳ Проверяю...';
+        setPaymentStatus('Проверяю статус оплаты...', 'warn');
+        try {
+          var st = '';
+          for (var i = 0; i < 5; i++) {
+            var r = await fetch(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(pendingPaymentRequestId), { headers: { 'X-Telegram-Init': initData } });
+            var j = await r.json().catch(function() { return {}; });
+            st = j && j.data && j.data.payment_status ? String(j.data.payment_status).toLowerCase() : '';
+            if (st === 'paid') break;
+            if (i < 4) await new Promise(function(res) { setTimeout(res, 1500); });
+          }
+          if (st === 'paid') {
+            setPaymentStatus('✅ Оплата подтверждена! Запускаем создание...', 'ok');
+            await fetch(apiBase + '/api/payments/hot/confirm', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+              body: JSON.stringify({ request_id: pendingPaymentRequestId, initData: initData })
+            }).catch(function(){});
+            pendingPaymentRequestId = null; pendingPaymentSku = null;
+            setTimeout(function() { hidePaymentOverlay(); goToPage('loadingPage'); setTimeout(function() { goToPage('successPage'); }, 1800); }, 1200);
+          } else {
+            setPaymentStatus('Оплата пока не подтверждена. Подожди немного и проверь снова.', 'warn');
+          }
+        } catch(e) {
+          setPaymentStatus('Ошибка проверки: ' + (e && e.message ? e.message : 'попробуй снова'), 'error');
+        } finally {
+          payOvCheckBtn.disabled = false;
+          payOvCheckBtn.textContent = '✅ Я уже оплатил — проверить';
+        }
+      });
+
       // ── Overlay: кнопка «Оплатить» ──────────────────────────────────────
       var payBtn = document.getElementById('payOvPayBtn');
       if (payBtn) payBtn.addEventListener('click', async function() {
@@ -2334,8 +2373,8 @@
           }
         }
 
-        var promoInput = document.getElementById('promoCodeInput');
-        var promoCode = (promoInput && promoInput.value) ? promoInput.value.trim() : (activePromo ? activePromo.code : null);
+        var promoInput = document.getElementById('payOvPromoInput') || document.getElementById('promoCodeInput');
+        var promoCode = (promoInput && promoInput.value && promoInput.value.trim()) ? promoInput.value.trim().toUpperCase() : (activePromo ? activePromo.code : null);
         var hotPayload = {
           request_id: pendingPaymentRequestId,
           sku: pendingPaymentSku,
@@ -2469,6 +2508,9 @@
           }
 
           setPaymentStatus(t('hotCheckoutOpened'), 'warn');
+          // Показываем кнопку ручной проверки — на случай если webhook задержится
+          var checkBtn = document.getElementById('payOvCheckBtn');
+          if (checkBtn) checkBtn.style.display = 'block';
           var maxAttempts = 60;
           var attempt = 0;
           var paid = false;
@@ -2830,11 +2872,12 @@
         </p>
 
         <!-- Промокод -->
+        <div style="margin-bottom:6px;font-size:0.82rem;color:rgba(255,255,255,0.55);letter-spacing:0.3px;">Промокод</div>
         <div style="display:flex;gap:8px;margin-bottom:14px;">
-          <input id="payOvPromoInput" type="text" placeholder="Промокод"
-            style="flex:1;padding:11px 13px;border-radius:10px;border:1px solid rgba(212,175,55,0.4);background:rgba(255,255,255,0.07);color:#fff;font-size:0.95rem;font-family:inherit;text-transform:uppercase;outline:none;">
+          <input id="payOvPromoInput" type="text" placeholder="Введите промокод"
+            style="flex:1;padding:11px 13px;border-radius:10px;border:1.5px solid rgba(212,175,55,0.65);background:rgba(255,255,255,0.13);color:#fff;font-size:0.95rem;font-family:inherit;text-transform:uppercase;outline:none;-webkit-appearance:none;">
           <button id="payOvPromoBtn" type="button"
-            style="padding:11px 16px;border-radius:10px;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.45);color:#d4af37;font-weight:600;font-size:0.9rem;cursor:pointer;white-space:nowrap;font-family:inherit;">
+            style="padding:11px 16px;border-radius:10px;background:rgba(212,175,55,0.2);border:1.5px solid rgba(212,175,55,0.55);color:#d4af37;font-weight:600;font-size:0.9rem;cursor:pointer;white-space:nowrap;font-family:inherit;">
             Применить
           </button>
         </div>
@@ -2857,6 +2900,11 @@
         <button id="payOvPayBtn" type="button"
           style="width:100%;padding:16px;border-radius:13px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:11px;letter-spacing:0.3px;">
           💳 Оплатить через HOT Pay
+        </button>
+
+        <!-- Кнопка ручной проверки (показывается после открытия HOT Pay) -->
+        <button id="payOvCheckBtn" type="button" style="display:none;width:100%;padding:13px;border-radius:13px;background:rgba(16,185,129,0.12);border:1.5px solid rgba(16,185,129,0.4);color:rgba(16,185,129,0.95);font-size:0.9rem;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:11px;">
+          ✅ Я уже оплатил — проверить
         </button>
 
         <!-- Кнопка назад -->
