@@ -1304,16 +1304,26 @@
           if (!stored) {
             console.warn('[initData] КРИТИЧНО: Нет initData! Приложение запущено не из Telegram или данные не сохранились');
             
-            // Показываем пользователю инструкции
+            // Показываем пользователю инструкции и предлагаем демо-режим
             setTimeout(function() {
               var message = '⚠️ Проблема с авторизацией Telegram!\n\n' +
                            '🔧 Возможные решения:\n' +
-                           '1. Обновите Telegram до последней версии\n' +
-                           '2. Перезапустите Telegram\n' +
-                           '3. Откройте приложение заново из бота @YupSoul_bot\n' +
-                           '4. Попробуйте использовать Telegram в браузере: web.telegram.org\n\n' +
-                           '❓ Если проблема остается - сообщите разработчику';
-              alert(message);
+                           '1. Откройте приложение из бота @YupSoul_bot (кнопка меню ☰)\n' +
+                           '2. Обновите Telegram до последней версии\n' +
+                           '3. Перезапустите Telegram\n' +
+                           '4. Попробуйте web.telegram.org\n\n' +
+                           '💡 Или продолжить в демо-режиме (без оплаты)';
+              
+              if (confirm(message + '\n\nПродолжить в демо-режиме?')) {
+                console.log('[Demo] Пользователь выбрал демо-режим');
+                window.demoMode = true;
+                // Создаем фиктивные данные для демо
+                window.fallbackUserData = {
+                  id: 'demo_user',
+                  first_name: 'Demo User',
+                  username: 'demo'
+                };
+              }
             }, 3000);
           }
           return stored;
@@ -1648,6 +1658,21 @@
       if (tg) loadMe();
       currentLang = detectLang();
       applyTranslations();
+      
+      // Проверяем демо-режим и показываем индикатор
+      function checkDemoMode() {
+        if (window.demoMode || (!getInitData() && tg && tg.version)) {
+          var demoIndicator = document.createElement('div');
+          demoIndicator.id = 'demoIndicator';
+          demoIndicator.style.cssText = 'position:fixed;top:10px;left:10px;background:rgba(255,165,0,0.9);color:white;padding:8px 12px;border-radius:6px;font-size:12px;z-index:9999;font-weight:600;';
+          demoIndicator.textContent = '💡 ДЕМО-РЕЖИМ';
+          document.body.appendChild(demoIndicator);
+          console.log('[Demo] Индикатор демо-режима добавлен');
+        }
+      }
+      
+      // Проверяем демо-режим через 2 секунды после загрузки
+      setTimeout(checkDemoMode, 2000);
       var langRuEl = document.getElementById('langRu');
       var langEnEl = document.getElementById('langEn');
       var langDeEl = document.getElementById('langDe');
@@ -1891,6 +1916,27 @@
           console.log('[Navigation] pendingPaymentRequestId на странице оплаты:', pendingPaymentRequestId);
           if (!pendingPaymentRequestId) {
             console.error('[Navigation] КРИТИЧНО: pendingPaymentRequestId потерян при переходе на страницу оплаты!');
+          }
+          
+          // Если демо-режим или нет initData - показываем специальное сообщение
+          if (window.demoMode || !getInitData()) {
+            var paymentIntro = document.getElementById('paymentIntro');
+            if (paymentIntro) {
+              paymentIntro.innerHTML = '💡 <strong>Демо-режим</strong><br><br>' +
+                                      'Для оплаты откройте приложение из Telegram бота <a href="https://t.me/YupSoul_bot" style="color:#d4af37">@YupSoul_bot</a><br><br>' +
+                                      '📱 Нажмите кнопку меню (☰) в боте или "Открыть приложение"';
+              paymentIntro.style.background = 'rgba(255,165,0,0.1)';
+              paymentIntro.style.border = '1px solid rgba(255,165,0,0.3)';
+              paymentIntro.style.borderRadius = '8px';
+              paymentIntro.style.padding = '15px';
+            }
+            
+            // Отключаем кнопку оплаты в демо-режиме
+            if (payBtn) {
+              payBtn.disabled = true;
+              payBtn.textContent = '🔒 Доступно только в Telegram';
+              payBtn.style.opacity = '0.6';
+            }
           }
           
           // Детальная проверка всех элементов страницы оплаты
@@ -2302,14 +2348,30 @@
         var initData = getInitData();
         if (!initData) { 
           console.error('[HOT Pay] Нет initData - проблема с авторизацией Telegram');
+          
+          if (window.demoMode) {
+            console.log('[HOT Pay] Демо-режим: показываем сообщение о необходимости авторизации');
+            alert('💡 Демо-режим\n\n' +
+                  'Для оплаты необходимо открыть приложение из Telegram бота @YupSoul_bot\n\n' +
+                  '📱 Как это сделать:\n' +
+                  '1. Откройте @YupSoul_bot в Telegram\n' +
+                  '2. Нажмите кнопку меню (☰) или "Открыть приложение"\n' +
+                  '3. Заполните форму и оплатите');
+            return;
+          }
+          
           var errorMessage = '⚠️ Ошибка авторизации Telegram!\n\n' +
                             '🔧 Решения:\n' +
+                            '• Откройте приложение из бота @YupSoul_bot (кнопка меню ☰)\n' +
                             '• Обновите Telegram до последней версии\n' +
                             '• Перезапустите Telegram\n' +
-                            '• Откройте приложение из бота @YupSoul_bot\n' +
                             '• Попробуйте web.telegram.org\n\n' +
                             '💡 Ваша версия Telegram: ' + (tg && tg.version ? tg.version : 'неизвестна');
-          alert(errorMessage);
+          
+          if (confirm(errorMessage + '\n\nПродолжить в демо-режиме?')) {
+            window.demoMode = true;
+            alert('💡 Демо-режим активирован\n\nВы можете заполнить форму, но оплата будет недоступна.');
+          }
           return; 
         }
         
