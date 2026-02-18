@@ -111,6 +111,7 @@
       position:fixed;
       inset:0;
       z-index:0;
+      /* Мягкие тона без ярких пятен */
       background:
         radial-gradient(ellipse 80% 50% at 50% 0%, rgba(212,175,55,0.06), transparent 50%),
         radial-gradient(ellipse 60% 40% at 80% 80%, rgba(236,72,153,0.04), transparent 50%),
@@ -122,6 +123,7 @@
       position:fixed;
       inset:0;
       z-index:0;
+      /* Лёгкая затемняющая плёнка без белых пятен — убраны яркие radial-gradient «звёзды» */
       background: linear-gradient(180deg, rgba(1,6,26,0.25) 0%, transparent 50%, rgba(8,10,38,0.2) 100%);
       pointer-events:none;
     }
@@ -819,6 +821,7 @@
           promoCode: 'Промокод', apply: 'Применить', backFromPayment: '← Назад',
           submitAndContinue: 'Оформить и продолжить', submitRequest: 'Отправить заявку',
           paymentPageIntroAfterSubmit: 'Заявка отправлена. Введите промокод или нажмите кнопку ниже для оплаты через HOT Pay.',
+          paymentPageIntroOrPay: 'Или введите промокод, или оплатите через HOT Pay.',
           paymentPageTagline: 'Промокод или оплата',
           payWithHot: 'Оплатить через HOT Pay',
           firstFree: 'Первый звуковой ключ доступен бесплатно.',
@@ -1572,31 +1575,63 @@
       function showPaymentOverlay() {
         var ov = document.getElementById('paymentOverlay');
         if (!ov) return;
+        console.log('[Payment Overlay] Открытие окна оплаты');
+        console.log('[Payment Overlay] pendingPaymentRequestId:', pendingPaymentRequestId);
+        console.log('[Payment Overlay] freeTrialAvailable:', freeTrialAvailable);
+        
         ov.style.display = 'block';
         if (tg && tg.expand) try { tg.expand(); } catch(e) {}
-        // Сбросить статус и поля
+        
+        // Сбросить статус, ссылку и поле промокода
         setPaymentStatus('', '');
         var lr = document.getElementById('payOvLinkRow');
         if (lr) lr.style.display = 'none';
         var pi = document.getElementById('payOvPromoInput');
         if (pi) pi.value = '';
-        ov.scrollTop = 0;
-        // Показываем подсказку для новичков если free trial был доступен
-        var hint = document.getElementById('payOvTrialHint');
-        if (hint) hint.style.display = (typeof freeTrialAvailable !== 'undefined' && freeTrialAvailable) ? '' : 'none';
-      }
-      function hidePaymentOverlay() {
-        var ov = document.getElementById('paymentOverlay');
-        if (ov) ov.style.display = 'none';
-        setPaymentStatus('', '');
-        activePromo = null;
-        var pi = document.getElementById('payOvPromoInput');
-        if (pi) pi.value = '';
-        // Сброс кнопки в исходное состояние
-        var pb = document.getElementById('payOvPayBtn');
-        if (pb) { pb.textContent = '💳 Оплатить через HOT Pay'; pb.style.background = 'linear-gradient(135deg,#7c3aed,#a855f7)'; pb.disabled = false; }
         var cb = document.getElementById('payOvCheckBtn');
         if (cb) cb.style.display = 'none';
+        
+        ov.scrollTop = 0;
+        
+        // Показываем кнопку "Получить бесплатный ключ" только если free trial доступен
+        var freeClaimBtn = document.getElementById('payOvFreeClaimBtn');
+        var hint = document.getElementById('payOvTrialHint');
+        if (freeTrialAvailable) {
+          if (freeClaimBtn) freeClaimBtn.style.display = '';
+          if (hint) hint.style.display = '';
+        } else {
+          if (freeClaimBtn) freeClaimBtn.style.display = 'none';
+          if (hint) hint.style.display = 'none';
+        }
+        
+        // Обновляем UI (цена, кнопка оплаты)
+        updatePaymentUiFromCatalog();
+      }
+      function hidePaymentOverlay() {
+        console.log('[Payment Overlay] Закрытие окна оплаты');
+        var ov = document.getElementById('paymentOverlay');
+        if (ov) ov.style.display = 'none';
+        
+        // Полный сброс состояния
+        setPaymentStatus('', '');
+        activePromo = null;
+        
+        var pi = document.getElementById('payOvPromoInput');
+        if (pi) pi.value = '';
+        
+        var lr = document.getElementById('payOvLinkRow');
+        if (lr) lr.style.display = 'none';
+        
+        var cb = document.getElementById('payOvCheckBtn');
+        if (cb) cb.style.display = 'none';
+        
+        // Сброс кнопки оплаты в исходное состояние
+        var pb = document.getElementById('payOvPayBtn');
+        if (pb) {
+          pb.textContent = '💳 Оплатить через HOT Pay';
+          pb.style.background = 'linear-gradient(135deg,#7c3aed,#a855f7)';
+          pb.disabled = false;
+        }
       }
       function setPaymentStatus(text, tone) {
         var el = document.getElementById('payOvStatus');
@@ -2553,15 +2588,18 @@
             }
             setTimeout(function() { goToPage('successPage'); }, 4000);
           } else if ((response.status === 402 || (result && result.payment_required)) && result.requestId) {
-            console.log('[Submit] Требуется оплата, переходим на страницу оплаты');
-            console.log('[Submit] result.requestId:', result.requestId);
-            console.log('[Submit] result.sku:', result.sku);
+            console.log('[Submit] 402 Payment Required — открываем окно оплаты');
+            console.log('[Submit] requestId:', result.requestId, 'sku:', result.sku);
             
+            // Сохраняем ID заявки и SKU для оплаты
             pendingPaymentRequestId = result.requestId;
             pendingPaymentSku = result.sku || getCurrentSku();
-            activePromo = null;
+            activePromo = null; // Сбрасываем промокод (пользователь может ввести новый)
+            
+            // Открываем окно оплаты и обновляем UI
             showPaymentOverlay();
-            setPaymentStatus(t('paymentRequiredOpening'), 'warn');
+            updatePaymentUiFromCatalog();
+            setPaymentStatus('', '');
           } else {
             var errMsg = result.error || result.message || 'Не удалось отправить заявку.';
             if (response.status === 503) errMsg = t('alertServerSleep');
@@ -2586,15 +2624,28 @@
       var payOvPromoBtn = document.getElementById('payOvPromoBtn');
       if (payOvPromoBtn) payOvPromoBtn.addEventListener('click', applyPromoCode);
 
-      // ── Overlay: кнопка «Получить бесплатный ключ» (восстановление подарка) ──
+      // ── Overlay: кнопка «Получить бесплатный ключ» (первый подарочный доступ) ──
       var payOvFreeClaimBtn = document.getElementById('payOvFreeClaimBtn');
       if (payOvFreeClaimBtn) payOvFreeClaimBtn.addEventListener('click', async function() {
-        if (!pendingPaymentRequestId) { setPaymentStatus('Нет активной заявки', 'error'); return; }
+        console.log('[Free Trial] Нажата кнопка "Получить бесплатный ключ"');
+        console.log('[Free Trial] pendingPaymentRequestId:', pendingPaymentRequestId);
+        
+        if (!pendingPaymentRequestId) {
+          setPaymentStatus('❌ Нет активной заявки. Заполни форму заново.', 'error');
+          return;
+        }
+        
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         var initData = getInitData();
-        if (!apiBase || !initData) { setPaymentStatus('Нет соединения с сервером', 'error'); return; }
+        if (!apiBase || !initData) {
+          setPaymentStatus('❌ Нет соединения с сервером. Проверь интернет.', 'error');
+          return;
+        }
+        
         payOvFreeClaimBtn.disabled = true;
-        payOvFreeClaimBtn.textContent = '⏳ Активирую...';
+        payOvFreeClaimBtn.textContent = '⏳ Активирую подарок...';
+        setPaymentStatus('🎁 Активирую бесплатный доступ...', 'ok');
+        
         try {
           var resp = await fetch(apiBase + '/api/free-trial/claim', {
             method: 'POST',
@@ -2602,17 +2653,24 @@
             body: JSON.stringify({ request_id: pendingPaymentRequestId, initData: initData })
           });
           var json = await resp.json().catch(function() { return {}; });
+          
           if (resp.ok && json.ok) {
+            console.log('[Free Trial] Подарок активирован успешно');
+            setPaymentStatus('✅ Подарок активирован! Создаём твой ключ...', 'ok');
+            pendingPaymentRequestId = null;
+            pendingPaymentSku = null;
             hidePaymentOverlay();
             goToPage('loadingPage');
             setTimeout(function() { goToPage('successPage'); }, 4000);
           } else {
-            var errMsg = json.error || 'Не удалось активировать подарок';
+            var errMsg = json.error || json.message || 'Не удалось активировать подарок';
+            console.warn('[Free Trial] Ошибка:', errMsg);
             setPaymentStatus('❌ ' + errMsg, 'error');
             payOvFreeClaimBtn.disabled = false;
             payOvFreeClaimBtn.textContent = '🎁 Получить бесплатный ключ';
           }
         } catch (e) {
+          console.error('[Free Trial] Ошибка соединения:', e);
           setPaymentStatus('❌ Ошибка соединения. Попробуй снова.', 'error');
           payOvFreeClaimBtn.disabled = false;
           payOvFreeClaimBtn.textContent = '🎁 Получить бесплатный ключ';
