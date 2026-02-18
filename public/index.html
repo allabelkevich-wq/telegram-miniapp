@@ -1632,7 +1632,7 @@
           pb.disabled = false;
         }
       }
-      // ── Надёжный экран "Заявка принята" — position:fixed, z-index:5000 ──────────
+      // ── Надёжный экран "Заявка принята" — position:fixed, z-index:10000 ─────────
       // Использует отдельный оверлей вместо страниц .page, чтобы избежать
       // конфликтов z-index и проблемы с «пустым экраном».
       function showConfirm(title, desc) {
@@ -1647,11 +1647,26 @@
         // 3. Показываем confirm-overlay
         var co = document.getElementById('confirmOverlay');
         if (co) co.style.display = 'block';
-        // 4. Через 5 сек переходим на successPage и скрываем overlay
+        // 4. Через 4 сек переходим на successPage и скрываем overlay
         setTimeout(function() {
           if (co) co.style.display = 'none';
           goToPage('successPage');
-        }, 5000);
+        }, 4000);
+      }
+      // Экраны «Заявка принята» — фиксированный оверлей, всегда виден поверх всего
+      function showConfirmOverlay(title, desc) {
+        hidePaymentOverlay();
+        var ov = document.getElementById('confirmOverlay');
+        if (!ov) return;
+        var tEl = document.getElementById('confirmTitle');
+        var dEl = document.getElementById('confirmDesc');
+        if (tEl) tEl.textContent = title || '✨ Заявка принята!';
+        if (dEl) dEl.innerHTML = desc || 'Анализирую твои данные и создаю уникальную песню.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.';
+        ov.style.display = 'block';
+      }
+      function hideConfirmOverlay() {
+        var ov = document.getElementById('confirmOverlay');
+        if (ov) ov.style.display = 'none';
       }
       function setPaymentStatus(text, tone) {
         var el = document.getElementById('payOvStatus');
@@ -2587,11 +2602,10 @@
           var result = await response.json().catch(function() { return {}; });
 
           if (response.ok && result.ok && result.requestId && !result.payment_required) {
-            // Сохраняем ID заявки для Soul Chat
             if (typeof scCurrentRequestId !== 'undefined') scCurrentRequestId = result.requestId;
             if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
-            
-            showConfirm('✨ Заявка принята, ' + name1 + '!', 'Анализирую твои данные и создаю уникальную песню.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.');
+            showConfirmOverlay('✨ Заявка принята, ' + name1 + '!', 'Анализирую твои данные и создаю уникальную песню.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.');
+            setTimeout(function() { hideConfirmOverlay(); goToPage('successPage'); }, 4000);
           } else if ((response.status === 402 || (result && result.payment_required)) && result.requestId) {
             console.log('[Submit] 402 Payment Required — открываем окно оплаты');
             console.log('[Submit] requestId:', result.requestId, 'sku:', result.sku);
@@ -2845,13 +2859,14 @@
             
             throw new Error(errorMsg);
           }
-          // КРИТИЧНО: Если промокод дал 100% скидку или free_applied — сразу переходим к успеху
+          // КРИТИЧНО: Если промокод дал 100% скидку или free_applied — показываем экран подтверждения
           if (hotJson.free_applied || (hotJson.success && hotJson.provider === 'promo' && Number(hotJson.amount) === 0)) {
-            console.log('[HOT Pay] Промокод дал бесплатную генерацию — закрываем окно оплаты');
+            console.log('[HOT Pay] Промокод дал бесплатную генерацию — показываем экран подтверждения');
             pendingPaymentRequestId = null;
             pendingPaymentSku = null;
             activePromo = null;
-            showConfirm('🎁 Промокод принят!', 'Промокод применён! Твоя песня создаётся.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.');
+            showConfirmOverlay('✨ Заявка принята!', 'Промокод применён! 🎁<br><br>Твоя песня создаётся и скоро придёт в бот.<br>Можешь закрыть приложение.');
+            setTimeout(function() { hideConfirmOverlay(); goToPage('successPage'); }, 4000);
             return;
           }
           if (!hotJson.checkout_url) {
@@ -3361,11 +3376,11 @@
     </div>
   </div>
 
-  <!-- ЭКРАН ПОДТВЕРЖДЕНИЯ ЗАЯВКИ — position:fixed, z-index:5000, всегда поверх всего -->
+  <!-- ЭКРАН ПОДТВЕРЖДЕНИЯ ЗАЯВКИ — position:fixed, z-index выше оплаты, всегда поверх всего -->
   <div id="confirmOverlay" style="
     display:none;
     position:fixed;inset:0;
-    z-index:5000;
+    z-index:10000;
     background:#0A0A1A url('assets/bg-yupsoul.png') center/cover no-repeat;
     overflow-y:auto;
     font-family:'Comfortaa',sans-serif;
