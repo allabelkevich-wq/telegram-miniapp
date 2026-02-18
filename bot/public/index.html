@@ -261,12 +261,15 @@
     }
     header{text-align:center;margin:var(--spacing-xl) 0 var(--spacing-lg);position:relative}
     .lang-switcher-compact{position:absolute;top:0;right:0;z-index:10}
-    .lang-switcher-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;font-size:14px;background:rgba(0,0,0,0.35);border:1px solid var(--tg-theme-border-color, rgba(255,255,255,0.2));border-radius:8px;color:var(--tg-theme-text-color,#fff);cursor:pointer;font-family:inherit}
-    .lang-switcher-btn:hover{background:rgba(0,0,0,0.5)}
-    .lang-dropdown{position:absolute;top:100%;right:0;margin-top:6px;min-width:100%;background:var(--tg-theme-secondary-bg-color);border:1px solid var(--tg-theme-border-color);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.3);overflow:hidden;z-index:20}
+    .lang-switcher-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:5px 8px;min-width:0;font-size:clamp(11px, 2.8vw, 13px);line-height:1;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.12);border-radius:999px;color:var(--tg-theme-text-color,#fff);cursor:pointer;font-family:inherit;font-weight:600;letter-spacing:0.02em;transition:background .2s, border-color .2s}
+    .lang-switcher-btn:hover{background:rgba(0,0,0,0.55);border-color:rgba(255,255,255,0.2)}
+    #langSwitcherIcon{font-size:clamp(12px, 3vw, 14px);opacity:0.9;line-height:1}
+    #langSwitcherCurrent{min-width:1.4em;text-align:center}
+    .lang-dropdown{position:absolute;top:100%;right:0;margin-top:4px;min-width:0;width:max-content;padding:4px;background:var(--tg-theme-secondary-bg-color);border:1px solid var(--tg-theme-border-color);border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.35);overflow:hidden;z-index:20}
     .lang-dropdown[hidden]{display:none !important}
-    .lang-opt{display:block;width:100%;padding:8px 12px;text-align:left;background:transparent;border:none;color:var(--tg-theme-text-color);font-size:13px;cursor:pointer;font-family:inherit}
-    .lang-opt:hover{background:rgba(255,255,255,0.1)}
+    .lang-opt{display:block;width:100%;padding:6px 12px;text-align:left;background:transparent;border:none;border-radius:6px;color:var(--tg-theme-text-color);font-size:clamp(12px, 2.5vw, 13px);cursor:pointer;font-family:inherit}
+    .lang-opt:hover{background:rgba(255,255,255,0.08)}
+    @media (min-width: 480px){.lang-switcher-btn{padding:6px 10px;gap:5px}}
     h1{font-size:var(--fluid-2xl);background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 4s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;letter-spacing:-1px;line-height:1.1}
     .subtitle{color:var(--subtitle-readable,var(--tg-theme-text-color));font-size:var(--fluid-base);margin-top:8px;font-weight:400}
     .tagline{color:#d4af37;font-size:var(--fluid-md);font-weight:600;margin:12px 0;letter-spacing:-0.2px}
@@ -399,8 +402,8 @@
     <!-- Главная страница -->
     <div class="page active" id="homePage">
       <header>
-        <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык">
-          <button type="button" id="langSwitcherBtn" class="lang-switcher-btn">
+        <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
+          <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
             <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
             <span id="langSwitcherCurrent">RU</span>
           </button>

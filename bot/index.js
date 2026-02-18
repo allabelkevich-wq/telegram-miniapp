@@ -1473,18 +1473,22 @@ const WEBHOOK_URL = (process.env.WEBHOOK_URL || "").replace(/\/$/, "");
 // Базовый URL для ссылки на админку. Одинаковое значение с WEBHOOK_URL — нормально (один сервис = один URL).
 const BOT_PUBLIC_URL = (process.env.BOT_PUBLIC_URL || process.env.WEBHOOK_URL || process.env.HEROES_API_BASE || "").replace(/\/webhook\/?$/i, "").replace(/\/$/, "");
 
-// КРИТИЧНО: Обработчик webhook для Telegram бота
+// КРИТИЧНО: Обработчик webhook для Telegram бота.
+// express.json() обязателен ДО webhookCallback — иначе req.body пустой и grammY падает с "reading 'update_id'".
 if (WEBHOOK_URL) {
   console.log("[Bot] Настройка webhook обработчика для пути /webhook");
-  
-  // Добавляем middleware для логирования webhook запросов
-  app.post("/webhook", (req, res, next) => {
-    console.log("[Webhook] Получен запрос от Telegram");
-    console.log("[Webhook] Headers:", JSON.stringify(req.headers, null, 2));
-    console.log("[Webhook] Body length:", req.body ? req.body.length : 0);
+  app.post("/webhook", express.json(), (req, res, next) => {
+    if (!req.body || typeof req.body !== "object") {
+      console.warn("[Webhook] Пустое или не-JSON body, отвечаем 400");
+      return res.status(400).send("Bad Request");
+    }
+    if (req.body.update_id == null) {
+      console.warn("[Webhook] Нет update_id в body, отвечаем 400");
+      return res.status(400).send("Bad Request");
+    }
+    console.log("[Webhook] update_id:", req.body.update_id);
     next();
   }, webhookCallback(bot, "express"));
-  
   console.log("[Bot] Webhook обработчик установлен для /webhook");
 } else {
   console.log("[Bot] WEBHOOK_URL не задан, webhook обработчик не установлен");
@@ -1992,6 +1996,19 @@ app.post("/api/admin/requests/:id/cancel", asyncApi(async (req, res) => {
     .eq("id", id);
   if (error) return res.status(500).json({ success: false, error: error.message });
   return res.json({ success: true });
+}));
+
+// Массовое удаление заявок из списка (например тестовых). Только для админа.
+app.post("/api/admin/requests/delete", express.json(), asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const raw = req.body?.ids;
+  const ids = Array.isArray(raw) ? raw.map((id) => String(id).trim()).filter(Boolean).filter(isValidRequestId) : [];
+  if (ids.length === 0) return res.status(400).json({ success: false, error: "Укажите массив ids (UUID заявок) для удаления" });
+  const { error } = await supabase.from("track_requests").delete().in("id", ids);
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  return res.json({ success: true, deleted: ids.length });
 }));
 
 app.get("/api/admin/settings", asyncApi(async (req, res) => {
