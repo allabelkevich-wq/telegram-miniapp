@@ -799,7 +799,13 @@
           alertPaymentFirst: 'Сначала нажмите «Отправить заявку» на предыдущем шаге.',
           alertLinkCopied: '✓ Ссылка скопирована. Вставьте её в Safari или Chrome и откройте.',
           alertHeroName: 'Введите имя', alertError: 'Ошибка', alertDeleteConfirm: 'Удалить «{name}»? Это действие нельзя отменить.',
-          alertSubmitError: 'Ошибка при отправке'
+          alertSubmitError: 'Ошибка при отправке',
+          copyLinkPrompt: 'Скопируйте эту ссылку и откройте в браузере:',
+          songFormingText: 'Твой звуковой ключ формируется. Через 2–3 минуты он придёт в этот чат.',
+          heroesLoading: 'Загрузка...', heroesEmpty: 'Пока нет героев. Нажми «Добавить героя».',
+          heroesLoadError: 'Не удалось загрузить список. Проверьте настройку API.',
+          forMyself: 'Для себя', forHero: 'Для: {name}',
+          previewHome: 'Главная', previewForm: 'Форма', previewPayment: 'Оплата', previewLoading: 'Загрузка', previewSuccess: 'Успех'
         },
         en: {
           tagline: 'Explore your edges the way you want',
@@ -899,7 +905,13 @@
           alertPaymentFirst: 'First tap «Submit request» on the previous step.',
           alertLinkCopied: '✓ Link copied. Paste it in Safari or Chrome and open.',
           alertHeroName: 'Enter name', alertError: 'Error', alertDeleteConfirm: 'Delete «{name}»? This action cannot be undone.',
-          alertSubmitError: 'Submit error'
+          alertSubmitError: 'Submit error',
+          copyLinkPrompt: 'Copy this link and open it in browser:',
+          songFormingText: 'Your sound key is being created. It will arrive in this chat in 2–3 minutes.',
+          heroesLoading: 'Loading...', heroesEmpty: 'No heroes yet. Tap «Add Hero».',
+          heroesLoadError: 'Failed to load list. Check API settings.',
+          forMyself: 'For myself', forHero: 'For: {name}',
+          previewHome: 'Home', previewForm: 'Form', previewPayment: 'Payment', previewLoading: 'Loading', previewSuccess: 'Success'
         },
         de: {
           tagline: 'Erkunde deine Facetten, wie du es möchtest',
@@ -999,7 +1011,13 @@
           alertPaymentFirst: 'Tippe zuerst auf «Anfrage senden» im vorherigen Schritt.',
           alertLinkCopied: '✓ Link kopiert. Füge ihn in Safari oder Chrome ein und öffne ihn.',
           alertHeroName: 'Name eingeben', alertError: 'Fehler', alertDeleteConfirm: '«{name}» löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
-          alertSubmitError: 'Sendefehler'
+          alertSubmitError: 'Sendefehler',
+          copyLinkPrompt: 'Kopiere diesen Link und öffne ihn im Browser:',
+          songFormingText: 'Dein Klangschlüssel wird erstellt. In 2–3 Minuten kommt er in diesen Chat.',
+          heroesLoading: 'Laden...', heroesEmpty: 'Noch keine Helden. Tippe auf «Held hinzufügen».',
+          heroesLoadError: 'Liste konnte nicht geladen werden. API-Einstellungen prüfen.',
+          forMyself: 'Für mich', forHero: 'Für: {name}',
+          previewHome: 'Startseite', previewForm: 'Formular', previewPayment: 'Zahlung', previewLoading: 'Laden', previewSuccess: 'Erfolg'
         },
         fr: {
           tagline: 'Explore tes facettes comme tu le souhaites',
@@ -1099,7 +1117,13 @@
           alertPaymentFirst: 'Appuie d\'abord sur «Envoyer la demande» à l\'étape précédente.',
           alertLinkCopied: '✓ Lien copié. Colle-le dans Safari ou Chrome et ouvre-le.',
           alertHeroName: 'Entre le nom', alertError: 'Erreur', alertDeleteConfirm: 'Supprimer «{name}» ? Cette action ne peut pas être annulée.',
-          alertSubmitError: 'Erreur d\'envoi'
+          alertSubmitError: 'Erreur d\'envoi',
+          copyLinkPrompt: 'Copie ce lien et ouvre-le dans le navigateur:',
+          songFormingText: 'Ta clé sonore est en cours de création. Elle arrivera dans ce chat dans 2–3 minutes.',
+          heroesLoading: 'Chargement...', heroesEmpty: 'Pas encore de héros. Appuie sur «Ajouter un héros».',
+          heroesLoadError: 'Impossible de charger la liste. Vérifier les paramètres API.',
+          forMyself: 'Pour moi', forHero: 'Pour: {name}',
+          previewHome: 'Accueil', previewForm: 'Formulaire', previewPayment: 'Paiement', previewLoading: 'Chargement', previewSuccess: 'Succès'
         }
       };
       var currentLang = 'ru';
@@ -1149,7 +1173,9 @@
           ['payWithHot','#payBtn'], ['creatingKey','.loading-text'], ['keyActivated','#successPage .subtitle'],
           ['done','.success-title'], ['soulChat','#soulChatBtn'], ['soulChatPay','#soulChatPayBtn'], ['newKey','#newKeyBtn'],
           ['paymentThanks','#paymentThanksPage .success-title'], ['thanksSubtitle','#paymentThanksPage .subtitle'],
-          ['thanksDone','#paymentThanksBackBtn'], ['gender','#genderLabel'], ['genderSelect','#gender option[value=""]']
+          ['thanksDone','#paymentThanksBackBtn'], ['gender','#genderLabel'], ['genderSelect','#gender option[value=""]'],
+          ['previewHome','button[data-page="home"]'], ['previewForm','button[data-page="form"]'], 
+          ['previewPayment','button[data-page="payment"]'], ['previewLoading','button[data-page="loading"]'], ['previewSuccess','button[data-page="success"]']
         ];
         map.forEach(function(pair) {
           var el = document.querySelector(pair[1]);
@@ -1179,6 +1205,20 @@
           if (o2[1]) o2[1].textContent = t('female'); if (o2[2]) o2[2].textContent = t('male');
           var o23 = gender2.querySelector('option[value="other"]'); if (o23) o23.textContent = t('other');
         }
+        var heroGender = document.getElementById('heroGender'); if (heroGender) {
+          var hOpts = heroGender.querySelectorAll('option'); if (hOpts[0]) hOpts[0].textContent = t('genderSelect');
+          if (hOpts[1]) hOpts[1].textContent = t('male'); if (hOpts[2]) hOpts[2].textContent = t('female');
+          var hO3 = heroGender.querySelector('option[value="other"]'); if (hO3) hO3.textContent = t('other');
+        }
+        var langSelect = document.getElementById('language'); if (langSelect) {
+          var lOpts = langSelect.querySelectorAll('option'); 
+          if (lOpts[0]) lOpts[0].textContent = t('langSong');
+          var lRu = langSelect.querySelector('option[value="ru"]'); if (lRu) lRu.textContent = t('langRu');
+          var lEn = langSelect.querySelector('option[value="en"]'); if (lEn) lEn.textContent = t('langEn');
+          var lDe = langSelect.querySelector('option[value="de"]'); if (lDe) lDe.textContent = t('langDe');
+          var lFr = langSelect.querySelector('option[value="fr"]'); if (lFr) lFr.textContent = t('langFr');
+          var lUk = langSelect.querySelector('option[value="uk"]'); if (lUk) lUk.textContent = t('langUk');
+        }
         var langSelect = document.getElementById('language'); if (langSelect) {
           var lo = langSelect.querySelectorAll('option');
           if (lo[0]) lo[0].textContent = t('langSong');
@@ -1204,6 +1244,8 @@
         var lr = document.getElementById('langRu'); var le = document.getElementById('langEn');
         if (lr) { lr.style.fontWeight = currentLang === 'ru' ? '700' : '400'; lr.style.opacity = currentLang === 'ru' ? '1' : '0.7'; }
         if (le) { le.style.fontWeight = currentLang === 'en' ? '700' : '400'; le.style.opacity = currentLang === 'en' ? '1' : '0.7'; }
+        // Убеждаемся, что кнопка оплаты имеет правильный текст после применения переводов
+        ensurePayButtonText();
       }
       function setLang(lang) {
         // Валидация поддерживаемых языков
@@ -1221,6 +1263,14 @@
           langSelect.value = songLang;
         }
         applyTranslations();
+        // Принудительно обновляем кнопку оплаты после смены языка
+        ensurePayButtonText();
+      }
+      function ensurePayButtonText() {
+        var payBtn = document.getElementById('payBtn');
+        if (payBtn && !payBtn.disabled) {
+          payBtn.textContent = t('payWithHot');
+        }
       }
       function isTelegramWebApp() {
         return !!(window.Telegram && window.Telegram.WebApp);
@@ -1712,6 +1762,8 @@
           var payBtnReset = document.getElementById('payBtn');
           if (payBtnReset) { payBtnReset.disabled = false; payBtnReset.textContent = t('payWithHot'); }
         }
+        // Всегда проверяем кнопку оплаты при переходах между страницами
+        ensurePayButtonText();
         
         document.querySelectorAll('.page').forEach(function(page) {
           page.classList.remove('active');
@@ -1795,7 +1847,7 @@
       var paymentThanksBackBtn = document.getElementById('paymentThanksBackBtn');
       if (paymentThanksBackBtn) paymentThanksBackBtn.addEventListener('click', function() {
         var sp = document.getElementById('songPreviewText');
-        if (sp) sp.textContent = 'Твой звуковой ключ формируется. Через 2–3 минуты он придёт в этот чат.';
+        if (sp) sp.textContent = t('songFormingText');
         goToPage('successPage');
       });
 
@@ -2022,9 +2074,9 @@
             goToPage('loadingPage');
             var sp = document.getElementById('songPreviewText');
             if (sp) {
-              if (mode === 'single') sp.textContent = '✨ ' + name1 + ', Вселенная услышала твой запрос.\n\nТвой звуковой ключ формируется. Через 2-3 минуты он придёт в этот чат.';
-              else if (mode === 'couple') sp.textContent = '✨ ' + name1 + ' и ' + payload.person2.name + ', Вселенная услышала ваш запрос.\n\nВаш звуковой ключ формируется. Через 2-3 минуты он придёт в этот чат.';
-              else sp.textContent = '✨ ' + name1 + ', Вселенная услышала твой запрос.\n\nЗвуковой ключ Энергии Дня формируется. Через 2-3 минуты он придёт в этот чат.';
+              if (mode === 'single') sp.textContent = t('universeHeard', { name: name1 });
+              else if (mode === 'couple') sp.textContent = t('universeHeardCouple', { name: name1, name2: payload.person2.name });
+              else sp.textContent = t('universeHeardTransit', { name: name1 });
             }
             if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
             goToPage('successPage');
@@ -2087,7 +2139,6 @@
           initData: initData
         };
 
-        var payOriginalText = payBtn.textContent;
         payBtn.disabled = true;
         payBtn.textContent = t('sending');
         try {
@@ -2112,7 +2163,7 @@
             goToPage('loadingPage');
             setTimeout(function() { goToPage('successPage'); }, 1800);
             payBtn.disabled = false;
-            payBtn.textContent = payOriginalText;
+            payBtn.textContent = t('payWithHot');
             return;
           }
           if (!hotJson.checkout_url) throw new Error('Checkout URL не получен');
@@ -2129,7 +2180,7 @@
                 navigator.clipboard.writeText(lastCheckoutUrl);
                 alert(t('alertLinkCopied'));
               } catch (e) {
-                prompt('Скопируйте эту ссылку и откройте в браузере:', lastCheckoutUrl);
+                prompt(t('copyLinkPrompt'), lastCheckoutUrl);
               }
             };
           }
@@ -2153,7 +2204,7 @@
           if (!opened) {
             setPaymentStatus('⚠️ Не удалось открыть автоматически. Нажмите «Скопировать ссылку» ниже и откройте в браузере.', 'error');
             payBtn.disabled = false;
-            payBtn.textContent = payOriginalText;
+            payBtn.textContent = t('payWithHot');
             return;
           }
 
@@ -2172,7 +2223,7 @@
           if (!paid) {
             setPaymentStatus(t('paymentNotConfirmed'), 'warn');
             payBtn.disabled = false;
-            payBtn.textContent = payOriginalText;
+            payBtn.textContent = t('payWithHot');
             return;
           }
           setPaymentStatus(t('paymentConfirmed'), 'ok');
@@ -2191,7 +2242,7 @@
           alert('❌ ' + msg);
         } finally {
           payBtn.disabled = false;
-          payBtn.textContent = payOriginalText;
+          payBtn.textContent = t('payWithHot');
         }
       });
       
@@ -2201,12 +2252,12 @@
       function loadHeroesList() {
         var listEl = document.getElementById('heroesList');
         if (!listEl) return;
-        listEl.innerHTML = '<p style="color:#6b7280">Загрузка...</p>';
+        listEl.innerHTML = '<p style="color:#6b7280">' + t('heroesLoading') + '</p>';
         var search = (document.getElementById('heroesSearch') || {}).value;
         var q = search ? '?search=' + encodeURIComponent(search) : '';
         heroesApi('/heroes' + q, { method: 'GET' }).then(function(d) {
           heroesCache = (d && d.clients) || [];
-          if (!heroesCache.length) { listEl.innerHTML = '<p style="color:#6b7280">Пока нет героев. Нажми «Добавить героя».</p>'; return; }
+          if (!heroesCache.length) { listEl.innerHTML = '<p style="color:#6b7280">' + t('heroesEmpty') + '</p>'; return; }
           listEl.innerHTML = heroesCache.map(function(h) {
             var dateStr = h.birth_date || '—';
             var addStr = h.created_at ? new Date(h.created_at).toLocaleDateString('ru-RU') : '';
@@ -2246,7 +2297,7 @@
             });
           });
         }).catch(function(e) {
-          listEl.innerHTML = '<p style="color:#dc2626">Не удалось загрузить список. Проверьте настройку API.</p>';
+          listEl.innerHTML = '<p style="color:#dc2626">' + t('heroesLoadError') + '</p>';
         });
       }
       var addHeroBtn = document.getElementById('addHeroBtn');
@@ -2396,7 +2447,7 @@
         wrap.style.display = 'block';
         heroesApi('/heroes', { method: 'GET' }).then(function(d) {
           heroesCache = (d && d.clients) || [];
-          sel.innerHTML = '<option value="">Для себя</option>' + heroesCache.map(function(h) { return '<option value="' + (h.id || '') + '">Для: ' + (h.name || '—') + '</option>'; }).join('');
+          sel.innerHTML = '<option value="">' + t('forMyself') + '</option>' + heroesCache.map(function(h) { return '<option value="' + (h.id || '') + '">' + t('forHero', { name: h.name || '—' }) + '</option>'; }).join('');
           sel.addEventListener('change', function() {
             var id = sel.value;
             if (!id) { fillFormFromHero(null); return; }
