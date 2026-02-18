@@ -1868,12 +1868,56 @@
         var computed = getComputedStyle(target);
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
         if (pageId === 'paymentPage') {
+          console.log('[Navigation] Настройка страницы оплаты');
           if (tg && tg.expand) try { tg.expand(); } catch (e) {}
           setPaymentStatus('', '');
           var copyBtn = document.getElementById('copyPaymentLinkBtn');
           var paymentLinkHint = document.getElementById('paymentLinkHint');
           if (copyBtn) copyBtn.style.display = 'none';
           if (paymentLinkHint) paymentLinkHint.style.display = 'none';
+          
+          // Проверяем что кнопка оплаты существует и видима
+          var payBtn = document.getElementById('payBtn');
+          if (payBtn) {
+            console.log('[Navigation] Кнопка оплаты найдена');
+            console.log('[Navigation] Кнопка видима:', payBtn.offsetHeight > 0);
+            console.log('[Navigation] Кнопка активна:', !payBtn.disabled);
+            console.log('[Navigation] Текст кнопки:', payBtn.textContent);
+          } else {
+            console.error('[Navigation] КРИТИЧНО: Кнопка оплаты не найдена!');
+          }
+          
+          // Проверяем что pendingPaymentRequestId все еще установлен
+          console.log('[Navigation] pendingPaymentRequestId на странице оплаты:', pendingPaymentRequestId);
+          if (!pendingPaymentRequestId) {
+            console.error('[Navigation] КРИТИЧНО: pendingPaymentRequestId потерян при переходе на страницу оплаты!');
+          }
+          
+          // Детальная проверка всех элементов страницы оплаты
+          var paymentElements = [
+            'paymentPage', 'paymentIntro', 'promoCodeInput', 'promoApplyBtn', 
+            'paymentStatus', 'paymentLinkHint', 'copyPaymentLinkBtn', 'backFromPaymentBtn', 'payBtn'
+          ];
+          
+          console.log('[Navigation] Проверка элементов страницы оплаты:');
+          paymentElements.forEach(function(elementId) {
+            var el = document.getElementById(elementId);
+            if (el) {
+              var isVisible = el.offsetHeight > 0 && el.offsetWidth > 0;
+              var computedStyle = getComputedStyle(el);
+              console.log('[Navigation] ' + elementId + ':', 'найден ✓', 'видим:', isVisible, 'display:', computedStyle.display, 'visibility:', computedStyle.visibility);
+            } else {
+              console.error('[Navigation] ' + elementId + ': НЕ НАЙДЕН ❌');
+            }
+          });
+          
+          // Проверяем что страница paymentPage действительно активна
+          var paymentPageEl = document.getElementById('paymentPage');
+          if (paymentPageEl) {
+            var hasActive = paymentPageEl.classList.contains('active');
+            var computedStyle = getComputedStyle(paymentPageEl);
+            console.log('[Navigation] paymentPage активна:', hasActive, 'display:', computedStyle.display, 'visibility:', computedStyle.visibility);
+          }
         }
         if (pageId === 'successPage') updateSoulChatHint();
         if (document.getElementById('previewNav') && document.getElementById('previewNav').classList.contains('show')) {
@@ -2171,13 +2215,26 @@
             if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
             goToPage('successPage');
           } else if (result && result.payment_required && result.requestId) {
+            console.log('[Submit] Требуется оплата, переходим на страницу оплаты');
+            console.log('[Submit] result.requestId:', result.requestId);
+            console.log('[Submit] result.sku:', result.sku);
+            
             pendingPaymentRequestId = result.requestId;
             pendingPaymentSku = result.sku || getCurrentSku();
             activePromo = null;
+            
+            console.log('[Submit] Установлены переменные:');
+            console.log('[Submit] pendingPaymentRequestId:', pendingPaymentRequestId);
+            console.log('[Submit] pendingPaymentSku:', pendingPaymentSku);
+            
             setPaymentStatus('', '');
             if (tg && tg.expand) try { tg.expand(); } catch (e) {}
+            
+            console.log('[Submit] Переходим на paymentPage');
             goToPage('paymentPage');
             setPaymentStatus(t('paymentRequiredOpening'), 'warn');
+            
+            console.log('[Submit] Переход на страницу оплаты завершен');
           } else {
             var errMsg = result.error || result.message || 'Не удалось отправить заявку.';
             if (response.status === 503) errMsg = t('alertServerSleep');
@@ -2218,8 +2275,20 @@
         }
         
         if (!pendingPaymentRequestId) {
-          console.error('[HOT Pay] Нет pendingPaymentRequestId');
-          alert(t('alertPaymentFirst'));
+          console.error('[HOT Pay] КРИТИЧНО: Нет pendingPaymentRequestId!');
+          console.error('[HOT Pay] Возможные причины:');
+          console.error('[HOT Pay] 1. Заявка не была отправлена');
+          console.error('[HOT Pay] 2. Ответ сервера не содержал requestId');
+          console.error('[HOT Pay] 3. Переменная была сброшена после перехода на страницу');
+          console.error('[HOT Pay] 4. Страница была перезагружена');
+          
+          // Проверяем другие переменные для диагностики
+          console.error('[HOT Pay] pendingPaymentSku:', pendingPaymentSku);
+          console.error('[HOT Pay] activePromo:', activePromo);
+          
+          alert(t('alertPaymentFirst') + '\n\n🔍 Отладочная информация:\n' +
+                'pendingPaymentRequestId: ' + (pendingPaymentRequestId || 'отсутствует') + '\n' +
+                'pendingPaymentSku: ' + (pendingPaymentSku || 'отсутствует'));
           return;
         }
         
