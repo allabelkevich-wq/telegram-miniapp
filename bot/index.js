@@ -2374,6 +2374,72 @@ app.post("/api/payments/hot/create", express.json(), asyncApi(async (req, res) =
   });
 }));
 
+// Возвращает последнюю pending_payment заявку пользователя (для восстановления на старте)
+app.get("/api/my/pending-request", asyncApi(async (req, res) => {
+  if (!supabase) return res.status(503).json({ ok: false });
+  const initData = req.headers["x-telegram-init"] || req.query?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (!telegramUserId) return res.status(401).json({ ok: false });
+  const { data } = await supabase
+    .from("track_requests")
+    .select("id,mode,created_at,generation_status,payment_status")
+    .eq("telegram_user_id", Number(telegramUserId))
+    .eq("generation_status", "pending_payment")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!data) return res.json({ ok: true, pending: false });
+  return res.json({ ok: true, pending: true, request_id: data.id, mode: data.mode, created_at: data.created_at });
+}));
+
+// Активирует бесплатный пробный ключ для pending_payment заявки (восстановление)
+app.post("/api/free-trial/claim", express.json(), asyncApi(async (req, res) => {
+  if (!supabase) return res.status(503).json({ ok: false, error: "Supabase недоступен" });
+  const initData = req.headers["x-telegram-init"] || req.body?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (!telegramUserId) return res.status(401).json({ ok: false, error: "Unauthorized" });
+
+  const requestId = String(req.body?.request_id || "").trim();
+  if (!requestId || !UUID_REGEX.test(requestId)) {
+    return res.status(400).json({ ok: false, error: "request_id обязателен" });
+  }
+
+  const { data: request } = await supabase
+    .from("track_requests")
+    .select("id,telegram_user_id,generation_status,payment_status,mode")
+    .eq("id", requestId)
+    .maybeSingle();
+
+  if (!request) return res.status(404).json({ ok: false, error: "Заявка не найдена" });
+  if (Number(request.telegram_user_id) !== Number(telegramUserId)) {
+    return res.status(403).json({ ok: false, error: "Нет доступа к этой заявке" });
+  }
+
+  const trialAvailable = await isTrialAvailable(telegramUserId, "first_song_gift");
+  if (!trialAvailable) {
+    return res.status(400).json({ ok: false, error: "Первый бесплатный ключ уже был использован" });
+  }
+
+  const consumed = await consumeTrial(telegramUserId, "first_song_gift");
+  if (!consumed.ok && consumed.reason === "already_consumed") {
+    return res.status(400).json({ ok: false, error: "Первый бесплатный ключ уже был активирован" });
+  }
+
+  await supabase.from("track_requests").update({
+    payment_provider: "gift",
+    payment_status: "gift_used",
+    generation_status: "pending",
+    updated_at: new Date().toISOString(),
+  }).eq("id", requestId);
+
+  import("./workerSoundKey.js").then(({ generateSoundKey }) => {
+    generateSoundKey(requestId).catch((err) => console.error("[free-trial/claim] generate:", err?.message));
+  }).catch((err) => console.error("[free-trial/claim] import:", err?.message));
+
+  console.log("[free-trial/claim] Активирован подарочный ключ для пользователя", telegramUserId, "заявка", requestId);
+  return res.json({ ok: true, request_id: requestId, message: "Бесплатный ключ активирован! Создание началось." });
+}));
+
 // status: owner-check (доступ только к своей заявке), GET идемпотентен
 app.get("/api/payments/hot/status", asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });

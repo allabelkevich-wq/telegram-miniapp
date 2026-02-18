@@ -405,6 +405,22 @@
         <div id="homeTagline" class="tagline">Исследуй свои грани так, как ты этого захочешь</div>
       </header>
       
+      <!-- Баннер восстановления зависшей заявки -->
+      <div id="recoveryBanner" style="display:none;margin:0 0 16px 0;background:rgba(5,150,105,0.15);border:1.5px solid rgba(16,185,129,0.5);border-radius:14px;padding:16px 18px;">
+        <div style="font-size:0.95rem;color:#d1fae5;line-height:1.55;margin-bottom:12px;">
+          🎁 <strong style="color:#6ee7b7;">У тебя есть незавершённая заявка!</strong><br>
+          Первый звуковой ключ — бесплатно. Нажми кнопку, и мы запустим создание прямо сейчас.
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button id="recoveryClaimBtn" style="flex:1;min-width:140px;padding:12px;border-radius:10px;background:linear-gradient(135deg,#059669,#10b981);border:none;color:#fff;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;">
+            🎁 Получить бесплатно
+          </button>
+          <button id="recoveryDismissBtn" style="padding:12px 16px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);font-size:0.9rem;cursor:pointer;font-family:inherit;">
+            Позже
+          </button>
+        </div>
+      </div>
+
       <div class="section">
         <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="220" height="220">
         <p id="homeGreeting" class="tagline" style="margin-bottom:12px">Заходи, когда захочешь вспомнить, кто ты.</p>
@@ -1671,6 +1687,8 @@
             hasSubscriptionActive = !!(json.subscription_active);
             catalogLoadError = false;
             updatePaymentUiFromCatalog();
+            // Если пробный доступ ещё не использован — проверяем есть ли зависшая заявка
+            if (freeTrialAvailable) checkPendingRequestOnStart();
           } else {
             catalogLoadError = true;
             updatePaymentUiFromCatalog();
