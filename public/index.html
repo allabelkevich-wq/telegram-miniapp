@@ -1632,6 +1632,27 @@
           pb.disabled = false;
         }
       }
+      // ── Надёжный экран "Заявка принята" — position:fixed, z-index:5000 ──────────
+      // Использует отдельный оверлей вместо страниц .page, чтобы избежать
+      // конфликтов z-index и проблемы с «пустым экраном».
+      function showConfirm(title, desc) {
+        // 1. Скрываем payment overlay если открыт
+        var po = document.getElementById('paymentOverlay');
+        if (po) po.style.display = 'none';
+        // 2. Обновляем текст
+        var ct = document.getElementById('confirmTitle');
+        var cd = document.getElementById('confirmDesc');
+        if (ct) ct.textContent = title || '✨ Заявка принята!';
+        if (cd) cd.innerHTML = desc || 'Анализирую твои данные и создаю уникальную песню.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.';
+        // 3. Показываем confirm-overlay
+        var co = document.getElementById('confirmOverlay');
+        if (co) co.style.display = 'block';
+        // 4. Через 5 сек переходим на successPage и скрываем overlay
+        setTimeout(function() {
+          if (co) co.style.display = 'none';
+          goToPage('successPage');
+        }, 5000);
+      }
       function setPaymentStatus(text, tone) {
         var el = document.getElementById('payOvStatus');
         if (!el) return;
@@ -2570,28 +2591,7 @@
             if (typeof scCurrentRequestId !== 'undefined') scCurrentRequestId = result.requestId;
             if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
             
-            // Показываем экран загрузки с понятным сообщением
-            goToPage('loadingPage');
-            var ldTitle = document.getElementById('loadingTitle');
-            if (ldTitle) ldTitle.textContent = '✨ Заявка принята, ' + name1 + '!';
-            
-            var ldDesc = document.getElementById('loadingDesc');
-            if (ldDesc) {
-              ldDesc.innerHTML = 'Анализирую твои данные и создаю уникальную песню.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.';
-            }
-            
-            // Переход на страницу успеха через 4 секунды
-            var ldCountdown = document.getElementById('loadingCountdown');
-            var ldSec = 4;
-            if (ldCountdown) {
-              ldCountdown.textContent = 'Переход через ' + ldSec + ' сек...';
-              var ldTimer = setInterval(function() {
-                ldSec--;
-                if (ldSec <= 0) { clearInterval(ldTimer); if (ldCountdown) ldCountdown.textContent = ''; }
-                else if (ldCountdown) ldCountdown.textContent = 'Переход через ' + ldSec + ' сек...';
-              }, 1000);
-            }
-            setTimeout(function() { goToPage('successPage'); }, 4000);
+            showConfirm('✨ Заявка принята, ' + name1 + '!', 'Анализирую твои данные и создаю уникальную песню.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.');
           } else if ((response.status === 402 || (result && result.payment_required)) && result.requestId) {
             console.log('[Submit] 402 Payment Required — открываем окно оплаты');
             console.log('[Submit] requestId:', result.requestId, 'sku:', result.sku);
@@ -2661,12 +2661,9 @@
           
           if (resp.ok && json.ok) {
             console.log('[Free Trial] Подарок активирован успешно');
-            setPaymentStatus('✅ Подарок активирован! Создаём твой ключ...', 'ok');
             pendingPaymentRequestId = null;
             pendingPaymentSku = null;
-            hidePaymentOverlay();
-            goToPage('loadingPage');
-            setTimeout(function() { goToPage('successPage'); }, 4000);
+            showConfirm('🎁 Первый ключ активирован!', 'Создаём твою персональную песню в подарок.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.');
           } else {
             var errMsg = json.error || json.message || 'Не удалось активировать подарок';
             console.warn('[Free Trial] Ошибка:', errMsg);
@@ -2716,7 +2713,7 @@
               body: JSON.stringify({ request_id: pendingPaymentRequestId, initData: initData })
             }).catch(function(){});
             pendingPaymentRequestId = null; pendingPaymentSku = null;
-            setTimeout(function() { hidePaymentOverlay(); goToPage('loadingPage'); setTimeout(function() { goToPage('successPage'); }, 1800); }, 1200);
+            setTimeout(function() { hidePaymentOverlay(); showConfirm('✨ Оплата подтверждена!', 'Запускаем создание твоей песни.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.'); }, 1200);
           } else {
             setPaymentStatus('Оплата пока не подтверждена. Подожди немного и проверь снова.', 'warn');
           }
@@ -2854,13 +2851,7 @@
             pendingPaymentRequestId = null;
             pendingPaymentSku = null;
             activePromo = null;
-            hidePaymentOverlay();
-            goToPage('loadingPage');
-            var ldTitle = document.getElementById('loadingTitle');
-            if (ldTitle) ldTitle.textContent = '✨ Заявка принята!';
-            var ldDesc = document.getElementById('loadingDesc');
-            if (ldDesc) ldDesc.innerHTML = 'Промокод применён! 🎁<br><br>Твоя песня создаётся и скоро придёт в бот.<br>Можешь закрыть приложение.';
-            setTimeout(function() { goToPage('successPage'); }, 4000);
+            showConfirm('🎁 Промокод принят!', 'Промокод применён! Твоя песня создаётся.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.');
             return;
           }
           if (!hotJson.checkout_url) {
@@ -2967,8 +2958,8 @@
           });
           pendingPaymentRequestId = null;
           pendingPaymentSku = null;
-          goToPage('loadingPage');
-          setTimeout(function() { goToPage('successPage'); }, 1800);
+          hidePaymentOverlay();
+          showConfirm('✅ Оплата подтверждена!', 'Запускаем создание твоей песни.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.');
         } catch (error) {
           console.error('[HOT Pay] Критическая ошибка:', error);
           var msg = (error && error.message) ? String(error.message) : t('errorOp');
@@ -3369,5 +3360,28 @@
       </div>
     </div>
   </div>
+
+  <!-- ЭКРАН ПОДТВЕРЖДЕНИЯ ЗАЯВКИ — position:fixed, z-index:5000, всегда поверх всего -->
+  <div id="confirmOverlay" style="
+    display:none;
+    position:fixed;inset:0;
+    z-index:5000;
+    background:#0A0A1A url('assets/bg-yupsoul.png') center/cover no-repeat;
+    overflow-y:auto;
+    font-family:'Comfortaa',sans-serif;
+  ">
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:40px 24px;text-align:center;background:linear-gradient(180deg,rgba(1,6,26,.7) 0%,rgba(8,10,38,.85) 100%);">
+      <div style="width:72px;height:72px;border:5px solid rgba(167,139,250,.2);border-top-color:#a78bfa;border-radius:50%;margin:0 auto 28px;animation:confirmSpin 1s linear infinite;"></div>
+      <div style="font-size:1.5rem;color:#a78bfa;font-weight:700;margin-bottom:16px;" id="confirmTitle">✨ Заявка принята!</div>
+      <div style="color:rgba(255,255,255,0.8);font-size:1rem;line-height:1.8;max-width:340px;" id="confirmDesc">
+        Анализирую твои данные и создаю уникальную песню.<br><br>
+        🎵 Готовый ключ придёт в бот — мы сами напишем.<br>
+        Можешь закрыть приложение.
+      </div>
+    </div>
+  </div>
+  <style>
+    @keyframes confirmSpin { to { transform: rotate(360deg); } }
+  </style>
 </body>
 </html>
