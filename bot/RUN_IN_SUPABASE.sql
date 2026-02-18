@@ -255,3 +255,15 @@ values
 on conflict (code) do update set active=excluded.active, updated_at=now();
 
 -- =============================================================================
+-- 9. Профили пользователей (app_users) — нужна для /api/me (без неё 500 ошибка)
+-- =============================================================================
+create table if not exists app_users (
+  id uuid primary key default gen_random_uuid(),
+  telegram_user_id bigint not null unique,
+  tariff text not null default 'basic',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table if exists app_users disable row level security;
+create index if not exists idx_app_users_telegram_user_id on app_users(telegram_user_id);
+-- =============================================================================

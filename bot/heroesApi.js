@@ -41,17 +41,24 @@ export function validateInitData(initData, botToken) {
  * Создаёт или возвращает app_user по telegram_user_id.
  */
 async function getOrCreateAppUser(supabase, telegramUserId) {
-  const { data: existing } = await supabase
+  const { data: existing, error: selErr } = await supabase
     .from("app_users")
     .select("id, tariff")
     .eq("telegram_user_id", telegramUserId)
     .maybeSingle();
+  // Таблица не создана — возвращаем дефолт вместо 500
+  if (selErr && /does not exist|relation/i.test(selErr.message)) {
+    return { id: String(telegramUserId), tariff: "basic" };
+  }
   if (existing) return existing;
   const { data: inserted, error } = await supabase
     .from("app_users")
     .insert({ telegram_user_id: telegramUserId, tariff: "basic" })
     .select("id, tariff")
     .single();
+  if (error && /does not exist|relation/i.test(error.message)) {
+    return { id: String(telegramUserId), tariff: "basic" };
+  }
   if (error) return null;
   return inserted;
 }
