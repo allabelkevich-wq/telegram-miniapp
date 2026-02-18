@@ -1521,12 +1521,19 @@ app.get("/api/miniapp-url", (_req, res) => {
 const publicDir = path.join(__dirname, "public");
 const appHtmlPath = path.join(publicDir, "index.html");
 function serveMiniApp(req, res) {
-  // Запрет кеширования HTML — браузер всегда получает свежую версию
+  // Серверный 302-редирект: если v=22 (старый короткий номер) → отправляем на свежий timestamp
+  const vParam = req.query.v;
+  if (vParam && /^\d{1,9}$/.test(String(vParam))) {
+    console.log(`[serveMiniApp] Старый v=${vParam} → редирект на v=${APP_BUILD}`);
+    return res.redirect(302, `/app?v=${APP_BUILD}`);
+  }
+  // Запрет кеширования HTML
   res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   res.setHeader("Pragma", "no-cache");
   res.setHeader("Expires", "0");
+  res.setHeader("Surrogate-Control", "no-store");
   try {
-    res.setHeader("X-MiniApp-Url", MINI_APP_URL);
+    res.setHeader("X-MiniApp-Build", String(APP_BUILD));
     res.setHeader("X-Render-Commit", process.env.RENDER_GIT_COMMIT || "");
   } catch (_) {}
   res.sendFile(appHtmlPath, (err) => {

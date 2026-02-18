@@ -8,6 +8,20 @@
   <meta http-equiv="Expires" content="0">
   <title>YupSoul</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Принудительный редирект от старых кешированных URL (v=22) на свежий timestamp -->
+  <script>
+    (function(){
+      try {
+        var qs = window.location.search;
+        var m = qs.match(/[?&]v=(\d+)/);
+        if (m && m[1] && m[1].length <= 6) {
+          // Старый короткий v= (напр. v=22) — перезагрузиться с timestamp чтобы сбить кеш
+          var fresh = window.location.href.replace(/([?&])v=\d+/, '$1v=' + Date.now());
+          window.location.replace(fresh);
+        }
+      } catch(e) {}
+    })();
+  </script>
   <!-- API: на Render используем тот же origin, иначе хардкод. -->
   <script>
     (function(){
@@ -87,8 +101,7 @@
       padding-bottom: max(var(--spacing-lg), env(safe-area-inset-bottom));
       min-height: 100vh;
       min-height: -webkit-fill-available;
-      display: flex;
-      flex-direction: column;
+      /* Убираем flex — страницы в нормальном потоке, скролл через window.scrollTo */
       position: relative;
       overflow-x: hidden;
       -webkit-tap-highlight-color: transparent;
@@ -239,13 +252,10 @@
     .page{display:none !important}
     .page.active{
       display:block !important;
-      position:fixed !important;
-      top:0 !important;left:0 !important;right:0 !important;bottom:0 !important;
-      overflow-y:auto !important;overflow-x:hidden !important;
-      /* z-index:2000 — выше body::before(0), body::after(0), langSwitcher(1000) */
-      z-index:2000 !important;
-      padding:var(--spacing-lg) var(--spacing-md) var(--spacing-lg);
-      background:var(--tg-theme-bg-color,#0A0A1A) url('assets/bg-yupsoul.png') center/cover no-repeat fixed;
+      width:100% !important;
+      min-height:100vh !important;
+      padding:var(--spacing-lg) var(--spacing-md) calc(var(--spacing-lg)*2);
+      box-sizing:border-box;
     }
     header{text-align:center;margin:var(--spacing-xl) 0 var(--spacing-lg);position:relative}
     h1{font-size:var(--fluid-2xl);background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 4s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;letter-spacing:-1px;line-height:1.1}
@@ -614,34 +624,7 @@
       </footer>
     </div>
     
-    <!-- Страница донатов / реквизиты -->
-    <div class="page" id="paymentPage">
-      <header>
-        <h1>YupSoul</h1>
-        <div class="subtitle">Твой звуковой ключ</div>
-      </header>
-      
-      <div class="section">
-        <div class="tagline" style="margin-bottom:15px">Промокод или оплата</div>
-        <p id="paymentIntro" style="text-align:center;font-size:1.05rem;line-height:1.7;margin-bottom:16px">Заявка отправлена. Введите промокод или нажмите кнопку ниже для оплаты через HOT Pay.</p>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <input id="promoCodeInput" type="text" placeholder="Промокод" style="flex:1;min-width:180px;padding:10px 12px;border-radius:10px;border:1px solid rgba(212,175,55,.4);background:var(--tg-theme-secondary-bg-color);color:var(--tg-theme-text-color);text-transform:uppercase;">
-          <button id="promoApplyBtn" type="button" class="secondary" style="min-width:140px;margin-top:0;">Применить</button>
-        </div>
-        <div id="paymentStatus" style="display:none;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.35);border-radius:12px;padding:12px 14px;margin:14px 0;font-size:.92rem;color:rgba(255,255,255,.95);"></div>
-        <p id="paymentLinkHint" style="display:none;font-size:.9rem;color:rgba(255,255,255,0.85);margin:12px 0 8px 0;">Если окно оплаты не открылось — нажмите кнопку ниже и откройте ссылку в браузере.</p>
-        <button type="button" class="secondary" id="copyPaymentLinkBtn" style="display:none;margin-bottom:12px;">📋 Скопировать ссылку для оплаты</button>
-        <div class="btn-group" style="margin-top:20px">
-          <button class="secondary" id="backFromPaymentBtn">← Назад</button>
-          <button id="payBtn">Оплатить через HOT Pay</button>
-        </div>
-      </div>
-      
-      <footer>
-        <p>YupSoul • 2026</p>
-      </footer>
-      
-    </div>
+    <!-- paymentPage убран из .page-системы — заменён на #paymentOverlay ниже -->
     
     <!-- Страница загрузки -->
     <div class="page" id="loadingPage">
@@ -1281,9 +1264,9 @@
         ensurePayButtonText();
       }
       function ensurePayButtonText() {
-        var payBtn = document.getElementById('payBtn');
+        var payBtn = document.getElementById('payOvPayBtn');
         if (payBtn && !payBtn.disabled) {
-          payBtn.textContent = t('payWithHot');
+          payBtn.textContent = '💳 Оплатить через HOT Pay';
         }
       }
       function isTelegramWebApp() {
@@ -1487,17 +1470,39 @@
         if (modeSku === 'transit') return 'transit_energy_song';
         return 'single_song';
       }
+      // ── Payment Overlay helpers ──────────────────────────────────────────
+      function showPaymentOverlay() {
+        var ov = document.getElementById('paymentOverlay');
+        if (!ov) return;
+        ov.style.display = 'block';
+        if (tg && tg.expand) try { tg.expand(); } catch(e) {}
+        // Сбросить статус и поля
+        setPaymentStatus('', '');
+        var lr = document.getElementById('payOvLinkRow');
+        if (lr) lr.style.display = 'none';
+        var pi = document.getElementById('payOvPromoInput');
+        if (pi) pi.value = '';
+        ov.scrollTop = 0;
+      }
+      function hidePaymentOverlay() {
+        var ov = document.getElementById('paymentOverlay');
+        if (ov) ov.style.display = 'none';
+        setPaymentStatus('', '');
+        activePromo = null;
+        var pi = document.getElementById('payOvPromoInput');
+        if (pi) pi.value = '';
+      }
       function setPaymentStatus(text, tone) {
-        var el = document.getElementById('paymentStatus');
+        var el = document.getElementById('payOvStatus');
         if (!el) return;
         if (!text) { el.style.display = 'none'; return; }
         el.style.display = 'block';
         el.textContent = text;
         el.style.color = 'rgba(255,255,255,.95)';
-        if (tone === 'ok') { el.style.borderColor = 'rgba(212,175,55,.5)'; el.style.background = 'rgba(212,175,55,.15)'; return; }
-        if (tone === 'warn') { el.style.borderColor = 'rgba(212,175,55,.45)'; el.style.background = 'rgba(212,175,55,.12)'; return; }
-        if (tone === 'error') { el.style.borderColor = 'rgba(236,72,153,.5)'; el.style.background = 'rgba(236,72,153,.12)'; return; }
-        el.style.borderColor = 'rgba(212,175,55,.35)';
+        if (tone === 'ok')    { el.style.border = '1px solid rgba(212,175,55,.5)';  el.style.background = 'rgba(212,175,55,.18)'; return; }
+        if (tone === 'warn')  { el.style.border = '1px solid rgba(212,175,55,.45)'; el.style.background = 'rgba(212,175,55,.12)'; return; }
+        if (tone === 'error') { el.style.border = '1px solid rgba(236,72,153,.5)';  el.style.background = 'rgba(236,72,153,.12)'; return; }
+        el.style.border = '1px solid rgba(212,175,55,.35)';
         el.style.background = 'rgba(212,175,55,.1)';
       }
       var DEFAULT_PRICES = { single_song: { title: 'Single song', price: '5.99', currency: 'USDT' }, couple_song: { title: 'Couple song', price: '8.99', currency: 'USDT' }, transit_energy_song: { title: 'Transit energy song', price: '6.99', currency: 'USDT' } };
@@ -1587,7 +1592,7 @@
         }
       }
       async function applyPromoCode() {
-        var input = document.getElementById('promoCodeInput');
+        var input = document.getElementById('payOvPromoInput') || document.getElementById('promoCodeInput');
         if (!input) return;
         var code = String(input.value || '').trim().toUpperCase();
         if (!code) {
@@ -1880,10 +1885,9 @@
         var currentPage = document.querySelector('.page.active');
         
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
-        if (pageId !== 'paymentPage') {
-          var payBtnReset = document.getElementById('payBtn');
-          if (payBtnReset) { payBtnReset.disabled = false; payBtnReset.textContent = t('payWithHot'); }
-        }
+        // paymentPage теперь overlay — сбрасываем его кнопку при любом переходе
+        var payBtnReset = document.getElementById('payOvPayBtn');
+        if (payBtnReset) { payBtnReset.disabled = false; payBtnReset.textContent = '💳 Оплатить через HOT Pay'; }
         // Всегда проверяем кнопку оплаты при переходах между страницами
         ensurePayButtonText();
         
@@ -1897,17 +1901,21 @@
           return;
         }
         target.classList.add('active');
-        // Сброс скролла активной страницы (position:fixed — элемент сам прокручивается)
-        try { target.scrollTop = 0; } catch(e) {}
+        // Задаём min-height через реальную высоту вьюпорта Telegram (100vh ненадёжен в WebView)
+        try {
+          var vh = (tg && tg.viewportHeight && tg.viewportHeight > 100)
+            ? tg.viewportHeight
+            : (window.innerHeight && window.innerHeight > 100 ? window.innerHeight : 600);
+          target.style.minHeight = Math.max(vh, 400) + 'px';
+        } catch(e) {}
+        // Скролл к началу страницы
+        setTimeout(function() {
+          try { window.scrollTo(0, 0); } catch(e) {}
+          try { document.documentElement.scrollTop = 0; } catch(e) {}
+          try { document.body.scrollTop = 0; } catch(e) {}
+        }, 0);
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
-        if (pageId === 'paymentPage') {
-          if (tg && tg.expand) try { tg.expand(); } catch (e) {}
-          setPaymentStatus('', '');
-          var copyBtn = document.getElementById('copyPaymentLinkBtn');
-          var paymentLinkHint = document.getElementById('paymentLinkHint');
-          if (copyBtn) copyBtn.style.display = 'none';
-          if (paymentLinkHint) paymentLinkHint.style.display = 'none';
-        }
+        // paymentPage теперь overlay — здесь ничего не делаем
         if (pageId === 'successPage') updateSoulChatHint();
         if (document.getElementById('previewNav') && document.getElementById('previewNav').classList.contains('show')) {
           document.querySelectorAll('.preview-nav button').forEach(function(btn) {
@@ -2211,19 +2219,8 @@
             pendingPaymentRequestId = result.requestId;
             pendingPaymentSku = result.sku || getCurrentSku();
             activePromo = null;
-            
-            console.log('[Submit] Установлены переменные:');
-            console.log('[Submit] pendingPaymentRequestId:', pendingPaymentRequestId);
-            console.log('[Submit] pendingPaymentSku:', pendingPaymentSku);
-            
-            setPaymentStatus('', '');
-            if (tg && tg.expand) try { tg.expand(); } catch (e) {}
-            
-            console.log('[Submit] Переходим на paymentPage');
-            goToPage('paymentPage');
+            showPaymentOverlay();
             setPaymentStatus(t('paymentRequiredOpening'), 'warn');
-            
-            console.log('[Submit] Переход на страницу оплаты завершен');
           } else {
             var errMsg = result.error || result.message || 'Не удалось отправить заявку.';
             if (response.status === 503) errMsg = t('alertServerSleep');
@@ -2244,17 +2241,19 @@
       });
       setMode('single');
       updateStepUI();
-      var promoApplyBtn = document.getElementById('promoApplyBtn');
-      if (promoApplyBtn) promoApplyBtn.addEventListener('click', applyPromoCode);
-      
-      var backFromPaymentBtn = document.getElementById('backFromPaymentBtn');
-      if (backFromPaymentBtn) backFromPaymentBtn.addEventListener('click', function() {
+      // ── Overlay: кнопка «Применить промокод» ────────────────────────────
+      var payOvPromoBtn = document.getElementById('payOvPromoBtn');
+      if (payOvPromoBtn) payOvPromoBtn.addEventListener('click', applyPromoCode);
+
+      // ── Overlay: кнопка «Назад» ─────────────────────────────────────────
+      var payOvBackBtn = document.getElementById('payOvBackBtn');
+      if (payOvBackBtn) payOvBackBtn.addEventListener('click', function() {
+        hidePaymentOverlay();
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
-        var payBtnEl = document.getElementById('payBtn');
-        if (payBtnEl) { payBtnEl.disabled = false; payBtnEl.textContent = t('payWithHot'); }
-        goToPage('formPage');
       });
-      var payBtn = document.getElementById('payBtn');
+
+      // ── Overlay: кнопка «Оплатить» ──────────────────────────────────────
+      var payBtn = document.getElementById('payOvPayBtn');
       if (payBtn) payBtn.addEventListener('click', async function() {
         console.log('[HOT Pay] Нажата кнопка оплаты');
         
@@ -2403,10 +2402,9 @@
           setPaymentStatus('Открываю страницу оплаты...', 'warn');
 
           var lastCheckoutUrl = checkoutUrl;
-          var hintEl = document.getElementById('paymentLinkHint');
-          var copyBtn = document.getElementById('copyPaymentLinkBtn');
+          var hintEl = document.getElementById('payOvLinkRow');
+          var copyBtn = document.getElementById('payOvCopyBtn');
           if (copyBtn) {
-            copyBtn.style.display = 'block';
             copyBtn.onclick = function() {
               try {
                 navigator.clipboard.writeText(lastCheckoutUrl);
@@ -2801,5 +2799,73 @@
       }, 50);
     });
   </script>
+
+  <!--
+    PAYMENT OVERLAY — изолированный оверлей оплаты.
+    Прямой ребёнок <body>, вне любых stacking context.
+    z-index:9999 — выше всего на странице.
+    Управляется через showPaymentOverlay() / hidePaymentOverlay() в JS.
+  -->
+  <div id="paymentOverlay" style="
+    display:none;
+    position:fixed;inset:0;
+    z-index:9999;
+    overflow-y:auto;overflow-x:hidden;
+    background:#0A0A1A url('assets/bg-yupsoul.png') center/cover no-repeat;
+    color:#fff;
+    font-family:'Comfortaa',sans-serif;
+  ">
+    <div style="max-width:520px;margin:0 auto;padding:28px 18px 40px;">
+      <!-- Заголовок -->
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="font-size:1.9rem;font-weight:800;background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">YupSoul</div>
+        <div id="payOvSubtitle" style="color:rgba(255,255,255,0.75);font-size:0.95rem;margin-top:6px;">Твой звуковой ключ</div>
+      </div>
+
+      <!-- Карточка оплаты -->
+      <div style="background:rgba(15,12,40,0.96);border:1px solid rgba(212,175,55,0.3);border-radius:18px;padding:24px 20px;">
+        <div style="color:#d4af37;font-weight:700;font-size:1.05rem;margin-bottom:10px;">💳 Оплата заявки</div>
+        <p id="payOvIntro" style="color:rgba(255,255,255,0.8);font-size:0.92rem;line-height:1.65;margin-bottom:20px;">
+          Заявка отправлена. Введи промокод или нажми кнопку ниже для оплаты через HOT Pay.
+        </p>
+
+        <!-- Промокод -->
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <input id="payOvPromoInput" type="text" placeholder="Промокод"
+            style="flex:1;padding:11px 13px;border-radius:10px;border:1px solid rgba(212,175,55,0.4);background:rgba(255,255,255,0.07);color:#fff;font-size:0.95rem;font-family:inherit;text-transform:uppercase;outline:none;">
+          <button id="payOvPromoBtn" type="button"
+            style="padding:11px 16px;border-radius:10px;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.45);color:#d4af37;font-weight:600;font-size:0.9rem;cursor:pointer;white-space:nowrap;font-family:inherit;">
+            Применить
+          </button>
+        </div>
+
+        <!-- Статус (промокод / оплата) -->
+        <div id="payOvStatus" style="display:none;border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:0.88rem;line-height:1.5;"></div>
+
+        <!-- Кнопка «скопировать ссылку» (показывается если openLink не сработал) -->
+        <div id="payOvLinkRow" style="display:none;margin-bottom:12px;">
+          <p style="color:rgba(255,255,255,0.75);font-size:0.85rem;margin-bottom:6px;">
+            Если окно не открылось — скопируйте ссылку и вставьте в браузер:
+          </p>
+          <button id="payOvCopyBtn" type="button"
+            style="width:100%;padding:11px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:0.9rem;cursor:pointer;font-family:inherit;">
+            📋 Скопировать ссылку оплаты
+          </button>
+        </div>
+
+        <!-- Главная кнопка оплаты -->
+        <button id="payOvPayBtn" type="button"
+          style="width:100%;padding:16px;border-radius:13px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:11px;letter-spacing:0.3px;">
+          💳 Оплатить через HOT Pay
+        </button>
+
+        <!-- Кнопка назад -->
+        <button id="payOvBackBtn" type="button"
+          style="width:100%;padding:13px;border-radius:13px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.65);font-size:0.9rem;cursor:pointer;font-family:inherit;">
+          ← Назад
+        </button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
