@@ -1,4 +1,5 @@
 # Render Blueprint: бот + воркер генерации (из папки bot/)
+# Деплой только из ветки main. В Dashboard → Repository → Branch = main.
 # Переменные (BOT_TOKEN, SUPABASE_*, DEEPSEEK_API_KEY, SUNO_API_KEY) задай в Dashboard для обоих сервисов.
 services:
   - type: web
