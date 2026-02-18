@@ -236,8 +236,17 @@
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Comfortaa',sans-serif}
     body::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(1,6,26,.62) 0%,rgba(8,10,38,.78) 100%);z-index:0}
     .container{max-width:min(600px,100%);margin:0 auto;width:100%;position:relative;z-index:1;padding:0 var(--spacing-md)}
-    .page{display:none !important;visibility:visible !important;opacity:1 !important}
-    .page.active{display:block !important;visibility:visible !important;opacity:1 !important;position:fixed !important;top:0 !important;left:0 !important;right:0 !important;bottom:0 !important;overflow-y:auto !important;overflow-x:hidden !important;z-index:10 !important;padding-top:var(--spacing-lg);background:var(--tg-theme-bg-color,#0A0A1A) url('assets/bg-yupsoul.png') center/cover no-repeat;}
+    .page{display:none !important}
+    .page.active{
+      display:block !important;
+      position:fixed !important;
+      top:0 !important;left:0 !important;right:0 !important;bottom:0 !important;
+      overflow-y:auto !important;overflow-x:hidden !important;
+      /* z-index:2000 — выше body::before(0), body::after(0), langSwitcher(1000) */
+      z-index:2000 !important;
+      padding:var(--spacing-lg) var(--spacing-md) var(--spacing-lg);
+      background:var(--tg-theme-bg-color,#0A0A1A) url('assets/bg-yupsoul.png') center/cover no-repeat fixed;
+    }
     header{text-align:center;margin:var(--spacing-xl) 0 var(--spacing-lg);position:relative}
     h1{font-size:var(--fluid-2xl);background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 4s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;letter-spacing:-1px;line-height:1.1}
     .subtitle{color:var(--subtitle-readable,var(--tg-theme-text-color));font-size:var(--fluid-base);margin-top:8px;font-weight:400}
@@ -367,7 +376,7 @@
     </div>
   </div>
 
-  <div id="langSwitcher" style="position:fixed;top:max(12px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));z-index:1000;font-size:13px;opacity:0.85;background:rgba(0,0,0,0.35);padding:6px 10px;border-radius:8px;min-height:32px;display:flex;align-items:center;">
+  <div id="langSwitcher" style="position:fixed;top:max(12px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));z-index:2100;font-size:13px;opacity:0.85;background:rgba(0,0,0,0.35);padding:6px 10px;border-radius:8px;min-height:32px;display:flex;align-items:center;">
     <span id="langRu" style="cursor:pointer;padding:2px 6px;border-radius:4px;">RU</span>
     <span style="opacity:0.5;">|</span>
     <span id="langEn" style="cursor:pointer;padding:2px 6px;border-radius:4px;">EN</span>
@@ -376,7 +385,7 @@
     <span style="opacity:0.5;">|</span>
     <span id="langFr" style="cursor:pointer;padding:2px 6px;border-radius:4px;">FR</span>
   </div>
-  <div class="container">
+  <!-- Страницы приложения — прямые дети body, вне .container, чтобы не создавать изолированный stacking context -->
     <!-- Главная страница -->
     <div class="page active" id="homePage">
       <header>
@@ -696,8 +705,6 @@
       </div>
       <footer><p>YupSoul • 2026</p></footer>
     </div>
-    
-  </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
