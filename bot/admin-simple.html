@@ -13,12 +13,28 @@
     .header h1 { font-size: 32px; font-weight: bold; margin-bottom: 10px; }
     .header p { opacity: 0.9; font-size: 16px; }
     .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-    .stat-card { background: #1a1a2e; padding: 20px; border-radius: 12px; text-align: center; border-left: 4px solid #667eea; }
+    .stat-card { background: #1a1a2e; padding: 20px; border-radius: 12px; text-align: center; border-left: 4px solid #667eea; cursor: pointer; transition: all 0.2s; user-select: none; }
+    .stat-card:hover { background: #232340; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(102,126,234,0.2); }
+    .stat-card.active-filter { box-shadow: 0 0 0 2px #667eea; background: #232350; }
     .stat-card.pending { border-left-color: #f39c12; }
+    .stat-card.pending:hover, .stat-card.pending.active-filter { box-shadow: 0 0 0 2px #f39c12; }
     .stat-card.completed { border-left-color: #27ae60; }
+    .stat-card.completed:hover, .stat-card.completed.active-filter { box-shadow: 0 0 0 2px #27ae60; }
     .stat-card.failed { border-left-color: #e74c3c; }
+    .stat-card.failed:hover, .stat-card.failed.active-filter { box-shadow: 0 0 0 2px #e74c3c; }
     .stat-number { font-size: 42px; font-weight: bold; margin: 10px 0; }
     .stat-label { font-size: 14px; opacity: 0.9; }
+    .sort-bar { background: #1a1a2e; padding: 12px 15px; border-radius: 10px; margin-bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .sort-bar span { font-size: 13px; color: #94a3b8; margin-right: 4px; }
+    .sort-btn { padding: 6px 14px; background: #2d3748; border: 1px solid #4a5568; color: #cbd5e1; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: inherit; transition: all 0.15s; }
+    .sort-btn:hover { background: #4a5568; }
+    .sort-btn.active { background: linear-gradient(135deg,#667eea,#764ba2); border-color: #667eea; color: #fff; }
+    .pay-badge { display:inline-block; padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 600; margin-left: 4px; }
+    .pay-badge-gift { background: rgba(139,92,246,.25); color: #c4b5fd; }
+    .pay-badge-promo { background: rgba(212,175,55,.2); color: #fde68a; }
+    .pay-badge-hot { background: rgba(59,130,246,.2); color: #93c5fd; }
+    .pay-badge-sub { background: rgba(16,185,129,.2); color: #6ee7b7; }
+    .pay-badge-free { background: rgba(34,197,94,.2); color: #86efac; }
     .filters { background: #1a1a2e; padding: 15px; border-radius: 12px; margin-bottom: 30px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
     .filter-btn { padding: 10px 20px; background: #2d3748; border: 2px solid #4a5568; color: #fff; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; }
     .filter-btn:hover { background: #4a5568; transform: translateY(-1px); }
@@ -102,29 +118,35 @@
       <p id="url-info" style="font-size:12px;color:#64748b;margin-top:8px;word-break:break-all;"></p>
     </div>
     <div class="stats">
-      <div class="stat-card">
-        <div class="stat-label">Всего / Total</div>
+      <div class="stat-card active-filter" data-filter="all" onclick="filterByCard(this)" title="Показать все заявки">
+        <div class="stat-label">📋 Всего / Total</div>
         <div class="stat-number" id="total">-</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px;">нажми → список</div>
       </div>
-      <div class="stat-card pending">
-        <div class="stat-label">В работе / In Progress</div>
+      <div class="stat-card pending" data-filter="pending" onclick="filterByCard(this)" title="Показать заявки в работе">
+        <div class="stat-label">⏳ В работе</div>
         <div class="stat-number" id="pending">-</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px;">нажми → список</div>
       </div>
-      <div class="stat-card completed">
-        <div class="stat-label">Готово / Completed</div>
+      <div class="stat-card completed" data-filter="completed" onclick="filterByCard(this)" title="Показать завершённые">
+        <div class="stat-label">✅ Готово</div>
         <div class="stat-number" id="completed">-</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px;">нажми → список</div>
       </div>
-      <div class="stat-card failed">
-        <div class="stat-label">Ошибки / Failed</div>
+      <div class="stat-card failed" data-filter="failed" onclick="filterByCard(this)" title="Показать с ошибками">
+        <div class="stat-label">❌ Ошибки</div>
         <div class="stat-number" id="failed">-</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px;">нажми → список</div>
       </div>
-      <div class="stat-card" style="border-left-color:#8b5cf6;">
+      <div class="stat-card" style="border-left-color:#8b5cf6;" data-filter="pending_payment" onclick="filterByCard(this)" title="Показать ожидающие оплаты">
         <div class="stat-label">💳 Ожидают оплаты</div>
         <div class="stat-number" id="stat-pending-payment">-</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px;">нажми → список</div>
       </div>
-      <div class="stat-card" style="border-left-color:#475569;">
+      <div class="stat-card" style="border-left-color:#475569;" data-filter="cancelled" onclick="filterByCard(this)" title="Показать отменённые">
         <div class="stat-label">🚫 Отменённые</div>
         <div class="stat-number" id="stat-cancelled">-</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px;">нажми → список</div>
       </div>
     </div>
     <!-- Секция незавершённых заявок (ожидают оплаты) -->
@@ -147,6 +169,14 @@
       <button class="filter-btn" data-filter="completed">✅ Готово</button>
       <button class="filter-btn" data-filter="failed">❌ Ошибки</button>
       <button class="filter-btn" data-filter="cancelled">🚫 Отменённые</button>
+    </div>
+    <div class="sort-bar">
+      <span>Сортировка:</span>
+      <button class="sort-btn active" data-sort="date_desc" onclick="setSort(this)">🕐 Новые первые</button>
+      <button class="sort-btn" data-sort="date_asc" onclick="setSort(this)">🕐 Старые первые</button>
+      <button class="sort-btn" data-sort="name_asc" onclick="setSort(this)">👤 Имя А–Я</button>
+      <button class="sort-btn" data-sort="status" onclick="setSort(this)">📊 По статусу</button>
+      <button class="sort-btn" data-sort="payment" onclick="setSort(this)">💳 По оплате</button>
     </div>
     <div class="details-section" style="margin-bottom:20px;">
       <div class="section-title">⚙️ Настройки генерации</div>
@@ -326,6 +356,76 @@
       if (el) el.textContent = 'Страница: ' + window.location.origin + ' · Запросы к API: ' + window.API_BASE;
     })();
     let currentFilter = 'all';
+    let currentSort = 'date_desc';
+
+    function filterByCard(card) {
+      const filter = card.getAttribute('data-filter') || 'all';
+      // Обновляем активную карточку
+      document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active-filter'));
+      card.classList.add('active-filter');
+      // Обновляем кнопки-фильтры
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-filter') === filter);
+      });
+      loadAdminData();
+      // Скролл к списку
+      setTimeout(() => document.getElementById('requests')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+    }
+
+    function setSort(btn) {
+      currentSort = btn.getAttribute('data-sort') || 'date_desc';
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      // Пересортируем уже загруженное (без перезапроса)
+      const cards = Array.from(document.querySelectorAll('#requests .request-card'));
+      if (!cards.length) return;
+      // Берём данные из глобального кэша
+      if (window._lastRequestsData) renderRequests(window._lastRequestsData);
+    }
+
+    function sortRequests(data) {
+      const sorted = [...data];
+      if (currentSort === 'date_desc') {
+        sorted.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      } else if (currentSort === 'date_asc') {
+        sorted.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+      } else if (currentSort === 'name_asc') {
+        sorted.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ru'));
+      } else if (currentSort === 'status') {
+        sorted.sort((a, b) => getStatusOrder(b.generation_status || '') - getStatusOrder(a.generation_status || ''));
+      } else if (currentSort === 'payment') {
+        const payOrder = { gift_used: 0, subscription_active: 1, paid: 2, requires_payment: 3, pending: 4 };
+        sorted.sort((a, b) => (payOrder[a.payment_status] ?? 5) - (payOrder[b.payment_status] ?? 5));
+      }
+      return sorted;
+    }
+
+    function paymentMethodBadge(r) {
+      const provider = String(r.payment_provider || '').toLowerCase();
+      const status   = String(r.payment_status  || '').toLowerCase();
+      const promo    = r.promo_code ? String(r.promo_code) : null;
+      if (status === 'gift_used' && (!provider || provider === 'gift')) {
+        return '<span class="pay-badge pay-badge-free">🎁 Первый подарок</span>';
+      }
+      if (provider === 'promo' || promo) {
+        const label = promo ? ('🏷 ' + escapeHtml(promo)) : '🏷 Промокод';
+        return '<span class="pay-badge pay-badge-promo">' + label + '</span>';
+      }
+      if (provider === 'hot') {
+        if (status === 'paid') return '<span class="pay-badge pay-badge-hot">💳 HOT Pay ✓</span>';
+        if (status === 'pending') return '<span class="pay-badge pay-badge-hot" style="opacity:.65;">💳 HOT (ожидает)</span>';
+        return '<span class="pay-badge pay-badge-hot">💳 HOT Pay</span>';
+      }
+      if (provider === 'subscription' || status === 'subscription_active') {
+        return '<span class="pay-badge pay-badge-sub">📋 Подписка</span>';
+      }
+      if (provider === 'admin') {
+        return '<span class="pay-badge pay-badge-free">🔧 Ручная</span>';
+      }
+      if (!provider && !status) return '';
+      return '<span class="pay-badge" style="background:rgba(100,116,139,.2);color:#94a3b8;">' + escapeHtml(provider || status) + '</span>';
+    }
 
     function getToken() {
       const fromUrl = new URLSearchParams(window.location.search).get('token');
@@ -401,6 +501,10 @@
           const cancelledEl = document.getElementById('stat-cancelled');
           if (cancelledEl) cancelledEl.textContent = s.cancelled || 0;
         }
+        // Синхронизируем подсветку карточек с текущим фильтром
+        document.querySelectorAll('.stat-card').forEach(c => {
+          c.classList.toggle('active-filter', c.getAttribute('data-filter') === currentFilter);
+        });
         // Загружаем незавершённые заявки (pending_payment) сразу при каждом обновлении
         loadUnpaidRequests();
         const listResult = await fetchJson(API_BASE + '/api/admin/requests?limit=50&status=' + currentFilter + authQuery(), { headers: authHeaders() });
@@ -469,6 +573,8 @@
       return {};
     }
     function renderRequests(data) {
+      window._lastRequestsData = data; // кэш для пересортировки без запроса
+      data = sortRequests(data);
       if (!data.length) {
         document.getElementById('requests').innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8">📭 Нет заявок / No requests</div>';
         return;
@@ -502,7 +608,7 @@
                 '</div>' : ''}
               <div class="request-id" title="Полный UUID: ${escapeHtml((r.id || ''))}">ID: ${(r.id || '').substring(0,8)} • ${r.created_at ? new Date(r.created_at).toLocaleDateString('ru-RU') : '—'}</div>
               <div class="request-id">Режим: ${escapeHtml(r.mode || 'single')}${r.person2_name ? ' · Пара: ' + escapeHtml((r.person2_gender || '—')) : ''}</div>
-              ${(function(){ var pl = paymentLabel(r.payment_status); return '<div class="request-id" style="margin-top:4px;"><span class="' + pl.cls + '">' + escapeHtml(pl.text) + '</span>' + (r.payment_provider ? ' · ' + escapeHtml(r.payment_provider) : '') + '</div>'; })()}
+              <div class="request-id" style="margin-top:4px;">${paymentMethodBadge(r)}${r.payment_amount != null ? '<span style="color:#94a3b8;font-size:11px;margin-left:6px;">' + escapeHtml(String(r.payment_amount)) + ' ' + escapeHtml(r.payment_currency || 'USDT') + '</span>' : ''}</div>
             </div>
             <div class="request-status ${statusClass(gs)}">${statusLabel(gs)}</div>
           </div>
@@ -729,19 +835,25 @@
         const reqId = String(item.id || '');
         const orderId = String(item.payment_order_id || '');
         const txId = String(item.payment_tx_id || '');
-        const promo = item.promo_code ? (String(item.promo_code) + (item.promo_discount_amount ? (' (-' + item.promo_discount_amount + ')') : '')) : '—';
         const amount = item.payment_amount != null ? (String(item.payment_amount) + ' ' + (item.payment_currency || 'USDT')) : '—';
+        // Способ оплаты — понятный бейдж
+        const methodBadge = paymentMethodBadge(item);
+        // Статус оплаты — понятный
+        const ps = String(item.payment_status || '').toLowerCase();
+        const statusColor = ['paid','gift_used','subscription_active'].includes(ps) ? '#22c55e' : (ps === 'requires_payment' ? '#f59e0b' : '#94a3b8');
+        const statusHuman = ps === 'paid' ? '✓ Оплачено' : ps === 'gift_used' ? '🎁 Подарок' : ps === 'subscription_active' ? '📋 Подписка' : ps === 'requires_payment' ? '⏳ Ожидает' : escapeHtml(ps || '—');
+        const promo = item.promo_code ? '<span style="color:#d4af37;font-weight:600;">' + escapeHtml(item.promo_code) + '</span>' + (item.promo_discount_amount ? ' <span style="color:#94a3b8;">(-' + escapeHtml(String(item.promo_discount_amount)) + ')</span>' : '') : '—';
         return '<tr>' +
-          '<td>' + escapeHtml(created) + '</td>' +
+          '<td style="font-size:11px;">' + escapeHtml(created) + '</td>' +
           '<td><code title="' + escapeAttr(reqId) + '">' + escapeHtml(reqId.slice(0, 8)) + '</code></td>' +
           '<td>' + escapeHtml(item.name || '—') + '</td>' +
           '<td>' + escapeHtml(item.mode || '—') + '</td>' +
-          '<td>' + escapeHtml(item.payment_provider || '—') + '</td>' +
-          '<td>' + escapeHtml(item.payment_status || '—') + '</td>' +
-          '<td>' + escapeHtml(amount) + '</td>' +
-          '<td title="' + escapeAttr(orderId) + '">' + escapeHtml(orderId ? orderId.slice(0, 12) + '…' : '—') + '</td>' +
-          '<td title="' + escapeAttr(txId) + '">' + escapeHtml(txId ? txId.slice(0, 12) + '…' : '—') + '</td>' +
-          '<td>' + escapeHtml(promo) + '</td>' +
+          '<td>' + methodBadge + '</td>' +
+          '<td style="color:' + statusColor + ';font-weight:600;font-size:12px;">' + statusHuman + '</td>' +
+          '<td style="font-weight:600;">' + escapeHtml(amount) + '</td>' +
+          '<td title="' + escapeAttr(orderId) + '" style="font-size:11px;">' + escapeHtml(orderId ? orderId.slice(0, 12) + '…' : '—') + '</td>' +
+          '<td title="' + escapeAttr(txId) + '" style="font-size:11px;">' + escapeHtml(txId ? txId.slice(0, 12) + '…' : '—') + '</td>' +
+          '<td>' + promo + '</td>' +
           '</tr>';
       }).join('');
     }
@@ -914,12 +1026,18 @@
     window.createPromoCode = createPromoCode;
     window.togglePromoActive = togglePromoActive;
     window.deletePromo = deletePromo;
+    window.filterByCard = filterByCard;
+    window.setSort = setSort;
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', function() {
         currentFilter = this.getAttribute('data-filter') || 'all';
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
+        // Синхронизируем подсветку карточек
+        document.querySelectorAll('.stat-card').forEach(c => {
+          c.classList.toggle('active-filter', c.getAttribute('data-filter') === currentFilter);
+        });
         loadAdminData();
       });
     });
