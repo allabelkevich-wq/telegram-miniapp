@@ -616,11 +616,14 @@ bot.on("callback_query:data", async (ctx) => {
     return;
   }
   const requestId = data.slice("cancel_req:".length).trim();
-  if (supabase && requestId) {
+  const callerId = ctx.from?.id;
+  if (supabase && requestId && callerId) {
+    // Отменяем только если заявка принадлежит этому пользователю
     await supabase
       .from("track_requests")
       .update({ generation_status: "cancelled", updated_at: new Date().toISOString() })
       .eq("id", requestId)
+      .eq("telegram_user_id", callerId)
       .catch((e) => console.warn("[cancel_req] supabase error:", e?.message));
   }
   await ctx.answerCallbackQuery({ text: "✅ Заявка отменена" }).catch(() => {});
@@ -2434,6 +2437,15 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
     const consumed = await consumeTrial(telegramUserId, "first_song_gift");
     if (!consumed.ok) {
       const skuPrice = await getSkuPrice(access.sku);
+      await supabase.from("track_requests").update({
+        payment_provider: "hot",
+        payment_status: "requires_payment",
+        payment_amount: skuPrice ? Number(skuPrice.price) : null,
+        payment_currency: skuPrice?.currency || "USDT",
+        generation_status: "pending_payment",
+        updated_at: new Date().toISOString(),
+      }).eq("id", requestId);
+      sendPendingPaymentBotMessage(telegramUserId, requestId);
       return res.status(402).json({
         ok: false,
         payment_required: true,
@@ -2545,10 +2557,8 @@ async function startBotWithPolling() {
 async function startBotWithWebhook() {
   try {
     const url = WEBHOOK_URL + "/webhook";
-    // Устанавливаем webhook с Web App URL для кнопки "Открыть"
-    await bot.api.setWebhook(url, { web_app: { url: MINI_APP_URL } });
-    console.log("[Bot] Вебхук установлен:", url, "— убедись, что WEBHOOK_URL в Render совпадает с URL этого сервиса (Dashboard → сервис → URL).");
-    console.log("[Bot] Web App URL для кнопки 'Открыть' установлен:", MINI_APP_URL);
+    await bot.api.setWebhook(url);
+    console.log("[Bot] Вебхук установлен:", url);
     const me = await bot.api.getMe();
     await onBotStart(me);
   } catch (err) {

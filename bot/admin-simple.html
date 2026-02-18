@@ -526,7 +526,7 @@
           API_BASE + '/api/admin/requests?status=pending_payment&limit=50' + authQuery(),
           { headers: authHeaders() }
         );
-        const items = (result.json && result.json.requests) || [];
+        const items = (result.json && (result.json.data || result.json.requests)) || [];
         if (badge) badge.textContent = items.length;
         if (!items.length) {
           if (section) section.classList.remove('has-items');
@@ -572,8 +572,7 @@
         );
         if (result.json && result.json.success) {
           alert('✅ Заявка отменена');
-          await loadUnpaidRequests();
-          await loadRequests();
+          await loadAdminData();
         } else {
           alert('Ошибка: ' + ((result.json && result.json.error) || 'неизвестно'));
           if (btn) { btn.disabled = false; btn.textContent = '❌ Отменить'; }

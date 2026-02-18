@@ -2203,7 +2203,7 @@
             }
             if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
             goToPage('successPage');
-          } else if (result && result.payment_required && result.requestId) {
+          } else if ((response.status === 402 || (result && result.payment_required)) && result.requestId) {
             console.log('[Submit] Требуется оплата, переходим на страницу оплаты');
             console.log('[Submit] result.requestId:', result.requestId);
             console.log('[Submit] result.sku:', result.sku);
