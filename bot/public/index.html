@@ -1303,6 +1303,18 @@
           console.log('[initData] Используем сохраненные данные:', stored ? 'есть данные (' + stored.length + ' символов)' : 'нет данных');
           if (!stored) {
             console.warn('[initData] КРИТИЧНО: Нет initData! Приложение запущено не из Telegram или данные не сохранились');
+            
+            // Показываем пользователю инструкции
+            setTimeout(function() {
+              var message = '⚠️ Проблема с авторизацией Telegram!\n\n' +
+                           '🔧 Возможные решения:\n' +
+                           '1. Обновите Telegram до последней версии\n' +
+                           '2. Перезапустите Telegram\n' +
+                           '3. Откройте приложение заново из бота @YupSoul_bot\n' +
+                           '4. Попробуйте использовать Telegram в браузере: web.telegram.org\n\n' +
+                           '❓ Если проблема остается - сообщите разработчику';
+              alert(message);
+            }, 3000);
           }
           return stored;
         } catch (_) { 
@@ -1323,6 +1335,13 @@
             console.log('[Telegram] Платформа:', tg.platform);
             console.log('[Telegram] initData длина:', tg.initData ? tg.initData.length : 0);
             
+            // Проверяем версию Telegram WebApp
+            var version = parseFloat(tg.version) || 0;
+            if (version < 6.1) {
+              console.warn('[Telegram] Старая версия WebApp (' + tg.version + ') может не поддерживать initData');
+              console.warn('[Telegram] Рекомендуется обновить Telegram до последней версии');
+            }
+            
             tg.ready();
             tg.expand();
             console.log('[Telegram] ready() и expand() выполнены');
@@ -1334,6 +1353,20 @@
               console.warn('[Telegram] enableClosingConfirmation не поддерживается в этой версии');
             }
             getInitData();
+            
+            // Для старых версий Telegram пытаемся получить хотя бы базовую информацию о пользователе
+            if ((!tg.initData || tg.initData.length < 10) && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+              console.log('[Telegram] Используем initDataUnsafe как fallback для старой версии');
+              console.log('[Telegram] Пользователь:', tg.initDataUnsafe.user.first_name, tg.initDataUnsafe.user.id);
+              
+              // Создаем минимальные данные для работы (только для отображения, не для API)
+              window.fallbackUserData = {
+                id: tg.initDataUnsafe.user.id,
+                first_name: tg.initDataUnsafe.user.first_name,
+                username: tg.initDataUnsafe.user.username
+              };
+            }
+            
             return true;
           } else {
             console.error('[Telegram] WebApp НЕ ДОСТУПЕН!');
@@ -2199,14 +2232,34 @@
         
         var initData = getInitData();
         if (!initData) { 
-          console.error('[HOT Pay] Нет initData');
-          alert(t('alertOpenFromBotShort')); 
+          console.error('[HOT Pay] Нет initData - проблема с авторизацией Telegram');
+          var errorMessage = '⚠️ Ошибка авторизации Telegram!\n\n' +
+                            '🔧 Решения:\n' +
+                            '• Обновите Telegram до последней версии\n' +
+                            '• Перезапустите Telegram\n' +
+                            '• Откройте приложение из бота @YupSoul_bot\n' +
+                            '• Попробуйте web.telegram.org\n\n' +
+                            '💡 Ваша версия Telegram: ' + (tg && tg.version ? tg.version : 'неизвестна');
+          alert(errorMessage);
           return; 
         }
         
         console.log('[HOT Pay] Все проверки пройдены, apiBase:', apiBase);
         console.log('[HOT Pay] pendingPaymentRequestId:', pendingPaymentRequestId);
         console.log('[HOT Pay] Telegram WebApp доступен:', !!(window.Telegram && window.Telegram.WebApp));
+        
+        // Дополнительная проверка версии для оплаты
+        if (tg && tg.version) {
+          var version = parseFloat(tg.version) || 0;
+          if (version < 6.1) {
+            console.warn('[HOT Pay] Версия Telegram (' + tg.version + ') может не поддерживать оплату');
+            alert('⚠️ Для оплаты требуется более новая версия Telegram!\n\n' +
+                  '📱 Ваша версия: ' + tg.version + '\n' +
+                  '✅ Требуется: 6.1 или выше\n\n' +
+                  '🔄 Обновите Telegram и попробуйте снова');
+            return;
+          }
+        }
 
         var promoInput = document.getElementById('promoCodeInput');
         var promoCode = (promoInput && promoInput.value) ? promoInput.value.trim() : (activePromo ? activePromo.code : null);
