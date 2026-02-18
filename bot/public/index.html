@@ -2122,9 +2122,6 @@
         var currentPage = document.querySelector('.page.active');
         
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
-        // paymentPage теперь overlay — сбрасываем его кнопку при любом переходе
-        var payBtnReset = document.getElementById('payOvPayBtn');
-        if (payBtnReset) { payBtnReset.disabled = false; payBtnReset.textContent = '💳 Оплатить через HOT Pay'; }
         // Всегда проверяем кнопку оплаты при переходах между страницами
         ensurePayButtonText();
         
@@ -2612,8 +2609,9 @@
           }
         }
 
-        var promoInput = document.getElementById('payOvPromoInput') || document.getElementById('promoCodeInput');
-        var promoCode = (promoInput && promoInput.value && promoInput.value.trim()) ? promoInput.value.trim().toUpperCase() : (activePromo ? activePromo.code : null);
+        // Используем только ПРОВЕРЕННЫЙ промокод (activePromo). Если в поле текст, но activePromo=null —
+        // значит промокод был отклонён, и отправлять его не нужно.
+        var promoCode = activePromo ? activePromo.code : null;
         var hotPayload = {
           request_id: pendingPaymentRequestId,
           sku: pendingPaymentSku,
@@ -2665,10 +2663,10 @@
             setPaymentStatus(t('promoFreeGen'), 'ok');
             pendingPaymentRequestId = null;
             pendingPaymentSku = null;
+            activePromo = null;
+            hidePaymentOverlay();
             goToPage('loadingPage');
             setTimeout(function() { goToPage('successPage'); }, 1800);
-            payBtn.disabled = false;
-            payBtn.textContent = t('payWithHot');
             return;
           }
           if (!hotJson.checkout_url) {
@@ -2780,20 +2778,29 @@
         } catch (error) {
           console.error('[HOT Pay] Критическая ошибка:', error);
           var msg = (error && error.message) ? String(error.message) : t('errorOp');
-          setPaymentStatus('❌ ' + msg, 'error');
-          
-          // Показываем детальную ошибку пользователю
-          var detailedError = '❌ Ошибка оплаты:\n' + msg;
+          var hint = '';
           if (error.name === 'AbortError') {
-            detailedError += '\n\n⏰ Превышено время ожидания. Попробуйте еще раз.';
-          } else if (error.message && error.message.includes('fetch')) {
-            detailedError += '\n\n🌐 Проблема с сетью. Проверьте подключение к интернету.';
+            hint = ' Превышено время ожидания — попробуй ещё раз.';
+          } else if (msg && (msg.toLowerCase().includes('промокод') || msg.toLowerCase().includes('promo'))) {
+            // Промокод не подошёл — чистим поле и activePromo чтобы не мешал следующей попытке
+            activePromo = null;
+            var promoInputErr = document.getElementById('payOvPromoInput');
+            if (promoInputErr) promoInputErr.value = '';
+            hint = ' Оплати без промокода или введи другой.';
+          } else if (msg && msg.includes('fetch')) {
+            hint = ' Проверь интернет-соединение.';
           }
-          alert(detailedError);
+          setPaymentStatus('❌ ' + msg + hint, 'error');
+          // Скроллим оверлей наверх, чтобы ошибка была видна
+          var ovScroll = document.getElementById('paymentOverlay');
+          if (ovScroll) ovScroll.scrollTop = 0;
         } finally {
           console.log('[HOT Pay] Завершение обработки, восстанавливаем кнопку');
           payBtn.disabled = false;
-          payBtn.textContent = t('payWithHot');
+          // Текст кнопки: сбрасываем в HOT Pay (активный промокод уже очищен при ошибке промокода)
+          var isFreeAfterError = activePromo && activePromo.sku === pendingPaymentSku && Number(activePromo.amount_after) === 0;
+          payBtn.textContent = isFreeAfterError ? '🎁 Получить бесплатно' : '💳 Оплатить через HOT Pay';
+          payBtn.style.background = isFreeAfterError ? 'linear-gradient(135deg,#059669,#10b981)' : 'linear-gradient(135deg,#7c3aed,#a855f7)';
         }
       });
       
