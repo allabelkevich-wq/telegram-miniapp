@@ -413,15 +413,27 @@ function isAdmin(telegramId) {
 
 async function getLastCompletedRequestForUser(telegramUserId) {
   if (!supabase || !telegramUserId) return null;
+  // Проверяем оба поля статуса: status и generation_status
   const { data } = await supabase
     .from("track_requests")
     .select("id")
     .eq("telegram_user_id", Number(telegramUserId))
-    .eq("status", "completed")
+    .not("mode", "eq", "soul_chat_day") // исключаем служебные записи покупки
+    .in("generation_status", ["completed", "done"])
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  return data ? data.id : null;
+  if (data) return data.id;
+  // Фолбек: любая не-служебная заявка
+  const { data: any } = await supabase
+    .from("track_requests")
+    .select("id")
+    .eq("telegram_user_id", Number(telegramUserId))
+    .not("mode", "eq", "soul_chat_day")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return any ? any.id : null;
 }
 
 /** Доступ к Soul Chat: по подписке Soul Basic / Soul Plus (включают N диалогов в месяц). */
@@ -546,10 +558,16 @@ function buildSoulChatPrompt(row, astro, question) {
 }
 
 async function runSoulChat({ requestId, question, telegramUserId, isAdminCaller = false }) {
-  const rid = String(requestId || "").trim();
-  if (!rid || !UUID_REGEX.test(rid)) return { ok: false, error: "Неверный request_id (нужен полный UUID)" };
+  let rid = String(requestId || "").trim();
   const q = String(question || "").trim();
   if (!q) return { ok: false, error: "Пустой вопрос" };
+  // Если request_id не передан или невалиден — ищем последнюю заявку пользователя
+  if (!rid || !UUID_REGEX.test(rid)) {
+    rid = (telegramUserId ? await getLastCompletedRequestForUser(telegramUserId) : null) || "";
+  }
+  if (!rid || !UUID_REGEX.test(rid)) {
+    return { ok: false, error: "Нет заявки для чата. Сначала создай звуковой ключ в приложении." };
+  }
 
   const loaded = await getRequestForSoulChat(rid);
   if (loaded.error) return { ok: false, error: loaded.error };
@@ -2037,7 +2055,10 @@ app.get("/api/soul-chat/access", asyncApi(async (req, res) => {
   const initData = req.headers["x-telegram-init"] || req.query?.initData || "";
   const telegramUserId = validateInitData(initData, BOT_TOKEN);
   if (telegramUserId == null) return res.status(401).json({ success: false, allowed: false, reason: "Нужна авторизация Telegram." });
-  const access = await getSoulChatAccess(telegramUserId);
+  const [access, lastReqId] = await Promise.all([
+    getSoulChatAccess(telegramUserId),
+    getLastCompletedRequestForUser(telegramUserId),
+  ]);
   return res.json({
     success: true,
     allowed: !!access.allowed,
@@ -2045,6 +2066,7 @@ app.get("/api/soul-chat/access", asyncApi(async (req, res) => {
     reason: access.reason || null,
     source: access.source || null,
     expires_at: access.expires_at || null,
+    last_request_id: lastReqId || null,
   });
 }));
 

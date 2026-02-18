@@ -1958,9 +1958,16 @@
         try {
           var r = await fetch(apiBase + '/api/soul-chat/access', { headers: { 'X-Telegram-Init': initData } });
           var d = await r.json().catch(function() { return {}; });
+          // Запоминаем последнюю заявку пользователя для контекста чата
+          if (d.last_request_id) scCurrentRequestId = d.last_request_id;
           if (d.allowed) {
             scShow('scActiveState');
             if (d.expires_at) scStartTimer(d.expires_at);
+            // Приветственное сообщение при первом открытии
+            var hist = document.getElementById('scHistory');
+            if (hist && hist.children.length === 0) {
+              scAddMessage('soul', '✨ Привет! Я здесь — задавай любые вопросы о себе, своём пути и душе.');
+            }
           } else if (d.trial_available) {
             scShow('scGiftState');
           } else {
