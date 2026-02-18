@@ -2515,6 +2515,10 @@
           request: requestText,
           language: currentLang || 'ru'
         };
+        // Если есть активный промокод — передаём его серверу для проверки ДО 402
+        if (activePromo && activePromo.code) {
+          payload.promo_code = activePromo.code;
+        }
         var birthplaceField = document.getElementById('birthplace');
         if (birthplaceField && birthplaceField.getAttribute('data-lat') && birthplaceField.getAttribute('data-lon')) {
           payload.person1.birthplaceLat = parseFloat(birthplaceField.getAttribute('data-lat'));
@@ -2565,17 +2569,19 @@
           if (response.ok && result.ok && result.requestId && !result.payment_required) {
             // Сохраняем ID заявки для Soul Chat
             if (typeof scCurrentRequestId !== 'undefined') scCurrentRequestId = result.requestId;
-            var sp = document.getElementById('songPreviewText');
-            if (sp) {
-              if (mode === 'single') sp.textContent = t('universeHeard', { name: name1 });
-              else if (mode === 'couple') sp.textContent = t('universeHeardCouple', { name: name1, name2: payload.person2.name });
-              else sp.textContent = t('universeHeardTransit', { name: name1 });
-            }
             if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
-            // Показываем экран загрузки 4 секунды — пользователь должен увидеть статус
+            
+            // Показываем экран загрузки с понятным сообщением
             goToPage('loadingPage');
             var ldTitle = document.getElementById('loadingTitle');
             if (ldTitle) ldTitle.textContent = '✨ Заявка принята, ' + name1 + '!';
+            
+            var ldDesc = document.getElementById('loadingDesc');
+            if (ldDesc) {
+              ldDesc.innerHTML = 'Анализирую твои данные и создаю уникальную песню.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.';
+            }
+            
+            // Переход на страницу успеха через 4 секунды
             var ldCountdown = document.getElementById('loadingCountdown');
             var ldSec = 4;
             if (ldCountdown) {

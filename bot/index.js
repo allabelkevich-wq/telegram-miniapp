@@ -2744,7 +2744,54 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
     return res.status(500).json({ error: "Не удалось сохранить заявку" });
   }
   const requestModeForAccess = isNewFormat && (body.mode === "couple" || body.mode === "transit") ? body.mode : "single";
+  
+  // ── ПРОВЕРКА ПРОМОКОДА ДО resolveAccessForRequest ──────────────────────────────
+  // Если фронт передал промокод — проверяем его. Если скидка 100% → сразу ok: true.
+  const promoCodeRaw = String(body.promo_code || body.promoCode || "").trim().toUpperCase();
+  let promoGrantsAccess = false;
+  let promoData = null;
+  if (promoCodeRaw && supabase) {
+    const { data: promo, error: promoErr } = await supabase
+      .from("promo_codes")
+      .select("*")
+      .eq("code", promoCodeRaw)
+      .maybeSingle();
+    if (!promoErr && promo && promo.active) {
+      const now = new Date();
+      const validFrom = promo.valid_from ? new Date(promo.valid_from) : null;
+      const validUntil = promo.valid_until ? new Date(promo.valid_until) : null;
+      const isTimeValid = (!validFrom || now >= validFrom) && (!validUntil || now <= validUntil);
+      const hasUsesLeft = promo.max_uses == null || (promo.used_count || 0) < promo.max_uses;
+      if (isTimeValid && hasUsesLeft) {
+        // Промокод валидный — проверяем, даёт ли он 100% скидку
+        const sku = requestModeForAccess === "couple" ? "couple_song" : (requestModeForAccess === "transit" ? "transit_energy_song" : "single_song");
+        const skuPrice = await getSkuPrice(sku);
+        const baseAmount = skuPrice ? Number(skuPrice.price) : 0;
+        let discount = 0;
+        if (promo.discount_type === "percentage") {
+          discount = (baseAmount * Number(promo.discount_value || 0)) / 100;
+        } else {
+          discount = Number(promo.discount_value || 0);
+        }
+        const finalAmount = Math.max(0, baseAmount - discount);
+        if (finalAmount === 0) {
+          console.log("[submit-request] Промокод", promoCodeRaw, "даёт 100% скидку — разрешаем без оплаты");
+          promoGrantsAccess = true;
+          promoData = { code: promoCodeRaw, id: promo.id, discount, finalAmount: 0 };
+        }
+      }
+    }
+  }
+  
   const access = await resolveAccessForRequest({ telegramUserId, mode: requestModeForAccess });
+  
+  // Если промокод даёт 100% скидку — переопределяем access
+  if (promoGrantsAccess && promoData) {
+    access.allowed = true;
+    access.source = "promo_free";
+    console.log("[submit-request] Промокод", promoData.code, "активирован — доступ разрешён");
+  }
+  
   if (!access.allowed) {
     console.log("[submit-request] payment_required", { requestId, sku: access.sku, telegramUserId });
     const skuPrice = await getSkuPrice(access.sku);
@@ -2790,11 +2837,37 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
       });
     }
   }
-  await supabase.from("track_requests").update({
-    payment_provider: access.source === "trial" ? "gift" : (access.source === "subscription" ? "subscription" : "hot"),
-    payment_status: access.source === "trial" ? "gift_used" : (access.source === "subscription" ? "subscription_active" : "paid"),
+  // Обновляем статус оплаты в зависимости от источника доступа
+  let paymentProvider = "hot";
+  let paymentStatus = "paid";
+  if (access.source === "trial") { paymentProvider = "gift"; paymentStatus = "gift_used"; }
+  else if (access.source === "subscription") { paymentProvider = "subscription"; paymentStatus = "subscription_active"; }
+  else if (access.source === "promo_free" && promoData) { paymentProvider = "promo"; paymentStatus = "promo_applied"; }
+  
+  const updateData = {
+    payment_provider: paymentProvider,
+    payment_status: paymentStatus,
     updated_at: new Date().toISOString(),
-  }).eq("id", requestId);
+  };
+  
+  // Если промокод — сохраняем код и discount
+  if (access.source === "promo_free" && promoData) {
+    updateData.promo_code = promoData.code;
+    updateData.payment_amount = 0;
+    updateData.payment_currency = "USDT";
+    // Записываем использование промокода
+    await supabase.from("promo_redemptions").insert({
+      promo_code_id: promoData.id,
+      telegram_user_id: Number(telegramUserId),
+      request_id: requestId,
+      discount_amount: promoData.discount,
+      redeemed_at: new Date().toISOString(),
+    }).catch((e) => console.warn("[submit-request] promo_redemptions insert:", e?.message));
+    // Увеличиваем счётчик использований промокода
+    await supabase.from("promo_codes").update({ used_count: (promoData.used_count || 0) + 1, updated_at: new Date().toISOString() }).eq("id", promoData.id).catch((e) => console.warn("[submit-request] promo_codes update:", e?.message));
+  }
+  
+  await supabase.from("track_requests").update(updateData).eq("id", requestId);
   const mode = body.person1 && body.mode === "couple" ? "couple" : "single";
   console.log(`[API] Заявка ${requestId} сохранена — ГЕНЕРИРУЕМ ПЕСНЮ БЕСПЛАТНО (режим: ${mode})`);
   const successText =
