@@ -115,7 +115,9 @@ export async function pollMusicResult(taskId) {
         const sunoData = d.response?.sunoData;
         const first = Array.isArray(sunoData) && sunoData[0];
         const audioUrl = first?.audioUrl;
-        if (audioUrl) return { ok: true, audioUrl };
+        // Suno возвращает imageUrl вместе с аудио в том же ответе
+        const imageUrl = first?.imageUrl || first?.image_url || first?.coverUrl || null;
+        if (audioUrl) return { ok: true, audioUrl, imageUrl };
         return { ok: false, error: "Нет audioUrl в ответе Suno" };
       }
       if (

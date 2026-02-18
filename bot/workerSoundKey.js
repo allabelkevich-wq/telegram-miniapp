@@ -918,26 +918,34 @@ ${extBlock ? "\n" + extBlock : ""}
     }
     
     const audioUrl = sunoResult.audioUrl;
-    console.log(`[Воркер] ЭТАП 3 — Suno: музыка готова, audio_url=${audioUrl}`);
+    // imageUrl часто приходит прямо в ответе на генерацию музыки
+    const imageUrlFromMusic = sunoResult.imageUrl || null;
+    console.log(`[Воркер] ЭТАП 3 — Suno: музыка готова, audio_url=${audioUrl}, image_url=${imageUrlFromMusic || "нет"}`);
     await setStepCompat('4', 'Аудио готово', 'audio_ready');
 
-    // Обложка: запрос + поллинг (не блокируем отправку песни при ошибке)
-    let coverUrl = null;
-    await setStep('cover_start', 'Запрос обложки запущен');
-    const coverStart = await generateCover(sunoStart.taskId);
-    if (coverStart.ok && coverStart.coverTaskId) {
-      const coverResult = await pollCoverResult(coverStart.coverTaskId);
-      if (coverResult.ok && coverResult.coverUrl) {
-        coverUrl = coverResult.coverUrl;
-        console.log(`[Воркер] Обложка готова: ${coverUrl}`);
-        await setStepCompat('4', 'Аудио и обложка готовы', 'cover_ready');
-      } else {
-        console.warn(`[Воркер] Обложка не получена: ${coverResult?.error || "—"}`);
-        await setStep('cover_ready', `Обложка не получена: ${coverResult?.error || "—"}`);
-      }
+    // Обложка: сначала проверяем imageUrl из основного ответа, затем cover API
+    let coverUrl = imageUrlFromMusic || null;
+    if (coverUrl) {
+      console.log(`[Воркер] Обложка получена из основного ответа Suno: ${coverUrl}`);
+      await setStepCompat('4', 'Аудио и обложка готовы (из основного ответа)', 'cover_ready');
     } else {
-      console.warn(`[Воркер] Запрос обложки не выполнен: ${coverStart?.error || "—"}`);
-      await setStep('cover_ready', `Запрос обложки не выполнен: ${coverStart?.error || "—"}`);
+      // Фолбек: отдельный cover API
+      await setStep('cover_start', 'imageUrl не найден в аудио-ответе, пробуем cover API');
+      const coverStart = await generateCover(sunoStart.taskId);
+      if (coverStart.ok && coverStart.coverTaskId) {
+        const coverResult = await pollCoverResult(coverStart.coverTaskId);
+        if (coverResult.ok && coverResult.coverUrl) {
+          coverUrl = coverResult.coverUrl;
+          console.log(`[Воркер] Обложка получена через cover API: ${coverUrl}`);
+          await setStepCompat('4', 'Аудио и обложка готовы (cover API)', 'cover_ready');
+        } else {
+          console.warn(`[Воркер] Обложка не получена через cover API: ${coverResult?.error || "—"}`);
+          await setStep('cover_ready', `Обложка не получена: ${coverResult?.error || "—"}`);
+        }
+      } else {
+        console.warn(`[Воркер] Cover API недоступен: ${coverStart?.error || "—"}`);
+        await setStep('cover_ready', `Cover API недоступен: ${coverStart?.error || "—"}`);
+      }
     }
 
     // Шаг 10: Обновить статус заявки и сохранить поля песни в БД (cover_url при наличии)
