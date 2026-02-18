@@ -585,6 +585,55 @@ async function getRequestsForAdmin(limit = 30) {
 // На Render часто забывают MINI_APP_URL, и Telegram продолжает открывать старый домен (404).
 // Поэтому авто-фиксируем обе кнопки на MINI_APP_URL при старте бота и в команде /fixurl.
 
+// Отправляет пользователю сообщение с кнопками "Оплатить" / "Отменить" когда заявка не оплачена.
+async function sendPendingPaymentBotMessage(telegramUserId, requestId) {
+  const payUrl = MINI_APP_URL + "&requestId=" + encodeURIComponent(requestId);
+  const shortId = String(requestId || "").substring(0, 8);
+  try {
+    await bot.api.sendMessage(
+      telegramUserId,
+      `⏳ *Заявка создана, но ожидает оплаты*\n\nID: \`${shortId}\`\n\nВыбери действие:`,
+      {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "💳 Оплатить сейчас", web_app: { url: payUrl } }],
+            [{ text: "❌ Отменить заявку", callback_data: "cancel_req:" + requestId }],
+          ],
+        },
+      }
+    );
+  } catch (e) {
+    console.warn("[PendingPayment] Не удалось отправить сообщение пользователю:", e?.message);
+  }
+}
+
+// Обработчик нажатия кнопки "Отменить заявку"
+bot.on("callback_query:data", async (ctx) => {
+  const data = ctx.callbackQuery?.data || "";
+  if (!data.startsWith("cancel_req:")) {
+    await ctx.answerCallbackQuery().catch(() => {});
+    return;
+  }
+  const requestId = data.slice("cancel_req:".length).trim();
+  if (supabase && requestId) {
+    await supabase
+      .from("track_requests")
+      .update({ generation_status: "cancelled", updated_at: new Date().toISOString() })
+      .eq("id", requestId)
+      .catch((e) => console.warn("[cancel_req] supabase error:", e?.message));
+  }
+  await ctx.answerCallbackQuery({ text: "✅ Заявка отменена" }).catch(() => {});
+  try {
+    await ctx.editMessageText(
+      `❌ *Заявка отменена*\n\nID: \`${String(requestId).substring(0, 8)}\`\n\nЕсли передумаешь — открой приложение и создай новую заявку.`,
+      { parse_mode: "Markdown" }
+    );
+  } catch (e) {
+    console.warn("[cancel_req] editMessageText:", e?.message);
+  }
+});
+
 bot.command("ping", async (ctx) => {
   console.log("[Bot] Команда /ping от пользователя:", ctx.from?.username, ctx.from?.id);
   await ctx.reply("🟢 Бот на связи. Команды работают.\n\n" +
@@ -775,7 +824,7 @@ bot.on("message:web_app_data", async (ctx) => {
       generation_status: "pending_payment",
       updated_at: new Date().toISOString(),
     }).eq("id", requestId);
-    await ctx.reply("💳 Бесплатный подарок уже использован. Чтобы продолжить, открой оплату HOT в Mini App.");
+    await sendPendingPaymentBotMessage(telegramUserId, requestId);
     return;
   }
   if (access.source === "trial") {
@@ -790,7 +839,7 @@ bot.on("message:web_app_data", async (ctx) => {
         generation_status: "pending_payment",
         updated_at: new Date().toISOString(),
       }).eq("id", requestId);
-      await ctx.reply("💳 Подарочный продукт уже использован. Чтобы продолжить, открой оплату HOT в Mini App.");
+      await sendPendingPaymentBotMessage(telegramUserId, requestId);
       return;
     }
   }
@@ -1564,12 +1613,13 @@ app.get("/api/admin/stats", asyncApi(async (req, res) => {
   }
   if (result.error) return res.status(500).json({ success: false, error: result.error.message });
   const rows = result.data || [];
-  const stats = { total: rows.length, pending: 0, pending_payment: 0, astro_calculated: 0, lyrics_generated: 0, suno_processing: 0, completed: 0, failed: 0 };
+  const stats = { total: rows.length, pending: 0, pending_payment: 0, cancelled: 0, astro_calculated: 0, lyrics_generated: 0, suno_processing: 0, completed: 0, failed: 0 };
   rows.forEach((r) => {
     const s = (r.generation_status ?? r.status) || "pending";
     if (s === "completed") stats.completed++;
     else if (s === "failed") stats.failed++;
-    else if (s === "pending_payment") stats.pending_payment++; // ожидают оплаты — не в работе
+    else if (s === "cancelled") stats.cancelled++;
+    else if (s === "pending_payment") stats.pending_payment++;
     else if (s === "suno_processing") stats.suno_processing++;
     else if (s === "lyrics_generated") stats.lyrics_generated++;
     else if (s === "astro_calculated") stats.astro_calculated++;
@@ -1590,7 +1640,8 @@ app.get("/api/admin/requests", asyncApi(async (req, res) => {
   else if (statusFilter === "pending_payment") q = q.eq("generation_status", "pending_payment");
   else if (statusFilter === "completed") q = q.eq("generation_status", "completed");
   else if (statusFilter === "failed") q = q.eq("generation_status", "failed");
-  // "all" — без фильтра, но pending_payment видны отдельно
+  else if (statusFilter === "cancelled") q = q.eq("generation_status", "cancelled");
+  // "all" — без фильтра
   let result = await q;
   if (result.error && /does not exist|column/i.test(result.error.message)) {
     const minSelect = "id, name, status, created_at, request, telegram_user_id";
@@ -1766,6 +1817,21 @@ app.post("/api/admin/requests/:id/deliver", asyncApi(async (req, res) => {
   } catch (e) {
     return res.status(500).json({ success: false, error: e?.message || "Ошибка отправки" });
   }
+}));
+
+// Отмена заявки из админки или от пользователя через кнопку в боте
+app.post("/api/admin/requests/:id/cancel", asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const id = sanitizeRequestId(req.params.id);
+  if (!id || !isValidRequestId(id)) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
+  const { error } = await supabase
+    .from("track_requests")
+    .update({ generation_status: "cancelled", updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  return res.json({ success: true });
 }));
 
 app.get("/api/admin/settings", asyncApi(async (req, res) => {
@@ -2353,6 +2419,8 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
       generation_status: "pending_payment",
       updated_at: new Date().toISOString(),
     }).eq("id", requestId);
+    // Отправляем пользователю сообщение с кнопками «Оплатить» / «Отменить»
+    sendPendingPaymentBotMessage(telegramUserId, requestId);
     return res.status(402).json({
       ok: false,
       payment_required: true,

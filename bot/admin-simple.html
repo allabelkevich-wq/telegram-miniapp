@@ -33,7 +33,7 @@
     .status-completed { background: #27ae60; color: #fff; }
     .status-failed { background: #e74c3c; color: #fff; }
     .status-payment { background: #8b5cf6; color: #fff; }
-    .status-payment { background: #8b5cf6; color: #fff; }
+    .status-cancelled { background: #475569; color: #fff; }
     .progress-container { background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 10px; margin: 25px 0; }
     .progress-title { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #667eea; }
     .progress-steps { display: flex; justify-content: space-between; position: relative; margin-bottom: 30px; }
@@ -70,6 +70,19 @@
     .mono-muted { color: #94a3b8; font-size: 12px; }
     .mono-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
     .mono-msg { margin-top: 8px; font-size: 12px; min-height: 18px; }
+    /* Секция незавершённых заявок */
+    .unpaid-section { background: rgba(139,92,246,0.08); border: 2px solid #8b5cf6; border-radius: 14px; padding: 20px 24px; margin-bottom: 28px; display: none; }
+    .unpaid-section.has-items { display: block; }
+    .unpaid-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .unpaid-section-title { font-size: 18px; font-weight: bold; color: #c4b5fd; display: flex; align-items: center; gap: 10px; }
+    .unpaid-badge { background: #8b5cf6; color: #fff; border-radius: 20px; padding: 2px 12px; font-size: 14px; font-weight: bold; }
+    .unpaid-card { background: #1a1a2e; border: 1px solid #4c1d95; border-radius: 10px; padding: 14px 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+    .unpaid-card:last-child { margin-bottom: 0; }
+    .unpaid-info { flex: 1; }
+    .unpaid-name { font-size: 16px; font-weight: bold; margin-bottom: 4px; }
+    .unpaid-meta { font-size: 12px; color: #94a3b8; line-height: 1.6; }
+    .unpaid-actions { display: flex; gap: 8px; flex-shrink: 0; flex-direction: column; }
+    .btn-cancel { background: linear-gradient(135deg, #e74c3c, #c0392b); min-width: 120px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     @media (max-width: 768px) {
       .header h1 { font-size: 26px; }
@@ -109,13 +122,31 @@
         <div class="stat-label">💳 Ожидают оплаты</div>
         <div class="stat-number" id="stat-pending-payment">-</div>
       </div>
+      <div class="stat-card" style="border-left-color:#475569;">
+        <div class="stat-label">🚫 Отменённые</div>
+        <div class="stat-number" id="stat-cancelled">-</div>
+      </div>
     </div>
+    <!-- Секция незавершённых заявок (ожидают оплаты) -->
+    <div class="unpaid-section" id="unpaidSection">
+      <div class="unpaid-section-header">
+        <div class="unpaid-section-title">
+          ⚠️ Незавершённые заявки
+          <span class="unpaid-badge" id="unpaidBadge">0</span>
+        </div>
+        <button class="btn btn-primary" style="min-width:140px;padding:10px 16px;font-size:13px;" onclick="loadUnpaidRequests()">🔄 Обновить</button>
+      </div>
+      <p style="font-size:13px;color:#94a3b8;margin-bottom:14px;">Заявки без оплаты, промокода и бесплатного периода. Пользователю уже отправлено сообщение в боте с кнопками «Оплатить» / «Отменить».</p>
+      <div id="unpaidList"><div class="loading"><div class="spinner"></div>Загрузка…</div></div>
+    </div>
+
     <div class="filters">
       <button class="filter-btn active" data-filter="all">📋 Все</button>
       <button class="filter-btn" data-filter="pending">⏳ В работе</button>
       <button class="filter-btn" data-filter="pending_payment">💳 Ожидает оплаты</button>
       <button class="filter-btn" data-filter="completed">✅ Готово</button>
       <button class="filter-btn" data-filter="failed">❌ Ошибки</button>
+      <button class="filter-btn" data-filter="cancelled">🚫 Отменённые</button>
     </div>
     <div class="details-section" style="margin-bottom:20px;">
       <div class="section-title">⚙️ Настройки генерации</div>
@@ -318,7 +349,11 @@
           // Показываем счётчик ожидающих оплаты
           const ppEl = document.getElementById('stat-pending-payment');
           if (ppEl) ppEl.textContent = s.pending_payment || 0;
+          const cancelledEl = document.getElementById('stat-cancelled');
+          if (cancelledEl) cancelledEl.textContent = s.cancelled || 0;
         }
+        // Загружаем незавершённые заявки (pending_payment) сразу при каждом обновлении
+        loadUnpaidRequests();
         const listResult = await fetchJson(API_BASE + '/api/admin/requests?limit=50&status=' + currentFilter + authQuery(), { headers: authHeaders() });
         const listJson = listResult.json;
         const listRes = listResult.res;
@@ -352,19 +387,21 @@
     }
 
     function getStatusOrder(status) {
-      const order = { pending_payment: -1, pending: 1, astro_calculated: 2, lyrics_generated: 3, suno_processing: 4, completed: 5, failed: 0 };
+      const order = { pending_payment: -1, pending: 1, astro_calculated: 2, lyrics_generated: 3, suno_processing: 4, completed: 5, failed: 0, cancelled: -2 };
       return order[status] !== undefined ? order[status] : 1;
     }
     function statusClass(gs) {
       if (gs === 'completed') return 'status-completed';
       if (gs === 'failed') return 'status-failed';
       if (gs === 'pending_payment') return 'status-payment';
+      if (gs === 'cancelled') return 'status-cancelled';
       return 'status-pending';
     }
     function statusLabel(gs) {
       if (gs === 'completed') return '✅ Готово';
       if (gs === 'failed') return '❌ Ошибка';
       if (gs === 'pending_payment') return '💳 Ожидает оплаты';
+      if (gs === 'cancelled') return '🚫 Отменена';
       return '⏳ В работе';
     }
     function paymentLabel(ps) {
@@ -458,6 +495,7 @@
           <div class="actions">
             <button class="btn btn-primary" onclick="showDetails('${(r.id || '').replace(/'/g, "\\'")}')">📋 Подробнее / Details</button>
             ${['pending','requires_payment'].includes(String((r.payment_status || '').toLowerCase())) ? '<button class="btn btn-success" onclick="markPaid(\'' + (r.id || '').replace(/'/g, "\\'") + '\')">✅ Отметить оплаченным</button>' : ''}
+            ${gs === 'pending_payment' ? '<button class="btn btn-cancel" onclick="cancelRequest(\'' + (r.id || '').replace(/'/g, "\\'") + '\', this)">❌ Отменить заявку</button>' : ''}
             <button class="btn btn-warning" onclick="restart('${(r.id || '').replace(/'/g, "\\'")}')">${gs === 'completed' ? '🔄 Перегенерировать' : '🔄 Перезапустить / Restart'}</button>
             ${r.audio_url ? '<button class="btn btn-success" onclick="window.open(\'' + r.audio_url.replace(/'/g, "\\'") + '\')">▶️ Слушать / Listen</button>' : ''}
             ${r.audio_url ? '<button class="btn btn-success" onclick="deliver(\'' + (r.id || '').replace(/'/g, "\\'") + '\', this)">📤 Отправить пользователю</button>' : ''}
@@ -474,6 +512,76 @@
 
     function escapeAttr(s) {
       return String(s == null ? '' : s).replace(/"/g, '&quot;');
+    }
+
+    // Загружает незавершённые заявки (pending_payment) в отдельную секцию вверху
+    async function loadUnpaidRequests() {
+      const section = document.getElementById('unpaidSection');
+      const list = document.getElementById('unpaidList');
+      const badge = document.getElementById('unpaidBadge');
+      if (!list) return;
+      list.innerHTML = '<div class="loading"><div class="spinner"></div>Загрузка…</div>';
+      try {
+        const result = await fetchJson(
+          API_BASE + '/api/admin/requests?status=pending_payment&limit=50' + authQuery(),
+          { headers: authHeaders() }
+        );
+        const items = (result.json && result.json.requests) || [];
+        if (badge) badge.textContent = items.length;
+        if (!items.length) {
+          if (section) section.classList.remove('has-items');
+          list.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;">✅ Незавершённых заявок нет</div>';
+          return;
+        }
+        if (section) section.classList.add('has-items');
+        list.innerHTML = items.map(function(r) {
+          const id = escapeHtml(r.id || '');
+          const idShort = (r.id || '').substring(0, 8);
+          const name = escapeHtml(r.name || '—');
+          const date = r.created_at ? new Date(r.created_at).toLocaleString('ru-RU') : '—';
+          const amount = r.payment_amount ? (r.payment_amount + ' ' + (r.payment_currency || 'USDT')) : '—';
+          const safeId = (r.id || '').replace(/'/g, "\\'");
+          return '<div class="unpaid-card">' +
+            '<div class="unpaid-info">' +
+              '<div class="unpaid-name">' + name + '</div>' +
+              '<div class="unpaid-meta">' +
+                'ID: <code>' + escapeHtml(idShort) + '</code> · ' + date + '<br>' +
+                'Сумма: ' + escapeHtml(amount) + ' · Статус оплаты: ' + escapeHtml(r.payment_status || '—') +
+              '</div>' +
+            '</div>' +
+            '<div class="unpaid-actions">' +
+              '<button class="btn btn-success" style="min-width:110px;padding:8px 12px;font-size:13px;" onclick="markPaid(\'' + safeId + '\')">✅ Оплачено</button>' +
+              '<button class="btn btn-cancel" style="min-width:110px;padding:8px 12px;font-size:13px;" onclick="cancelRequest(\'' + safeId + '\', this)">❌ Отменить</button>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      } catch (e) {
+        if (section) section.classList.remove('has-items');
+        list.innerHTML = '<div style="color:#e74c3c;padding:10px;">Ошибка загрузки: ' + escapeHtml((e && e.message) || String(e)) + '</div>';
+      }
+    }
+
+    // Отмена заявки из админки
+    async function cancelRequest(id, btn) {
+      if (!confirm('Отменить заявку ' + id.substring(0, 8) + '? Пользователь увидит статус «Отменена».')) return;
+      if (btn) { btn.disabled = true; btn.textContent = 'Отмена…'; }
+      try {
+        const result = await fetchJson(
+          API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + '/cancel' + authQueryFromPath(),
+          { method: 'POST', headers: authHeaders() }
+        );
+        if (result.json && result.json.success) {
+          alert('✅ Заявка отменена');
+          await loadUnpaidRequests();
+          await loadRequests();
+        } else {
+          alert('Ошибка: ' + ((result.json && result.json.error) || 'неизвестно'));
+          if (btn) { btn.disabled = false; btn.textContent = '❌ Отменить'; }
+        }
+      } catch (e) {
+        alert('Ошибка: ' + ((e && e.message) || String(e)));
+        if (btn) { btn.disabled = false; btn.textContent = '❌ Отменить'; }
+      }
     }
 
     async function loadMonetizationData() {
