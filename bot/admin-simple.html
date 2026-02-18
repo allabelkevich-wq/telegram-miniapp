@@ -32,6 +32,8 @@
     .status-pending { background: #f39c12; color: #000; }
     .status-completed { background: #27ae60; color: #fff; }
     .status-failed { background: #e74c3c; color: #fff; }
+    .status-payment { background: #8b5cf6; color: #fff; }
+    .status-payment { background: #8b5cf6; color: #fff; }
     .progress-container { background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 10px; margin: 25px 0; }
     .progress-title { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #667eea; }
     .progress-steps { display: flex; justify-content: space-between; position: relative; margin-bottom: 30px; }
@@ -103,12 +105,17 @@
         <div class="stat-label">Ошибки / Failed</div>
         <div class="stat-number" id="failed">-</div>
       </div>
+      <div class="stat-card" style="border-left-color:#8b5cf6;">
+        <div class="stat-label">💳 Ожидают оплаты</div>
+        <div class="stat-number" id="stat-pending-payment">-</div>
+      </div>
     </div>
     <div class="filters">
-      <button class="filter-btn active" data-filter="all">📋 Все / All</button>
-      <button class="filter-btn" data-filter="pending">⏳ В работе / In Progress</button>
-      <button class="filter-btn" data-filter="completed">✅ Готово / Completed</button>
-      <button class="filter-btn" data-filter="failed">❌ Ошибки / Failed</button>
+      <button class="filter-btn active" data-filter="all">📋 Все</button>
+      <button class="filter-btn" data-filter="pending">⏳ В работе</button>
+      <button class="filter-btn" data-filter="pending_payment">💳 Ожидает оплаты</button>
+      <button class="filter-btn" data-filter="completed">✅ Готово</button>
+      <button class="filter-btn" data-filter="failed">❌ Ошибки</button>
     </div>
     <div class="details-section" style="margin-bottom:20px;">
       <div class="section-title">⚙️ Настройки генерации</div>
@@ -308,6 +315,9 @@
           document.getElementById('pending').textContent = (s.pending || 0) + (s.astro_calculated || 0) + (s.lyrics_generated || 0) + (s.suno_processing || 0);
           document.getElementById('completed').textContent = s.completed || 0;
           document.getElementById('failed').textContent = s.failed || 0;
+          // Показываем счётчик ожидающих оплаты
+          const ppEl = document.getElementById('stat-pending-payment');
+          if (ppEl) ppEl.textContent = s.pending_payment || 0;
         }
         const listResult = await fetchJson(API_BASE + '/api/admin/requests?limit=50&status=' + currentFilter + authQuery(), { headers: authHeaders() });
         const listJson = listResult.json;
@@ -342,18 +352,20 @@
     }
 
     function getStatusOrder(status) {
-      const order = { pending: 1, astro_calculated: 2, lyrics_generated: 3, suno_processing: 4, completed: 5, failed: 0 };
-      return order[status] || 1;
+      const order = { pending_payment: -1, pending: 1, astro_calculated: 2, lyrics_generated: 3, suno_processing: 4, completed: 5, failed: 0 };
+      return order[status] !== undefined ? order[status] : 1;
     }
     function statusClass(gs) {
       if (gs === 'completed') return 'status-completed';
       if (gs === 'failed') return 'status-failed';
+      if (gs === 'pending_payment') return 'status-payment';
       return 'status-pending';
     }
     function statusLabel(gs) {
-      if (gs === 'completed') return '✅ Готово / Completed';
-      if (gs === 'failed') return '❌ Ошибка / Failed';
-      return '⏳ В работе / In Progress';
+      if (gs === 'completed') return '✅ Готово';
+      if (gs === 'failed') return '❌ Ошибка';
+      if (gs === 'pending_payment') return '💳 Ожидает оплаты';
+      return '⏳ В работе';
     }
     function paymentLabel(ps) {
       if (!ps) return { text: '—', cls: 'mono-muted' };

@@ -35,7 +35,8 @@ if (!MINI_APP_BASE || MINI_APP_BASE.includes("vercel.app")) {
 }
 // Явный путь /app — чтобы все кнопки (меню, inline) вели на один и тот же рабочий адрес.
 // BotFather и кнопка «Открыть» в сообщениях должны использовать этот же URL.
-const MINI_APP_URL = MINI_APP_BASE.replace(/\/app\/?$/, "") + "/app?v=22";
+const APP_BUILD = Date.now(); // Меняется при каждом перезапуске — браузер всегда берёт свежий HTML
+const MINI_APP_URL = MINI_APP_BASE.replace(/\/app\/?$/, "") + "/app?v=" + APP_BUILD;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";
@@ -1563,11 +1564,12 @@ app.get("/api/admin/stats", asyncApi(async (req, res) => {
   }
   if (result.error) return res.status(500).json({ success: false, error: result.error.message });
   const rows = result.data || [];
-  const stats = { total: rows.length, pending: 0, astro_calculated: 0, lyrics_generated: 0, suno_processing: 0, completed: 0, failed: 0 };
+  const stats = { total: rows.length, pending: 0, pending_payment: 0, astro_calculated: 0, lyrics_generated: 0, suno_processing: 0, completed: 0, failed: 0 };
   rows.forEach((r) => {
     const s = (r.generation_status ?? r.status) || "pending";
     if (s === "completed") stats.completed++;
     else if (s === "failed") stats.failed++;
+    else if (s === "pending_payment") stats.pending_payment++; // ожидают оплаты — не в работе
     else if (s === "suno_processing") stats.suno_processing++;
     else if (s === "lyrics_generated") stats.lyrics_generated++;
     else if (s === "astro_calculated") stats.astro_calculated++;
@@ -1585,8 +1587,10 @@ app.get("/api/admin/requests", asyncApi(async (req, res) => {
   const fullSelect = "id,name,gender,birthdate,birthplace,person2_name,person2_gender,person2_birthdate,person2_birthplace,status,generation_status,created_at,audio_url,mode,request,generation_steps,payment_status,payment_provider,telegram_user_id";
   let q = supabase.from("track_requests").select(fullSelect).order("created_at", { ascending: false }).limit(limit);
   if (statusFilter === "pending") q = q.in("generation_status", ["pending", "astro_calculated", "lyrics_generated", "suno_processing"]);
+  else if (statusFilter === "pending_payment") q = q.eq("generation_status", "pending_payment");
   else if (statusFilter === "completed") q = q.eq("generation_status", "completed");
   else if (statusFilter === "failed") q = q.eq("generation_status", "failed");
+  // "all" — без фильтра, но pending_payment видны отдельно
   let result = await q;
   if (result.error && /does not exist|column/i.test(result.error.message)) {
     const minSelect = "id, name, status, created_at, request, telegram_user_id";

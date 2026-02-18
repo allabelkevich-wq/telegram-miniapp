@@ -236,8 +236,8 @@
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Comfortaa',sans-serif}
     body::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(1,6,26,.62) 0%,rgba(8,10,38,.78) 100%);z-index:0}
     .container{max-width:min(600px,100%);margin:0 auto;width:100%;position:relative;z-index:1;padding:0 var(--spacing-md)}
-    .page{display:none !important;padding-top:var(--spacing-lg);visibility:visible !important;opacity:1 !important}
-    .page.active{display:block !important;visibility:visible !important;opacity:1 !important;min-height:var(--tg-viewport-height,100vh);width:100%;}
+    .page{display:none !important;visibility:visible !important;opacity:1 !important}
+    .page.active{display:block !important;visibility:visible !important;opacity:1 !important;position:fixed !important;top:0 !important;left:0 !important;right:0 !important;bottom:0 !important;overflow-y:auto !important;overflow-x:hidden !important;z-index:10 !important;padding-top:var(--spacing-lg);background:var(--tg-theme-bg-color,#0A0A1A) url('assets/bg-yupsoul.png') center/cover no-repeat;}
     header{text-align:center;margin:var(--spacing-xl) 0 var(--spacing-lg);position:relative}
     h1{font-size:var(--fluid-2xl);background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 4s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;letter-spacing:-1px;line-height:1.1}
     .subtitle{color:var(--subtitle-readable,var(--tg-theme-text-color));font-size:var(--fluid-base);margin-top:8px;font-weight:400}
@@ -606,13 +606,13 @@
     </div>
     
     <!-- Страница донатов / реквизиты -->
-    <div class="page" id="paymentPage" style="position:relative;z-index:10">
-      <header style="position:relative;z-index:20">
-        <h1 style="color:#d4af37">YupSoul</h1>
-        <div class="subtitle" style="color:rgba(255,255,255,0.9)">Твой звуковой ключ</div>
+    <div class="page" id="paymentPage">
+      <header>
+        <h1>YupSoul</h1>
+        <div class="subtitle">Твой звуковой ключ</div>
       </header>
       
-      <div class="section" style="position:relative;z-index:20">
+      <div class="section">
         <div class="tagline" style="margin-bottom:15px">Промокод или оплата</div>
         <p id="paymentIntro" style="text-align:center;font-size:1.05rem;line-height:1.7;margin-bottom:16px">Заявка отправлена. Введите промокод или нажмите кнопку ниже для оплаты через HOT Pay.</p>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -1870,34 +1870,29 @@
       }
       // Навигация по страницам
       function goToPage(pageId) {
+        var currentPage = document.querySelector('.page.active');
+        
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
         if (pageId !== 'paymentPage') {
           var payBtnReset = document.getElementById('payBtn');
           if (payBtnReset) { payBtnReset.disabled = false; payBtnReset.textContent = t('payWithHot'); }
         }
+        // Всегда проверяем кнопку оплаты при переходах между страницами
         ensurePayButtonText();
         
         document.querySelectorAll('.page').forEach(function(page) {
           page.classList.remove('active');
-          page.style.minHeight = '';
         });
         
         var target = document.getElementById(pageId);
-        if (!target) return;
         
-        // Получаем реальную высоту viewport (100vh не всегда работает в Telegram WebView)
-        var vh = (tg && tg.viewportHeight && tg.viewportHeight > 50)
-          ? tg.viewportHeight
-          : (window.innerHeight && window.innerHeight > 50 ? window.innerHeight : 600);
-        target.style.minHeight = vh + 'px';
+        if (!target) {
+          return;
+        }
         target.classList.add('active');
-        
-        // Скролл в начало при каждой смене страницы
-        try { window.scrollTo(0, 0); } catch(e) {}
-        try { document.documentElement.scrollTop = 0; document.body.scrollTop = 0; } catch(e) {}
-        
+        // Сброс скролла активной страницы (position:fixed — элемент сам прокручивается)
+        try { target.scrollTop = 0; } catch(e) {}
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
-        
         if (pageId === 'paymentPage') {
           if (tg && tg.expand) try { tg.expand(); } catch (e) {}
           setPaymentStatus('', '');
@@ -1906,7 +1901,6 @@
           if (copyBtn) copyBtn.style.display = 'none';
           if (paymentLinkHint) paymentLinkHint.style.display = 'none';
         }
-        
         if (pageId === 'successPage') updateSoulChatHint();
         if (document.getElementById('previewNav') && document.getElementById('previewNav').classList.contains('show')) {
           document.querySelectorAll('.preview-nav button').forEach(function(btn) {
