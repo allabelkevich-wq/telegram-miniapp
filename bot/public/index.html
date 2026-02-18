@@ -1317,7 +1317,11 @@
       function ensurePayButtonText() {
         var payBtn = document.getElementById('payOvPayBtn');
         if (payBtn && !payBtn.disabled) {
-          payBtn.textContent = '💳 Оплатить через HOT Pay';
+          var isFree = activePromo && activePromo.sku === getCurrentSku() && Number(activePromo.amount_after) === 0;
+          if (!isFree) {
+            payBtn.textContent = '💳 Оплатить через HOT Pay';
+            payBtn.style.background = 'linear-gradient(135deg,#7c3aed,#a855f7)';
+          }
         }
       }
       function isTelegramWebApp() {
@@ -1545,6 +1549,11 @@
         activePromo = null;
         var pi = document.getElementById('payOvPromoInput');
         if (pi) pi.value = '';
+        // Сброс кнопки в исходное состояние
+        var pb = document.getElementById('payOvPayBtn');
+        if (pb) { pb.textContent = '💳 Оплатить через HOT Pay'; pb.style.background = 'linear-gradient(135deg,#7c3aed,#a855f7)'; pb.disabled = false; }
+        var cb = document.getElementById('payOvCheckBtn');
+        if (cb) cb.style.display = 'none';
       }
       function setPaymentStatus(text, tone) {
         var el = document.getElementById('payOvStatus');
@@ -1607,6 +1616,16 @@
               notice.style.background = 'rgba(212,175,55,.1)';
               notice.style.color = 'rgba(255,255,255,.95)';
             }
+          }
+          // Кнопка оплаты: меняем текст если промокод даёт 0
+          var payBtnUpd = document.getElementById('payOvPayBtn');
+          if (payBtnUpd && !payBtnUpd.disabled) {
+            var sku2 = getCurrentSku();
+            var isFreePromo = activePromo && activePromo.sku === sku2 && Number(activePromo.amount_after) === 0;
+            payBtnUpd.textContent = isFreePromo ? '🎁 Получить бесплатно' : '💳 Оплатить через HOT Pay';
+            payBtnUpd.style.background = isFreePromo
+              ? 'linear-gradient(135deg,#059669,#10b981)'
+              : 'linear-gradient(135deg,#7c3aed,#a855f7)';
           }
         } catch (e) {
           console.warn('[updatePaymentUiFromCatalog]', e);
