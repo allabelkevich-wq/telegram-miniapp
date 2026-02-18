@@ -267,6 +267,27 @@ function forceLyricsLowercase(text) {
   return text.toLocaleLowerCase("ru-RU");
 }
 
+// Замена музыкальных терминов в сопроводительном письме на понятные слова
+function humanizeCoverLetter(text) {
+  if (!text || typeof text !== "string") return text;
+  return text
+    .replace(/\bintro\b/gi, "вступление")
+    .replace(/\boutro\b/gi, "финал")
+    .replace(/\bpre-chorus\b/gi, "подводка")
+    .replace(/\bpre chorus\b/gi, "подводка")
+    .replace(/\bfinal chorus\b/gi, "завершающий припев")
+    .replace(/\bbridge\b/gi, "средняя часть")
+    .replace(/\bverse\b/gi, "куплет")
+    .replace(/\bchorus\b/gi, "припев")
+    .replace(/\bбридж\b/gi, "средняя часть")
+    .replace(/\bкуплет[ые]?\b/gi, (m) => m) // куплет оставляем — это понятно
+    .replace(/\[verse\s*\d?\]/gi, "")
+    .replace(/\[chorus\]/gi, "")
+    .replace(/\[bridge\]/gi, "")
+    .replace(/\[intro\]/gi, "")
+    .replace(/\[outro\]/gi, "");
+}
+
 // ============================================================================
 // ПАРСИНГ ОТВЕТА LLM
 // ============================================================================
@@ -454,14 +475,17 @@ async function sendPhotoToUser(telegramUserId, photoUrl, caption) {
   return { ok: true };
 }
 
-async function sendAudioToUser(telegramUserId, audioUrl, caption) {
+async function sendAudioToUser(telegramUserId, audioUrl, caption, { title = "", performer = "YupSoul" } = {}) {
   if (!BOT_TOKEN || !telegramUserId) return { ok: false, error: "Нет BOT_TOKEN или chat_id" };
   const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`;
   const body = new URLSearchParams({
     chat_id: String(telegramUserId),
     audio: audioUrl,
     caption: caption || "Твой персональный звуковой ключ готов.",
+    parse_mode: "Markdown",
   });
+  if (title) body.set("title", title.slice(0, 128));
+  if (performer) body.set("performer", performer.slice(0, 128));
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -976,7 +1000,10 @@ ${extBlock ? "\n" + extBlock : ""}
     if (coverUrl) {
       await sendPhotoToUser(request.telegram_user_id, coverUrl, `Обложка твоей песни · ${parsed.title || "Звуковой ключ"}`).catch((e) => console.warn("[Воркер] Ошибка отправки обложки:", e?.message));
     }
-    const send = await sendAudioToUser(request.telegram_user_id, audioUrl, caption);
+    const send = await sendAudioToUser(request.telegram_user_id, audioUrl, caption, {
+      title: parsed.title || "Звуковой ключ",
+      performer: request.name ? `YupSoul · ${request.name}` : "YupSoul",
+    });
     
     if (!send.ok) {
       console.warn(`[Воркер] Ошибка отправки аудио: ${send.error}`);
@@ -998,7 +1025,7 @@ ${extBlock ? "\n" + extBlock : ""}
       console.log(`[Воркер] ✅ Заявка ${requestId} завершена для ${request.name}`);
 
       // Сопроводительное письмо — отдельным сообщением сразу после аудио
-      const coverLetter = parsed.cover_letter;
+      const coverLetter = humanizeCoverLetter(parsed.cover_letter);
       if (coverLetter && coverLetter.length > 20) {
         try {
           const letterText = `✉️ *Сопроводительное письмо для ${request.name}*\n\n${coverLetter}`;
@@ -1025,17 +1052,18 @@ ${extBlock ? "\n" + extBlock : ""}
       // Сообщение с опциональной поддержкой (реквизиты как на странице донатов)
       const donationText =
         `💫 Если песня коснулась твоей души — ты можешь поддержать создание таких ключей:\n\n` +
-        `▫️ Приорбанк: 4916 9896 3237 0697\n` +
-        `▫️ Альфа-банк: 4585 2200 0626 0623\n\n` +
-        `Любая сумма от сердца. Это не оплата — это благодарность от сердца к сердцу ❤️\n\n` +
-        `С любовью, — YupSoul`;
+        `▫️ Приорбанк:\n\`4916 9896 3237 0697\`\n\n` +
+        `▫️ Альфа-банк:\n\`4585 2200 0626 0623\`\n\n` +
+        `Нажми на номер карты — он скопируется автоматически.\n\n` +
+        `Любая сумма от сердца. Это не оплата — это благодарность ❤️\n— YupSoul`;
       try {
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             chat_id: request.telegram_user_id,
-            text: donationText
+            text: donationText,
+            parse_mode: "Markdown",
           })
         });
       } catch (e) {

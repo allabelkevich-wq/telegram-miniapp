@@ -630,8 +630,14 @@
     <div class="page" id="loadingPage">
       <div class="loading">
         <div class="spinner"></div>
-        <div class="loading-text">Создаю твой ключ...</div>
-        <div id="loadingDesc" style="color:#6b7280;font-size:1.1rem;text-align:center;max-width:400px">Магия творится в реальном времени. Твой персональный звуковой ключ формируется на основе твоих уникальных данных.</div>
+        <div class="loading-text" id="loadingTitle">✨ Заявка принята!</div>
+        <div id="loadingDesc" style="color:rgba(255,255,255,0.75);font-size:1rem;text-align:center;max-width:380px;line-height:1.7;margin-top:12px;">
+          Твой звуковой ключ создаётся прямо сейчас.<br>
+          Это занимает <strong>5–10 минут</strong> — мы глубоко анализируем твою натальную карту и создаём уникальную песню.<br><br>
+          🎵 Готовый ключ придёт тебе в бот.<br>
+          Можешь закрыть приложение — мы сами напишем!
+        </div>
+        <div id="loadingCountdown" style="margin-top:20px;color:rgba(167,139,250,0.8);font-size:0.9rem;"></div>
       </div>
     </div>
     
@@ -2436,7 +2442,6 @@
           var result = await response.json().catch(function() { return {}; });
 
           if (response.ok && result.ok && result.requestId && !result.payment_required) {
-            goToPage('loadingPage');
             // Сохраняем ID заявки для Soul Chat
             if (typeof scCurrentRequestId !== 'undefined') scCurrentRequestId = result.requestId;
             var sp = document.getElementById('songPreviewText');
@@ -2446,7 +2451,21 @@
               else sp.textContent = t('universeHeardTransit', { name: name1 });
             }
             if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
-            goToPage('successPage');
+            // Показываем экран загрузки 4 секунды — пользователь должен увидеть статус
+            goToPage('loadingPage');
+            var ldTitle = document.getElementById('loadingTitle');
+            if (ldTitle) ldTitle.textContent = '✨ Заявка принята, ' + name1 + '!';
+            var ldCountdown = document.getElementById('loadingCountdown');
+            var ldSec = 4;
+            if (ldCountdown) {
+              ldCountdown.textContent = 'Переход через ' + ldSec + ' сек...';
+              var ldTimer = setInterval(function() {
+                ldSec--;
+                if (ldSec <= 0) { clearInterval(ldTimer); if (ldCountdown) ldCountdown.textContent = ''; }
+                else if (ldCountdown) ldCountdown.textContent = 'Переход через ' + ldSec + ' сек...';
+              }, 1000);
+            }
+            setTimeout(function() { goToPage('successPage'); }, 4000);
           } else if ((response.status === 402 || (result && result.payment_required)) && result.requestId) {
             console.log('[Submit] Требуется оплата, переходим на страницу оплаты');
             console.log('[Submit] result.requestId:', result.requestId);
