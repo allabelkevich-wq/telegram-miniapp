@@ -299,24 +299,28 @@ function parseResponse(text) {
   const mood = moodMatch ? moodMatch[1].trim() : "";
   const styleFull = [style, vocal, mood].filter(Boolean).join(" | ");
   
-  // Лирика — от любого блока [Verse 1], [Verse 1:], [Chorus], [Intro] и т.д. до MUSIC PROMPT или [style:]
+  // Универсальный ограничитель конца лирики: MUSIC PROMPT / [style:] / СОПРОВОДИТЕЛЬНОЕ ПИСЬМО
+  const LYRICS_END_PATTERN = /\n\s*(?:MUSIC PROMPT|КЛЮЧЕВЫЕ ПРИНЦИПЫ|СОПРОВОДИТЕЛЬНОЕ ПИСЬМО|\[style:\s*[^\]]+\]|\[vocal:\s*[^\]]+\])/i;
+
+  // Лирика — от любого блока [Verse 1], [Verse 1:], [Chorus], [Intro] и т.д. до MUSIC PROMPT / [style:] / письма
   const lyricsStart = text.search(/\[(?:intro|verse\s*1|verse\s*2|pre-chorus|chorus|bridge|final\s*chorus|outro)\s*:?\]/i);
   if (lyricsStart >= 0) {
     const afterStart = text.slice(lyricsStart);
-    const endMark = afterStart.search(/\n\s*MUSIC PROMPT|КЛЮЧЕВЫЕ ПРИНЦИПЫ|\[style:\s*[^\]]+\]|\[vocal:\s*[^\]]+\]/i);
+    const endMark = afterStart.search(LYRICS_END_PATTERN);
     lyrics = (endMark >= 0 ? afterStart.slice(0, endMark) : afterStart).trim();
   }
-  // Запасной вариант: после "ЛИРИКА:" или "Лирика:" до [style:] или MUSIC PROMPT
+  // Запасной вариант: после "ЛИРИКА:" или "Лирика:" до [style:] / MUSIC PROMPT / письма
   if (!lyrics && /ЛИРИКА\s*:\s*|Lyrics?\s*:\s*/i.test(text)) {
     const afterLabel = text.replace(/^[\s\S]*?(ЛИРИКА|Lyrics?)\s*:\s*/i, "");
-    const endMark = afterLabel.search(/\n\s*MUSIC PROMPT|\[style:\s*|\[vocal:\s*/i);
+    const endMark = afterLabel.search(LYRICS_END_PATTERN);
     const block = endMark >= 0 ? afterLabel.slice(0, endMark) : afterLabel;
     if (block.trim().length > 100) lyrics = block.trim();
   }
-  // Запасной: всё перед [style:] или MUSIC PROMPT, начиная с последнего вхождения Verse/Chorus/Куплет/Припев
+  // Запасной: всё перед [style:] или MUSIC PROMPT или письмом, начиная с последнего вхождения Verse/Chorus/Куплет/Припев
   if (!lyrics) {
+    const coverIdx = text.search(/\n\s*СОПРОВОДИТЕЛЬНОЕ ПИСЬМО/i);
     const styleIdx = text.indexOf("[style:");
-    const endIdx = styleIdx >= 0 ? styleIdx : text.length;
+    const endIdx = [coverIdx, styleIdx].filter((i) => i >= 0).sort((a, b) => a - b)[0] ?? text.length;
     const beforeStyle = text.slice(0, endIdx);
     const markers = [
       /\[Verse\s*1\s*:?\]/i, /\[Verse\s*2\s*:?\]/i, /\[Chorus\s*:?\]/i, /\[Bridge\s*:?\]/i,
@@ -362,10 +366,11 @@ function parseResponse(text) {
       if (block.length > 200) lyrics = block;
     }
   }
-  // Ещё запасной: от последнего «название» до [style:] (лирика часто идёт сразу после названия)
+  // Ещё запасной: от последнего «название» до [style:] или письма
   if (!lyrics) {
-    const styleIdx = text.indexOf("[style:");
-    const end = styleIdx > 0 ? styleIdx : text.length;
+    const coverIdx2 = text.search(/\n\s*СОПРОВОДИТЕЛЬНОЕ ПИСЬМО/i);
+    const styleIdx2 = text.indexOf("[style:");
+    const end = [coverIdx2, styleIdx2].filter((i) => i > 0).sort((a, b) => a - b)[0] ?? text.length;
     const lastGuillemet = text.lastIndexOf("»");
     if (lastGuillemet >= 0 && end - lastGuillemet > 250) {
       const block = text.slice(lastGuillemet + 1, end).trim();
@@ -404,6 +409,17 @@ function parseResponse(text) {
     if (block.length > 300 && block.split(/\n/).filter((l) => l.trim()).length >= 5) lyrics = block;
   }
 
+  // Сопроводительное письмо — отдельный блок после лирики и MUSIC PROMPT
+  let cover_letter = "";
+  const coverLetterIdx = text.search(/СОПРОВОДИТЕЛЬНОЕ ПИСЬМО ДЛЯ\s/i);
+  if (coverLetterIdx >= 0) {
+    // Берём всё после заголовка «СОПРОВОДИТЕЛЬНОЕ ПИСЬМО ДЛЯ Имя:»
+    const afterHeader = text.slice(coverLetterIdx).replace(/^СОПРОВОДИТЕЛЬНОЕ ПИСЬМО ДЛЯ\s[^\n]*\n?/i, "").trim();
+    // Письмо заканчивается на «КЛЮЧЕВЫЕ ПРИНЦИПЫ» или конце текста
+    const endMark = afterHeader.search(/\n\s*КЛЮЧЕВЫЕ ПРИНЦИПЫ/i);
+    cover_letter = (endMark >= 0 ? afterHeader.slice(0, endMark) : afterHeader).trim();
+  }
+
   if (!title && lyrics) title = "Sound Key";
   if (!lyrics) return null;
 
@@ -412,6 +428,7 @@ function parseResponse(text) {
     title: title || "",
     lyrics: lyrics,
     style: styleFull,
+    cover_letter: cover_letter || null,
   };
 }
 
@@ -971,6 +988,32 @@ ${extBlock ? "\n" + extBlock : ""}
       await setStep('delivery_done', `Доставка с fallback: ${send.error}`);
     } else {
       console.log(`[Воркер] ✅ Заявка ${requestId} завершена для ${request.name}`);
+
+      // Сопроводительное письмо — отдельным сообщением сразу после аудио
+      const coverLetter = parsed.cover_letter;
+      if (coverLetter && coverLetter.length > 20) {
+        try {
+          const letterText = `✉️ *Сопроводительное письмо для ${request.name}*\n\n${coverLetter}`;
+          // Telegram ограничивает длину сообщения 4096 символами
+          const chunks = [];
+          for (let i = 0; i < letterText.length; i += 4000) chunks.push(letterText.slice(i, i + 4000));
+          for (const chunk of chunks) {
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ chat_id: request.telegram_user_id, text: chunk, parse_mode: "Markdown" })
+            });
+          }
+          await setStep('cover_letter_sent', `Письмо отправлено (${coverLetter.length} симв.)`);
+        } catch (e) {
+          console.warn("[Воркер] Не удалось отправить сопроводительное письмо:", e?.message);
+          await setStep('cover_letter_sent', `Ошибка отправки письма: ${e?.message}`);
+        }
+      } else {
+        console.warn(`[Воркер] Сопроводительное письмо не найдено или пустое — пропускаю`);
+        await setStep('cover_letter_sent', 'Письмо не найдено в ответе LLM');
+      }
+
       // Сообщение с опциональной поддержкой (реквизиты как на странице донатов)
       const donationText =
         `💫 Если песня коснулась твоей души — ты можешь поддержать создание таких ключей:\n\n` +
