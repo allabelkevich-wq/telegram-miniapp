@@ -1287,24 +1287,70 @@
         try {
           var wa = window.Telegram && window.Telegram.WebApp;
           current = (wa && wa.initData) ? String(wa.initData) : (tg && tg.initData) ? String(tg.initData) : '';
-        } catch (_) { current = ''; }
+          console.log('[initData] Telegram WebApp доступен:', !!(wa));
+          console.log('[initData] initData из WebApp:', current ? 'есть данные (' + current.length + ' символов)' : 'пустые данные');
+        } catch (e) { 
+          console.error('[initData] Ошибка получения initData:', e);
+          current = ''; 
+        }
         if (current) {
           try { localStorage.setItem(INIT_DATA_STORAGE_KEY, current); } catch (_) {}
+          console.log('[initData] Используем свежие данные из Telegram');
           return current;
         }
-        try { return localStorage.getItem(INIT_DATA_STORAGE_KEY) || ''; } catch (_) { return ''; }
+        try { 
+          var stored = localStorage.getItem(INIT_DATA_STORAGE_KEY) || '';
+          console.log('[initData] Используем сохраненные данные:', stored ? 'есть данные (' + stored.length + ' символов)' : 'нет данных');
+          if (!stored) {
+            console.warn('[initData] КРИТИЧНО: Нет initData! Приложение запущено не из Telegram или данные не сохранились');
+          }
+          return stored;
+        } catch (_) { 
+          console.error('[initData] Ошибка чтения из localStorage');
+          return ''; 
+        }
       }
       function initApp() {
         try {
-      if (window.Telegram && window.Telegram.WebApp) {
+          console.log('[App] Инициализация приложения');
+          console.log('[App] window.Telegram доступен:', !!(window.Telegram));
+          console.log('[App] window.Telegram.WebApp доступен:', !!(window.Telegram && window.Telegram.WebApp));
+          
+          if (window.Telegram && window.Telegram.WebApp) {
             tg = window.Telegram.WebApp;
-        tg.ready();
+            console.log('[Telegram] WebApp инициализирован');
+            console.log('[Telegram] Версия:', tg.version);
+            console.log('[Telegram] Платформа:', tg.platform);
+            console.log('[Telegram] initData длина:', tg.initData ? tg.initData.length : 0);
+            
+            tg.ready();
             tg.expand();
-            if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
+            console.log('[Telegram] ready() и expand() выполнены');
+            
+            if (tg.enableClosingConfirmation) {
+              tg.enableClosingConfirmation();
+              console.log('[Telegram] enableClosingConfirmation включен');
+            } else {
+              console.warn('[Telegram] enableClosingConfirmation не поддерживается в этой версии');
+            }
             getInitData();
             return true;
+          } else {
+            console.error('[Telegram] WebApp НЕ ДОСТУПЕН!');
+            console.error('[Telegram] Приложение запущено не из Telegram или в неподдерживаемом браузере');
+            // Показываем предупреждение пользователю
+            setTimeout(function() {
+              if (!tg) {
+                alert('⚠️ Приложение должно быть запущено из Telegram!\n\n' +
+                      '1. Откройте @YupSoul_bot в Telegram\n' +
+                      '2. Нажмите кнопку меню (☰) или "Открыть приложение"\n' +
+                      '3. Если не работает - обновите Telegram до последней версии');
+              }
+            }, 2000);
           }
-        } catch (e) { console.warn('Telegram init:', e); }
+        } catch (e) { 
+          console.error('[Telegram] Ошибка инициализации:', e); 
+        }
         return false;
       }
       if (!initApp()) {
@@ -2198,6 +2244,17 @@
           if (!hotResp.ok || !hotJson.success) {
             var errorMsg = hotJson.error || 'Не удалось создать оплату HOT';
             console.error('[HOT Pay] Ошибка создания платежа:', errorMsg);
+            console.error('[HOT Pay] Статус ответа:', hotResp.status, hotResp.statusText);
+            
+            if (hotResp.status === 401) {
+              errorMsg = 'Ошибка авторизации (401). Приложение должно быть запущено из Telegram бота!';
+              console.error('[HOT Pay] КРИТИЧНО: Проблема с initData - приложение запущено не из Telegram');
+            } else if (hotResp.status === 403) {
+              errorMsg = 'Доступ запрещен (403). Проверьте права доступа.';
+            } else if (hotResp.status >= 500) {
+              errorMsg = 'Ошибка сервера (' + hotResp.status + '). Попробуйте позже.';
+            }
+            
             throw new Error(errorMsg);
           }
           if (hotJson.free_applied) {
