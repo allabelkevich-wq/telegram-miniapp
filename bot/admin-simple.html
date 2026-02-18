@@ -99,6 +99,12 @@
     .unpaid-meta { font-size: 12px; color: #94a3b8; line-height: 1.6; }
     .unpaid-actions { display: flex; gap: 8px; flex-shrink: 0; flex-direction: column; }
     .btn-cancel { background: linear-gradient(135deg, #e74c3c, #c0392b); min-width: 120px; }
+    .btn-restore { background: linear-gradient(135deg, #059669, #10b981); min-width: 120px; }
+    .pay-filter-bar { background: #1a1a2e; padding: 10px 15px; border-radius: 10px; margin-bottom: 16px; display: flex; gap: 7px; flex-wrap: wrap; align-items: center; border: 1px solid rgba(212,175,55,0.15); }
+    .pay-filter-bar span { font-size: 12px; color: #d4af37; margin-right: 4px; font-weight: 600; }
+    .pay-filter-btn { padding: 5px 13px; background: #2d3748; border: 1px solid #4a5568; color: #cbd5e1; border-radius: 6px; cursor: pointer; font-size: 12px; font-family: inherit; transition: all 0.15s; }
+    .pay-filter-btn:hover { background: #4a5568; }
+    .pay-filter-btn.active { background: linear-gradient(135deg,#d4af37,#ec4899); border-color: #d4af37; color: #fff; font-weight: 700; }
     @keyframes spin { to { transform: rotate(360deg); } }
     @media (max-width: 768px) {
       .header h1 { font-size: 26px; }
@@ -177,6 +183,16 @@
       <button class="sort-btn" data-sort="name_asc" onclick="setSort(this)">👤 Имя А–Я</button>
       <button class="sort-btn" data-sort="status" onclick="setSort(this)">📊 По статусу</button>
       <button class="sort-btn" data-sort="payment" onclick="setSort(this)">💳 По оплате</button>
+    </div>
+    <div class="pay-filter-bar">
+      <span>💳 Оплата:</span>
+      <button class="pay-filter-btn active" data-pay="all" onclick="setPayFilter(this)">Все</button>
+      <button class="pay-filter-btn" data-pay="gift" onclick="setPayFilter(this)">🎁 Первый подарок</button>
+      <button class="pay-filter-btn" data-pay="promo" onclick="setPayFilter(this)">🏷 Промокод</button>
+      <button class="pay-filter-btn" data-pay="hot" onclick="setPayFilter(this)">💳 HOT Pay</button>
+      <button class="pay-filter-btn" data-pay="subscription" onclick="setPayFilter(this)">📋 Подписка</button>
+      <button class="pay-filter-btn" data-pay="awaiting" onclick="setPayFilter(this)">⏳ Ожидает оплаты</button>
+      <button class="pay-filter-btn" data-pay="admin" onclick="setPayFilter(this)">🔧 Ручная</button>
     </div>
     <div class="details-section" style="margin-bottom:20px;">
       <div class="section-title">⚙️ Настройки генерации</div>
@@ -357,6 +373,7 @@
     })();
     let currentFilter = 'all';
     let currentSort = 'date_desc';
+    let currentPayFilter = 'all';
 
     function filterByCard(card) {
       const filter = card.getAttribute('data-filter') || 'all';
@@ -401,30 +418,65 @@
       return sorted;
     }
 
+    // Определяем «тип оплаты» для фильтрации и сортировки
+    function getPayType(r) {
+      const provider = String(r.payment_provider || '').toLowerCase();
+      const status   = String(r.payment_status  || '').toLowerCase();
+      const promo    = r.promo_code ? String(r.promo_code).toUpperCase() : null;
+      const gs       = String(r.generation_status || '').toLowerCase();
+      if (gs === 'pending_payment' || status === 'requires_payment') return 'awaiting';
+      if (status === 'gift_used') return 'gift';
+      if (provider === 'subscription' || status === 'subscription_active') return 'subscription';
+      if (provider === 'promo' || (promo && provider !== 'hot')) return 'promo';
+      if (provider === 'hot') return 'hot';
+      if (provider === 'admin') return 'admin';
+      if (provider === 'gift') return 'gift';
+      return 'unknown';
+    }
+
     function paymentMethodBadge(r) {
       const provider = String(r.payment_provider || '').toLowerCase();
       const status   = String(r.payment_status  || '').toLowerCase();
       const promo    = r.promo_code ? String(r.promo_code) : null;
-      if (status === 'gift_used' && (!provider || provider === 'gift')) {
+      const gs       = String(r.generation_status || '').toLowerCase();
+      const payType  = getPayType(r);
+
+      if (gs === 'pending_payment' || status === 'requires_payment') {
+        const amt = r.payment_amount != null ? (' · ' + r.payment_amount + ' ' + (r.payment_currency || 'USDT')) : '';
+        return '<span class="pay-badge" style="background:rgba(139,92,246,.25);color:#c4b5fd;">⏳ Ожидает оплаты' + escapeHtml(amt) + '</span>';
+      }
+      if (payType === 'gift') {
         return '<span class="pay-badge pay-badge-free">🎁 Первый подарок</span>';
       }
-      if (provider === 'promo' || promo) {
+      if (payType === 'promo') {
         const label = promo ? ('🏷 ' + escapeHtml(promo)) : '🏷 Промокод';
-        return '<span class="pay-badge pay-badge-promo">' + label + '</span>';
+        const disc = r.promo_discount_amount ? (' −' + r.promo_discount_amount) : '';
+        return '<span class="pay-badge pay-badge-promo">' + label + escapeHtml(disc) + '</span>';
       }
-      if (provider === 'hot') {
+      if (payType === 'hot') {
         if (status === 'paid') return '<span class="pay-badge pay-badge-hot">💳 HOT Pay ✓</span>';
-        if (status === 'pending') return '<span class="pay-badge pay-badge-hot" style="opacity:.65;">💳 HOT (ожидает)</span>';
-        return '<span class="pay-badge pay-badge-hot">💳 HOT Pay</span>';
+        return '<span class="pay-badge pay-badge-hot" style="opacity:.75;">💳 HOT Pay…</span>';
       }
-      if (provider === 'subscription' || status === 'subscription_active') {
+      if (payType === 'subscription') {
         return '<span class="pay-badge pay-badge-sub">📋 Подписка</span>';
       }
-      if (provider === 'admin') {
+      if (payType === 'admin') {
         return '<span class="pay-badge pay-badge-free">🔧 Ручная</span>';
       }
       if (!provider && !status) return '';
       return '<span class="pay-badge" style="background:rgba(100,116,139,.2);color:#94a3b8;">' + escapeHtml(provider || status) + '</span>';
+    }
+
+    function setPayFilter(btn) {
+      currentPayFilter = btn.getAttribute('data-pay') || 'all';
+      document.querySelectorAll('.pay-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (window._lastRequestsData) renderRequests(window._lastRequestsData);
+    }
+
+    function filterByPayment(data) {
+      if (!currentPayFilter || currentPayFilter === 'all') return data;
+      return data.filter(r => getPayType(r) === currentPayFilter);
     }
 
     function getToken() {
@@ -574,9 +626,11 @@
     }
     function renderRequests(data) {
       window._lastRequestsData = data; // кэш для пересортировки без запроса
+      data = filterByPayment(data);
       data = sortRequests(data);
+      const payLabel = currentPayFilter !== 'all' ? (' · Оплата: ' + currentPayFilter) : '';
       if (!data.length) {
-        document.getElementById('requests').innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8">📭 Нет заявок / No requests</div>';
+        document.getElementById('requests').innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8">📭 Нет заявок' + escapeHtml(payLabel) + '</div>';
         return;
       }
       function stepMsg(steps, key) {
@@ -705,6 +759,7 @@
               '</div>' +
             '</div>' +
             '<div class="unpaid-actions">' +
+              '<button class="btn btn-restore" style="min-width:120px;padding:8px 12px;font-size:13px;" onclick="restoreRequest(\'' + safeId + '\', this)" title="Засчитать как подарочный и перезапустить генерацию">🔄 Восстановить</button>' +
               '<button class="btn btn-success" style="min-width:110px;padding:8px 12px;font-size:13px;" onclick="markPaid(\'' + safeId + '\')">✅ Оплачено</button>' +
               '<button class="btn btn-cancel" style="min-width:110px;padding:8px 12px;font-size:13px;" onclick="cancelRequest(\'' + safeId + '\', this)">❌ Отменить</button>' +
             '</div>' +
@@ -1021,6 +1076,37 @@
       }
     }
 
+    // Восстановить застрявшую заявку: засчитать как оплаченную и перезапустить генерацию
+    window.restoreRequest = async function restoreRequest(id, btn) {
+      if (!confirm('Восстановить заявку ' + id.substring(0, 8) + '?\n\nДействие: отметить как оплаченную (провайдер: admin) и немедленно перезапустить генерацию.')) return;
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Восстановление…'; }
+      try {
+        // 1. markPaid
+        const paid = await fetchJson(API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + '/mark-paid' + authQueryFromPath(), {
+          method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify({ provider: 'admin' })
+        });
+        if (!paid.json || !paid.json.success) {
+          alert('Ошибка при отметке оплаты: ' + ((paid.json && paid.json.error) || 'unknown'));
+          if (btn) { btn.disabled = false; btn.textContent = '🔄 Восстановить'; }
+          return;
+        }
+        // 2. restart
+        const restarted = await fetchJson(API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + '/restart' + authQueryFromPath(), {
+          method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }
+        });
+        if (restarted.json && restarted.json.success) {
+          alert('✅ Заявка восстановлена и генерация запущена!');
+          await loadAdminData();
+        } else {
+          alert('Оплата засчитана, но перезапуск не удался: ' + ((restarted.json && restarted.json.error) || 'unknown'));
+          await loadAdminData();
+        }
+      } catch (e) {
+        alert('Ошибка восстановления: ' + ((e && e.message) || String(e)));
+        if (btn) { btn.disabled = false; btn.textContent = '🔄 Восстановить'; }
+      }
+    };
+
     window.savePricingRow = savePricingRow;
     window.savePromoRow = savePromoRow;
     window.createPromoCode = createPromoCode;
@@ -1028,6 +1114,7 @@
     window.deletePromo = deletePromo;
     window.filterByCard = filterByCard;
     window.setSort = setSort;
+    window.setPayFilter = setPayFilter;
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', function() {
