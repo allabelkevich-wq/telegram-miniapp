@@ -58,6 +58,16 @@ if (!BOT_TOKEN) {
 
 const bot = new Bot(BOT_TOKEN);
 
+// Обработчик ошибок бота
+bot.catch((err) => {
+  console.error("[Bot] Ошибка обработки сообщения:", err);
+  console.error("[Bot] Контекст:", err.ctx ? {
+    message: err.ctx.message?.text,
+    from: err.ctx.from?.username,
+    chat: err.ctx.chat?.id
+  } : 'нет контекста');
+});
+
 // Лог входящих апдейтов и сразу «печатает…» — чтобы сообщение не казалось «не отправленным»
 bot.use(async (ctx, next) => {
   const msg = ctx.message;
@@ -546,7 +556,11 @@ async function getRequestsForAdmin(limit = 30) {
 // Поэтому авто-фиксируем обе кнопки на MINI_APP_URL при старте бота и в команде /fixurl.
 
 bot.command("ping", async (ctx) => {
-  await ctx.reply("Бот на связи. Команды работают.");
+  console.log("[Bot] Команда /ping от пользователя:", ctx.from?.username, ctx.from?.id);
+  await ctx.reply("🟢 Бот на связи. Команды работают.\n\n" +
+                  "📊 Статус:\n" +
+                  "• Webhook: " + (WEBHOOK_URL ? "активен" : "отключен") + "\n" +
+                  "• Время: " + new Date().toISOString());
 });
 
 bot.command("fixurl", async (ctx) => {
@@ -1264,6 +1278,23 @@ const app = express();
 const WEBHOOK_URL = (process.env.WEBHOOK_URL || "").replace(/\/$/, "");
 // Базовый URL для ссылки на админку. Одинаковое значение с WEBHOOK_URL — нормально (один сервис = один URL).
 const BOT_PUBLIC_URL = (process.env.BOT_PUBLIC_URL || process.env.WEBHOOK_URL || process.env.HEROES_API_BASE || "").replace(/\/webhook\/?$/i, "").replace(/\/$/, "");
+
+// КРИТИЧНО: Обработчик webhook для Telegram бота
+if (WEBHOOK_URL) {
+  console.log("[Bot] Настройка webhook обработчика для пути /webhook");
+  
+  // Добавляем middleware для логирования webhook запросов
+  app.post("/webhook", (req, res, next) => {
+    console.log("[Webhook] Получен запрос от Telegram");
+    console.log("[Webhook] Headers:", JSON.stringify(req.headers, null, 2));
+    console.log("[Webhook] Body length:", req.body ? req.body.length : 0);
+    next();
+  }, webhookCallback(bot, "express"));
+  
+  console.log("[Bot] Webhook обработчик установлен для /webhook");
+} else {
+  console.log("[Bot] WEBHOOK_URL не задан, webhook обработчик не установлен");
+}
 // HOT webhook: верификация подписи (X-HOT-Signature), идемпотентность по payment_order_id и payment_tx_id
 app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, res) => {
   try {
