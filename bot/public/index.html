@@ -661,9 +661,60 @@
           Открой бота <a href="https://t.me/Yup_Soul_bot" style="color:#a78bfa;text-decoration:underline">@Yup_Soul_bot</a> в Telegram — там тебя ждёт твой звуковой ключ.
         </div>
         
-        <div id="soulChatHint" class="soul-chat-hint" style="background:rgba(167,139,250,.06);border-radius:12px;padding:12px 14px;margin:12px 0 0 0;font-size:.95rem;line-height:1.5;color:var(--tg-theme-hint-color,#6b7280);display:none"></div>
-        <button class="secondary" id="soulChatBtn" type="button" style="margin-top:15px">Поговорить с душой</button>
-        <button class="secondary" id="soulChatPayBtn" type="button" style="margin-top:8px;display:none;font-size:.9rem">К оплате — Soul Basic / Soul Plus</button>
+        <!-- ════════════════ SOUL CHAT БЛОК ════════════════ -->
+        <div id="soulChatBlock" style="margin-top:20px;">
+
+          <!-- Состояние: загрузка -->
+          <div id="scLoading" style="text-align:center;color:rgba(255,255,255,0.5);font-size:0.9rem;padding:12px 0;">
+            ✨ Загружаю Soul Chat...
+          </div>
+
+          <!-- Состояние: подарок доступен -->
+          <div id="scGiftState" style="display:none;background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(236,72,153,0.1));border:1px solid rgba(139,92,246,0.4);border-radius:16px;padding:20px;text-align:center;">
+            <div style="font-size:2rem;margin-bottom:8px;">🎁</div>
+            <div style="font-weight:700;font-size:1.05rem;color:#a78bfa;margin-bottom:6px;">Подарок для тебя</div>
+            <div style="color:rgba(255,255,255,0.75);font-size:0.9rem;line-height:1.6;margin-bottom:16px;">
+              Сутки общения с душой — бесплатно.<br>Задавай любые вопросы 24 часа.
+            </div>
+            <button id="scActivateGiftBtn" type="button" style="padding:14px 28px;border-radius:13px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">
+              🎁 Получить бесплатные сутки
+            </button>
+          </div>
+
+          <!-- Состояние: активен (чат) -->
+          <div id="scActiveState" style="display:none;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div style="font-weight:700;color:#a78bfa;font-size:1rem;">💬 Soul Chat</div>
+              <div id="scTimer" style="font-size:0.8rem;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.07);padding:4px 10px;border-radius:20px;"></div>
+            </div>
+            <!-- История сообщений -->
+            <div id="scHistory" style="max-height:260px;overflow-y:auto;margin-bottom:12px;display:flex;flex-direction:column;gap:10px;"></div>
+            <!-- Поле ввода -->
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <textarea id="scQuestion" rows="2" placeholder="Задай вопрос своей душе..."
+                style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1.5px solid rgba(139,92,246,0.45);background:rgba(255,255,255,0.08);color:#fff;font-size:0.95rem;font-family:inherit;resize:none;outline:none;line-height:1.5;"></textarea>
+              <button id="scSendBtn" type="button" style="padding:13px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;">
+                Спросить душу ✨
+              </button>
+            </div>
+          </div>
+
+          <!-- Состояние: нужна оплата -->
+          <div id="scPayState" style="display:none;background:rgba(15,12,40,0.7);border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:20px;text-align:center;">
+            <div style="font-size:1.8rem;margin-bottom:8px;">🔒</div>
+            <div style="font-weight:700;color:#d4af37;margin-bottom:6px;">Soul Chat</div>
+            <div style="color:rgba(255,255,255,0.7);font-size:0.9rem;line-height:1.6;margin-bottom:16px;">
+              Подарочные сутки использованы.<br>Продолжи общение с душой.
+            </div>
+            <div style="font-size:1.4rem;font-weight:800;color:#a78bfa;margin-bottom:16px;">2.99 USDT / сутки</div>
+            <button id="scBuyBtn" type="button" style="padding:14px 28px;border-radius:13px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:8px;">
+              💳 Купить доступ на сутки
+            </button>
+          </div>
+
+        </div>
+        <!-- ════════════════════════════════════════════════ -->
+
         <button class="secondary" id="newKeyBtn" style="margin-top:15px">Создать ещё один ключ</button>
       </div>
       
@@ -1483,6 +1534,9 @@
         var pi = document.getElementById('payOvPromoInput');
         if (pi) pi.value = '';
         ov.scrollTop = 0;
+        // Показываем подсказку для новичков если free trial был доступен
+        var hint = document.getElementById('payOvTrialHint');
+        if (hint) hint.style.display = (typeof freeTrialAvailable !== 'undefined' && freeTrialAvailable) ? '' : 'none';
       }
       function hidePaymentOverlay() {
         var ov = document.getElementById('paymentOverlay');
@@ -1855,32 +1909,188 @@
         if (formPage && userTariff === 'master') loadForWhoSelect();
       
       // Подсказка Soul Chat: есть ли доступ и как оплатить
-      function updateSoulChatHint() {
-        var hintEl = document.getElementById('soulChatHint');
-        if (!hintEl) return;
-        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
-        if (!apiBase) { hintEl.style.display = 'block'; hintEl.textContent = t('soulChatNoApi'); return; }
-        var initData = typeof getInitData === 'function' ? getInitData() : '';
-        hintEl.textContent = t('soulChatLoad');
-        hintEl.style.display = 'block';
-        fetch(apiBase + '/api/soul-chat/access', { headers: { 'X-Telegram-Init': initData } })
-          .then(function(r) { return r.json(); })
-          .then(function(d) {
-            var payBtn = document.getElementById('soulChatPayBtn');
-            if (d && d.allowed) {
-              hintEl.textContent = t('soulChatHasAccess');
-              if (payBtn) payBtn.style.display = 'none';
-            } else {
-              hintEl.textContent = (d && d.reason) ? d.reason : t('soulChatNoAccess');
-              if (payBtn) payBtn.style.display = 'block';
-            }
-          })
-          .catch(function() {
-            hintEl.textContent = t('soulChatDefault');
-            var payBtn = document.getElementById('soulChatPayBtn');
-            if (payBtn) payBtn.style.display = 'block';
-          });
+      // ── Soul Chat ──────────────────────────────────────────────────────────
+      var scCurrentRequestId = null;
+      var scTimerInterval = null;
+
+      function scShow(state) {
+        ['scLoading','scGiftState','scActiveState','scPayState'].forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el) el.style.display = (id === state) ? '' : 'none';
+        });
       }
+
+      function scStartTimer(expiresAt) {
+        if (scTimerInterval) clearInterval(scTimerInterval);
+        function tick() {
+          var el = document.getElementById('scTimer');
+          if (!el) return;
+          var ms = new Date(expiresAt).getTime() - Date.now();
+          if (ms <= 0) { el.textContent = 'Время вышло'; clearInterval(scTimerInterval); initSoulChat(); return; }
+          var h = Math.floor(ms / 3600000);
+          var m = Math.floor((ms % 3600000) / 60000);
+          var s = Math.floor((ms % 60000) / 1000);
+          el.textContent = (h > 0 ? h + 'ч ' : '') + m + 'м ' + s + 'с осталось';
+        }
+        tick();
+        scTimerInterval = setInterval(tick, 1000);
+      }
+
+      function scAddMessage(role, text) {
+        var hist = document.getElementById('scHistory');
+        if (!hist) return;
+        var isUser = (role === 'user');
+        var div = document.createElement('div');
+        div.style.cssText = 'padding:10px 14px;border-radius:12px;font-size:0.9rem;line-height:1.6;max-width:90%;' +
+          (isUser
+            ? 'align-self:flex-end;background:rgba(139,92,246,0.25);border:1px solid rgba(139,92,246,0.3);color:#e9d5ff;'
+            : 'align-self:flex-start;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);');
+        div.textContent = text;
+        hist.appendChild(div);
+        hist.scrollTop = hist.scrollHeight;
+      }
+
+      async function initSoulChat() {
+        scShow('scLoading');
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        var initData = typeof getInitData === 'function' ? getInitData() : '';
+        if (!apiBase || !initData) { scShow('scPayState'); return; }
+        try {
+          var r = await fetch(apiBase + '/api/soul-chat/access', { headers: { 'X-Telegram-Init': initData } });
+          var d = await r.json().catch(function() { return {}; });
+          if (d.allowed) {
+            scShow('scActiveState');
+            if (d.expires_at) scStartTimer(d.expires_at);
+          } else if (d.trial_available) {
+            scShow('scGiftState');
+          } else {
+            scShow('scPayState');
+          }
+        } catch(e) {
+          scShow('scPayState');
+        }
+      }
+
+      function updateSoulChatHint() { initSoulChat(); }
+
+      // Активировать подарочные сутки
+      var scActivateGiftBtn = document.getElementById('scActivateGiftBtn');
+      if (scActivateGiftBtn) scActivateGiftBtn.addEventListener('click', async function() {
+        scActivateGiftBtn.disabled = true;
+        scActivateGiftBtn.textContent = '⏳ Активирую...';
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        var initData = typeof getInitData === 'function' ? getInitData() : '';
+        try {
+          var r = await fetch(apiBase + '/api/soul-chat/activate-gift', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+            body: JSON.stringify({ initData: initData })
+          });
+          var d = await r.json().catch(function() { return {}; });
+          if (d.success) {
+            scShow('scActiveState');
+            if (d.expires_at) scStartTimer(d.expires_at);
+            scAddMessage('soul', '🎁 Привет! Твои бесплатные сутки активированы. Я здесь — задавай любые вопросы ✨');
+          } else {
+            scActivateGiftBtn.disabled = false;
+            scActivateGiftBtn.textContent = '🎁 Получить бесплатные сутки';
+            alert(d.error || 'Ошибка активации');
+          }
+        } catch(e) {
+          scActivateGiftBtn.disabled = false;
+          scActivateGiftBtn.textContent = '🎁 Получить бесплатные сутки';
+        }
+      });
+
+      // Отправить вопрос
+      var scSendBtn = document.getElementById('scSendBtn');
+      if (scSendBtn) scSendBtn.addEventListener('click', async function() {
+        var qa = document.getElementById('scQuestion');
+        var question = qa ? qa.value.trim() : '';
+        if (!question) return;
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        var initData = typeof getInitData === 'function' ? getInitData() : '';
+        scAddMessage('user', question);
+        if (qa) qa.value = '';
+        scSendBtn.disabled = true;
+        scSendBtn.textContent = '✨ Слушаю...';
+        var thinkingDiv = document.createElement('div');
+        thinkingDiv.id = 'scThinking';
+        thinkingDiv.style.cssText = 'align-self:flex-start;color:rgba(167,139,250,0.7);font-size:0.85rem;padding:6px 0;';
+        thinkingDiv.textContent = '💭 Душа думает...';
+        var hist = document.getElementById('scHistory');
+        if (hist) hist.appendChild(thinkingDiv);
+        try {
+          var requestId = scCurrentRequestId || (typeof pendingPaymentRequestId !== 'undefined' ? pendingPaymentRequestId : null) || '';
+          var r = await fetch(apiBase + '/api/soul-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+            body: JSON.stringify({ request_id: requestId, question: question, initData: initData })
+          });
+          var d = await r.json().catch(function() { return {}; });
+          if (thinkingDiv.parentNode) thinkingDiv.parentNode.removeChild(thinkingDiv);
+          if (d.success && d.data && d.data.answer) {
+            scAddMessage('soul', d.data.answer);
+          } else if (d.need_payment) {
+            scShow('scPayState');
+          } else {
+            scAddMessage('soul', '❗ ' + (d.error || 'Что-то пошло не так, попробуй снова'));
+          }
+        } catch(e) {
+          if (thinkingDiv.parentNode) thinkingDiv.parentNode.removeChild(thinkingDiv);
+          scAddMessage('soul', '❗ Нет связи с сервером');
+        } finally {
+          scSendBtn.disabled = false;
+          scSendBtn.textContent = 'Спросить душу ✨';
+        }
+      });
+
+      // Ctrl+Enter или Enter для отправки
+      var scQa = document.getElementById('scQuestion');
+      if (scQa) scQa.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (scSendBtn) scSendBtn.click(); }
+      });
+
+      // Купить сутки
+      var scBuyBtn = document.getElementById('scBuyBtn');
+      if (scBuyBtn) scBuyBtn.addEventListener('click', async function() {
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        var initData = typeof getInitData === 'function' ? getInitData() : '';
+        scBuyBtn.disabled = true;
+        scBuyBtn.textContent = '⏳ Создаю ссылку оплаты...';
+        try {
+          var r = await fetch(apiBase + '/api/soul-chat/buy-day', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+            body: JSON.stringify({ initData: initData })
+          });
+          var d = await r.json().catch(function() { return {}; });
+          if (d.success && d.checkout_url) {
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) {
+              window.Telegram.WebApp.openLink(d.checkout_url, { try_instant_view: false });
+            } else {
+              window.open(d.checkout_url, '_blank');
+            }
+            scBuyBtn.textContent = '✅ Проверить оплату';
+            scBuyBtn.onclick = async function() {
+              scBuyBtn.disabled = true;
+              scBuyBtn.textContent = '⏳ Проверяю...';
+              await initSoulChat();
+              scBuyBtn.disabled = false;
+              scBuyBtn.textContent = '💳 Купить доступ на сутки';
+            };
+          } else {
+            alert(d.error || 'Не удалось создать ссылку оплаты');
+          }
+        } catch(e) {
+          alert('Ошибка подключения к серверу');
+        } finally {
+          if (scBuyBtn.textContent === '⏳ Создаю ссылку оплаты...') {
+            scBuyBtn.disabled = false;
+            scBuyBtn.textContent = '💳 Купить доступ на сутки';
+          }
+        }
+      });
       // Навигация по страницам
       function goToPage(pageId) {
         var currentPage = document.querySelector('.page.active');
@@ -2204,6 +2414,8 @@
 
           if (response.ok && result.ok && result.requestId && !result.payment_required) {
             goToPage('loadingPage');
+            // Сохраняем ID заявки для Soul Chat
+            if (typeof scCurrentRequestId !== 'undefined') scCurrentRequestId = result.requestId;
             var sp = document.getElementById('songPreviewText');
             if (sp) {
               if (mode === 'single') sp.textContent = t('universeHeard', { name: name1 });
@@ -2868,6 +3080,13 @@
       <!-- Карточка оплаты -->
       <div style="background:rgba(15,12,40,0.96);border:1px solid rgba(212,175,55,0.3);border-radius:18px;padding:24px 20px;">
         <div style="color:#d4af37;font-weight:700;font-size:1.05rem;margin-bottom:10px;">💳 Оплата заявки</div>
+
+        <!-- Подсказка для новичков (показывается только если free_trial доступен) -->
+        <div id="payOvTrialHint" style="display:none;background:rgba(139,92,246,0.18);border:1px solid rgba(139,92,246,0.45);border-radius:12px;padding:14px;margin-bottom:16px;font-size:0.9rem;color:#e9d5ff;line-height:1.55;">
+          🎁 <strong>Первый звуковой ключ — бесплатно!</strong><br>
+          Кажется, что-то пошло не так при активации подарка. Нажми <strong>«Назад»</strong> и попробуй отправить заявку снова.
+        </div>
+
         <p id="payOvIntro" style="color:rgba(255,255,255,0.8);font-size:0.92rem;line-height:1.65;margin-bottom:20px;">
           Заявка отправлена. Введи промокод или нажми кнопку ниже для оплаты через HOT Pay.
         </p>

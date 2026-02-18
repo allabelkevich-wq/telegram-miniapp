@@ -255,7 +255,42 @@ values
 on conflict (code) do update set active=excluded.active, updated_at=now();
 
 -- =============================================================================
--- 9. Профили пользователей (app_users) — нужна для /api/me (без неё 500 ошибка)
+-- 9. Soul Chat: доступ по времени + история сессий
+-- =============================================================================
+
+-- soul_chat_access: активный суточный доступ (триал или купленный)
+create table if not exists soul_chat_access (
+  id uuid primary key default gen_random_uuid(),
+  telegram_user_id bigint not null,
+  expires_at timestamptz not null,
+  source text not null default 'purchase',  -- 'gift_1day' | 'purchase_1day' | 'subscription'
+  order_id text,
+  created_at timestamptz not null default now()
+);
+alter table if exists soul_chat_access disable row level security;
+create index if not exists idx_soul_chat_access_user on soul_chat_access(telegram_user_id);
+create index if not exists idx_soul_chat_access_expires on soul_chat_access(expires_at);
+
+-- soul_chat_sessions: история вопросов и ответов
+create table if not exists soul_chat_sessions (
+  id uuid primary key default gen_random_uuid(),
+  telegram_user_id bigint not null,
+  track_request_id uuid,
+  question text not null,
+  answer text,
+  source text default 'gift_1day',  -- какой тип доступа использован
+  created_at timestamptz not null default now()
+);
+alter table if exists soul_chat_sessions disable row level security;
+create index if not exists idx_soul_chat_sessions_user on soul_chat_sessions(telegram_user_id);
+
+-- SKU для покупки суточного доступа
+insert into pricing_catalog (sku, title, description, price, currency, active, limits_json)
+values ('soul_chat_1day', 'Soul Chat — 1 сутки', 'Безлимитный чат с душой на 24 часа', 2.99, 'USDT', true, '{"hours":24,"kind":"soul_chat_day"}'::jsonb)
+on conflict (sku) do update set price=excluded.price, active=excluded.active, updated_at=now();
+
+-- =============================================================================
+-- 10. Профили пользователей (app_users) — нужна для /api/me (без неё 500 ошибка)
 -- =============================================================================
 create table if not exists app_users (
   id uuid primary key default gen_random_uuid(),
@@ -266,4 +301,33 @@ create table if not exists app_users (
 );
 alter table if exists app_users disable row level security;
 create index if not exists idx_app_users_telegram_user_id on app_users(telegram_user_id);
+
+-- =============================================================================
+-- 10. Soul Chat: суточный доступ и история диалогов
+-- =============================================================================
+create table if not exists soul_chat_access (
+  id uuid primary key default gen_random_uuid(),
+  telegram_user_id bigint not null,
+  source text not null default 'purchase', -- 'gift' | 'purchase' | 'subscription'
+  expires_at timestamptz not null,
+  created_at timestamptz not null default now()
+);
+alter table if exists soul_chat_access disable row level security;
+create index if not exists idx_soul_chat_access_user_exp on soul_chat_access(telegram_user_id, expires_at);
+
+create table if not exists soul_chat_sessions (
+  id uuid primary key default gen_random_uuid(),
+  telegram_user_id bigint not null,
+  track_request_id uuid,
+  question text not null,
+  answer text not null,
+  created_at timestamptz not null default now()
+);
+alter table if exists soul_chat_sessions disable row level security;
+create index if not exists idx_soul_chat_sessions_user on soul_chat_sessions(telegram_user_id);
+
+-- SKU: суточный доступ к Soul Chat (2.99 USDT)
+insert into pricing_catalog (sku, title, description, price, currency, active, limits_json)
+values ('soul_chat_1day', 'Soul Chat 24ч', 'Неограниченное общение с душой 24 часа', 2.99, 'USDT', true, '{"kind":"soul_chat_day"}')
+on conflict (sku) do update set price=excluded.price, title=excluded.title, active=excluded.active, updated_at=now();
 -- =============================================================================

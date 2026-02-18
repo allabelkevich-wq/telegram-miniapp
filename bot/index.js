@@ -395,11 +395,14 @@ async function createOrRefreshSubscription({ telegramUserId, planSku, source = "
   return { ok: true, renew_at: renewAt };
 }
 
-async function grantPurchaseBySku({ telegramUserId, sku, source = "hot_payment" }) {
+async function grantPurchaseBySku({ telegramUserId, sku, source = "hot_payment", orderId = null }) {
   const normalizedSku = String(sku || "").trim();
   if (!normalizedSku) return { ok: false, error: "sku_required" };
   if (normalizedSku === "soul_basic_sub" || normalizedSku === "soul_plus_sub") {
     return createOrRefreshSubscription({ telegramUserId, planSku: normalizedSku, source });
+  }
+  if (normalizedSku === "soul_chat_1day") {
+    return activateSoulChatDay(telegramUserId, orderId);
   }
   return grantEntitlement({ telegramUserId, sku: normalizedSku, uses: 1, source });
 }
@@ -424,12 +427,80 @@ async function getLastCompletedRequestForUser(telegramUserId) {
 /** Доступ к Soul Chat: по подписке Soul Basic / Soul Plus (включают N диалогов в месяц). */
 async function getSoulChatAccess(telegramUserId) {
   if (!telegramUserId) return { allowed: false, reason: "Нужна авторизация Telegram." };
+
+  // 1. Активная подписка Soul Basic / Soul Plus
   const hasSub = await hasActiveSubscription(telegramUserId);
-  if (hasSub) return { allowed: true, source: "subscription" };
+  if (hasSub) return { allowed: true, source: "subscription", expires_at: null };
+
+  // 2. Активный суточный доступ (подарочный или купленный)
+  if (supabase) {
+    const nowIso = new Date().toISOString();
+    const { data: dayAccess } = await supabase
+      .from("soul_chat_access")
+      .select("id,expires_at,source")
+      .eq("telegram_user_id", Number(telegramUserId))
+      .gte("expires_at", nowIso)
+      .order("expires_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (dayAccess) {
+      return { allowed: true, source: dayAccess.source, expires_at: dayAccess.expires_at };
+    }
+
+    // 3. Подарочные сутки — первый раз бесплатно (через user_trials)
+    const trialKey = "soul_chat_1day_gift";
+    const { data: trialRow } = await supabase
+      .from("user_trials")
+      .select("id")
+      .eq("telegram_user_id", Number(telegramUserId))
+      .eq("trial_key", trialKey)
+      .maybeSingle();
+    if (!trialRow) {
+      // Триал ещё не использован — предлагаем подарок
+      return { allowed: false, trial_available: true, source: "gift_available",
+        reason: "Тебя ждёт подарок — бесплатные сутки Soul Chat 🎁" };
+    }
+  }
+
   return {
     allowed: false,
-    reason: "Soul Chat доступен по подписке Soul Basic или Soul Plus. Открой приложение → «К оплате» и выбери тариф с диалогами с душой.",
+    trial_available: false,
+    reason: "Доступ к Soul Chat на 24 часа — 2.99 USDT.",
   };
+}
+
+async function activateSoulChatGift(telegramUserId) {
+  if (!supabase) return { ok: false, error: "Supabase недоступен" };
+  const trialKey = "soul_chat_1day_gift";
+  // Записываем использование триала
+  const { error: trialErr } = await supabase.from("user_trials").insert({
+    telegram_user_id: Number(telegramUserId),
+    trial_key: trialKey,
+    consumed_at: new Date().toISOString(),
+  });
+  if (trialErr && /duplicate key/i.test(trialErr.message)) {
+    return { ok: false, error: "Подарок уже был активирован" };
+  }
+  // Создаём суточный доступ
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  await supabase.from("soul_chat_access").insert({
+    telegram_user_id: Number(telegramUserId),
+    expires_at: expiresAt,
+    source: "gift_1day",
+  });
+  return { ok: true, expires_at: expiresAt, source: "gift_1day" };
+}
+
+async function activateSoulChatDay(telegramUserId, orderId) {
+  if (!supabase) return { ok: false, error: "Supabase недоступен" };
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  await supabase.from("soul_chat_access").insert({
+    telegram_user_id: Number(telegramUserId),
+    expires_at: expiresAt,
+    source: "purchase_1day",
+    order_id: orderId || null,
+  });
+  return { ok: true, expires_at: expiresAt, source: "purchase_1day" };
 }
 
 async function getRequestForSoulChat(requestId) {
@@ -495,7 +566,21 @@ async function runSoulChat({ requestId, question, telegramUserId, isAdminCaller 
     { model: process.env.DEEPSEEK_MODEL || "deepseek-reasoner", max_tokens: 1200, temperature: 1.1 }
   );
   if (!llm.ok) return { ok: false, error: llm.error || "Ошибка генерации soul-chat" };
-  return { ok: true, answer: String(llm.text || "").trim(), request: row };
+  const answer = String(llm.text || "").trim();
+
+  // Сохраняем в историю soul_chat_sessions
+  if (supabase) {
+    const access = isAdminCaller ? null : await getSoulChatAccess(telegramUserId);
+    supabase.from("soul_chat_sessions").insert({
+      telegram_user_id: Number(telegramUserId),
+      track_request_id: rid,
+      question: q,
+      answer,
+      source: access?.source || "admin",
+    }).then(() => {}).catch(() => {});
+  }
+
+  return { ok: true, answer, request: row };
 }
 
 // Сохранение заявки: в Supabase и/или в память (для админки). Поддержка client_id (тариф Мастер).
@@ -1484,28 +1569,50 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
           });
         }
       }
-      await grantPurchaseBySku({ telegramUserId: row.telegram_user_id, sku: purchasedSku, source: "hot_payment" });
-      const gs = String(row.generation_status || row.status || "pending");
-      if (["pending_payment", "pending", "processing"].includes(gs)) {
-        import("./workerSoundKey.js").then(({ generateSoundKey }) => {
-          generateSoundKey(row.id).catch((err) => console.error("[payments/hot/webhook] generate:", err?.message || err));
-        }).catch((err) => console.error("[payments/hot/webhook] import worker:", err?.message || err));
-      }
+      await grantPurchaseBySku({ telegramUserId: row.telegram_user_id, sku: purchasedSku, source: "hot_payment", orderId: orderId || null });
 
-      // Уведомляем пользователя в Telegram что оплата принята и заявка в работе
-      const shortId = String(row.id || "").slice(0, 8);
-      bot.api.sendMessage(
-        row.telegram_user_id,
-        `✅ *Оплата подтверждена!*\n\nЗаявка ID: \`${shortId}\` принята в работу.\n🎵 Твой звуковой ключ создаётся — отправлю, как только будет готово!`,
-        { parse_mode: "Markdown" }
-      ).catch((e) => console.warn("[webhook] notify user paid:", e?.message));
-
-      // Уведомляем администраторов
-      for (const adminId of ADMIN_IDS) {
+      // Специальная обработка для Soul Chat 1day
+      if (purchasedSku === "soul_chat_1day") {
+        const dayGrant = await activateSoulChatDay(row.telegram_user_id, orderId);
+        const expiresStr = dayGrant.ok && dayGrant.expires_at
+          ? ` Доступ действует до: ${new Date(dayGrant.expires_at).toLocaleString("ru-RU", { timeZone: "Europe/Moscow" })} (МСК)`
+          : "";
+        const shortId = String(row.id || "").slice(0, 8);
         bot.api.sendMessage(
-          adminId,
-          `💰 *Оплата получена*\nЗаявка: \`${shortId}\`\nСумма: ${body.amount || "?"} ${body.currency || "USDT"}\nSKU: ${purchasedSku}`
-        , { parse_mode: "Markdown" }).catch(() => {});
+          row.telegram_user_id,
+          `✅ *Soul Chat активирован!*\n\n💬 24 часа общения с душой открыты.${expiresStr}\n\nОткрой YupSoul и задавай вопросы — я здесь ✨`,
+          { parse_mode: "Markdown" }
+        ).catch((e) => console.warn("[webhook] notify soul chat user:", e?.message));
+        for (const adminId of ADMIN_IDS) {
+          bot.api.sendMessage(
+            adminId,
+            `💰 *Soul Chat куплен*\nЗаявка: \`${shortId}\`\nСумма: ${body.amount || "?"} ${body.currency || "USDT"}`
+          , { parse_mode: "Markdown" }).catch(() => {});
+        }
+      } else {
+        // Обычный звуковой ключ
+        const gs = String(row.generation_status || row.status || "pending");
+        if (["pending_payment", "pending", "processing"].includes(gs)) {
+          import("./workerSoundKey.js").then(({ generateSoundKey }) => {
+            generateSoundKey(row.id).catch((err) => console.error("[payments/hot/webhook] generate:", err?.message || err));
+          }).catch((err) => console.error("[payments/hot/webhook] import worker:", err?.message || err));
+        }
+
+        // Уведомляем пользователя в Telegram что оплата принята и заявка в работе
+        const shortId = String(row.id || "").slice(0, 8);
+        bot.api.sendMessage(
+          row.telegram_user_id,
+          `✅ *Оплата подтверждена!*\n\nЗаявка ID: \`${shortId}\` принята в работу.\n🎵 Твой звуковой ключ создаётся — отправлю, как только будет готово!`,
+          { parse_mode: "Markdown" }
+        ).catch((e) => console.warn("[webhook] notify user paid:", e?.message));
+
+        // Уведомляем администраторов
+        for (const adminId of ADMIN_IDS) {
+          bot.api.sendMessage(
+            adminId,
+            `💰 *Оплата получена*\nЗаявка: \`${shortId}\`\nСумма: ${body.amount || "?"} ${body.currency || "USDT"}\nSKU: ${purchasedSku}`
+          , { parse_mode: "Markdown" }).catch(() => {});
+        }
       }
     }
     return res.json({ success: true, paid: normalizedPaid, sku: purchasedSku });
@@ -1931,7 +2038,57 @@ app.get("/api/soul-chat/access", asyncApi(async (req, res) => {
   const telegramUserId = validateInitData(initData, BOT_TOKEN);
   if (telegramUserId == null) return res.status(401).json({ success: false, allowed: false, reason: "Нужна авторизация Telegram." });
   const access = await getSoulChatAccess(telegramUserId);
-  return res.json({ success: true, allowed: !!access.allowed, reason: access.reason || null, source: access.source || null });
+  return res.json({
+    success: true,
+    allowed: !!access.allowed,
+    trial_available: !!access.trial_available,
+    reason: access.reason || null,
+    source: access.source || null,
+    expires_at: access.expires_at || null,
+  });
+}));
+
+// Активировать подарочные сутки (первый раз бесплатно)
+app.post("/api/soul-chat/activate-gift", express.json(), asyncApi(async (req, res) => {
+  const initData = req.headers["x-telegram-init"] || (req.body && req.body.initData) || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, error: "Нужна авторизация Telegram." });
+  const access = await getSoulChatAccess(telegramUserId);
+  if (access.allowed) return res.json({ success: true, already_active: true, expires_at: access.expires_at, source: access.source });
+  if (!access.trial_available) return res.status(403).json({ success: false, error: "Подарочные сутки уже использованы. Необходима оплата — 2.99 USDT." });
+  const result = await activateSoulChatGift(telegramUserId);
+  if (!result.ok) return res.status(400).json({ success: false, error: result.error });
+  return res.json({ success: true, expires_at: result.expires_at, source: result.source });
+}));
+
+// Создать HOT Pay ссылку для покупки суток
+app.post("/api/soul-chat/buy-day", express.json(), asyncApi(async (req, res) => {
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const initData = req.headers["x-telegram-init"] || (req.body && req.body.initData) || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, error: "Нужна авторизация Telegram." });
+  const sku = "soul_chat_1day";
+  const price = await getSkuPrice(sku);
+  if (!price) return res.status(400).json({ success: false, error: "SKU soul_chat_1day не найден. Запустите RUN_IN_SUPABASE.sql." });
+  const itemId = pickHotItemId(sku);
+  if (!itemId) return res.status(400).json({ success: false, error: "HOT_ITEM_ID не задан для soul_chat_1day. Добавьте HOT_ITEM_ID_SOUL_CHAT_1DAY или HOT_ITEM_ID_DEFAULT в Render." });
+  const orderId = crypto.randomUUID();
+  // Сохраняем pending-заказ в track_requests как служебный (без астро)
+  const { data: inserted } = await supabase.from("track_requests").insert({
+    telegram_user_id: Number(telegramUserId),
+    name: "SoulChat",
+    mode: "soul_chat_day",
+    request: "Покупка суточного доступа Soul Chat",
+    payment_provider: "hot",
+    payment_status: "pending",
+    payment_order_id: orderId,
+    payment_amount: Number(price.price),
+    payment_currency: price.currency || "USDT",
+    generation_status: "pending_payment",
+  }).select("id").maybeSingle();
+  const requestId = inserted?.id;
+  const checkoutUrl = buildHotCheckoutUrl({ itemId, orderId, amount: Number(price.price), currency: price.currency || "USDT", requestId: requestId || orderId, sku });
+  return res.json({ success: true, checkout_url: checkoutUrl, order_id: orderId, price: price.price, currency: price.currency || "USDT" });
 }));
 
 app.post("/api/soul-chat", express.json(), asyncApi(async (req, res) => {
@@ -1948,21 +2105,39 @@ app.post("/api/soul-chat", express.json(), asyncApi(async (req, res) => {
     const initData = req.headers["x-telegram-init"] || body.initData || "";
     telegramUserId = validateInitData(initData, BOT_TOKEN);
     if (telegramUserId == null) {
-      return res.status(401).json({ success: false, error: "Нужна авторизация Telegram (initData). Открой Soul Chat из приложения или из бота." });
+      return res.status(401).json({ success: false, error: "Нужна авторизация Telegram." });
     }
   }
   const access = await getSoulChatAccess(telegramUserId);
   if (!access.allowed) {
-    return res.status(403).json({ success: false, error: access.reason });
+    return res.status(403).json({
+      success: false,
+      error: access.reason,
+      trial_available: !!access.trial_available,
+      need_payment: !access.trial_available,
+    });
   }
   const result = await runSoulChat({ requestId, question, telegramUserId, isAdminCaller });
   if (!result.ok) return res.status(400).json({ success: false, error: result.error });
+
+  // Сохраняем диалог в историю (не блокируем ответ на ошибку записи)
+  if (supabase) {
+    supabase.from("soul_chat_sessions").insert({
+      telegram_user_id: Number(telegramUserId),
+      track_request_id: result.request?.id || null,
+      question,
+      answer: result.answer,
+    }).then(() => {}).catch((e) => console.warn("[soul-chat] save session:", e?.message));
+  }
+
   return res.json({
     success: true,
     data: {
       request_id: result.request.id,
       name: result.request.name,
       answer: result.answer,
+      expires_at: access.expires_at || null,
+      source: access.source || null,
     },
   });
 }));
