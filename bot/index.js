@@ -539,9 +539,11 @@ async function getRequestsForAdmin(limit = 30) {
   }
 }
 
-// Кнопку меню (слева от поля ввода) можно задать в @BotFather → Bot Settings → Menu Button.
-// Но на Render часто забывают MINI_APP_URL, и Telegram продолжает открывать старый домен (404/DEPLOYMENT_NOT_FOUND).
-// Поэтому дополнительно авто-фиксируем Menu Button на MINI_APP_URL при старте бота.
+// Кнопки приложения:
+// 1. Menu Button (слева от поля ввода) — setChatMenuButton()
+// 2. Кнопка "Открыть" (рядом с ботом в списке чатов) — setWebhook() с web_app параметром
+// На Render часто забывают MINI_APP_URL, и Telegram продолжает открывать старый домен (404).
+// Поэтому авто-фиксируем обе кнопки на MINI_APP_URL при старте бота и в команде /fixurl.
 
 bot.command("ping", async (ctx) => {
   await ctx.reply("Бот на связи. Команды работают.");
@@ -550,14 +552,26 @@ bot.command("ping", async (ctx) => {
 bot.command("fixurl", async (ctx) => {
   const name = ctx.from?.first_name || "друг";
   try {
+    // Обновляем Menu Button (кнопка в меню)
     await bot.api.setChatMenuButton({
       chat_id: ctx.chat?.id,
       menu_button: { type: "web_app", text: "YupSoul", web_app: { url: MINI_APP_URL } },
     });
+    
+    // Обновляем Web App URL для кнопки "Открыть" (глобально)
+    const webhookInfo = await bot.api.getWebhookInfo();
+    if (webhookInfo.url) {
+      await bot.api.setWebhook(webhookInfo.url, { web_app: { url: MINI_APP_URL } });
+      console.log("[fixurl] Web App URL для кнопки 'Открыть' обновлён:", MINI_APP_URL);
+    }
+    
     await ctx.reply(
-      `✅ ${name}, кнопка меню обновлена!\n\n` +
-      `Новый URL:\n${MINI_APP_URL}\n\n` +
-      `Теперь нажми на кнопку меню (☰) слева от поля ввода, или используй кнопку ниже:`,
+      `✅ ${name}, все кнопки обновлены!\n\n` +
+      `🔗 Новый URL:\n${MINI_APP_URL}\n\n` +
+      `✨ Обновлено:\n` +
+      `• Кнопка меню (☰)\n` +
+      `• Кнопка "Открыть" рядом с ботом\n\n` +
+      `Теперь нажми на любую из этих кнопок или используй кнопку ниже:`,
       {
         reply_markup: {
           inline_keyboard: [[
@@ -566,9 +580,9 @@ bot.command("fixurl", async (ctx) => {
         }
       }
     );
-    console.log("[fixurl] Menu Button обновлён для chat", ctx.chat?.id, "→", MINI_APP_URL);
+    console.log("[fixurl] Menu Button и Web App URL обновлены для chat", ctx.chat?.id, "→", MINI_APP_URL);
   } catch (err) {
-    await ctx.reply(`❌ Ошибка при обновлении кнопки: ${err?.message}`);
+    await ctx.reply(`❌ Ошибка при обновлении кнопок: ${err?.message}`);
     console.error("[fixurl] Ошибка:", err);
   }
 });
@@ -1232,6 +1246,7 @@ bot.command("admin", async (ctx) => {
 const commands = [
   { command: "start", description: "Начать / открыть приложение" },
   { command: "ping", description: "Проверка связи с ботом" },
+  { command: "fixurl", description: "Исправить все ссылки на мини-приложение (меню + кнопка 'Открыть')" },
   { command: "get_analysis", description: "Расшифровка карты (после оплаты)" },
   { command: "soulchat", description: "Разговор по душам по заявке" },
   { command: "admin", description: "Админ: ссылка на админку и список заявок" },
@@ -2398,8 +2413,10 @@ async function startBotWithPolling() {
 async function startBotWithWebhook() {
   try {
     const url = WEBHOOK_URL + "/webhook";
-    await bot.api.setWebhook(url);
+    // Устанавливаем webhook с Web App URL для кнопки "Открыть"
+    await bot.api.setWebhook(url, { web_app: { url: MINI_APP_URL } });
     console.log("[Bot] Вебхук установлен:", url, "— убедись, что WEBHOOK_URL в Render совпадает с URL этого сервиса (Dashboard → сервис → URL).");
+    console.log("[Bot] Web App URL для кнопки 'Открыть' установлен:", MINI_APP_URL);
     const me = await bot.api.getMe();
     await onBotStart(me);
   } catch (err) {
