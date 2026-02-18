@@ -212,6 +212,56 @@
 
       <div class="mono-panel">
         <h3>Промокоды (promo_codes)</h3>
+
+        <!-- Форма создания нового промокода -->
+        <details id="newPromoDetails" style="margin-bottom:18px;border:1px solid rgba(212,175,55,0.3);border-radius:10px;padding:12px 16px;background:rgba(212,175,55,0.05);">
+          <summary style="cursor:pointer;font-weight:600;color:#d4af37;font-size:0.95rem;list-style:none;">➕ Создать новый промокод</summary>
+          <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Код <span style="color:#ef4444">*</span></label>
+              <input id="newPromoCode" type="text" placeholder="WELCOME10" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;text-transform:uppercase;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Тип <span style="color:#ef4444">*</span></label>
+              <select id="newPromoType" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;">
+                <option value="discount_percent">% скидка (discount_percent)</option>
+                <option value="discount_amount">Сумма скидки (discount_amount)</option>
+                <option value="free_generation">Бесплатная генерация (free_generation)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Значение (% или сумма)</label>
+              <input id="newPromoValue" type="number" step="0.01" min="0" placeholder="10" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">SKU (пусто = для всех)</label>
+              <input id="newPromoSku" type="text" placeholder="single_song" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Макс. использований (пусто = ∞)</label>
+              <input id="newPromoMaxUses" type="number" step="1" min="1" placeholder="100" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Лимит на 1 юзера</label>
+              <input id="newPromoPerUser" type="number" step="1" min="1" value="1" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Действует с (необязательно)</label>
+              <input id="newPromoStartsAt" type="datetime-local" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Действует до (необязательно)</label>
+              <input id="newPromoExpiresAt" type="datetime-local" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;">
+            </div>
+          </div>
+          <div style="margin-top:12px;display:flex;align-items:center;gap:12px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:#94a3b8;font-size:0.88rem;">
+              <input id="newPromoActive" type="checkbox" checked style="width:16px;height:16px;"> Активен сразу
+            </label>
+            <button onclick="createPromoCode()" class="btn btn-primary" style="padding:9px 22px;font-size:0.9rem;">Создать промокод</button>
+          </div>
+        </details>
+
         <div class="mono-table-wrap">
           <table class="mono-table" id="promoTable">
             <thead>
@@ -220,16 +270,15 @@
                 <th>Тип</th>
                 <th>Значение</th>
                 <th>SKU</th>
-                <th>Лимит (общий)</th>
-                <th>Лимит (на юзера)</th>
+                <th>Макс / На юзера</th>
                 <th>Активен</th>
-                <th>Сроки</th>
-                <th>Used</th>
-                <th>Действие</th>
+                <th>Действует до</th>
+                <th>Использован</th>
+                <th>Действия</th>
               </tr>
             </thead>
             <tbody id="promoTableBody">
-              <tr><td colspan="10" class="mono-muted">Загрузка…</td></tr>
+              <tr><td colspan="9" class="mono-muted">Загрузка…</td></tr>
             </tbody>
           </table>
         </div>
@@ -628,31 +677,42 @@
       }).join('');
     }
 
+    function promoTypeLabel(type) {
+      if (type === 'discount_percent') return '% скидка';
+      if (type === 'discount_amount') return '$ скидка';
+      if (type === 'free_generation') return '🎁 Бесплатно';
+      return type || '—';
+    }
     function renderPromoRows(rows) {
       const body = document.getElementById('promoTableBody');
       if (!body) return;
       if (!rows.length) {
-        body.innerHTML = '<tr><td colspan="10" class="mono-muted">Промокоды не найдены.</td></tr>';
+        body.innerHTML = '<tr><td colspan="9" class="mono-muted">Промокодов нет. Создай первый выше ↑</td></tr>';
         return;
       }
       body.innerHTML = rows.map(function(item) {
         const code = escapeHtml(item.code || '');
-        const validity = [item.starts_at ? new Date(item.starts_at).toLocaleString('ru-RU') : '—', item.expires_at ? new Date(item.expires_at).toLocaleString('ru-RU') : '—'].join(' → ');
+        const expiresLabel = item.expires_at ? new Date(item.expires_at).toLocaleString('ru-RU') : '∞';
+        const usedOf = (item.used_count == null ? 0 : item.used_count) + ' / ' + (item.max_uses == null ? '∞' : item.max_uses);
+        const valueLabel = item.type === 'free_generation' ? '—' : (item.value != null ? String(item.value) + (item.type === 'discount_percent' ? '%' : ' USDT') : '—');
+        const activeLabel = item.active !== false
+          ? '<span style="color:#22c55e;font-weight:600;">✓ Да</span>'
+          : '<span style="color:#ef4444;">✗ Нет</span>';
         return '<tr data-code="' + code + '">' +
-          '<td><code>' + code + '</code></td>' +
-          '<td><select data-field="type">' +
-            '<option value="discount_percent"' + (item.type === 'discount_percent' ? ' selected' : '') + '>discount_percent</option>' +
-            '<option value="discount_amount"' + (item.type === 'discount_amount' ? ' selected' : '') + '>discount_amount</option>' +
-            '<option value="free_generation"' + (item.type === 'free_generation' ? ' selected' : '') + '>free_generation</option>' +
-          '</select></td>' +
-          '<td><input type="number" step="0.01" min="0" data-field="value" value="' + escapeAttr(item.value == null ? '' : item.value) + '"></td>' +
-          '<td><input data-field="sku" value="' + escapeAttr(item.sku || '') + '"></td>' +
-          '<td><input type="number" step="1" min="0" data-field="max_uses" value="' + escapeAttr(item.max_uses == null ? '' : item.max_uses) + '"></td>' +
-          '<td><input type="number" step="1" min="1" data-field="per_user_limit" value="' + escapeAttr(item.per_user_limit == null ? 1 : item.per_user_limit) + '"></td>' +
-          '<td style="text-align:center;"><input type="checkbox" data-field="active" ' + (item.active === false ? '' : 'checked') + '></td>' +
-          '<td class="mono-muted">' + escapeHtml(validity) + '</td>' +
-          '<td>' + escapeHtml(String(item.used_count == null ? 0 : item.used_count)) + '</td>' +
-          '<td><button class="btn btn-primary" style="min-width:120px;padding:8px 12px;font-size:12px;" onclick="savePromoRow(\'' + escapeAttr(item.code || '') + '\')">Сохранить</button></td>' +
+          '<td><code style="font-size:1rem;color:#d4af37;">' + code + '</code></td>' +
+          '<td>' + escapeHtml(promoTypeLabel(item.type)) + '</td>' +
+          '<td>' + escapeHtml(valueLabel) + '</td>' +
+          '<td>' + escapeHtml(item.sku || 'все') + '</td>' +
+          '<td>' + escapeHtml(usedOf) + ' (на 1 юзера: ' + (item.per_user_limit || 1) + ')</td>' +
+          '<td>' + activeLabel + '</td>' +
+          '<td class="mono-muted">' + escapeHtml(expiresLabel) + '</td>' +
+          '<td style="font-weight:600;">' + escapeHtml(String(item.used_count == null ? 0 : item.used_count)) + '</td>' +
+          '<td style="display:flex;gap:6px;flex-wrap:wrap;">' +
+            '<button class="btn btn-primary" style="padding:6px 12px;font-size:12px;" onclick="togglePromoActive(\'' + escapeAttr(item.code || '') + '\',' + (item.active !== false) + ')">' +
+              (item.active !== false ? '⏸ Деакт.' : '▶ Актив.') +
+            '</button>' +
+            '<button class="btn" style="padding:6px 12px;font-size:12px;background:#ef4444;border-color:#ef4444;color:#fff;" onclick="deletePromo(\'' + escapeAttr(item.code || '') + '\')">🗑 Удалить</button>' +
+          '</td>' +
           '</tr>';
       }).join('');
     }
@@ -765,8 +825,95 @@
       }
     }
 
+    async function createPromoCode() {
+      const code = (document.getElementById('newPromoCode').value || '').trim().toUpperCase();
+      if (!code) { setMonoMsg('promoMsg', 'Введите код промокода', false); return; }
+      const type = document.getElementById('newPromoType').value;
+      const valueRaw = document.getElementById('newPromoValue').value.trim();
+      const skuRaw = document.getElementById('newPromoSku').value.trim();
+      const maxUsesRaw = document.getElementById('newPromoMaxUses').value.trim();
+      const perUserRaw = document.getElementById('newPromoPerUser').value.trim();
+      const startsAt = document.getElementById('newPromoStartsAt').value || null;
+      const expiresAt = document.getElementById('newPromoExpiresAt').value || null;
+      const active = document.getElementById('newPromoActive').checked;
+      const payload = {
+        type,
+        value: valueRaw ? Number(valueRaw) : null,
+        sku: skuRaw || null,
+        max_uses: maxUsesRaw ? Number(maxUsesRaw) : null,
+        per_user_limit: perUserRaw ? Number(perUserRaw) : 1,
+        active,
+        starts_at: startsAt ? new Date(startsAt).toISOString() : null,
+        expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+      };
+      setMonoMsg('promoMsg', 'Создаю промокод ' + code + '…', null);
+      try {
+        const result = await fetchJson(API_BASE + '/api/admin/promos/' + encodeURIComponent(code) + authQueryFromPath(), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify(payload),
+        });
+        if (result.json && result.json.success) {
+          setMonoMsg('promoMsg', '✅ Промокод ' + code + ' создан!', true);
+          document.getElementById('newPromoCode').value = '';
+          document.getElementById('newPromoValue').value = '';
+          document.getElementById('newPromoSku').value = '';
+          document.getElementById('newPromoMaxUses').value = '';
+          document.getElementById('newPromoStartsAt').value = '';
+          document.getElementById('newPromoExpiresAt').value = '';
+          document.getElementById('newPromoDetails').removeAttribute('open');
+          await loadMonetizationData();
+        } else {
+          setMonoMsg('promoMsg', '❌ Ошибка: ' + ((result.json && result.json.error) || 'unknown'), false);
+        }
+      } catch(e) {
+        setMonoMsg('promoMsg', '❌ Ошибка: ' + (e && e.message || String(e)), false);
+      }
+    }
+
+    async function togglePromoActive(code, currentlyActive) {
+      setMonoMsg('promoMsg', (currentlyActive ? 'Деактивирую' : 'Активирую') + ' промокод ' + code + '…', null);
+      try {
+        const result = await fetchJson(API_BASE + '/api/admin/promos/' + encodeURIComponent(code) + authQueryFromPath(), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({ active: !currentlyActive }),
+        });
+        if (result.json && result.json.success) {
+          setMonoMsg('promoMsg', '✅ Промокод ' + code + (currentlyActive ? ' деактивирован' : ' активирован'), true);
+          await loadMonetizationData();
+        } else {
+          setMonoMsg('promoMsg', '❌ Ошибка: ' + ((result.json && result.json.error) || 'unknown'), false);
+        }
+      } catch(e) {
+        setMonoMsg('promoMsg', '❌ Ошибка: ' + (e && e.message || String(e)), false);
+      }
+    }
+
+    async function deletePromo(code) {
+      if (!confirm('Удалить промокод ' + code + '? Это действие нельзя отменить.')) return;
+      setMonoMsg('promoMsg', 'Удаляю промокод ' + code + '…', null);
+      try {
+        const result = await fetchJson(API_BASE + '/api/admin/promos/' + encodeURIComponent(code) + authQueryFromPath(), {
+          method: 'DELETE',
+          headers: authHeaders(),
+        });
+        if (result.json && result.json.success) {
+          setMonoMsg('promoMsg', '✅ Промокод ' + code + ' удалён.', true);
+          await loadMonetizationData();
+        } else {
+          setMonoMsg('promoMsg', '❌ Ошибка: ' + ((result.json && result.json.error) || 'unknown'), false);
+        }
+      } catch(e) {
+        setMonoMsg('promoMsg', '❌ Ошибка: ' + (e && e.message || String(e)), false);
+      }
+    }
+
     window.savePricingRow = savePricingRow;
     window.savePromoRow = savePromoRow;
+    window.createPromoCode = createPromoCode;
+    window.togglePromoActive = togglePromoActive;
+    window.deletePromo = deletePromo;
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', function() {

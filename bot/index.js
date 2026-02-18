@@ -2292,6 +2292,17 @@ app.get("/api/admin/promos", asyncApi(async (req, res) => {
   return res.json({ success: true, data: data || [] });
 }));
 
+app.delete("/api/admin/promos/:code", asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const code = normalizePromoCode(req.params.code);
+  if (!code) return res.status(400).json({ success: false, error: "code обязателен" });
+  const { error } = await supabase.from("promo_codes").delete().eq("code", code);
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  return res.json({ success: true, deleted: code });
+}));
+
 app.put("/api/admin/promos/:code", express.json(), asyncApi(async (req, res) => {
   const auth = resolveAdminAuth(req);
   if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
