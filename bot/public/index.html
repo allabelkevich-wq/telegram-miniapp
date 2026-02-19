@@ -581,7 +581,7 @@
       
       <!-- Баннер восстановления зависшей заявки -->
       <div id="recoveryBanner" style="display:none;margin:0 0 16px 0;background:rgba(5,150,105,0.15);border:1.5px solid rgba(16,185,129,0.5);border-radius:14px;padding:16px 18px;">
-        <div style="font-size:0.95rem;color:#d1fae5;line-height:1.55;margin-bottom:12px;">
+        <div id="recoveryBannerText" style="font-size:0.95rem;color:#d1fae5;line-height:1.55;margin-bottom:12px;">
           🎁 <strong style="color:#6ee7b7;">Твоя заявка ждёт!</strong><br>
           Получи первую песню бесплатно.
         </div>
@@ -650,8 +650,8 @@
       <div class="section">
         <div class="step-panel" data-step="1">
           <div class="mode-selector">
-            <h3>Тип песни</h3>
-            <p class="mode-subtitle">От этого зависят поля формы ниже</p>
+            <h3>Формат песни</h3>
+            <p class="mode-subtitle">Для кого создаём?</p>
             <div class="mode-buttons">
               <button type="button" class="mode-btn active" data-mode="single">
                 <span class="mode-label">Для себя</span>
@@ -953,7 +953,7 @@
           heroBirthplace: 'Место рождения', heroBirthplacePh: 'Город, страна', heroNotes: 'Досье / заметки', heroNotesPh: 'Заметки о клиенте',
           unknownTime: 'Не знаю точное время', cancel: 'Отмена', save: 'Сохранить', back: '← Назад',
           gender: 'Пол', genderSelect: 'Выбери', male: 'Мужской', female: 'Женский', other: 'Другой',
-          modeType: 'Тип песни', modeSubtitle: 'Выбери тип генерации',
+          modeType: 'Формат песни', modeSubtitle: 'Для кого создаём?',
           modeSingle: 'Для себя', modeSingleDesc: 'Глубокий анализ',
           modeCouple: 'Для двоих', modeCoupleDesc: 'Дуэт/пара',
           modeTransit: 'Энергия дня', modeTransitDesc: 'Энергия момента',
@@ -1060,7 +1060,7 @@
           heroBirthplace: 'Place of birth', heroBirthplacePh: 'City, country', heroNotes: 'Notes', heroNotesPh: 'Client notes',
           unknownTime: "I don't know exact time", cancel: 'Cancel', save: 'Save', back: '← Back',
           gender: 'Gender', genderSelect: 'Choose', male: 'Male', female: 'Female', other: 'Other',
-          modeType: 'Key type', modeSubtitle: 'Choose generation type',
+          modeType: 'Song format', modeSubtitle: 'Who is it for?',
           modeSingle: 'For myself', modeSingleDesc: 'Deep analysis',
           modeCouple: 'For two', modeCoupleDesc: 'Duet / couple',
           modeTransit: 'Day energy', modeTransitDesc: 'Energy of the moment',
@@ -1166,7 +1166,7 @@
           heroBirthplace: 'Geburtsort', heroBirthplacePh: 'Stadt, Land', heroNotes: 'Notizen', heroNotesPh: 'Klientennotizen',
           unknownTime: 'Exakte Zeit unbekannt', cancel: 'Abbrechen', save: 'Speichern', back: '← Zurück',
           gender: 'Geschlecht', genderSelect: 'Wählen', male: 'Männlich', female: 'Weiblich', other: 'Divers',
-          modeType: 'Schlüsseltyp', modeSubtitle: 'Das bestimmt die Formularfelder unten',
+          modeType: 'Song-Format', modeSubtitle: 'Für wen erstellen wir?',
           modeSingle: 'Für mich', modeSingleDesc: 'Tiefenanalyse',
           modeCouple: 'Zu zweit', modeCoupleDesc: 'Duett / Paar',
           modeTransit: 'Tagesenergie', modeTransitDesc: 'Energie des Augenblicks',
@@ -1272,7 +1272,7 @@
           heroBirthplace: 'Lieu de naissance', heroBirthplacePh: 'Ville, pays', heroNotes: 'Notes', heroNotesPh: 'Notes client',
           unknownTime: "Heure exacte inconnue", cancel: 'Annuler', save: 'Enregistrer', back: '← Retour',
           gender: 'Genre', genderSelect: 'Choisir', male: 'Homme', female: 'Femme', other: 'Autre',
-          modeType: "Type de clé", modeSubtitle: 'Cela détermine les champs du formulaire ci-dessous',
+          modeType: "Format de chanson", modeSubtitle: 'Pour qui créons-nous ?',
           modeSingle: 'Pour moi', modeSingleDesc: 'Analyse approfondie',
           modeCouple: 'À deux', modeCoupleDesc: 'Duo / couple',
           modeTransit: "Énergie du jour", modeTransitDesc: "Énergie du moment",
@@ -1926,8 +1926,8 @@
             hasSubscriptionActive = !!(json.subscription_active);
             catalogLoadError = false;
             updatePaymentUiFromCatalog();
-            // Если пробный доступ ещё не использован — проверяем есть ли зависшая заявка
-            if (freeTrialAvailable) checkPendingRequestOnStart();
+            // Проверяем зависшую заявку для всех пользователей (новичков и повторных)
+            checkPendingRequestOnStart();
           } else {
             catalogLoadError = true;
             updatePaymentUiFromCatalog();
@@ -1938,9 +1938,8 @@
           updatePaymentUiFromCatalog();
         }
       }
-      // Проверяет при запуске есть ли зависшая заявка + доступен ли бесплатный ключ
+      // Проверяет при запуске есть ли зависшая заявка (работает и для новичков и для повторных)
       async function checkPendingRequestOnStart() {
-        if (!freeTrialAvailable) return;
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         var initData = getInitData();
         if (!apiBase || !initData) return;
@@ -1950,10 +1949,21 @@
           if (!resp.ok || !json.ok || !json.pending || !json.request_id) return;
           // Есть зависшая заявка — показываем восстановительный баннер на главной
           pendingPaymentRequestId = json.request_id;
+          pendingPaymentSku = json.sku || null;
           var banner = document.getElementById('recoveryBanner');
+          var bannerText = document.getElementById('recoveryBannerText');
+          var rb = document.getElementById('recoveryClaimBtn');
           if (banner) {
+            if (freeTrialAvailable) {
+              // Новый пользователь — предлагаем бесплатный ключ
+              if (bannerText) bannerText.innerHTML = '🎁 <strong style="color:#6ee7b7;">Твоя заявка ждёт!</strong><br>Получи первую песню бесплатно.';
+              if (rb) rb.textContent = '🎁 Получить бесплатно';
+            } else {
+              // Повторный пользователь — у него незавершённая оплата
+              if (bannerText) bannerText.innerHTML = '⏳ <strong style="color:#6ee7b7;">Незавершённый заказ</strong><br>У тебя есть заявка, ожидающая оплаты.';
+              if (rb) rb.textContent = '💳 Перейти к оплате';
+            }
             banner.style.display = 'block';
-            var rb = document.getElementById('recoveryClaimBtn');
             if (rb) rb.addEventListener('click', function() {
               banner.style.display = 'none';
               showPaymentOverlay();
@@ -3376,11 +3386,12 @@
             return;
           }
           setPaymentStatus(t('paymentConfirmed'), 'ok');
-          await fetch(apiBase + '/api/payments/hot/confirm', {
+          var confirmResp = await fetch(apiBase + '/api/payments/hot/confirm', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
             body: JSON.stringify({ request_id: pendingPaymentRequestId, initData: initData })
           });
+          if (!confirmResp.ok) throw new Error('Ошибка подтверждения оплаты (' + confirmResp.status + ')');
           pendingPaymentRequestId = null;
           pendingPaymentSku = null;
           hidePaymentOverlay();
