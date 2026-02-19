@@ -71,8 +71,12 @@ const server = createServer(async (req, res) => {
     return;
   }
   if (url.startsWith("/admin")) {
-    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    res.end(page("YupSoul Bot", "<h1>Запуск…</h1><p>Админка загружается. Подожди 10–20 сек и обнови страницу (F5).</p><p><a href=\"/healthz\">/healthz</a></p>"));
+    res.writeHead(200, {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+      "Pragma": "no-cache",
+    });
+    res.end(page("YupSoul Bot", "<h1>Запуск…</h1><p>Админка загружается. Подожди 10–20 сек и обнови страницу (F5).</p><p><a href=\"/admin\">Обновить</a></p>"));
     return;
   }
   // Статика Mini App (/assets/*) пока бот грузится

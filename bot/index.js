@@ -1837,6 +1837,11 @@ function asyncApi(fn) {
 }
 
 app.get(["/admin", "/admin/"], (req, res) => {
+  res.set({
+    "Cache-Control": "no-store, no-cache, must-revalidate",
+    "Pragma": "no-cache",
+    "Expires": "0",
+  });
   res.type("html").sendFile(path.join(__dirname, "admin-simple.html"), (err) => {
     if (err) {
       console.error("[admin] sendFile error:", err.message);
@@ -2770,6 +2775,7 @@ function apiNotFoundJson(req, res, next) {
 }
 
 app.get(["/admin-simple", "/admin-simple/"], (req, res) => {
+  res.set({ "Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache", "Expires": "0" });
   res.type("html").sendFile(path.join(__dirname, "admin-simple.html"), (err) => {
     if (err) res.status(500).send("<!DOCTYPE html><html><head><meta charset='utf-8'></head><body style='background:#0f0f1b;color:#fff;font-family:sans-serif;padding:40px;'><h1>Ошибка</h1><p>admin-simple.html не найден</p><a href='/admin' style='color:#667eea'>Админка</a></body></html>");
   });
