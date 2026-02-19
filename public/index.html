@@ -581,7 +581,7 @@
       
       <!-- Баннер восстановления зависшей заявки -->
       <div id="recoveryBanner" style="display:none;margin:0 0 16px 0;background:rgba(5,150,105,0.15);border:1.5px solid rgba(16,185,129,0.5);border-radius:14px;padding:16px 18px;">
-        <div style="font-size:0.95rem;color:#d1fae5;line-height:1.55;margin-bottom:12px;">
+        <div id="recoveryBannerText" style="font-size:0.95rem;color:#d1fae5;line-height:1.55;margin-bottom:12px;">
           🎁 <strong style="color:#6ee7b7;">Твоя заявка ждёт!</strong><br>
           Получи первую песню бесплатно.
         </div>
@@ -1926,8 +1926,8 @@
             hasSubscriptionActive = !!(json.subscription_active);
             catalogLoadError = false;
             updatePaymentUiFromCatalog();
-            // Если пробный доступ ещё не использован — проверяем есть ли зависшая заявка
-            if (freeTrialAvailable) checkPendingRequestOnStart();
+            // Проверяем зависшую заявку для всех пользователей (новичков и повторных)
+            checkPendingRequestOnStart();
           } else {
             catalogLoadError = true;
             updatePaymentUiFromCatalog();
@@ -1938,9 +1938,8 @@
           updatePaymentUiFromCatalog();
         }
       }
-      // Проверяет при запуске есть ли зависшая заявка + доступен ли бесплатный ключ
+      // Проверяет при запуске есть ли зависшая заявка (работает и для новичков и для повторных)
       async function checkPendingRequestOnStart() {
-        if (!freeTrialAvailable) return;
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         var initData = getInitData();
         if (!apiBase || !initData) return;
@@ -1950,10 +1949,21 @@
           if (!resp.ok || !json.ok || !json.pending || !json.request_id) return;
           // Есть зависшая заявка — показываем восстановительный баннер на главной
           pendingPaymentRequestId = json.request_id;
+          pendingPaymentSku = json.sku || null;
           var banner = document.getElementById('recoveryBanner');
+          var bannerText = document.getElementById('recoveryBannerText');
+          var rb = document.getElementById('recoveryClaimBtn');
           if (banner) {
+            if (freeTrialAvailable) {
+              // Новый пользователь — предлагаем бесплатный ключ
+              if (bannerText) bannerText.innerHTML = '🎁 <strong style="color:#6ee7b7;">Твоя заявка ждёт!</strong><br>Получи первую песню бесплатно.';
+              if (rb) rb.textContent = '🎁 Получить бесплатно';
+            } else {
+              // Повторный пользователь — у него незавершённая оплата
+              if (bannerText) bannerText.innerHTML = '⏳ <strong style="color:#6ee7b7;">Незавершённый заказ</strong><br>У тебя есть заявка, ожидающая оплаты.';
+              if (rb) rb.textContent = '💳 Перейти к оплате';
+            }
             banner.style.display = 'block';
-            var rb = document.getElementById('recoveryClaimBtn');
             if (rb) rb.addEventListener('click', function() {
               banner.style.display = 'none';
               showPaymentOverlay();
