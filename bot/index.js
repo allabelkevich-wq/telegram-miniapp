@@ -229,29 +229,10 @@ async function isTrialAvailable(telegramUserId, trialKey = "first_song_gift") {
     return true;
   }
   
-  // КРИТИЧНО: Сначала проверяем существует ли пользователь в app_users
-  // Если пользователя нет — это 100% первый визит, разрешаем trial
-  const { data: appUser, error: appUserError } = await supabase
-    .from("app_users")
-    .select("telegram_user_id")
-    .eq("telegram_user_id", Number(telegramUserId))
-    .maybeSingle();
-  
-  if (appUserError && !/does not exist|relation/i.test(appUserError.message)) {
-    console.error("[Trial] Ошибка запроса к app_users:", appUserError.message);
-    // При ошибке БД разрешаем trial (лучше дать бесплатный доступ, чем заблокировать)
-    console.log("[Trial] Ошибка БД app_users → разрешаем пробную версию");
-    return true;
-  }
-  
-  if (!appUser) {
-    console.log("[Trial] Пользователь не найден в app_users → первый визит → разрешаем пробную версию");
-    return true;
-  }
-  
-  console.log("[Trial] Пользователь найден в app_users, проверяем user_trials");
-  
-  // Пользователь существует, проверяем использовал ли он trial
+  // КРИТИЧНО: Проверяем ТОЛЬКО таблицу user_trials, а НЕ app_users!
+  // Пользователь может быть создан в app_users через Heroes API до первой заявки,
+  // но это НЕ означает, что он использовал бесплатную песню.
+  // Единственный источник правды — наличие записи в user_trials.
   const { data: trialData, error: trialError } = await supabase
     .from("user_trials")
     .select("id, consumed_at")
