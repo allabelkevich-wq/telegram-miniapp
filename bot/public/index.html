@@ -1637,21 +1637,26 @@
         console.log('[Payment Overlay] pendingPaymentRequestId:', pendingPaymentRequestId);
         console.log('[Payment Overlay] freeTrialAvailable:', freeTrialAvailable);
         
-        ov.style.display = 'block';
+        ov.style.display = 'flex';
         if (tg && tg.expand) try { tg.expand(); } catch(e) {}
         
-        // Сбросить статус, ссылку и поле промокода
+        // Сброс UI
         setPaymentStatus('', '');
-        var lr = document.getElementById('payOvLinkRow');
-        if (lr) lr.style.display = 'none';
+        hidePromoConfirmButton();
+        showPaymentSection();
+        
         var pi = document.getElementById('payOvPromoInput');
         if (pi) pi.value = '';
+        
+        var lr = document.getElementById('payOvLinkRow');
+        if (lr) lr.style.display = 'none';
+        
         var cb = document.getElementById('payOvCheckBtn');
         if (cb) cb.style.display = 'none';
         
         ov.scrollTop = 0;
         
-        // Показываем кнопку "Получить бесплатный ключ" только если free trial доступен
+        // Free trial блок
         var freeClaimBtn = document.getElementById('payOvFreeClaimBtn');
         var hint = document.getElementById('payOvTrialHint');
         if (freeTrialAvailable) {
@@ -1662,7 +1667,6 @@
           if (hint) hint.style.display = 'none';
         }
         
-        // Обновляем UI (цена, кнопка оплаты)
         updatePaymentUiFromCatalog();
       }
       function hidePaymentOverlay() {
@@ -1673,6 +1677,7 @@
         // Полный сброс состояния
         setPaymentStatus('', '');
         activePromo = null;
+        resetPaymentUI();
         
         var pi = document.getElementById('payOvPromoInput');
         if (pi) pi.value = '';
@@ -1682,14 +1687,6 @@
         
         var cb = document.getElementById('payOvCheckBtn');
         if (cb) cb.style.display = 'none';
-        
-        // Сброс кнопки оплаты в исходное состояние
-        var pb = document.getElementById('payOvPayBtn');
-        if (pb) {
-          pb.textContent = '💳 Оплатить через HOT Pay';
-          pb.style.background = 'linear-gradient(135deg,#7c3aed,#a855f7)';
-          pb.disabled = false;
-        }
       }
       // ── Надёжный экран "Заявка принята" — position:fixed, z-index:10000 ─────────
       // Использует отдельный оверлей вместо страниц .page, чтобы избежать
@@ -1789,14 +1786,22 @@
               notice.style.color = 'rgba(255,255,255,.95)';
             }
           }
-          // Кнопка оплаты: зелёная если промокод даёт 0 (без проверки SKU — promo уже привязан к заявке)
-          var payBtnUpd = document.getElementById('payOvPayBtn');
-          if (payBtnUpd && !payBtnUpd.disabled) {
-            var isFreePromo = activePromo && Number(activePromo.amount_after) === 0;
-            payBtnUpd.textContent = isFreePromo ? '🎁 Получить бесплатно' : '💳 Оплатить через HOT Pay';
-            payBtnUpd.style.background = isFreePromo
-              ? 'linear-gradient(135deg,#059669,#10b981)'
-              : 'linear-gradient(135deg,#7c3aed,#a855f7)';
+          // Обновляем цену в overlay (новый элемент payOvPriceDisplay)
+          var priceDisplay = document.getElementById('payOvPriceDisplay');
+          var priceHintOv = document.getElementById('payOvPriceHint');
+          if (priceDisplay) {
+            if (activePromo) {
+              priceDisplay.textContent = String(activePromo.amount_after) + ' ' + (activePromo.currency || (item && item.currency) || 'USDT');
+            } else {
+              priceDisplay.textContent = item ? (String(item.price) + ' ' + (item.currency || 'USDT')) : '5.99 USDT';
+            }
+          }
+          if (priceHintOv) {
+            if (activePromo && Number(activePromo.amount_after) > 0) {
+              priceHintOv.textContent = '💚 Скидка: ' + activePromo.discount_amount + ' ' + (activePromo.currency || 'USDT');
+            } else {
+              priceHintOv.textContent = '';
+            }
           }
         } catch (e) {
           console.warn('[updatePaymentUiFromCatalog]', e);
@@ -1866,44 +1871,129 @@
         } catch (e) { /* не критично */ }
       }
 
+      // ── Helper-функции для UI промокода и оплаты ──────────────────────
+      function showPromoConfirmButton() {
+        var hint = document.getElementById('payOvPromoSuccessHint');
+        var btn = document.getElementById('payOvPromoConfirmBtn');
+        if (hint) hint.style.display = '';
+        if (btn) btn.style.display = '';
+      }
+
+      function hidePromoConfirmButton() {
+        var hint = document.getElementById('payOvPromoSuccessHint');
+        var btn = document.getElementById('payOvPromoConfirmBtn');
+        if (hint) hint.style.display = 'none';
+        if (btn) btn.style.display = 'none';
+      }
+
+      function hidePaymentSection() {
+        var section = document.getElementById('payOvPaymentSection');
+        if (section) section.style.display = 'none';
+      }
+
+      function showPaymentSection() {
+        var section = document.getElementById('payOvPaymentSection');
+        if (section) section.style.display = '';
+      }
+
+      function updatePaymentSectionWithDiscount() {
+        var priceDisplay = document.getElementById('payOvPriceDisplay');
+        var priceHint = document.getElementById('payOvPriceHint');
+        
+        if (activePromo && priceDisplay) {
+          priceDisplay.textContent = activePromo.amount_after + ' ' + activePromo.currency;
+        }
+        
+        if (activePromo && priceHint) {
+          priceHint.textContent = '💚 Скидка: ' + activePromo.discount_amount + ' ' + activePromo.currency;
+        }
+        
+        showPaymentSection();
+      }
+
+      function resetPaymentUI() {
+        hidePromoConfirmButton();
+        showPaymentSection();
+        
+        var priceDisplay = document.getElementById('payOvPriceDisplay');
+        var priceHint = document.getElementById('payOvPriceHint');
+        
+        // Сброс цены к оригинальной (из каталога)
+        if (priceDisplay && catalogData && catalogData.items) {
+          var item = catalogData.items.find(function(x) { return x.sku === pendingPaymentSku; });
+          if (item) {
+            priceDisplay.textContent = item.price + ' ' + (item.currency || 'USDT');
+          }
+        }
+        
+        if (priceHint) priceHint.textContent = '';
+      }
+
       async function applyPromoCode() {
         var input = document.getElementById('payOvPromoInput') || document.getElementById('promoCodeInput');
         if (!input) return;
         var code = String(input.value || '').trim().toUpperCase();
         if (!code) {
           activePromo = null;
-          updatePaymentUiFromCatalog();
+          resetPaymentUI();
           setPaymentStatus(t('promoCleared'), 'warn');
           return;
         }
-        var sku = getCurrentSku();
+        var sku = pendingPaymentSku;
+        if (!sku) {
+          setPaymentStatus('Сначала отправь заявку', 'error');
+          return;
+        }
+        
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
-        var initData = (tg && tg.initData) ? tg.initData : '';
+        var initData = getInitData();
+        if (!apiBase || !initData) {
+          setPaymentStatus('Нет соединения с сервером', 'error');
+          return;
+        }
+        
+        setPaymentStatus('Проверяю промокод...', 'warn');
+        
         try {
           var resp = await fetch(apiBase + '/api/promos/validate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
-            body: JSON.stringify({ promo_code: code, sku: sku, initData: initData })
+            body: JSON.stringify({ code: code, sku: sku, initData: initData })
           });
           var json = await resp.json().catch(function() { return {}; });
-          if (!resp.ok || !json.success || !json.valid) {
+          
+          if (!resp.ok || !json.valid) {
             activePromo = null;
-            updatePaymentUiFromCatalog();
+            resetPaymentUI();
             var errMsg = json.error || (json.reason === 'not_found' ? 'Промокод не найден' : json.reason === 'expired' ? 'Срок действия промокода истёк' : json.reason === 'user_limit_reached' ? 'Вы уже использовали этот промокод' : 'Промокод недействителен');
             throw new Error(errMsg);
           }
+          
           activePromo = {
             code: code,
             sku: sku,
             amount_before: json.amount_before,
-            discount_amount: json.discount_amount,
             amount_after: json.amount_after,
+            discount_amount: json.discount_amount,
             currency: json.currency || 'USDT'
           };
-          updatePaymentUiFromCatalog();
-          setPaymentStatus(t('promoApplied', { amount: json.amount_after, currency: json.currency || 'USDT' }), 'ok');
+          
+          var isFree = Number(activePromo.amount_after) === 0;
+          
+          if (isFree) {
+            // Промокод даёт 100% скидку
+            setPaymentStatus('✅ Промокод применён! Генерация бесплатна.', 'ok');
+            showPromoConfirmButton();
+            hidePaymentSection();
+          } else {
+            // Промокод даёт частичную скидку
+            setPaymentStatus('✅ Промокод применён! Скидка: ' + activePromo.discount_amount + ' ' + activePromo.currency, 'ok');
+            updatePaymentSectionWithDiscount();
+            hidePromoConfirmButton();
+          }
+          
         } catch (e) {
-          setPaymentStatus((e && e.message) ? e.message : t('promoError'), 'error');
+          setPaymentStatus('❌ ' + (e.message || 'Ошибка проверки промокода'), 'error');
         }
       }
       function heroesApi(path, opts) {
@@ -2807,6 +2897,73 @@
       var payOvPromoBtn = document.getElementById('payOvPromoBtn');
       if (payOvPromoBtn) payOvPromoBtn.addEventListener('click', applyPromoCode);
 
+      // ── Overlay: кнопка «Подтвердить и отправить» (промокод 100%) ──
+      var payOvPromoConfirmBtn = document.getElementById('payOvPromoConfirmBtn');
+      if (payOvPromoConfirmBtn) payOvPromoConfirmBtn.addEventListener('click', async function() {
+        console.log('[Promo Confirm] Нажата кнопка подтверждения промокода');
+        
+        if (!pendingPaymentRequestId) {
+          setPaymentStatus('❌ Нет активной заявки', 'error');
+          return;
+        }
+        
+        if (!activePromo || Number(activePromo.amount_after) !== 0) {
+          setPaymentStatus('❌ Промокод не даёт 100% скидку', 'error');
+          return;
+        }
+        
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        var initData = getInitData();
+        if (!apiBase || !initData) {
+          setPaymentStatus('❌ Нет соединения с сервером', 'error');
+          return;
+        }
+        
+        payOvPromoConfirmBtn.disabled = true;
+        payOvPromoConfirmBtn.textContent = '⏳ Подтверждаю...';
+        setPaymentStatus('🎁 Применяю промокод...', 'ok');
+        
+        try {
+          var resp = await fetch(apiBase + '/api/payments/hot/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+            body: JSON.stringify({
+              request_id: pendingPaymentRequestId,
+              promo_code: activePromo.code,
+              initData: initData
+            })
+          });
+          
+          var json = await resp.json().catch(function() { return {}; });
+          
+          if (!resp.ok || !json.success) {
+            throw new Error(json.error || json.message || 'Ошибка применения промокода');
+          }
+          
+          // Проверяем, что промокод действительно дал бесплатный доступ
+          if (json.free_applied || (json.provider === 'promo' && Number(json.amount) === 0)) {
+            console.log('[Promo Confirm] Промокод применён успешно');
+            pendingPaymentRequestId = null;
+            pendingPaymentSku = null;
+            activePromo = null;
+            
+            hidePaymentOverlay();
+            showConfirm(
+              '🎁 Промокод применён!',
+              'Твоя песня создаётся и скоро придёт в бот.<br><br>🎵 Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.'
+            );
+          } else {
+            throw new Error('Промокод не дал бесплатный доступ');
+          }
+          
+        } catch (e) {
+          console.error('[Promo Confirm] Ошибка:', e);
+          setPaymentStatus('❌ ' + (e.message || 'Ошибка применения промокода'), 'error');
+          payOvPromoConfirmBtn.disabled = false;
+          payOvPromoConfirmBtn.textContent = '🎁 Подтвердить и отправить';
+        }
+      });
+
       // ── Overlay: кнопка «Получить бесплатный ключ» (первый подарочный доступ) ──
       var payOvFreeClaimBtn = document.getElementById('payOvFreeClaimBtn');
       if (payOvFreeClaimBtn) payOvFreeClaimBtn.addEventListener('click', async function() {
@@ -3490,24 +3647,45 @@
           </button>
         </div>
 
-        <p id="payOvIntro" style="color:rgba(255,255,255,0.8);font-size:0.92rem;line-height:1.65;margin-bottom:20px;">
-          Заявка отправлена. Введи промокод или нажми кнопку ниже для оплаты через HOT Pay.
-        </p>
-
-        <!-- Промокод -->
-        <div style="margin-bottom:8px;">
-          <label style="display:block;font-size:0.82rem;color:rgba(255,255,255,0.6);margin-bottom:6px;letter-spacing:0.3px;">🏷 Промокод</label>
+        <!-- Промокод секция -->
+        <div style="margin-bottom:20px;">
+          <p style="color:rgba(255,255,255,0.8);font-size:0.95rem;margin-bottom:10px;">Есть промокод?</p>
           <input id="payOvPromoInput" type="text" placeholder="Введите промокод"
             style="display:block;width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(212,175,55,0.65);background:rgba(255,255,255,0.14);color:#fff;font-size:1rem;font-family:inherit;text-transform:uppercase;outline:none;-webkit-appearance:none;margin-bottom:8px;">
           <button id="payOvPromoBtn" type="button"
             style="display:block;width:100%;box-sizing:border-box;padding:11px;border-radius:10px;background:rgba(212,175,55,0.18);border:1.5px solid rgba(212,175,55,0.55);color:#d4af37;font-weight:600;font-size:0.9rem;cursor:pointer;font-family:inherit;">
-            Применить промокод
+            Применить
           </button>
         </div>
-        <div style="height:10px;"></div>
 
-        <!-- Статус (промокод / оплата) -->
+        <!-- Успешное применение промокода 100% -->
+        <div id="payOvPromoSuccessHint" style="display:none;background:rgba(5,150,105,0.15);border:1.5px solid rgba(16,185,129,0.5);border-radius:14px;padding:16px;margin-bottom:16px;">
+          <p style="color:#d1fae5;font-size:0.95rem;line-height:1.6;margin:0;">
+            ✅ <strong style="color:#6ee7b7;">Промокод применён!</strong> Генерация бесплатна.
+          </p>
+        </div>
+
+        <!-- Кнопка подтверждения промокода 100% -->
+        <button id="payOvPromoConfirmBtn" type="button" style="display:none;width:100%;padding:16px;border-radius:13px;background:linear-gradient(135deg,#059669,#10b981);border:none;color:#fff;font-size:1.05rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:16px;letter-spacing:0.3px;">
+          🎁 Подтвердить и отправить
+        </button>
+
+        <!-- Статус (ошибки, предупреждения) -->
         <div id="payOvStatus" style="display:none;border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:0.88rem;line-height:1.5;"></div>
+
+        <!-- Секция оплаты (HOT Pay) -->
+        <div id="payOvPaymentSection" style="margin-bottom:16px;">
+          <p style="color:rgba(255,255,255,0.8);font-size:0.95rem;margin-bottom:10px;">Или оплати:</p>
+          <div style="background:rgba(167,139,250,0.08);border-radius:12px;padding:14px;margin-bottom:12px;text-align:center;">
+            <div style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-bottom:4px;">Цена:</div>
+            <div id="payOvPriceDisplay" style="font-size:1.3rem;font-weight:700;color:#a78bfa;">5.99 USDT</div>
+            <div id="payOvPriceHint" style="font-size:0.8rem;color:rgba(16,185,129,0.8);margin-top:6px;"></div>
+          </div>
+          <button id="payOvPayBtn" type="button"
+            style="width:100%;padding:16px;border-radius:13px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:0;letter-spacing:0.3px;">
+            💳 Оплатить через HOT Pay
+          </button>
+        </div>
 
         <!-- Кнопка «скопировать ссылку» (показывается если openLink не сработал) -->
         <div id="payOvLinkRow" style="display:none;margin-bottom:12px;">
@@ -3519,12 +3697,6 @@
             📋 Скопировать ссылку оплаты
           </button>
         </div>
-
-        <!-- Главная кнопка оплаты -->
-        <button id="payOvPayBtn" type="button"
-          style="width:100%;padding:16px;border-radius:13px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:11px;letter-spacing:0.3px;">
-          💳 Оплатить через HOT Pay
-        </button>
 
         <!-- Кнопка ручной проверки (показывается после открытия HOT Pay) -->
         <button id="payOvCheckBtn" type="button" style="display:none;width:100%;padding:13px;border-radius:13px;background:rgba(16,185,129,0.12);border:1.5px solid rgba(16,185,129,0.4);color:rgba(16,185,129,0.95);font-size:0.9rem;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:11px;">
