@@ -286,8 +286,10 @@
     input.valid,textarea.valid{border-color:#4ade80}
     /* Улучшения для date/time inputs на Android */
     input[type="date"],input[type="time"]{
-      font-size:1.1rem;
-      min-height:52px;
+      font-size:1.2rem;
+      min-height:56px;
+      font-weight:500;
+      letter-spacing:0.3px;
       padding:15px 18px;
       font-weight:600;
       letter-spacing:0.4px;
@@ -308,8 +310,10 @@
     }
     input[type="date"]::-webkit-calendar-picker-indicator,
     input[type="time"]::-webkit-calendar-picker-indicator{
-      width:28px;
-      height:28px;
+      width:32px;
+      height:32px;
+      min-width:32px;
+      min-height:32px;
       opacity:0.85;
       cursor:pointer;
       filter:invert(1) brightness(1.2);
@@ -331,15 +335,18 @@
     /* Улучшенная видимость для Android Xiaomi */
     @media (max-width: 600px) {
       input[type="date"],input[type="time"]{
-        font-size:1.15rem;
-        min-height:56px;
+        font-size:1.25rem;
+        min-height:58px;
         padding:16px 20px;
         border-width:2.5px;
+        font-weight:600;
       }
       input[type="date"]::-webkit-calendar-picker-indicator,
       input[type="time"]::-webkit-calendar-picker-indicator{
-        width:32px;
-        height:32px;
+        width:36px;
+        height:36px;
+        min-width:36px;
+        min-height:36px;
       }
     }
     .birthdate-wrap{position:relative}
@@ -446,8 +453,18 @@
     .birthplace-hint{margin-top:6px;font-size:.9rem;color:var(--tg-theme-hint-color,rgba(212,175,55,0.85));line-height:1.5}
     @media (max-width: 600px) {
       .birthplace-suggestions{max-height:240px;border-width:2.5px}
-      .birthplace-suggestions li{padding:16px 20px;font-size:1.1rem}
-      #birthplace{font-size:1.1rem;padding:16px 20px}
+      .birthplace-suggestions li{padding:16px 20px;font-size:1.15rem;font-weight:600}
+      #birthplace{font-size:1.15rem;padding:16px 20px;font-weight:500}
+      .field input:not([type="checkbox"]):not([type="radio"]){
+        font-size:1.15rem;
+        padding:16px 20px;
+        font-weight:500;
+      }
+      .field select{
+        font-size:1.15rem;
+        padding:16px 20px;
+        font-weight:500;
+      }
     }
     
     #transitForm{display:none;margin-top:30px;padding:20px;background:var(--tg-theme-secondary-bg-color,rgba(255,255,255,0.05));border-radius:12px;border:1px solid var(--tg-theme-border-color,rgba(255,255,255,0.1))}
@@ -651,11 +668,11 @@
         <div class="field">
           <label for="birthplace" data-icon="📍">Место рождения</label>
           <div id="birthplaceWrap" class="birthplace-wrap">
-              <input type="text" id="birthplace" placeholder="Начни вводить город..." required autocomplete="off" aria-label="Локация рождения">
+              <input type="text" id="birthplace" placeholder="Москва, Лондон, Нью-Йорк..." required autocomplete="off" aria-label="Локация рождения">
               <span id="birthplaceCheck" class="birthplace-check" aria-hidden="true">✓</span>
             <ul id="birthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true"></ul>
           </div>
-          <div id="birthplaceHint" class="birthplace-hint" style="display:block;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">💡 Начни вводить название города — появятся подсказки. Выбери из списка для точных координат.</div>
+          <div id="birthplaceHint" class="birthplace-hint" style="display:block;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">💡 Начни вводить название города — появятся подсказки. Выбери из списка.</div>
         </div>
         
         <div class="field">
