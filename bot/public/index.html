@@ -12,6 +12,18 @@
   <script>
     (function(){
       try {
+        var APP_VERSION = '1.2.19';
+        var CACHE_KEY = 'yupsoul_app_version';
+        var cached = localStorage.getItem(CACHE_KEY);
+        
+        // Если версия изменилась — принудительно перезагрузить без кэша
+        if (cached && cached !== APP_VERSION) {
+          localStorage.setItem(CACHE_KEY, APP_VERSION);
+          window.location.reload(true);
+          return;
+        }
+        localStorage.setItem(CACHE_KEY, APP_VERSION);
+        
         var qs = window.location.search;
         var m = qs.match(/[?&]v=(\d+)/);
         if (m && m[1] && m[1].length <= 6) {
@@ -464,23 +476,36 @@
     .app-logo{display:block;margin:0 auto 4px;max-width:150px;width:100%;height:auto;border-radius:0;box-shadow:none;opacity:0.92}
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* Онбординг: полноэкранные слайды с автопереходом */
-    #onboardingPage{position:fixed;inset:0;z-index:10001;background:#0A0A1A url('assets/bg-yupsoul.png') center/cover no-repeat;overflow:hidden}
-    #onboardingPage::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(4,4,20,.45) 0%,rgba(8,10,35,.65) 100%);z-index:0}
-    .onboarding-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 32px 96px;text-align:center;opacity:0;pointer-events:none;transition:opacity .4s ease;z-index:1}
+    /* ── СТОРИС-ОНБОРДИНГ ── */
+    #onboardingPage{position:fixed;inset:0;z-index:10001;background:#0A0A1A url('assets/bg-yupsoul.png') center/cover no-repeat;overflow:hidden;user-select:none}
+    #onboardingPage::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(4,4,20,.5) 0%,rgba(8,10,35,.7) 100%);z-index:0}
+    /* Прогресс-бары вверху (как в сторис) */
+    .stories-bars{position:absolute;top:max(14px,env(safe-area-inset-top));left:16px;right:16px;display:flex;gap:5px;z-index:10}
+    .story-bar{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,0.25);overflow:hidden}
+    .story-bar-fill{height:100%;width:0;background:rgba(255,255,255,0.9);border-radius:2px}
+    .story-bar-fill.done{width:100%;transition:none}
+    .story-bar-fill.playing{width:100%;transition:width var(--story-dur,4s) linear}
+    /* Кнопка закрыть */
+    .stories-close{position:absolute;top:max(8px,env(safe-area-inset-top));right:14px;z-index:11;background:rgba(255,255,255,0.12);border:none;color:#fff;font-size:1.1rem;width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background .2s;padding:0;line-height:1}
+    .stories-close:hover{background:rgba(255,255,255,0.22)}
+    /* Зоны тапа */
+    .stories-tap-prev,.stories-tap-next{position:absolute;top:0;bottom:0;width:40%;z-index:5;cursor:pointer}
+    .stories-tap-prev{left:0}
+    .stories-tap-next{right:0}
+    /* Слайды */
+    .onboarding-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:max(80px,calc(env(safe-area-inset-top)+72px)) 36px max(100px,calc(env(safe-area-inset-bottom)+80px));text-align:center;opacity:0;pointer-events:none;transition:opacity .3s ease;z-index:1}
     .onboarding-slide.active{opacity:1;pointer-events:auto}
-    .onboarding-icon{font-size:3.8rem;margin-bottom:20px;animation:iconBounce .5s ease-out}
-    @keyframes iconBounce{0%{transform:scale(0.5);opacity:0}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
-    .onboarding-title{font-size:1.6rem;font-weight:700;color:#fff;margin:0 0 14px 0;line-height:1.25;max-width:300px;letter-spacing:-0.2px}
-    .onboarding-text{font-size:1rem;line-height:1.6;color:rgba(255,255,255,0.72);margin:0 0 36px 0;max-width:300px}
-    .onboarding-btn{padding:15px 40px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1.05rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(212,175,55,0.3);transition:transform .2s,box-shadow .2s;min-width:180px;margin-bottom:24px}
+    .onboarding-icon{font-size:4.2rem;margin-bottom:22px;animation:iconBounce .4s ease-out}
+    @keyframes iconBounce{0%{transform:scale(0.6);opacity:0}65%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+    .onboarding-title{font-size:1.7rem;font-weight:700;color:#fff;margin:0 0 14px 0;line-height:1.22;max-width:300px;letter-spacing:-0.3px}
+    .onboarding-text{font-size:1rem;line-height:1.62;color:rgba(255,255,255,0.72);margin:0 0 32px 0;max-width:290px}
+    .onboarding-btn{padding:15px 40px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1.05rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(212,175,55,0.3);transition:transform .2s,box-shadow .2s;min-width:180px;width:auto;margin-top:0;min-height:unset;animation:none}
     .onboarding-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(212,175,55,0.4)}
-    .onboarding-btn:active{transform:translateY(0)}
-    .onboarding-skip{position:absolute;bottom:max(40px,calc(env(safe-area-inset-bottom) + 16px));left:50%;transform:translateX(-50%);padding:8px 16px;background:none;border:none;color:rgba(255,255,255,0.4);font-size:0.85rem;cursor:pointer;font-family:inherit;z-index:10;transition:color .2s;letter-spacing:0.2px;white-space:nowrap}
-    .onboarding-skip:hover{color:rgba(255,255,255,0.65)}
+    .onboarding-btn:active{transform:translateY(1px)}
     .onboarding-dots{display:none}
-    .onboarding-progress{position:absolute;top:0;left:0;right:0;height:2px;background:none;z-index:10;overflow:hidden}
-    .onboarding-progress-bar{height:100%;background:linear-gradient(90deg,rgba(167,139,250,0.6),rgba(236,72,153,0.6));width:0;transition:width 2s linear}
-    .onboarding-progress-bar.active{width:100%}
+    .onboarding-progress{display:none}
+    .onboarding-progress-bar{display:none}
+    .onboarding-skip{display:none}
     .success-title{font-size:2.2rem;color:#a78bfa;font-weight:800;text-align:center;margin:20px 0;background:linear-gradient(90deg,#a78bfa,#f9a8d4);-webkit-background-clip:text;background-clip:text;color:transparent}
     .success-text{font-size:1.15rem;line-height:1.7;margin:20px 0;text-align:center;padding:0 10px}
     .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px 40px;text-align:center;min-height:70vh}
@@ -550,38 +575,45 @@
     </div>
   </div>
 
-  <!-- Онбординг (показывается при каждом входе) -->
+  <!-- Онбординг — формат сторис -->
   <div id="onboardingPage" style="display:none">
-    <button class="onboarding-skip" id="onboardingSkip">Пропустить</button>
-    
-    <div class="onboarding-progress">
-      <div class="onboarding-progress-bar" id="onboardingProgressBar"></div>
+
+    <!-- Прогресс-бары сторис -->
+    <div class="stories-bars">
+      <div class="story-bar"><div class="story-bar-fill" id="storyBar1"></div></div>
+      <div class="story-bar"><div class="story-bar-fill" id="storyBar2"></div></div>
+      <div class="story-bar"><div class="story-bar-fill" id="storyBar3"></div></div>
     </div>
-    
+
+    <!-- Кнопка закрыть -->
+    <button class="stories-close" id="onboardingSkip" aria-label="Закрыть">✕</button>
+
+    <!-- Зоны тапа: влево = назад, вправо = вперёд -->
+    <div class="stories-tap-prev" id="storiesTapPrev"></div>
+    <div class="stories-tap-next" id="storiesTapNext"></div>
+
     <!-- Слайд 1 -->
     <div class="onboarding-slide active" data-step="1">
       <span class="onboarding-icon">✨</span>
       <h2 class="onboarding-title">Твои песни души</h2>
       <p class="onboarding-text">Слушай свой персональный саундтрек в любой ситуации.</p>
     </div>
-    
+
     <!-- Слайд 2 -->
     <div class="onboarding-slide" data-step="2">
       <span class="onboarding-icon">💬</span>
       <h2 class="onboarding-title">Разговор по душам</h2>
       <p class="onboarding-text">AI-агент, который понимает тебя без слов. Задавай вопросы, получай поддержку — как с близким другом.</p>
     </div>
-    
-    <!-- Слайд 3 — контент зависит от того, новый это пользователь или вернувшийся (переключается JS) -->
+
+    <!-- Слайд 3 — новый или вернувшийся пользователь -->
     <div class="onboarding-slide" data-step="3">
-      <!-- Для новых пользователей -->
       <div id="onboardingSlide3New">
         <span class="onboarding-icon">🎁</span>
         <h2 class="onboarding-title">Первая — бесплатно</h2>
         <p class="onboarding-text">Попробуй прямо сейчас без оплаты. Нажми «Начать» и получи свою первую песню в подарок.</p>
         <button class="onboarding-btn" id="onboardingStartBtn">Начать</button>
       </div>
-      <!-- Для вернувшихся пользователей -->
       <div id="onboardingSlide3Return" style="display:none">
         <span class="onboarding-icon">🔗</span>
         <h2 class="onboarding-title">Позови друга — получи трек</h2>
@@ -589,11 +621,15 @@
         <button class="onboarding-btn" id="onboardingReferBtn">Пригласить друга →</button>
       </div>
     </div>
-    
-    <div class="onboarding-dots">
+
+    <!-- Скрытые элементы для совместимости со старым JS -->
+    <div class="onboarding-dots" style="display:none">
       <button class="onboarding-dot active" data-step="1"></button>
       <button class="onboarding-dot" data-step="2"></button>
       <button class="onboarding-dot" data-step="3"></button>
+    </div>
+    <div class="onboarding-progress" style="display:none">
+      <div class="onboarding-progress-bar" id="onboardingProgressBar"></div>
     </div>
   </div>
 
@@ -667,7 +703,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026</p>
+        <p>YupSoul • 2026 • v1.2.19</p>
       </footer>
     </div>
     
@@ -890,7 +926,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026</p>
+        <p>YupSoul • 2026 • v1.2.19</p>
       </footer>
     </div>
     
@@ -992,7 +1028,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026</p>
+        <p>YupSoul • 2026 • v1.2.19</p>
       </footer>
     </div>
 
@@ -2268,31 +2304,34 @@
       // #endregion
       
       // ═══════════════════════════════════════════════════════════════════
-      // ОНБОРДИНГ: логика показа и автопереходов (показывается при каждом входе)
+      // ═══════════════════════════════════════════════════════════════════
+      // ОНБОРДИНГ — формат сторис (прогресс-бары + тап для навигации)
       // ═══════════════════════════════════════════════════════════════════
       (function() {
         var ONBOARDING_KEY = 'yupsoul_onboarding_seen';
+        var TOTAL_SLIDES = 3;
+        var SLIDE_DURATION = 4500; // одинаковая скорость для всех
+
         var onboardingPage = document.getElementById('onboardingPage');
         var homePage = document.getElementById('homePage');
         var slides = document.querySelectorAll('.onboarding-slide');
-        var dots = document.querySelectorAll('.onboarding-dot');
-        var progressBar = document.getElementById('onboardingProgressBar');
         var skipBtn = document.getElementById('onboardingSkip');
         var startBtn = document.getElementById('onboardingStartBtn');
         var referBtn = document.getElementById('onboardingReferBtn');
         var slide3New = document.getElementById('onboardingSlide3New');
         var slide3Return = document.getElementById('onboardingSlide3Return');
+        var tapPrev = document.getElementById('storiesTapPrev');
+        var tapNext = document.getElementById('storiesTapNext');
 
         var currentStep = 1;
         var autoTimer = null;
-        // Вернувшиеся пользователи видят онбординг быстрее
+
+        // Устанавливаем CSS-переменную для длительности анимации
+        if (onboardingPage) onboardingPage.style.setProperty('--story-dur', (SLIDE_DURATION / 1000) + 's');
+
+        // Тип пользователя
         var seen = false;
         try { seen = localStorage.getItem(ONBOARDING_KEY) === 'true'; } catch(_) {}
-        var SLIDE_DURATION = seen ? 1000 : 2000;
-        // Синхронизируем CSS-анимацию прогресс-бара с SLIDE_DURATION
-        if (progressBar) progressBar.style.transition = 'width ' + (SLIDE_DURATION / 1000) + 's linear';
-
-        // Подготавливаем слайд 3 под тип пользователя
         if (seen) {
           if (slide3New) slide3New.style.display = 'none';
           if (slide3Return) slide3Return.style.display = '';
@@ -2301,103 +2340,115 @@
           if (slide3Return) slide3Return.style.display = 'none';
         }
 
+        // Получаем fill-элементы прогресс-баров
+        function getBar(i) { return document.getElementById('storyBar' + i); }
+
+        function updateBars(activeStep) {
+          for (var i = 1; i <= TOTAL_SLIDES; i++) {
+            var fill = getBar(i);
+            if (!fill) continue;
+            // Сброс анимации
+            fill.style.transition = 'none';
+            if (i < activeStep) {
+              fill.style.width = '100%'; // уже просмотрен
+            } else if (i === activeStep) {
+              fill.style.width = '0%';
+              // Принудительный reflow чтобы transition сработал
+              void fill.offsetWidth;
+              fill.style.transition = 'width ' + (SLIDE_DURATION / 1000) + 's linear';
+              fill.style.width = '100%';
+            } else {
+              fill.style.width = '0%'; // ещё не смотрели
+            }
+          }
+        }
+
         function showOnboarding() {
           if (onboardingPage) onboardingPage.style.display = 'block';
           if (homePage) homePage.classList.remove('active');
-          startAutoProgress();
+          goToStep(1);
         }
-        
+
         function hideOnboarding() {
+          if (autoTimer) clearTimeout(autoTimer);
           if (onboardingPage) onboardingPage.style.display = 'none';
           if (homePage) homePage.classList.add('active');
           try { localStorage.setItem(ONBOARDING_KEY, 'true'); } catch(_) {}
-          stopAutoProgress();
         }
-        
+
         function goToStep(step) {
-          if (step < 1 || step > 3) return;
+          if (step < 1) { hideOnboarding(); return; }
+          if (step > TOTAL_SLIDES) { hideOnboarding(); return; }
+
+          if (autoTimer) clearTimeout(autoTimer);
           currentStep = step;
-          
+
           slides.forEach(function(s) {
             s.classList.toggle('active', parseInt(s.dataset.step) === step);
           });
-          dots.forEach(function(d) {
-            d.classList.toggle('active', parseInt(d.dataset.step) === step);
-          });
-          
-          stopAutoProgress();
-          // На последнем слайде у вернувшихся — автозакрытие через 2 сек
-          if (step < 3) {
-            startAutoProgress();
-          } else if (seen) {
-            autoTimer = setTimeout(hideOnboarding, 2000);
-          }
-        }
-        
-        function startAutoProgress() {
-          if (currentStep >= 3) return;
-          
-          if (progressBar) {
-            progressBar.classList.remove('active');
-            void progressBar.offsetWidth;
-            progressBar.classList.add('active');
-          }
-          
+
+          updateBars(step);
+
+          // Автопереход на следующий слайд (последний — закрыть)
           autoTimer = setTimeout(function() {
             goToStep(currentStep + 1);
           }, SLIDE_DURATION);
         }
-        
-        function stopAutoProgress() {
-          if (autoTimer) clearTimeout(autoTimer);
-          if (progressBar) progressBar.classList.remove('active');
-        }
-        
-        if (skipBtn) skipBtn.addEventListener('click', hideOnboarding);
-        if (startBtn) startBtn.addEventListener('click', hideOnboarding);
+
+        // Кнопка закрыть (X)
+        if (skipBtn) skipBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          hideOnboarding();
+        });
+
+        // Кнопка «Начать» на последнем слайде
+        if (startBtn) startBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          hideOnboarding();
+        });
 
         // Кнопка «Пригласить друга» на слайде 3 для вернувшихся
         if (referBtn) {
-          referBtn.addEventListener('click', function() {
+          referBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
             hideOnboarding();
-            // Ждём завершения loadReferralStats, затем шейрим
             setTimeout(function() {
               var link = (document.getElementById('referralLinkInput') || {}).value || '';
               if (link) {
-                // Ссылка уже загружена — сразу шейрим
                 var shareBtn = document.getElementById('referralShareBtn');
                 if (shareBtn) shareBtn.click();
               } else {
-                // Ссылка ещё не загружена — запускаем загрузку, потом шейрим
-                loadReferralStats().then(function() {
-                  var shareBtn = document.getElementById('referralShareBtn');
-                  if (shareBtn) shareBtn.click();
-                }).catch(function() {});
+                if (typeof loadReferralStats === 'function') {
+                  loadReferralStats().then(function() {
+                    var shareBtn = document.getElementById('referralShareBtn');
+                    if (shareBtn) shareBtn.click();
+                  }).catch(function() {});
+                }
               }
             }, 300);
           });
         }
-        
-        dots.forEach(function(dot) {
-          dot.addEventListener('click', function() {
-            goToStep(parseInt(this.dataset.step));
-          });
-        });
-        
+
+        // Тап-зоны: влево = предыдущий, вправо = следующий
+        if (tapPrev) tapPrev.addEventListener('click', function() { goToStep(currentStep - 1); });
+        if (tapNext) tapNext.addEventListener('click', function() { goToStep(currentStep + 1); });
+
+        // Поддержка свайпа (дополнительно к зонам тапа)
         var touchStartX = 0;
-        var touchEndX = 0;
         if (onboardingPage) {
           onboardingPage.addEventListener('touchstart', function(e) {
             touchStartX = e.changedTouches[0].screenX;
-          });
+          }, { passive: true });
           onboardingPage.addEventListener('touchend', function(e) {
-            touchEndX = e.changedTouches[0].screenX;
-            if (touchStartX - touchEndX > 50 && currentStep < 3) goToStep(currentStep + 1);
-            if (touchEndX - touchStartX > 50 && currentStep > 1) goToStep(currentStep - 1);
-          });
+            var dx = e.changedTouches[0].screenX - touchStartX;
+            if (Math.abs(dx) > 60) {
+              if (dx < 0) goToStep(currentStep + 1);
+              else goToStep(currentStep - 1);
+            }
+          }, { passive: true });
         }
 
-        // Онбординг показывается при каждом входе
+        // Показываем онбординг при каждом входе
         showOnboarding();
       })();
 
