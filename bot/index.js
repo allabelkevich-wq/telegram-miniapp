@@ -50,6 +50,8 @@ const ADMIN_IDS = (process.env.ADMIN_TELEGRAM_IDS || "")
   .filter((n) => !Number.isNaN(n));
 const ADMIN_SECRET = process.env.ADMIN_SECRET || "";
 const HOT_API_JWT = process.env.HOT_API_JWT || "";
+// Реальное username бота — заполняется при старте через bot.api.getMe()
+let RESOLVED_BOT_USERNAME = process.env.BOT_USERNAME || "";
 const HOT_WEBHOOK_SECRET = process.env.HOT_WEBHOOK_SECRET || "";
 const HOT_PAYMENT_URL = (process.env.HOT_PAYMENT_URL || "https://pay.hot-labs.org/payment").trim();
 
@@ -2310,7 +2312,7 @@ app.get("/api/referral/stats", asyncApi(async (req, res) => {
   if (telegramUserId == null) return res.status(401).json({ error: "Unauthorized" });
 
   const code = await getOrCreateReferralCode(telegramUserId);
-  const botUsername = process.env.BOT_USERNAME || "yupsoul_bot";
+  const botUsername = RESOLVED_BOT_USERNAME || process.env.BOT_USERNAME || "yupsoul_bot";
 
   const [invitedRes, rewardedRes, profileRes] = await Promise.allSettled([
     supabase.from("referrals").select("*", { count: "exact", head: true }).eq("referrer_id", Number(telegramUserId)),
@@ -3057,6 +3059,7 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
 });
 
 async function onBotStart(info) {
+  if (info?.username) RESOLVED_BOT_USERNAME = info.username;
   console.log("Бот запущен:", info.username);
   try {
     if (process.env.RENDER_EXTERNAL_URL || process.env.MINI_APP_URL) {

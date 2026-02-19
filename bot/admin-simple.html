@@ -204,7 +204,15 @@
       <button class="pay-filter-btn" data-pay="awaiting" onclick="setPayFilter(this)">⏳ Ожидает оплаты</button>
       <button class="pay-filter-btn" data-pay="admin" onclick="setPayFilter(this)">🔧 Ручная</button>
     </div>
-    <div class="details-section" style="margin-bottom:20px;">
+    <div class="bulk-actions-bar" id="bulkActionsBar" style="display:none;">
+      <label><input type="checkbox" id="selectAllRequests" aria-label="Выделить все заявки"> Выделить все</label>
+      <button type="button" class="btn btn-warning" id="deleteSelectedBtn" disabled title="Удалить выбранные заявки из списка (например тестовые)">🗑 Удалить выбранные (<span id="deleteSelectedCount">0</span>)</button>
+    </div>
+    <div id="requests" class="loading">
+      <div class="spinner"></div>
+      <div>Загрузка... / Loading...</div>
+    </div>
+    <div class="details-section" style="margin-bottom:20px;margin-top:32px;">
       <div class="section-title">⚙️ Настройки генерации</div>
       <p style="font-size:14px;color:#94a3b8;margin-bottom:12px;">Параметры DeepSeek для новых заявок. Приоритет: .env на сервере &gt; эти настройки.</p>
       <div style="display:flex;flex-direction:column;gap:14px;">
@@ -397,14 +405,6 @@
         </div>
         <div id="referralsMsg" class="mono-msg"></div>
       </div>
-    </div>
-    <div class="bulk-actions-bar" id="bulkActionsBar" style="display:none;">
-      <label><input type="checkbox" id="selectAllRequests" aria-label="Выделить все заявки"> Выделить все</label>
-      <button type="button" class="btn btn-warning" id="deleteSelectedBtn" disabled title="Удалить выбранные заявки из списка (например тестовые)">🗑 Удалить выбранные (<span id="deleteSelectedCount">0</span>)</button>
-    </div>
-    <div id="requests" class="loading">
-      <div class="spinner"></div>
-      <div>Загрузка... / Loading...</div>
     </div>
   </div>
 
