@@ -273,8 +273,8 @@
     .lang-opt:hover{background:rgba(255,255,255,0.08)}
     h1{font-size:var(--fluid-2xl);background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 4s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;letter-spacing:-1px;line-height:1.1}
     .subtitle{color:var(--subtitle-readable,var(--tg-theme-text-color));font-size:var(--fluid-base);margin-top:8px;font-weight:400}
-    .tagline{color:#d4af37;font-size:var(--fluid-md);font-weight:600;margin:12px 0;letter-spacing:-0.2px}
-    .section{background:var(--tg-theme-secondary-bg-color);border-radius:var(--radius-lg);padding:var(--spacing-xl) var(--spacing-lg);box-shadow:0 15px 45px rgba(212,175,55,0.28);border:1px solid var(--tg-theme-border-color);position:relative;overflow:hidden;margin-bottom:var(--spacing-lg)}
+    .tagline{color:#d4af37;font-size:var(--fluid-sm);font-weight:400;margin:6px 0 0;letter-spacing:0.1px;opacity:0.75}
+    .section{background:var(--tg-theme-secondary-bg-color);border-radius:var(--radius-lg);padding:var(--spacing-lg) var(--spacing-lg);box-shadow:0 4px 18px rgba(212,175,55,0.08);border:1px solid rgba(255,255,255,0.06);position:relative;overflow:hidden;margin-bottom:var(--spacing-lg)}
     #paymentPage .section{background:rgba(20,18,45,0.98);min-height:300px;color:#fff}
     body.theme-light #paymentPage .section{background:rgba(250,248,255,0.98);color:#1f2937}
     .section::before{display:none}
@@ -431,7 +431,7 @@
     .keys-composition-small{display:flex;align-items:center;justify-content:center;gap:12px;margin:15px 0}
     .keys-composition-small .key-music{width:36px;height:50px;transform:rotate(-8deg);opacity:.9}
     .keys-composition-small .key-door{width:34px;height:50px;transform:rotate(6deg);opacity:.9}
-    .app-logo{display:block;margin:0 auto;max-width:220px;width:100%;height:auto;border-radius:0;box-shadow:0 10px 28px rgba(214,172,83,.22)}
+    .app-logo{display:block;margin:0 auto 4px;max-width:150px;width:100%;height:auto;border-radius:0;box-shadow:none;opacity:0.92}
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* Онбординг: полноэкранные слайды с автопереходом */
     #onboardingPage{position:fixed;inset:0;z-index:10001;background:#0A0A1A url('assets/bg-yupsoul.png') center/cover no-repeat;overflow:hidden}
@@ -462,7 +462,7 @@
     .song-preview{background:white;border-radius:16px;padding:20px;margin:20px 0;text-align:left;border:2px solid #a78bfa}
     .song-preview h3{color:#a78bfa;font-size:1.4rem;margin-bottom:10px;text-align:center}
     .song-preview p{font-size:1.05rem;line-height:1.7;color:var(--tg-theme-text-color,#2d2d2d)}
-    footer{text-align:center;padding:30px 0 20px;color:#6b7280;font-size:.95rem;margin-top:auto}
+    footer{text-align:center;padding:16px 0 12px;color:rgba(107,114,128,0.5);font-size:.78rem;margin-top:auto}
     .birthplace-wrap{position:relative}
     .birthplace-suggestions{display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--tg-theme-bg-color,rgba(15,12,40,0.98));border:2px solid rgba(212,175,55,0.5);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.3);max-height:280px;overflow-y:auto;z-index:50;list-style:none;padding:6px 0}
     .birthplace-suggestions li{padding:14px 18px;cursor:pointer;font-size:1.05rem;color:var(--tg-theme-text-color,#fff);border-bottom:1px solid rgba(255,255,255,0.1);transition:all .2s;font-weight:500}
@@ -562,7 +562,7 @@
   <!-- Страницы приложения — прямые дети body, вне .container, чтобы не создавать изолированный stacking context -->
     <!-- Главная страница -->
     <div class="page" id="homePage">
-      <header>
+      <header style="padding-bottom:8px">
         <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
           <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
             <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
@@ -575,7 +575,7 @@
             <button type="button" class="lang-opt" data-lang="fr">FR</button>
           </div>
         </div>
-        <h1>YupSoul</h1>
+        <h1 style="font-size:1.4rem;margin-bottom:2px">YupSoul</h1>
         <div id="homeTagline" class="tagline">Исследуй свои грани так, как ты этого захочешь</div>
       </header>
       
@@ -591,8 +591,8 @@
       </div>
 
       <div class="section">
-        <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="220" height="220">
-        <p id="homeGreeting" class="tagline" style="margin-bottom:12px">Заходи, когда захочешь свою персональную песню.</p>
+        <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="150" height="150">
+        <p id="homeGreeting" style="font-size:0.95rem;color:rgba(255,255,255,0.6);text-align:center;margin:8px 0 20px;line-height:1.5">Заходи, когда захочешь свою персональную песню.</p>
         <button id="startBtn">Начать</button>
         <div id="masterNav" style="display:none; margin-top:20px">
           <button class="secondary" id="goHeroesBtn">👥 Мои герои</button>
