@@ -346,6 +346,17 @@
     .keys-composition-small .key-door{width:34px;height:50px;transform:rotate(6deg);opacity:.9}
     .app-logo{display:block;margin:0 auto;max-width:220px;width:100%;height:auto;border-radius:0;box-shadow:0 10px 28px rgba(214,172,83,.22)}
     .app-logo.success{max-width:180px;margin-bottom:15px}
+    /* Превью-карусель: польза бота в 3 слайда */
+    .preview-carousel{width:100%;margin:0 0 20px 0;overflow:hidden;border-radius:16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12)}
+    .preview-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .preview-track::-webkit-scrollbar{display:none}
+    .preview-slide{flex:0 0 100%;scroll-snap-align:start;scroll-snap-stop:always;padding:24px 20px;text-align:center;box-sizing:border-box;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+    .preview-slide-icon{font-size:2.8rem;margin-bottom:12px;line-height:1}
+    .preview-slide-title{font-size:1.05rem;font-weight:700;color:var(--tg-theme-text-color,#fff);margin:0 0 6px 0}
+    .preview-slide-text{font-size:0.9rem;color:var(--tg-theme-hint-color,rgba(255,255,255,0.75));line-height:1.5;margin:0}
+    .preview-dots{display:flex;justify-content:center;gap:8px;margin-top:12px}
+    .preview-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.3);border:none;padding:0;cursor:pointer;transition:background 0.2s}
+    .preview-dot.active{background:var(--tg-theme-button-color,#a78bfa)}
     .success-title{font-size:2.2rem;color:#a78bfa;font-weight:800;text-align:center;margin:20px 0;background:linear-gradient(90deg,#a78bfa,#f9a8d4);-webkit-background-clip:text;background-clip:text;color:transparent}
     .success-text{font-size:1.15rem;line-height:1.7;margin:20px 0;text-align:center;padding:0 10px}
     .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px 40px;text-align:center;min-height:70vh}
@@ -423,7 +434,7 @@
       <div id="recoveryBanner" style="display:none;margin:0 0 16px 0;background:rgba(5,150,105,0.15);border:1.5px solid rgba(16,185,129,0.5);border-radius:14px;padding:16px 18px;">
         <div style="font-size:0.95rem;color:#d1fae5;line-height:1.55;margin-bottom:12px;">
           🎁 <strong style="color:#6ee7b7;">У тебя есть незавершённая заявка!</strong><br>
-          Первый звуковой ключ — бесплатно. Нажми кнопку, и мы запустим создание прямо сейчас.
+          Первая песня — бесплатно. Нажми кнопку, и мы запустим создание прямо сейчас.
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <button id="recoveryClaimBtn" style="flex:1;min-width:140px;padding:12px;border-radius:10px;background:linear-gradient(135deg,#059669,#10b981);border:none;color:#fff;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;">
@@ -435,9 +446,35 @@
         </div>
       </div>
 
+      <!-- Превью: как бот даёт пользу (2–3 слайда) -->
+      <div class="preview-carousel" id="previewCarousel">
+        <div class="preview-track" id="previewTrack">
+          <div class="preview-slide">
+            <span class="preview-slide-icon">🎵</span>
+            <div class="preview-slide-title">Персональная песня</div>
+            <p class="preview-slide-text">По твоим данным и запросу создаётся уникальный трек — только для тебя.</p>
+          </div>
+          <div class="preview-slide">
+            <span class="preview-slide-icon">📱</span>
+            <div class="preview-slide-title">Трек в Telegram</div>
+            <p class="preview-slide-text">Песня придёт в чат с ботом. Слушай когда удобно — ничего не потеряется.</p>
+          </div>
+          <div class="preview-slide">
+            <span class="preview-slide-icon">🎁</span>
+            <div class="preview-slide-title">Первый раз — бесплатно</div>
+            <p class="preview-slide-text">Нажми «Начать», заполни пару полей — и получи свою первую песню в подарок.</p>
+          </div>
+        </div>
+        <div class="preview-dots" id="previewDots">
+          <button type="button" class="preview-dot active" aria-label="Слайд 1" data-index="0"></button>
+          <button type="button" class="preview-dot" aria-label="Слайд 2" data-index="1"></button>
+          <button type="button" class="preview-dot" aria-label="Слайд 3" data-index="2"></button>
+        </div>
+      </div>
+
       <div class="section">
         <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="220" height="220">
-        <p id="homeGreeting" class="tagline" style="margin-bottom:12px">Заходи, когда захочешь вспомнить, кто ты.</p>
+        <p id="homeGreeting" class="tagline" style="margin-bottom:12px">Заходи, когда захочешь свою персональную песню.</p>
         <button id="startBtn">Начать</button>
         <div id="masterNav" style="display:none; margin-top:20px">
           <button class="secondary" id="goHeroesBtn">👥 Мои герои</button>
@@ -495,7 +532,7 @@
       <div class="section">
         <div class="step-panel" data-step="1">
           <div class="mode-selector">
-            <h3>Тип ключа</h3>
+            <h3>Тип песни</h3>
             <p class="mode-subtitle">От этого зависят поля формы ниже</p>
             <div class="mode-buttons">
               <button type="button" class="mode-btn active" data-mode="single">
@@ -674,8 +711,7 @@
         <div class="loading-text" id="loadingTitle">✨ Заявка принята!</div>
         <div id="loadingDesc" style="color:rgba(255,255,255,0.75);font-size:1rem;text-align:center;max-width:380px;line-height:1.7;margin-top:12px;">
           Анализирую твои данные и создаю уникальную песню.<br><br>
-          🎵 Готовый ключ придёт в бот — мы сами напишем.<br>
-          Можешь закрыть приложение.
+          🎵 Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.
         </div>
         <div id="loadingCountdown" style="margin-top:20px;color:rgba(167,139,250,0.8);font-size:0.9rem;"></div>
       </div>
@@ -685,14 +721,14 @@
     <div class="page" id="successPage">
       <header>
         <h1>YupSoul</h1>
-        <div class="subtitle">Ключ активирован!</div>
+        <div class="subtitle">Песня создана!</div>
       </header>
       
       <div class="section">
         <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo success" width="180" height="180">
         <h2 class="success-title">Готово!</h2>
         <p class="success-text">
-          Твой персональный звуковой ключ создан! Это твой уникальный артефакт силы для игры жизни.
+          Твоя персональная песня создана! Уникальный трек по твоим данным — слушай когда захочешь.
         </p>
         
         <div class="song-preview">
@@ -704,7 +740,7 @@
         
         <div style="background:rgba(167,139,250,.08);border-radius:12px;padding:15px;margin:20px 0;text-align:center;font-size:1.05rem;line-height:1.7">
           <strong>Что дальше:</strong><br>
-          Открой бота <a href="https://t.me/Yup_Soul_bot" style="color:#a78bfa;text-decoration:underline">@Yup_Soul_bot</a> в Telegram — там тебя ждёт твой звуковой ключ.
+          Открой бота <a href="https://t.me/Yup_Soul_bot" style="color:#a78bfa;text-decoration:underline">@Yup_Soul_bot</a> в Telegram — там тебя ждёт твоя песня.
         </div>
         
         <!-- ════════════════ SOUL CHAT БЛОК ════════════════ -->
@@ -761,7 +797,7 @@
         </div>
         <!-- ════════════════════════════════════════════════ -->
 
-        <button class="secondary" id="newKeyBtn" style="margin-top:15px">Создать ещё один ключ</button>
+        <button class="secondary" id="newKeyBtn" style="margin-top:15px">Создать ещё одну песню</button>
       </div>
       
       <footer>
@@ -801,7 +837,7 @@
           heroBirthplace: 'Место рождения', heroBirthplacePh: 'Город, страна', heroNotes: 'Досье / заметки', heroNotesPh: 'Заметки о клиенте',
           unknownTime: 'Не знаю точное время', cancel: 'Отмена', save: 'Сохранить', back: '← Назад',
           gender: 'Пол', genderSelect: 'Выбери', male: 'Мужской', female: 'Женский', other: 'Другой',
-          modeType: 'Тип ключа', modeSubtitle: 'Выбери тип генерации',
+          modeType: 'Тип песни', modeSubtitle: 'Выбери тип генерации',
           modeSingle: 'Для себя', modeSingleDesc: 'Глубокий анализ',
           modeCouple: 'Для двоих', modeCoupleDesc: 'Дуэт/пара',
           modeTransit: 'Энергия дня', modeTransitDesc: 'Энергия момента',
@@ -814,7 +850,7 @@
           transitIntentPh: 'Намерение момента (опционально)',
           sendRequest: 'Отправь запрос', quickRequests: 'Быстрые запросы', hide: 'Скрыть',
           requestPh: 'Какую грань будем исследовать сегодня?', toPayment: 'К оплате',
-          paymentSubtitle: 'Твой звуковой ключ', paymentAndAccess: 'Оплата и доступ',
+          paymentSubtitle: 'Твоя песня', paymentAndAccess: 'Оплата и доступ',
           paymentIntro: 'Первая песня — в подарок. Дальше можно оплатить отдельный элемент или оформить подписку на полный доступ.',
           loadingPricing: 'Загрузка тарифов...', currentItem: 'Текущий элемент',
           promoCode: 'Промокод', apply: 'Применить', backFromPayment: '← Назад',
@@ -823,20 +859,20 @@
           paymentPageIntroOrPay: 'Или введите промокод, или оплатите через HOT Pay.',
           paymentPageTagline: 'Промокод или оплата',
           payWithHot: 'Оплатить через HOT Pay',
-          firstFree: 'Первый звуковой ключ доступен бесплатно.',
+          firstFree: 'Первая песня доступна бесплатно.',
           paymentRequired: 'Оплата требуется для новых заявок.',
           subscriptionActive: 'У вас активная подписка — можно продолжить.',
           catalogLoadFailed: 'Тарифы не загрузились. Нажмите «Оформить и продолжить» — стоимость определит бэкенд.',
           promoApplied: 'Промокод {code}: -{amount} {currency}',
-          creatingKey: 'Создаю твой ключ...',
-          creatingKeyDesc: 'Магия творится в реальном времени. Твой персональный звуковой ключ формируется на основе твоих уникальных данных.',
-          keyActivated: 'Ключ активирован!', done: 'Готово!',
-          successText: 'Твой персональный звуковой ключ создан! Это твой уникальный артефакт силы для игры жизни.',
+          creatingKey: 'Создаю твою песню...',
+          creatingKeyDesc: 'Магия творится в реальном времени. Твоя персональная песня формируется на основе твоих данных.',
+          keyActivated: 'Песня создана!', done: 'Готово!',
+          successText: 'Твоя персональная песня создана! Уникальный трек по твоим данным — слушай когда захочешь.',
           yourSong: '🎵 Твоя песня',
           songPreviewText: 'Твоя уникальная аудиокомпозиция уже ждёт тебя в боте. Слушай её каждое утро, чтобы настроиться на волну успеха.',
           whatNext: 'Что дальше:', openBot: 'Открой бота',
           soulChat: 'Поговорить с душой', soulChatPay: 'К оплате — Soul Basic / Soul Plus',
-          newKey: 'Создать ещё один ключ',
+          newKey: 'Создать ещё одну песню',
           paymentThanks: 'Спасибо за оплату', thanksSubtitle: 'заявка принята',
           songInProgress: 'Песня ушла в генерацию. Через 2–3 минуты придёт в чат с ботом.',
           songInProgressConfirmed: 'Заявка принята. Песня ушла в генерацию — повторно оплачивать не нужно. Через 2–3 минуты придёт в чат с ботом.',
@@ -848,8 +884,8 @@
           soulChatNoAccess: 'Soul Chat — диалоги с душой. Доступ по подписке Soul Basic (10 диалогов/мес) или Soul Plus (30 диалогов/мес).',
           soulChatDefault: 'Soul Chat — диалоги с душой по заявке. Доступ по подписке.',
           soulChatNoApi: 'Soul Chat — диалоги с душой по заявке. Доступ по подписке Soul Basic или Soul Plus. Оформи в приложении: «К оплате».',
-          greeting: 'Привет, {name}! Заходи, когда захочешь вспомнить, кто ты.',
-          greetingDefault: 'Заходи, когда захочешь вспомнить, кто ты.',
+          greeting: 'Привет, {name}! Заходи, когда захочешь свою персональную песню.',
+          greetingDefault: 'Заходи, когда захочешь свою персональную песню.',
           alertNameShort: 'Имя должно содержать минимум 2 символа', alertBirthdate: 'Выбери дату рождения',
           alertBirthplace: 'Место рождения должно содержать минимум 3 символа', alertBirthplaceHint: 'Выбери локацию из списка подсказок',
           alertBirthtime: 'Укажи время рождения или отметь "Не знаю"', alertGender: 'Укажи пол', alertLanguage: 'Выбери язык',
@@ -861,9 +897,9 @@
           alertYourPath: 'Выбери свой путь', alertNoApi: 'Не настроен адрес API.', alertOpenFromBot: 'Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.',
           alertServerSleep: 'Сервер проснулся не сразу. Подожди около минуты и нажми «Отправить заявку» снова.',
           sending: 'Отправляю…',
-          universeHeard: '✨ {name}, Вселенная услышала твой запрос.\n\nТвой звуковой ключ формируется. Через 2-3 минуты он придёт в этот чат.',
-          universeHeardCouple: '✨ {name} и {name2}, Вселенная услышала ваш запрос.\n\nВаш звуковой ключ формируется. Через 2-3 минуты он придёт в этот чат.',
-          universeHeardTransit: '✨ {name}, Вселенная услышала твой запрос.\n\nЗвуковой ключ Энергии Дня формируется. Через 2-3 минуты он придёт в этот чат.',
+          universeHeard: '✨ {name}, Вселенная услышала твой запрос.\n\nТвоя песня формируется. Через 2-3 минуты придёт в этот чат.',
+          universeHeardCouple: '✨ {name} и {name2}, Вселенная услышала ваш запрос.\n\nВаша песня формируется. Через 2-3 минуты придёт в этот чат.',
+          universeHeardTransit: '✨ {name}, Вселенная услышала твой запрос.\n\nПесня «Энергия Дня» формируется. Через 2-3 минуты придёт в этот чат.',
           langSong: 'Язык песни', langRu: 'Русский', langEn: 'English', langDe: 'Deutsch', langFr: 'Français', langUk: 'Українська',
           quick1: 'Гармония и любовь к себе', quick2: 'Уверенность и предназначение', quick3: 'Творческий потенциал', quick4: 'Отпустить прошлое',
           quick5: 'Баланс жизни', quick6: 'Доверие и принятие', quick7: 'Исцеление и свобода', quick8: 'Путь к счастью',
@@ -893,7 +929,7 @@
           alertHeroName: 'Введите имя', alertError: 'Ошибка', alertDeleteConfirm: 'Удалить «{name}»? Это действие нельзя отменить.',
           alertSubmitError: 'Ошибка при отправке',
           copyLinkPrompt: 'Скопируйте эту ссылку и откройте в браузере:',
-          songFormingText: 'Твой звуковой ключ формируется. Через 2–3 минуты он придёт в этот чат.',
+          songFormingText: 'Твоя песня формируется. Через 2–3 минуты придёт в этот чат.',
           heroesLoading: 'Загрузка...', heroesEmpty: 'Пока нет героев. Нажми «Добавить героя».',
           heroesLoadError: 'Не удалось загрузить список. Проверьте настройку API.',
           forMyself: 'Для себя', forHero: 'Для: {name}',
@@ -1643,7 +1679,7 @@
         var ct = document.getElementById('confirmTitle');
         var cd = document.getElementById('confirmDesc');
         if (ct) ct.textContent = title || '✨ Заявка принята!';
-        if (cd) cd.innerHTML = desc || 'Анализирую твои данные и создаю уникальную песню.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.';
+        if (cd) cd.innerHTML = desc || 'Анализирую твои данные и создаю уникальную песню.<br><br>🎵 Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.';
         // 3. Показываем confirm-overlay
         var co = document.getElementById('confirmOverlay');
         if (co) co.style.display = 'block';
@@ -1661,7 +1697,7 @@
         var tEl = document.getElementById('confirmTitle');
         var dEl = document.getElementById('confirmDesc');
         if (tEl) tEl.textContent = title || '✨ Заявка принята!';
-        if (dEl) dEl.innerHTML = desc || 'Анализирую твои данные и создаю уникальную песню.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.';
+        if (dEl) dEl.innerHTML = desc || 'Анализирую твои данные и создаю уникальную песню.<br><br>🎵 Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.';
         ov.style.display = 'block';
       }
       function hideConfirmOverlay() {
@@ -2385,6 +2421,28 @@
         goToPage('formPage');
       });
 
+      // Превью-карусель: синхронизация точек со скроллом и клик по точке
+      (function() {
+        var track = document.getElementById('previewTrack');
+        var dots = document.getElementById('previewDots');
+        if (!track || !dots) return;
+        var dotBtns = dots.querySelectorAll('.preview-dot');
+        var slides = track.querySelectorAll('.preview-slide');
+        function updateDots() {
+          var w = track.offsetWidth;
+          var index = Math.round(track.scrollLeft / w);
+          index = Math.max(0, Math.min(index, slides.length - 1));
+          dotBtns.forEach(function(b, i) { b.classList.toggle('active', i === index); });
+        }
+        track.addEventListener('scroll', updateDots);
+        dotBtns.forEach(function(btn, i) {
+          btn.addEventListener('click', function() {
+            var w = track.offsetWidth;
+            track.scrollTo({ left: w * i, behavior: 'smooth' });
+          });
+        });
+      })();
+
       var stepNext = document.getElementById('stepNext');
       var quickToggle = document.getElementById('quickRequestsToggle');
       var quickPanel = document.getElementById('quickRequestsPanel');
@@ -2604,7 +2662,7 @@
           if (response.ok && result.ok && result.requestId && !result.payment_required) {
             if (typeof scCurrentRequestId !== 'undefined') scCurrentRequestId = result.requestId;
             if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
-            showConfirmOverlay('✨ Заявка принята, ' + name1 + '!', 'Анализирую твои данные и создаю уникальную песню.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.');
+            showConfirmOverlay('✨ Заявка принята, ' + name1 + '!', 'Анализирую твои данные и создаю уникальную песню.<br><br>🎵 Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.');
             setTimeout(function() { hideConfirmOverlay(); goToPage('successPage'); }, 4000);
           } else if ((response.status === 402 || (result && result.payment_required)) && result.requestId) {
             console.log('[Submit] 402 Payment Required — открываем окно оплаты');
@@ -2677,19 +2735,19 @@
             console.log('[Free Trial] Подарок активирован успешно');
             pendingPaymentRequestId = null;
             pendingPaymentSku = null;
-            showConfirm('🎁 Первый ключ активирован!', 'Создаём твою персональную песню в подарок.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.');
+            showConfirm('🎁 Первая песня в подарок!', 'Создаём твою персональную песню.<br><br>🎵 Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.');
           } else {
             var errMsg = json.error || json.message || 'Не удалось активировать подарок';
             console.warn('[Free Trial] Ошибка:', errMsg);
             setPaymentStatus('❌ ' + errMsg, 'error');
             payOvFreeClaimBtn.disabled = false;
-            payOvFreeClaimBtn.textContent = '🎁 Получить бесплатный ключ';
+            payOvFreeClaimBtn.textContent = '🎁 Получить бесплатную песню';
           }
         } catch (e) {
           console.error('[Free Trial] Ошибка соединения:', e);
           setPaymentStatus('❌ Ошибка соединения. Попробуй снова.', 'error');
           payOvFreeClaimBtn.disabled = false;
-          payOvFreeClaimBtn.textContent = '🎁 Получить бесплатный ключ';
+          payOvFreeClaimBtn.textContent = '🎁 Получить бесплатную песню';
         }
       });
 
@@ -2727,7 +2785,7 @@
               body: JSON.stringify({ request_id: pendingPaymentRequestId, initData: initData })
             }).catch(function(){});
             pendingPaymentRequestId = null; pendingPaymentSku = null;
-            setTimeout(function() { hidePaymentOverlay(); showConfirm('✨ Оплата подтверждена!', 'Запускаем создание твоей песни.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.'); }, 1200);
+            setTimeout(function() { hidePaymentOverlay(); showConfirm('✨ Оплата подтверждена!', 'Запускаем создание твоей песни.<br><br>🎵 Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.'); }, 1200);
           } else {
             setPaymentStatus('Оплата пока не подтверждена. Подожди немного и проверь снова.', 'warn');
           }
@@ -2974,7 +3032,7 @@
           pendingPaymentRequestId = null;
           pendingPaymentSku = null;
           hidePaymentOverlay();
-          showConfirm('✅ Оплата подтверждена!', 'Запускаем создание твоей песни.<br><br>🎵 Готовый ключ придёт в бот — мы сами напишем.<br>Можешь закрыть приложение.');
+          showConfirm('✅ Оплата подтверждена!', 'Запускаем создание твоей песни.<br><br>🎵 Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.');
         } catch (error) {
           console.error('[HOT Pay] Критическая ошибка:', error);
           var msg = (error && error.message) ? String(error.message) : t('errorOp');
@@ -3307,7 +3365,7 @@
       <!-- Заголовок -->
       <div style="text-align:center;margin-bottom:24px;">
         <div style="font-size:1.9rem;font-weight:800;background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">YupSoul</div>
-        <div id="payOvSubtitle" style="color:rgba(255,255,255,0.75);font-size:0.95rem;margin-top:6px;">Твой звуковой ключ</div>
+        <div id="payOvSubtitle" style="color:rgba(255,255,255,0.75);font-size:0.95rem;margin-top:6px;">Твоя песня</div>
       </div>
 
       <!-- Карточка оплаты -->
@@ -3317,12 +3375,12 @@
         <!-- Подсказка для новичков (показывается только если free_trial доступен) -->
         <div id="payOvTrialHint" style="display:none;background:rgba(5,150,105,0.15);border:1.5px solid rgba(16,185,129,0.5);border-radius:14px;padding:16px;margin-bottom:16px;">
           <div style="font-size:0.92rem;color:#d1fae5;line-height:1.55;margin-bottom:12px;">
-            🎁 <strong style="color:#6ee7b7;">Первый звуковой ключ — бесплатно!</strong><br>
-            Это твоя заявка. Нажми кнопку ниже — и мы запустим создание подарочного ключа прямо сейчас.
+            🎁 <strong style="color:#6ee7b7;">Первая песня — бесплатно!</strong><br>
+            Это твоя заявка. Нажми кнопку ниже — и мы запустим создание подарочной песни прямо сейчас.
           </div>
           <button id="payOvFreeClaimBtn" type="button"
             style="width:100%;padding:14px;border-radius:11px;background:linear-gradient(135deg,#059669,#10b981);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.2px;">
-            🎁 Получить бесплатный ключ
+            🎁 Получить бесплатную песню
           </button>
         </div>
 
@@ -3390,8 +3448,7 @@
       <div style="font-size:1.5rem;color:#a78bfa;font-weight:700;margin-bottom:16px;" id="confirmTitle">✨ Заявка принята!</div>
       <div style="color:rgba(255,255,255,0.8);font-size:1rem;line-height:1.8;max-width:340px;" id="confirmDesc">
         Анализирую твои данные и создаю уникальную песню.<br><br>
-        🎵 Готовый ключ придёт в бот — мы сами напишем.<br>
-        Можешь закрыть приложение.
+        🎵 Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.
       </div>
     </div>
   </div>
