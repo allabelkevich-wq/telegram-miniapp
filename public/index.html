@@ -2133,8 +2133,8 @@
         var priceHint = document.getElementById('payOvPriceHint');
         
         // Сброс цены к оригинальной (из каталога)
-        if (priceDisplay && catalogData && catalogData.items) {
-          var item = catalogData.items.find(function(x) { return x.sku === pendingPaymentSku; });
+        if (priceDisplay && pricingCatalog && pricingCatalog.length) {
+          var item = pricingCatalog.find(function(x) { return x && x.sku === pendingPaymentSku; });
           if (item) {
             priceDisplay.textContent = item.price + ' ' + (item.currency || 'USDT');
           }
@@ -3839,7 +3839,7 @@
     position:fixed;inset:0;
     z-index:9999;
     overflow-y:auto;overflow-x:hidden;
-    background:#0A0A1A url('assets/bg-yupsoul.png') center/cover no-repeat;
+    background:#0A0A1A url('assets/bg-yupsoul.png') center/cover no-repeat fixed;
     color:#fff;
     font-family:'Comfortaa',sans-serif;
   ">
@@ -3935,7 +3935,7 @@
     display:none;
     position:fixed;inset:0;
     z-index:10000;
-    background:#0A0A1A url('assets/bg-yupsoul.png') center/cover no-repeat;
+    background:#0A0A1A url('assets/bg-yupsoul.png') center/cover no-repeat fixed;
     overflow-y:auto;
     font-family:'Comfortaa',sans-serif;
   ">
