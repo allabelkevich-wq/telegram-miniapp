@@ -115,6 +115,45 @@
     .request-card .req-select-wrap { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
     .request-card .req-select-wrap input[type="checkbox"] { margin-top: 4px; width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    /* ── Tab navigation ── */
+    .admin-tabs { display:flex; gap:4px; margin-bottom:18px; background:#0a0a16; padding:5px; border-radius:12px; border:1px solid #1e293b; flex-wrap:wrap; }
+    .tab-btn { flex:1; min-width:110px; padding:9px 14px; background:transparent; border:none; color:#64748b; font-size:13px; font-weight:600; cursor:pointer; border-radius:8px; transition:all 0.18s; font-family:inherit; white-space:nowrap; text-align:center; }
+    .tab-btn:hover { background:#1e293b; color:#cbd5e1; }
+    .tab-btn.active { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; box-shadow:0 2px 8px rgba(102,126,234,0.35); }
+    .tab-pane { display:none; }
+    .tab-pane.active { display:block; }
+    /* ── Unified filter bar ── */
+    .unified-filter { background:#1a1a2e; border-radius:10px; padding:10px 14px; margin-bottom:12px; border:1px solid #2d3748; }
+    .uf-row { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:6px; }
+    .uf-row:last-child { margin-bottom:0; }
+    .uf-label { font-size:11px; color:#64748b; font-weight:600; min-width:60px; }
+    .uf-btn { padding:4px 11px; background:#2d3748; border:1px solid #374151; color:#94a3b8; border-radius:6px; cursor:pointer; font-size:11px; font-family:inherit; transition:all 0.12s; white-space:nowrap; }
+    .uf-btn:hover { background:#374151; color:#e2e8f0; }
+    .uf-btn.active { background:linear-gradient(135deg,#667eea,#764ba2); border-color:#667eea; color:#fff; font-weight:700; }
+    .uf-btn.active-gold { background:linear-gradient(135deg,#d4af37,#ec4899); border-color:#d4af37; color:#fff; font-weight:700; }
+    /* ── Compact accordion request rows ── */
+    .req-row { background:#1a1a2e; border-radius:9px; margin-bottom:5px; border:1px solid #2d3748; overflow:hidden; transition:border-color 0.15s; }
+    .req-row:hover .req-row-head { background:rgba(255,255,255,0.02); }
+    .req-row.expanded { border-color:#667eea; }
+    .req-row-head { display:flex; align-items:center; gap:10px; padding:10px 13px; cursor:pointer; user-select:none; }
+    .req-row-main { flex:1; min-width:0; }
+    .req-row-name { font-size:13px; font-weight:700; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; }
+    .req-row-meta { font-size:10px; color:#64748b; display:block; margin-top:1px; }
+    .req-row-status { padding:3px 9px; border-radius:12px; font-size:10px; font-weight:700; white-space:nowrap; flex-shrink:0; }
+    .req-row-btns { display:flex; gap:5px; flex-shrink:0; flex-wrap:wrap; }
+    .rmb { padding:4px 9px; border-radius:5px; font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap; border:1px solid transparent; transition:opacity 0.15s; line-height:1.4; }
+    .rmb:hover { opacity:0.8; }
+    .rmb-blue { background:rgba(102,126,234,0.2); color:#a5b4fc; border-color:rgba(102,126,234,0.3); }
+    .rmb-green { background:rgba(39,174,96,0.2); color:#86efac; border-color:rgba(39,174,96,0.3); }
+    .rmb-orange { background:rgba(243,156,18,0.2); color:#fcd34d; border-color:rgba(243,156,18,0.25); }
+    .rmb-red { background:rgba(231,76,60,0.18); color:#fca5a5; border-color:rgba(231,76,60,0.25); }
+    .rmb-purple { background:rgba(139,92,246,0.18); color:#c4b5fd; border-color:rgba(139,92,246,0.25); }
+    .req-chevron { font-size:14px; color:#475569; transition:transform 0.18s; flex-shrink:0; width:16px; text-align:center; }
+    .req-row.expanded .req-chevron { transform:rotate(90deg); color:#a5b4fc; }
+    .req-row-body { display:none; border-top:1px solid #2d3748; padding:14px 14px 12px; }
+    .req-row-body .progress-container { margin:0 0 14px 0; }
+    .req-row-body .details-section { margin:10px 0 0 0; padding:12px; }
+    .req-row-body .actions { margin-top:14px; }
     @media (max-width: 768px) {
       .header h1 { font-size: 26px; }
       .stat-number { font-size: 36px; }
@@ -122,6 +161,9 @@
       .step { width: 100%; margin-bottom: 20px; }
       .actions { flex-direction: column; }
       .btn { width: 100%; min-width: auto; }
+      .req-row-name { max-width: 130px; }
+      .req-row-btns { display:none; }
+      .req-row.expanded .req-row-btns { display:flex; }
     }
   </style>
 </head>
@@ -169,218 +211,164 @@
         <div style="font-size:11px;color:#64748b;margin-top:4px;">нажми → список</div>
       </div>
     </div>
-    <!-- Секция незавершённых заявок (ожидают оплаты) -->
-    <div class="unpaid-section" id="unpaidSection">
-      <div class="unpaid-section-header">
-        <div class="unpaid-section-title">
-          ⚠️ Незавершённые заявки
-          <span class="unpaid-badge" id="unpaidBadge">0</span>
-        </div>
-        <button class="btn btn-primary" style="min-width:140px;padding:10px 16px;font-size:13px;" onclick="loadUnpaidRequests()">🔄 Обновить</button>
-      </div>
-      <p style="font-size:13px;color:#94a3b8;margin-bottom:14px;">Заявки без оплаты, промокода и бесплатного периода. Пользователю уже отправлено сообщение в боте с кнопками «Оплатить» / «Отменить».</p>
-      <div id="unpaidList"><div class="loading"><div class="spinner"></div>Загрузка…</div></div>
+    <!-- Tab navigation -->
+    <div class="admin-tabs">
+      <button class="tab-btn active" onclick="switchTab('requests', this)">📋 Заявки</button>
+      <button class="tab-btn" onclick="switchTab('monetization', this)">💳 Монетизация</button>
+      <button class="tab-btn" onclick="switchTab('settings', this)">⚙️ Настройки</button>
+      <button class="tab-btn" onclick="switchTab('referrals', this)">🔗 Рефералы</button>
     </div>
 
-    <div class="filters">
-      <button class="filter-btn active" data-filter="all">📋 Все</button>
-      <button class="filter-btn" data-filter="pending">⏳ В работе</button>
-      <button class="filter-btn" data-filter="pending_payment">💳 Ожидает оплаты</button>
-      <button class="filter-btn" data-filter="completed">✅ Готово</button>
-      <button class="filter-btn" data-filter="failed">❌ Ошибки</button>
-      <button class="filter-btn" data-filter="cancelled">🚫 Отменённые</button>
-    </div>
-    <div class="sort-bar">
-      <span>Сортировка:</span>
-      <button class="sort-btn active" data-sort="date_desc" onclick="setSort(this)">🕐 Новые первые</button>
-      <button class="sort-btn" data-sort="date_asc" onclick="setSort(this)">🕐 Старые первые</button>
-      <button class="sort-btn" data-sort="name_asc" onclick="setSort(this)">👤 Имя А–Я</button>
-      <button class="sort-btn" data-sort="status" onclick="setSort(this)">📊 По статусу</button>
-      <button class="sort-btn" data-sort="payment" onclick="setSort(this)">💳 По оплате</button>
-    </div>
-    <div class="pay-filter-bar">
-      <span>💳 Оплата:</span>
-      <button class="pay-filter-btn active" data-pay="all" onclick="setPayFilter(this)">Все</button>
-      <button class="pay-filter-btn" data-pay="gift" onclick="setPayFilter(this)">🎁 Первый подарок</button>
-      <button class="pay-filter-btn" data-pay="promo" onclick="setPayFilter(this)">🏷 Промокод</button>
-      <button class="pay-filter-btn" data-pay="hot" onclick="setPayFilter(this)">💳 HOT Pay</button>
-      <button class="pay-filter-btn" data-pay="subscription" onclick="setPayFilter(this)">📋 Подписка</button>
-      <button class="pay-filter-btn" data-pay="awaiting" onclick="setPayFilter(this)">⏳ Ожидает оплаты</button>
-      <button class="pay-filter-btn" data-pay="admin" onclick="setPayFilter(this)">🔧 Ручная</button>
-    </div>
-    <div class="bulk-actions-bar" id="bulkActionsBar" style="display:none;">
-      <label><input type="checkbox" id="selectAllRequests" aria-label="Выделить все заявки"> Выделить все</label>
-      <button type="button" class="btn btn-warning" id="deleteSelectedBtn" disabled title="Удалить выбранные заявки из списка (например тестовые)">🗑 Удалить выбранные (<span id="deleteSelectedCount">0</span>)</button>
-    </div>
-    <div id="requests" class="loading">
-      <div class="spinner"></div>
-      <div>Загрузка... / Loading...</div>
-    </div>
-    <div class="details-section" style="margin-bottom:20px;margin-top:32px;">
-      <div class="section-title">⚙️ Настройки генерации</div>
-      <p style="font-size:14px;color:#94a3b8;margin-bottom:12px;">Параметры DeepSeek для новых заявок. Приоритет: .env на сервере &gt; эти настройки.</p>
-      <div style="display:flex;flex-direction:column;gap:14px;">
-        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-          <label style="display:flex;align-items:center;gap:8px;">
-            <span style="min-width:100px;">Модель:</span>
-            <select id="settings-model" style="min-width:220px;padding:10px;border-radius:8px;border:2px solid #4a5568;background:#1a1a2e;color:#fff;font-size:14px;">
-              <option value="deepseek-reasoner">deepseek-reasoner (рекомендуется: 128K, thinking)</option>
-              <option value="deepseek-chat">deepseek-chat</option>
-              <option value="deepseek-coder">deepseek-coder</option>
-              <option value="">— как в .env —</option>
-            </select>
-          </label>
+    <!-- Tab: Заявки -->
+    <div class="tab-pane active" id="tab-requests">
+      <!-- Незавершённые заявки -->
+      <div class="unpaid-section" id="unpaidSection">
+        <div class="unpaid-section-header">
+          <div class="unpaid-section-title">
+            ⚠️ Незавершённые заявки
+            <span class="unpaid-badge" id="unpaidBadge">0</span>
+          </div>
+          <button class="btn btn-primary" style="min-width:120px;padding:8px 14px;font-size:12px;" onclick="loadUnpaidRequests()">🔄 Обновить</button>
         </div>
-        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-          <label style="display:flex;align-items:center;gap:8px;">
-            <span style="min-width:100px;">max_tokens:</span>
-            <input type="number" id="settings-max-tokens" min="4096" max="65536" value="8192" step="1" title="Лимит DeepSeek API: 1..65536" style="width:100px;padding:10px;border-radius:8px;border:2px solid #4a5568;background:#1a1a2e;color:#fff;font-size:16px;">
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;">
-            <span style="min-width:100px;">temperature:</span>
-            <input type="number" id="settings-temperature" min="0" max="2" step="0.1" value="1.5" style="width:80px;padding:10px;border-radius:8px;border:2px solid #4a5568;background:#1a1a2e;color:#fff;font-size:16px;" title="0 = детерминированно, 1.5 = креатив (по умолчанию)">
-          </label>
-        </div>
-        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-          <button type="button" class="btn btn-primary" id="settings-save-btn" style="min-width:140px;">💾 Сохранить</button>
-          <span id="settings-save-status" style="font-size:14px;color:#86efac;"></span>
-        </div>
-      </div>
-    </div>
-    <div class="details-section" style="margin-bottom:20px;">
-      <div class="section-title">💳 Монетизация HOT</div>
-      <p class="mono-muted">Управление тарифами, промокодами и быстрый просмотр статусов оплат.</p>
-      <div class="mono-actions">
-        <button type="button" class="btn btn-primary" id="monetization-refresh-btn" style="min-width:180px;">🔄 Обновить монетизацию</button>
-      </div>
-      <div id="monetizationGlobalMsg" class="mono-msg"></div>
-
-      <div class="mono-panel">
-        <h3>Тарифы (pricing_catalog)</h3>
-        <div class="mono-table-wrap">
-          <table class="mono-table" id="pricingTable">
-            <thead>
-              <tr>
-                <th>SKU</th>
-                <th>Название</th>
-                <th>Цена</th>
-                <th>Валюта</th>
-                <th>Активен</th>
-                <th>Лимиты JSON</th>
-                <th>Действие</th>
-              </tr>
-            </thead>
-            <tbody id="pricingTableBody">
-              <tr><td colspan="7" class="mono-muted">Загрузка…</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div id="pricingMsg" class="mono-msg"></div>
+        <p style="font-size:12px;color:#94a3b8;margin-bottom:10px;">Без оплаты, промокода или бесплатного периода. Боту уже отправлено сообщение.</p>
+        <div id="unpaidList"><div class="loading"><div class="spinner"></div>Загрузка…</div></div>
       </div>
 
-      <div class="mono-panel">
-        <h3>Промокоды (promo_codes)</h3>
+      <!-- Единая панель фильтров -->
+      <div class="unified-filter">
+        <div class="uf-row">
+          <span class="uf-label">Статус:</span>
+          <button class="uf-btn filter-btn active" data-filter="all">📋 Все</button>
+          <button class="uf-btn filter-btn" data-filter="pending">⏳ В работе</button>
+          <button class="uf-btn filter-btn" data-filter="pending_payment">💳 Оплата</button>
+          <button class="uf-btn filter-btn" data-filter="completed">✅ Готово</button>
+          <button class="uf-btn filter-btn" data-filter="failed">❌ Ошибки</button>
+          <button class="uf-btn filter-btn" data-filter="cancelled">🚫 Отменённые</button>
+        </div>
+        <div class="uf-row">
+          <span class="uf-label">Оплата:</span>
+          <button class="uf-btn pay-filter-btn active" data-pay="all" onclick="setPayFilter(this)">Все</button>
+          <button class="uf-btn pay-filter-btn" data-pay="gift" onclick="setPayFilter(this)">🎁 Подарок</button>
+          <button class="uf-btn pay-filter-btn" data-pay="promo" onclick="setPayFilter(this)">🏷 Промо</button>
+          <button class="uf-btn pay-filter-btn" data-pay="hot" onclick="setPayFilter(this)">💳 HOT</button>
+          <button class="uf-btn pay-filter-btn" data-pay="subscription" onclick="setPayFilter(this)">📋 Подписка</button>
+          <button class="uf-btn pay-filter-btn" data-pay="awaiting" onclick="setPayFilter(this)">⏳ Ожидает</button>
+          <button class="uf-btn pay-filter-btn" data-pay="admin" onclick="setPayFilter(this)">🔧 Ручная</button>
+        </div>
+        <div class="uf-row">
+          <span class="uf-label">Порядок:</span>
+          <button class="uf-btn sort-btn active" data-sort="date_desc" onclick="setSort(this)">🕐 Новые</button>
+          <button class="uf-btn sort-btn" data-sort="date_asc" onclick="setSort(this)">🕐 Старые</button>
+          <button class="uf-btn sort-btn" data-sort="name_asc" onclick="setSort(this)">👤 А–Я</button>
+          <button class="uf-btn sort-btn" data-sort="status" onclick="setSort(this)">📊 Статус</button>
+          <button class="uf-btn sort-btn" data-sort="payment" onclick="setSort(this)">💳 Оплата</button>
+        </div>
+      </div>
 
-        <!-- Форма создания нового промокода -->
-        <details id="newPromoDetails" style="margin-bottom:18px;border:1px solid rgba(212,175,55,0.3);border-radius:10px;padding:12px 16px;background:rgba(212,175,55,0.05);">
-          <summary style="cursor:pointer;font-weight:600;color:#d4af37;font-size:0.95rem;list-style:none;">➕ Создать новый промокод</summary>
-          <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-            <div>
-              <label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Код <span style="color:#ef4444">*</span></label>
-              <input id="newPromoCode" type="text" placeholder="WELCOME10" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;text-transform:uppercase;box-sizing:border-box;">
+      <!-- Bulk actions -->
+      <div class="bulk-actions-bar" id="bulkActionsBar" style="display:none;">
+        <label><input type="checkbox" id="selectAllRequests" aria-label="Выделить все заявки"> Выделить все</label>
+        <button type="button" class="btn btn-warning" id="deleteSelectedBtn" disabled>🗑 Удалить (<span id="deleteSelectedCount">0</span>)</button>
+      </div>
+
+      <!-- Список заявок -->
+      <div id="requests" class="loading">
+        <div class="spinner"></div>
+        <div>Загрузка...</div>
+      </div>
+    </div>
+
+    <!-- Tab: Монетизация -->
+    <div class="tab-pane" id="tab-monetization">
+      <div class="details-section" style="margin-bottom:20px;">
+        <div class="section-title">💳 Монетизация HOT</div>
+        <p class="mono-muted">Управление тарифами, промокодами и быстрый просмотр статусов оплат.</p>
+        <div class="mono-actions">
+          <button type="button" class="btn btn-primary" id="monetization-refresh-btn" style="min-width:180px;">🔄 Обновить монетизацию</button>
+        </div>
+        <div id="monetizationGlobalMsg" class="mono-msg"></div>
+        <div class="mono-panel">
+          <h3>Тарифы (pricing_catalog)</h3>
+          <div class="mono-table-wrap">
+            <table class="mono-table" id="pricingTable">
+              <thead><tr><th>SKU</th><th>Название</th><th>Цена</th><th>Валюта</th><th>Активен</th><th>Лимиты JSON</th><th>Действие</th></tr></thead>
+              <tbody id="pricingTableBody"><tr><td colspan="7" class="mono-muted">Загрузка…</td></tr></tbody>
+            </table>
+          </div>
+          <div id="pricingMsg" class="mono-msg"></div>
+        </div>
+        <div class="mono-panel">
+          <h3>Промокоды (promo_codes)</h3>
+          <details id="newPromoDetails" style="margin-bottom:18px;border:1px solid rgba(212,175,55,0.3);border-radius:10px;padding:12px 16px;background:rgba(212,175,55,0.05);">
+            <summary style="cursor:pointer;font-weight:600;color:#d4af37;font-size:0.95rem;list-style:none;">➕ Создать новый промокод</summary>
+            <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Код <span style="color:#ef4444">*</span></label><input id="newPromoCode" type="text" placeholder="WELCOME10" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;text-transform:uppercase;box-sizing:border-box;"></div>
+              <div><label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Тип <span style="color:#ef4444">*</span></label><select id="newPromoType" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;"><option value="discount_percent">% скидка</option><option value="discount_amount">Сумма скидки</option><option value="free_generation">Бесплатная генерация</option></select></div>
+              <div><label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Значение</label><input id="newPromoValue" type="number" step="0.01" min="0" placeholder="10" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;"></div>
+              <div><label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">SKU (пусто = все)</label><input id="newPromoSku" type="text" placeholder="single_song" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;"></div>
+              <div><label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Макс. использований</label><input id="newPromoMaxUses" type="number" step="1" min="1" placeholder="100" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;"></div>
+              <div><label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Лимит на 1 юзера</label><input id="newPromoPerUser" type="number" step="1" min="1" value="1" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;"></div>
+              <div><label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Действует с</label><input id="newPromoStartsAt" type="datetime-local" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;"></div>
+              <div><label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Действует до</label><input id="newPromoExpiresAt" type="datetime-local" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;"></div>
             </div>
-            <div>
-              <label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Тип <span style="color:#ef4444">*</span></label>
-              <select id="newPromoType" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;">
-                <option value="discount_percent">% скидка (discount_percent)</option>
-                <option value="discount_amount">Сумма скидки (discount_amount)</option>
-                <option value="free_generation">Бесплатная генерация (free_generation)</option>
+            <div style="margin-top:12px;display:flex;align-items:center;gap:12px;">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:#94a3b8;font-size:0.88rem;"><input id="newPromoActive" type="checkbox" checked style="width:16px;height:16px;"> Активен сразу</label>
+              <button onclick="createPromoCode()" class="btn btn-primary" style="padding:9px 22px;font-size:0.9rem;">Создать промокод</button>
+            </div>
+          </details>
+          <div class="mono-table-wrap">
+            <table class="mono-table" id="promoTable">
+              <thead><tr><th>Код</th><th>Тип</th><th>Значение</th><th>SKU</th><th>Макс / На юзера</th><th>Активен</th><th>Действует до</th><th>Использован</th><th>Действия</th></tr></thead>
+              <tbody id="promoTableBody"><tr><td colspan="9" class="mono-muted">Загрузка…</td></tr></tbody>
+            </table>
+          </div>
+          <div id="promoMsg" class="mono-msg"></div>
+        </div>
+        <div class="mono-panel">
+          <h3>Последние оплаты</h3>
+          <div class="mono-table-wrap">
+            <table class="mono-table" id="paymentsTable">
+              <thead><tr><th>Дата</th><th>Request ID</th><th>Имя</th><th>SKU/Mode</th><th>Провайдер</th><th>Статус</th><th>Сумма</th><th>Order</th><th>TX</th><th>Промо</th></tr></thead>
+              <tbody id="paymentsTableBody"><tr><td colspan="10" class="mono-muted">Загрузка…</td></tr></tbody>
+            </table>
+          </div>
+          <div id="paymentsMsg" class="mono-msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Настройки -->
+    <div class="tab-pane" id="tab-settings">
+      <div class="details-section" style="margin-bottom:20px;">
+        <div class="section-title">⚙️ Настройки генерации</div>
+        <p style="font-size:14px;color:#94a3b8;margin-bottom:12px;">Параметры DeepSeek для новых заявок. Приоритет: .env на сервере &gt; эти настройки.</p>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:8px;"><span style="min-width:100px;">Модель:</span>
+              <select id="settings-model" style="min-width:220px;padding:10px;border-radius:8px;border:2px solid #4a5568;background:#1a1a2e;color:#fff;font-size:14px;">
+                <option value="deepseek-reasoner">deepseek-reasoner (рекомендуется)</option>
+                <option value="deepseek-chat">deepseek-chat</option>
+                <option value="deepseek-coder">deepseek-coder</option>
+                <option value="">— как в .env —</option>
               </select>
-            </div>
-            <div>
-              <label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Значение (% или сумма)</label>
-              <input id="newPromoValue" type="number" step="0.01" min="0" placeholder="10" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;">
-            </div>
-            <div>
-              <label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">SKU (пусто = для всех)</label>
-              <input id="newPromoSku" type="text" placeholder="single_song" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;">
-            </div>
-            <div>
-              <label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Макс. использований (пусто = ∞)</label>
-              <input id="newPromoMaxUses" type="number" step="1" min="1" placeholder="100" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;">
-            </div>
-            <div>
-              <label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Лимит на 1 юзера</label>
-              <input id="newPromoPerUser" type="number" step="1" min="1" value="1" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;">
-            </div>
-            <div>
-              <label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Действует с (необязательно)</label>
-              <input id="newPromoStartsAt" type="datetime-local" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;">
-            </div>
-            <div>
-              <label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Действует до (необязательно)</label>
-              <input id="newPromoExpiresAt" type="datetime-local" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;">
-            </div>
-          </div>
-          <div style="margin-top:12px;display:flex;align-items:center;gap:12px;">
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:#94a3b8;font-size:0.88rem;">
-              <input id="newPromoActive" type="checkbox" checked style="width:16px;height:16px;"> Активен сразу
             </label>
-            <button onclick="createPromoCode()" class="btn btn-primary" style="padding:9px 22px;font-size:0.9rem;">Создать промокод</button>
           </div>
-        </details>
-
-        <div class="mono-table-wrap">
-          <table class="mono-table" id="promoTable">
-            <thead>
-              <tr>
-                <th>Код</th>
-                <th>Тип</th>
-                <th>Значение</th>
-                <th>SKU</th>
-                <th>Макс / На юзера</th>
-                <th>Активен</th>
-                <th>Действует до</th>
-                <th>Использован</th>
-                <th>Действия</th>
-              </tr>
-            </thead>
-            <tbody id="promoTableBody">
-              <tr><td colspan="9" class="mono-muted">Загрузка…</td></tr>
-            </tbody>
-          </table>
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:8px;"><span style="min-width:100px;">max_tokens:</span><input type="number" id="settings-max-tokens" min="4096" max="65536" value="8192" step="1" style="width:100px;padding:10px;border-radius:8px;border:2px solid #4a5568;background:#1a1a2e;color:#fff;font-size:16px;"></label>
+            <label style="display:flex;align-items:center;gap:8px;"><span style="min-width:100px;">temperature:</span><input type="number" id="settings-temperature" min="0" max="2" step="0.1" value="1.5" style="width:80px;padding:10px;border-radius:8px;border:2px solid #4a5568;background:#1a1a2e;color:#fff;font-size:16px;"></label>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary" id="settings-save-btn" style="min-width:140px;">💾 Сохранить</button>
+            <span id="settings-save-status" style="font-size:14px;color:#86efac;"></span>
+          </div>
         </div>
-        <div id="promoMsg" class="mono-msg"></div>
       </div>
+    </div>
 
-      <div class="mono-panel">
-        <h3>Последние оплаты</h3>
-        <div class="mono-table-wrap">
-          <table class="mono-table" id="paymentsTable">
-            <thead>
-              <tr>
-                <th>Дата</th>
-                <th>Request ID</th>
-                <th>Имя</th>
-                <th>SKU/Mode</th>
-                <th>Провайдер</th>
-                <th>Статус</th>
-                <th>Сумма</th>
-                <th>Order</th>
-                <th>TX</th>
-                <th>Промо</th>
-              </tr>
-            </thead>
-            <tbody id="paymentsTableBody">
-              <tr><td colspan="10" class="mono-muted">Загрузка…</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div id="paymentsMsg" class="mono-msg"></div>
-      </div>
-
-      <div class="mono-panel">
-        <h3>🔗 Реферальная программа</h3>
+    <!-- Tab: Рефералы -->
+    <div class="tab-pane" id="tab-referrals">
+      <div class="details-section" style="margin-bottom:20px;">
+        <div class="section-title">🔗 Реферальная программа</div>
         <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
           <div style="background:#1e293b;border-radius:10px;padding:14px 20px;text-align:center;min-width:140px;flex:1;">
             <div id="refTotalCount" style="font-size:2rem;font-weight:700;color:#a78bfa;">—</div>
@@ -393,18 +381,8 @@
         </div>
         <div class="mono-table-wrap">
           <table class="mono-table" id="referralsTable">
-            <thead>
-              <tr>
-                <th>Реферер ID</th>
-                <th>Реферал ID</th>
-                <th>Дата регистрации</th>
-                <th>Дата активации</th>
-                <th>Награда</th>
-              </tr>
-            </thead>
-            <tbody id="referralsTableBody">
-              <tr><td colspan="5" class="mono-muted">Загрузка…</td></tr>
-            </tbody>
+            <thead><tr><th>Реферер ID</th><th>Реферал ID</th><th>Дата регистрации</th><th>Дата активации</th><th>Награда</th></tr></thead>
+            <tbody id="referralsTableBody"><tr><td colspan="5" class="mono-muted">Загрузка…</td></tr></tbody>
           </table>
         </div>
         <div id="referralsMsg" class="mono-msg"></div>
@@ -424,29 +402,46 @@
     let currentSort = 'date_desc';
     let currentPayFilter = 'all';
 
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      const pane = document.getElementById('tab-' + tabId);
+      if (pane) pane.classList.add('active');
+      if (btn) btn.classList.add('active');
+    }
+
+    function toggleRow(id) {
+      const row = document.getElementById('req-row-' + id);
+      const body = document.getElementById('req-body-' + id);
+      if (!row || !body) return;
+      const isOpen = row.classList.contains('expanded');
+      if (isOpen) {
+        row.classList.remove('expanded');
+        body.style.display = 'none';
+      } else {
+        row.classList.add('expanded');
+        body.style.display = 'block';
+      }
+    }
+
     function filterByCard(card) {
       const filter = card.getAttribute('data-filter') || 'all';
-      // Обновляем активную карточку
       document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active-filter'));
       card.classList.add('active-filter');
-      // Обновляем кнопки-фильтры
       currentFilter = filter;
       document.querySelectorAll('.filter-btn').forEach(b => {
         b.classList.toggle('active', b.getAttribute('data-filter') === filter);
       });
+      // Переключаемся на вкладку Заявки
+      const tabBtn = document.querySelector('.tab-btn[onclick*="requests"]');
+      if (tabBtn) switchTab('requests', tabBtn);
       loadAdminData();
-      // Скролл к списку
-      setTimeout(() => document.getElementById('requests')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
     }
 
     function setSort(btn) {
       currentSort = btn.getAttribute('data-sort') || 'date_desc';
       document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      // Пересортируем уже загруженное (без перезапроса)
-      const cards = Array.from(document.querySelectorAll('#requests .request-card'));
-      if (!cards.length) return;
-      // Берём данные из глобального кэша
       if (window._lastRequestsData) renderRequests(window._lastRequestsData);
     }
 
@@ -754,7 +749,7 @@
       return {};
     }
     function renderRequests(data) {
-      window._lastRequestsData = data; // кэш для пересортировки без запроса
+      window._lastRequestsData = data;
       data = filterByPayment(data);
       data = sortRequests(data);
       const payLabel = currentPayFilter !== 'all' ? (' · Оплата: ' + currentPayFilter) : '';
@@ -784,64 +779,68 @@
         const steps = normalizeSteps(r.generation_steps);
         const safeId = (r.id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         const safeIdAttr = escapeAttr(r.id || '');
+        const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('ru-RU') + ' ' + new Date(r.created_at).toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'}) : '—';
+        const isPendingPay = ['pending','requires_payment'].includes(String((r.payment_status || '').toLowerCase()));
         return `
-        <div class="request-card" data-request-id="${safeIdAttr}">
-          <div class="req-select-wrap"><input type="checkbox" class="req-select-cb" data-request-id="${safeIdAttr}" aria-label="Выделить заявку"><span style="color:#94a3b8;font-size:12px;">Выделить для удаления</span></div>
-          <div class="request-header">
-            <div>
-              <div class="request-name">${escapeHtml(r.name || '')}${r.person2_name ? ' & ' + escapeHtml(r.person2_name) : ''}</div>
-              ${r.person2_name ? '<div style="font-size:12px;color:#94a3b8;margin-top:4px;">' +
-                escapeHtml(r.gender || '—') + ' / ' + escapeHtml(r.person2_gender || '—') +
-                (r.person2_birthdate ? (' · ' + escapeHtml(r.person2_birthdate)) : '') +
-                '</div>' : ''}
-              <div class="request-id" title="Полный UUID: ${escapeHtml((r.id || ''))}">ID: ${(r.id || '').substring(0,8)} • ${r.created_at ? new Date(r.created_at).toLocaleDateString('ru-RU') : '—'}</div>
-              <div class="request-id">Режим: ${escapeHtml(r.mode || 'single')}${r.person2_name ? ' · Пара: ' + escapeHtml((r.person2_gender || '—')) : ''}</div>
-              <div class="request-id" style="margin-top:4px;">${paymentMethodBadge(r)}${r.payment_amount != null ? '<span style="color:#94a3b8;font-size:11px;margin-left:6px;">' + escapeHtml(String(r.payment_amount)) + ' ' + escapeHtml(r.payment_currency || 'USDT') + '</span>' : ''}</div>
+        <div class="req-row" id="req-row-${safeIdAttr}" data-request-id="${safeIdAttr}">
+          <div class="req-row-head" onclick="toggleRow('${safeId}')">
+            <input type="checkbox" class="req-select-cb" data-request-id="${safeIdAttr}" aria-label="Выделить заявку" onclick="event.stopPropagation()" style="width:16px;height:16px;flex-shrink:0;cursor:pointer;">
+            <div class="req-row-main">
+              <span class="req-row-name">${escapeHtml(r.name || '—')}${r.person2_name ? ' & ' + escapeHtml(r.person2_name) : ''}</span>
+              <span class="req-row-meta">${escapeHtml(r.mode || 'single')} · ${dateStr}</span>
             </div>
-            <div class="request-status ${statusClass(gs)}">${statusLabel(gs)}</div>
-          </div>
-          <div class="progress-container">
-            <div class="progress-title">Цепочка генерации / Generation chain</div>
-            <div class="progress-steps">
-              <div class="step ${order >= 1 ? 'done' : ''} ${order === 1 ? 'current' : ''}">
-                <div class="step-circle">${order >= 1 ? '✓' : '1'}</div>
-                <div class="step-label ru">Данные получены</div>
-                <div class="step-label en">Data received</div>
-                ${stepMsg(steps, '1') ? '<div class="step-log" title="' + stepMsg(steps, '1') + '">' + stepMsg(steps, '1') + '</div>' : ''}
-              </div>
-              <div class="step ${order >= 2 ? 'done' : ''} ${order === 2 ? 'current' : ''}">
-                <div class="step-circle">${order >= 2 ? '✓' : '2'}</div>
-                <div class="step-label ru">Анализ ИИ</div>
-                <div class="step-label en">AI analysis</div>
-                ${stepMsg(steps, '2') ? '<div class="step-log" title="' + stepMsg(steps, '2') + '">' + stepMsg(steps, '2') + '</div>' : ''}
-              </div>
-              <div class="step ${order >= 3 ? 'done' : ''} ${order === 3 ? 'current' : ''}">
-                <div class="step-circle">${order >= 3 ? '✓' : '3'}</div>
-                <div class="step-label ru">Текст песни</div>
-                <div class="step-label en">Song lyrics</div>
-                ${stepMsg(steps, '3') ? '<div class="step-log" title="' + stepMsg(steps, '3') + '">' + stepMsg(steps, '3') + '</div>' : ''}
-              </div>
-              <div class="step ${order >= 4 ? 'done' : ''} ${order === 4 ? 'current' : ''}">
-                <div class="step-circle">${order >= 4 ? '✓' : '4'}</div>
-                <div class="step-label ru">Аудио</div>
-                <div class="step-label en">Audio</div>
-                ${stepMsg(steps, '4') ? '<div class="step-log" title="' + stepMsg(steps, '4') + '">' + stepMsg(steps, '4') + '</div>' : ''}
-              </div>
+            <span class="req-row-status ${statusClass(gs)}" style="font-size:10px;padding:2px 8px;">${statusLabel(gs)}</span>
+            ${paymentMethodBadge(r)}
+            <div class="req-row-btns" onclick="event.stopPropagation()">
+              <button class="rmb rmb-orange" onclick="restart('${safeId}')" title="${gs === 'completed' ? 'Перегенерировать' : 'Перезапустить'}">↻</button>
+              ${isPendingPay ? `<button class="rmb rmb-green" onclick="markPaid('${safeId}')" title="Отметить оплаченным">✓ Оплачен</button>` : ''}
+              ${gs === 'pending_payment' ? `<button class="rmb rmb-red" onclick="cancelRequest('${safeId}', this)" title="Отменить">✕</button>` : ''}
+              ${r.audio_url ? `<button class="rmb rmb-green" onclick="window.open('${r.audio_url.replace(/'/g,"\\'")}');event.stopPropagation();" title="Слушать аудио">▶</button>` : ''}
+              ${r.audio_url ? `<button class="rmb rmb-blue" onclick="deliver('${safeId}',this);event.stopPropagation();" title="Отправить пользователю">📤</button>` : ''}
             </div>
-            ${steps.error ? '<div class="details-section" style="margin-top:12px;"><div class="section-title" style="color:#e74c3c;">❌ Ошибка этапа</div><div class="content-text" style="font-size:12px;">' + stepMsg(steps, 'error') + '</div></div>' : ''}
+            <span class="req-chevron">›</span>
           </div>
-          <div class="details-section">
-            <div class="section-title">💬 Запрос / Request</div>
-            <div class="content-text">${escapeHtml((r.request || '—').substring(0, 500))}${(r.request || '').length > 500 ? '…' : ''}</div>
-          </div>
-          ${stepsDigest(steps) ? '<div class="details-section"><div class="section-title">🧭 Контроль новых этапов</div><div class="content-text" style="font-size:12px;">' + stepsDigest(steps) + '</div></div>' : ''}
-          <div class="actions">
-            <button class="btn btn-primary" onclick="showDetails('${(r.id || '').replace(/'/g, "\\'")}')">📋 Подробнее / Details</button>
-            ${['pending','requires_payment'].includes(String((r.payment_status || '').toLowerCase())) ? '<button class="btn btn-success" onclick="markPaid(\'' + (r.id || '').replace(/'/g, "\\'") + '\')">✅ Отметить оплаченным</button>' : ''}
-            ${gs === 'pending_payment' ? '<button class="btn btn-cancel" onclick="cancelRequest(\'' + (r.id || '').replace(/'/g, "\\'") + '\', this)">❌ Отменить заявку</button>' : ''}
-            <button class="btn btn-warning" onclick="restart('${(r.id || '').replace(/'/g, "\\'")}')">${gs === 'completed' ? '🔄 Перегенерировать' : '🔄 Перезапустить / Restart'}</button>
-            ${r.audio_url ? '<button class="btn btn-success" onclick="window.open(\'' + r.audio_url.replace(/'/g, "\\'") + '\')">▶️ Слушать / Listen</button>' : ''}
-            ${r.audio_url ? '<button class="btn btn-success" onclick="deliver(\'' + (r.id || '').replace(/'/g, "\\'") + '\', this)">📤 Отправить пользователю</button>' : ''}
+          <div class="req-row-body" id="req-body-${safeIdAttr}">
+            <div style="font-size:11px;color:#64748b;margin-bottom:10px;font-family:monospace;">ID: ${escapeHtml(r.id || '')} · Режим: ${escapeHtml(r.mode || 'single')}${r.payment_amount != null ? ' · ' + escapeHtml(String(r.payment_amount)) + ' ' + escapeHtml(r.payment_currency || 'USDT') : ''}</div>
+            <div class="progress-container">
+              <div class="progress-title">Цепочка генерации</div>
+              <div class="progress-steps">
+                <div class="step ${order >= 1 ? 'done' : ''} ${order === 1 ? 'current' : ''}">
+                  <div class="step-circle">${order >= 1 ? '✓' : '1'}</div>
+                  <div class="step-label ru">Данные получены</div>
+                  ${stepMsg(steps, '1') ? '<div class="step-log" title="' + stepMsg(steps, '1') + '">' + stepMsg(steps, '1') + '</div>' : ''}
+                </div>
+                <div class="step ${order >= 2 ? 'done' : ''} ${order === 2 ? 'current' : ''}">
+                  <div class="step-circle">${order >= 2 ? '✓' : '2'}</div>
+                  <div class="step-label ru">Анализ ИИ</div>
+                  ${stepMsg(steps, '2') ? '<div class="step-log" title="' + stepMsg(steps, '2') + '">' + stepMsg(steps, '2') + '</div>' : ''}
+                </div>
+                <div class="step ${order >= 3 ? 'done' : ''} ${order === 3 ? 'current' : ''}">
+                  <div class="step-circle">${order >= 3 ? '✓' : '3'}</div>
+                  <div class="step-label ru">Текст песни</div>
+                  ${stepMsg(steps, '3') ? '<div class="step-log" title="' + stepMsg(steps, '3') + '">' + stepMsg(steps, '3') + '</div>' : ''}
+                </div>
+                <div class="step ${order >= 4 ? 'done' : ''} ${order === 4 ? 'current' : ''}">
+                  <div class="step-circle">${order >= 4 ? '✓' : '4'}</div>
+                  <div class="step-label ru">Аудио</div>
+                  ${stepMsg(steps, '4') ? '<div class="step-log" title="' + stepMsg(steps, '4') + '">' + stepMsg(steps, '4') + '</div>' : ''}
+                </div>
+              </div>
+              ${steps.error ? '<div style="margin-top:8px;padding:8px 10px;background:rgba(231,76,60,0.1);border-radius:6px;font-size:12px;color:#fca5a5;">❌ ' + stepMsg(steps, 'error') + '</div>' : ''}
+            </div>
+            <div class="details-section">
+              <div class="section-title">💬 Запрос</div>
+              <div class="content-text">${escapeHtml((r.request || '—').substring(0, 500))}${(r.request || '').length > 500 ? '…' : ''}</div>
+            </div>
+            ${stepsDigest(steps) ? '<div class="details-section"><div class="section-title">🧭 Этапы</div><div class="content-text" style="font-size:12px;">' + stepsDigest(steps) + '</div></div>' : ''}
+            <div class="actions" style="margin-top:12px;">
+              <button class="btn btn-primary" onclick="showDetails('${safeId}')">📋 Подробнее</button>
+              ${isPendingPay ? `<button class="btn btn-success" onclick="markPaid('${safeId}')">✅ Отметить оплаченным</button>` : ''}
+              ${gs === 'pending_payment' ? `<button class="btn btn-cancel" onclick="cancelRequest('${safeId}', this)">❌ Отменить заявку</button>` : ''}
+              <button class="btn btn-warning" onclick="restart('${safeId}')">${gs === 'completed' ? '🔄 Перегенерировать' : '🔄 Перезапустить'}</button>
+              ${r.audio_url ? `<button class="btn btn-success" onclick="window.open('${r.audio_url.replace(/'/g,"\\'")}')">▶️ Слушать</button>` : ''}
+              ${r.audio_url ? `<button class="btn btn-success" onclick="deliver('${safeId}', this)">📤 Отправить</button>` : ''}
+            </div>
           </div>
         </div>`;
       }).join('');
