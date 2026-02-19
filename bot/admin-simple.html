@@ -682,6 +682,44 @@
       }
     }
 
+    // Лёгкое обновление после действий — только заявки + счётчики, без сброса всей страницы
+    async function refreshAfterAction() {
+      const token = getToken();
+      if (!token) return;
+      const el = document.getElementById('requests');
+      // Плавное затухание вместо полного сброса
+      if (el) el.style.transition = 'opacity .2s';
+      if (el) el.style.opacity = '0.4';
+      try {
+        const [statsRes, listRes] = await Promise.all([
+          fetchJson(API_BASE + '/api/admin/stats?' + new URLSearchParams({ token }).toString(), { headers: authHeaders() }, 10000),
+          fetchJson(API_BASE + '/api/admin/requests?limit=50&status=' + currentFilter + authQuery(), { headers: authHeaders() }, 10000),
+        ]);
+        // Обновляем счётчики
+        if (statsRes.json && statsRes.json.success && statsRes.json.stats) {
+          const s = statsRes.json.stats;
+          document.getElementById('total').textContent = s.total;
+          document.getElementById('pending').textContent = (s.pending || 0) + (s.astro_calculated || 0) + (s.lyrics_generated || 0) + (s.suno_processing || 0);
+          document.getElementById('completed').textContent = s.completed || 0;
+          document.getElementById('failed').textContent = s.failed || 0;
+          const ppEl = document.getElementById('stat-pending-payment');
+          if (ppEl) ppEl.textContent = s.pending_payment || 0;
+          const cancelledEl = document.getElementById('stat-cancelled');
+          if (cancelledEl) cancelledEl.textContent = s.cancelled || 0;
+        }
+        // Обновляем список заявок
+        if (listRes.json && listRes.json.success && Array.isArray(listRes.json.data)) {
+          renderRequests(listRes.json.data);
+        }
+        // Обновляем незавершённые заявки
+        loadUnpaidRequests();
+      } catch(e) {
+        // При ошибке просто восстанавливаем видимость
+      } finally {
+        if (el) { el.style.opacity = '1'; el.style.transition = ''; }
+      }
+    }
+
     function getStatusOrder(status) {
       const order = { pending_payment: -1, pending: 1, astro_calculated: 2, lyrics_generated: 3, suno_processing: 4, completed: 5, failed: 0, cancelled: -2 };
       return order[status] !== undefined ? order[status] : 1;
@@ -842,7 +880,7 @@
             try {
               const result = await fetchJson(API_BASE + '/api/admin/requests/delete' + authQueryFromPath(), { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify({ ids: ids }) });
               const json = result.json;
-              if (json.success) { alert('Удалено заявок: ' + (json.deleted || ids.length)); loadAdminData(); }
+              if (json.success) { alert('Удалено заявок: ' + (json.deleted || ids.length)); refreshAfterAction(); }
               else alert('Ошибка: ' + (json.error || 'unknown'));
             } catch (e) {
               alert('Ошибка: ' + (e && e.message ? e.message : e));
@@ -928,7 +966,7 @@
         );
         if (result.json && result.json.success) {
           alert('✅ Заявка отменена');
-          await loadAdminData();
+          await refreshAfterAction();
         } else {
           alert('Ошибка: ' + ((result.json && result.json.error) || 'неизвестно'));
           if (btn) { btn.disabled = false; btn.textContent = '❌ Отменить'; }
@@ -1286,10 +1324,10 @@
         });
         if (restarted.json && restarted.json.success) {
           alert('✅ Заявка восстановлена и генерация запущена!');
-          await loadAdminData();
+          await refreshAfterAction();
         } else {
           alert('Оплата засчитана, но перезапуск не удался: ' + ((restarted.json && restarted.json.error) || 'unknown'));
-          await loadAdminData();
+          await refreshAfterAction();
         }
       } catch (e) {
         alert('Ошибка восстановления: ' + ((e && e.message) || String(e)));
@@ -1315,7 +1353,7 @@
         document.querySelectorAll('.stat-card').forEach(c => {
           c.classList.toggle('active-filter', c.getAttribute('data-filter') === currentFilter);
         });
-        loadAdminData();
+        refreshAfterAction();
       });
     });
 
@@ -1474,7 +1512,7 @@
         const result = await fetchJson(API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + '/restart' + authQueryFromPath(), { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() } });
         const json = result.json;
         const res = result.res;
-        if (json.success) { alert('✅ Генерация перезапущена'); loadAdminData(); }
+        if (json.success) { alert('✅ Генерация перезапущена'); refreshAfterAction(); }
         else alert('Ошибка: ' + (json.error || res.status));
       } catch (e) {
         alert('Ошибка: ' + (e && e.message ? e.message : e));
@@ -1486,7 +1524,7 @@
       try {
         const result = await fetchJson(API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + '/mark-paid' + authQueryFromPath(), { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify({ provider: 'admin' }) });
         const json = result.json;
-        if (result.res && result.res.ok && json.success) { alert('✅ Заявка отмечена как оплаченная'); loadAdminData(); }
+        if (result.res && result.res.ok && json.success) { alert('✅ Заявка отмечена как оплаченная'); refreshAfterAction(); }
         else alert('Ошибка: ' + (json.error || result.res?.status || 'unknown'));
       } catch (e) {
         alert('Ошибка: ' + (e && e.message ? e.message : e));
