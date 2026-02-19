@@ -471,7 +471,7 @@
           <button type="button" class="preview-dot" aria-label="Слайд 3" data-index="2"></button>
         </div>
       </div>
-
+      
       <div class="section">
         <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="220" height="220">
         <p id="homeGreeting" class="tagline" style="margin-bottom:12px">Заходи, когда захочешь свою персональную песню.</p>
@@ -820,7 +820,7 @@
         <button id="paymentThanksBackBtn" class="primary">Готово</button>
       </div>
       <footer><p>YupSoul • 2026</p></footer>
-    </div>
+  </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -1464,7 +1464,7 @@
           console.log('[App] window.Telegram доступен:', !!(window.Telegram));
           console.log('[App] window.Telegram.WebApp доступен:', !!(window.Telegram && window.Telegram.WebApp));
           
-          if (window.Telegram && window.Telegram.WebApp) {
+      if (window.Telegram && window.Telegram.WebApp) {
             tg = window.Telegram.WebApp;
             console.log('[Telegram] WebApp инициализирован');
             console.log('[Telegram] Версия:', tg.version);
@@ -1478,7 +1478,7 @@
               console.warn('[Telegram] Рекомендуется обновить Telegram до последней версии');
             }
             
-            tg.ready();
+        tg.ready();
             tg.expand();
             console.log('[Telegram] ready() и expand() выполнены');
             
@@ -2181,7 +2181,7 @@
             }
           } else if (d.trial_available) {
             scShow('scGiftState');
-          } else {
+            } else {
             scShow('scPayState');
           }
         } catch(e) {
