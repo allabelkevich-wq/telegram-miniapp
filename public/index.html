@@ -2289,6 +2289,8 @@
         var seen = false;
         try { seen = localStorage.getItem(ONBOARDING_KEY) === 'true'; } catch(_) {}
         var SLIDE_DURATION = seen ? 1000 : 2000;
+        // Синхронизируем CSS-анимацию прогресс-бара с SLIDE_DURATION
+        if (progressBar) progressBar.style.transition = 'width ' + (SLIDE_DURATION / 1000) + 's linear';
 
         // Подготавливаем слайд 3 под тип пользователя
         if (seen) {
@@ -2358,10 +2360,20 @@
         if (referBtn) {
           referBtn.addEventListener('click', function() {
             hideOnboarding();
-            // Даём главной странице прогрузиться, потом триггерим шейринг
+            // Ждём завершения loadReferralStats, затем шейрим
             setTimeout(function() {
-              var shareBtn = document.getElementById('referralShareBtn');
-              if (shareBtn) shareBtn.click();
+              var link = (document.getElementById('referralLinkInput') || {}).value || '';
+              if (link) {
+                // Ссылка уже загружена — сразу шейрим
+                var shareBtn = document.getElementById('referralShareBtn');
+                if (shareBtn) shareBtn.click();
+              } else {
+                // Ссылка ещё не загружена — запускаем загрузку, потом шейрим
+                loadReferralStats().then(function() {
+                  var shareBtn = document.getElementById('referralShareBtn');
+                  if (shareBtn) shareBtn.click();
+                }).catch(function() {});
+              }
             }, 300);
           });
         }
@@ -2427,6 +2439,8 @@
 
       setTimeout(function() {
         try {
+        // Загружаем каталог цен, free trial, реферальные данные и проверяем зависшие заявки
+        loadPricingCatalog();
         (function initProfile() {
           if (!tg || !tg.initData) return;
           fetchUserProfile().then(function(p) {

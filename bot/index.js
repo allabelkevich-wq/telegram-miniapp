@@ -852,7 +852,7 @@ bot.command("start", async (ctx) => {
   // --- Обработка реферального deep link ---
   const payload = ctx.match; // "ref_A3K9PX" или пусто
   const telegramUserId = ctx.from?.id;
-  if (payload?.startsWith('ref_') && telegramUserId) {
+  if (supabase && payload?.startsWith('ref_') && telegramUserId) {
     const refCode = payload.slice(4);
     try {
       const { data: referrer } = await supabase.from('user_profiles')
