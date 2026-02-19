@@ -486,8 +486,8 @@
     .story-bar-fill.done{width:100%;transition:none}
     .story-bar-fill.playing{width:100%;transition:width var(--story-dur,4s) linear}
     /* Кнопка закрыть */
-    .stories-close{position:absolute;top:max(8px,env(safe-area-inset-top));right:14px;z-index:11;background:rgba(0,0,0,0.45);border:1.5px solid rgba(255,255,255,0.18);color:rgba(255,255,255,0.85);font-size:1rem;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;padding:0;line-height:1}
-    .stories-close:hover{background:rgba(0,0,0,0.65)}
+    .stories-close{position:absolute;top:max(10px,env(safe-area-inset-top));right:14px;z-index:11;background:rgba(15,12,40,0.72);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);font-size:0.9rem;width:30px;height:30px;min-width:30px;min-height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;padding:0;line-height:1;isolation:isolate;flex-shrink:0}
+    .stories-close:hover{background:rgba(15,12,40,0.9)}
     /* Зоны тапа */
     .stories-tap-prev,.stories-tap-next{position:absolute;top:0;bottom:0;width:40%;z-index:5;cursor:pointer}
     .stories-tap-prev{left:0}
@@ -639,7 +639,7 @@
 
       <!-- Логотип и приветствие — вверху, без карточки -->
       <div style="position:relative;text-align:center;padding:max(36px,calc(env(safe-area-inset-top)+24px)) 20px 20px">
-        <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса" style="position:absolute;top:max(10px,env(safe-area-inset-top));right:4px">
+        <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
           <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
             <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
             <span id="langSwitcherCurrent">RU</span>
@@ -652,17 +652,16 @@
           </div>
         </div>
         <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="150" height="150">
-        <h1 style="font-size:1.7rem;margin:8px 0 4px;letter-spacing:0.3px">YupSoul</h1>
+        <div style="font-size:1.85rem;font-weight:800;letter-spacing:-0.5px;color:#d4af37;margin:6px 0 4px;line-height:1.1">YupSoul</div>
         <p id="homeGreeting" style="font-size:0.93rem;color:rgba(255,255,255,0.55);text-align:center;margin:6px 0 0;line-height:1.55;max-width:280px;margin-left:auto;margin-right:auto">Заходи, когда захочешь свою персональную песню.</p>
       </div>
 
       <!-- Баннер восстановления зависшей заявки -->
-      <div id="recoveryBanner" style="display:none;margin:0 0 16px 0;background:rgba(5,150,105,0.15);border:1.5px solid rgba(16,185,129,0.5);border-radius:14px;padding:16px 18px;">
-        <div id="recoveryBannerText" style="font-size:0.95rem;color:#d1fae5;line-height:1.55;margin-bottom:12px;">
-          🎁 <strong style="color:#6ee7b7;">Твоя заявка ждёт!</strong><br>
-          Получи первую песню бесплатно.
+      <div id="recoveryBanner" style="display:none;margin:0 0 14px 0;background:rgba(5,150,105,0.10);border:1px solid rgba(16,185,129,0.28);border-radius:14px;padding:14px 16px;">
+        <div id="recoveryBannerText" style="font-size:0.88rem;color:rgba(209,250,229,0.85);line-height:1.5;margin-bottom:10px;">
+          🎁 <strong style="color:#6ee7b7;">Твоя заявка ждёт!</strong> Получи первую песню бесплатно.
         </div>
-        <button id="recoveryClaimBtn" style="width:100%;padding:14px;border-radius:11px;background:linear-gradient(135deg,#059669,#10b981);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;">
+        <button id="recoveryClaimBtn" style="width:100%;padding:12px;border-radius:11px;background:linear-gradient(135deg,#059669,#10b981);border:none;color:#fff;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;">
           🎁 Получить бесплатно
         </button>
       </div>
