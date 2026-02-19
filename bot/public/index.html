@@ -550,7 +550,7 @@
     </div>
   </div>
 
-  <!-- Онбординг (показывается 1 раз при первом визите) -->
+  <!-- Онбординг (показывается при каждом входе) -->
   <div id="onboardingPage" style="display:none">
     <button class="onboarding-skip" id="onboardingSkip">Пропустить</button>
     
@@ -572,12 +572,22 @@
       <p class="onboarding-text">AI-агент, который понимает тебя без слов. Задавай вопросы, получай поддержку — как с близким другом.</p>
     </div>
     
-    <!-- Слайд 3 -->
+    <!-- Слайд 3 — контент зависит от того, новый это пользователь или вернувшийся (переключается JS) -->
     <div class="onboarding-slide" data-step="3">
-      <span class="onboarding-icon">🎁</span>
-      <h2 class="onboarding-title">Первая — бесплатно</h2>
-      <p class="onboarding-text">Попробуй прямо сейчас без оплаты. Нажми «Начать» и получи свою первую песню в подарок.</p>
-      <button class="onboarding-btn" id="onboardingStartBtn">Начать</button>
+      <!-- Для новых пользователей -->
+      <div id="onboardingSlide3New">
+        <span class="onboarding-icon">🎁</span>
+        <h2 class="onboarding-title">Первая — бесплатно</h2>
+        <p class="onboarding-text">Попробуй прямо сейчас без оплаты. Нажми «Начать» и получи свою первую песню в подарок.</p>
+        <button class="onboarding-btn" id="onboardingStartBtn">Начать</button>
+      </div>
+      <!-- Для вернувшихся пользователей -->
+      <div id="onboardingSlide3Return" style="display:none">
+        <span class="onboarding-icon">🔗</span>
+        <h2 class="onboarding-title">Позови друга — получи трек</h2>
+        <p class="onboarding-text">За каждого друга, который создаст свою первую песню, — тебе бесплатная генерация!</p>
+        <button class="onboarding-btn" id="onboardingReferBtn">Пригласить друга →</button>
+      </div>
     </div>
     
     <div class="onboarding-dots">
@@ -2258,7 +2268,7 @@
       // #endregion
       
       // ═══════════════════════════════════════════════════════════════════
-      // ОНБОРДИНГ: логика показа и автопереходов
+      // ОНБОРДИНГ: логика показа и автопереходов (показывается при каждом входе)
       // ═══════════════════════════════════════════════════════════════════
       (function() {
         var ONBOARDING_KEY = 'yupsoul_onboarding_seen';
@@ -2269,10 +2279,26 @@
         var progressBar = document.getElementById('onboardingProgressBar');
         var skipBtn = document.getElementById('onboardingSkip');
         var startBtn = document.getElementById('onboardingStartBtn');
-        
+        var referBtn = document.getElementById('onboardingReferBtn');
+        var slide3New = document.getElementById('onboardingSlide3New');
+        var slide3Return = document.getElementById('onboardingSlide3Return');
+
         var currentStep = 1;
         var autoTimer = null;
-        
+        // Вернувшиеся пользователи видят онбординг быстрее
+        var seen = false;
+        try { seen = localStorage.getItem(ONBOARDING_KEY) === 'true'; } catch(_) {}
+        var SLIDE_DURATION = seen ? 1000 : 2000;
+
+        // Подготавливаем слайд 3 под тип пользователя
+        if (seen) {
+          if (slide3New) slide3New.style.display = 'none';
+          if (slide3Return) slide3Return.style.display = '';
+        } else {
+          if (slide3New) slide3New.style.display = '';
+          if (slide3Return) slide3Return.style.display = 'none';
+        }
+
         function showOnboarding() {
           if (onboardingPage) onboardingPage.style.display = 'block';
           if (homePage) homePage.classList.remove('active');
@@ -2298,7 +2324,12 @@
           });
           
           stopAutoProgress();
-          if (step < 3) startAutoProgress();
+          // На последнем слайде у вернувшихся — автозакрытие через 2 сек
+          if (step < 3) {
+            startAutoProgress();
+          } else if (seen) {
+            autoTimer = setTimeout(hideOnboarding, 2000);
+          }
         }
         
         function startAutoProgress() {
@@ -2312,7 +2343,7 @@
           
           autoTimer = setTimeout(function() {
             goToStep(currentStep + 1);
-          }, 2000);
+          }, SLIDE_DURATION);
         }
         
         function stopAutoProgress() {
@@ -2322,6 +2353,18 @@
         
         if (skipBtn) skipBtn.addEventListener('click', hideOnboarding);
         if (startBtn) startBtn.addEventListener('click', hideOnboarding);
+
+        // Кнопка «Пригласить друга» на слайде 3 для вернувшихся
+        if (referBtn) {
+          referBtn.addEventListener('click', function() {
+            hideOnboarding();
+            // Даём главной странице прогрузиться, потом триггерим шейринг
+            setTimeout(function() {
+              var shareBtn = document.getElementById('referralShareBtn');
+              if (shareBtn) shareBtn.click();
+            }, 300);
+          });
+        }
         
         dots.forEach(function(dot) {
           dot.addEventListener('click', function() {
@@ -2341,15 +2384,9 @@
             if (touchEndX - touchStartX > 50 && currentStep > 1) goToStep(currentStep - 1);
           });
         }
-        
-        var seen = false;
-        try { seen = localStorage.getItem(ONBOARDING_KEY) === 'true'; } catch(_) {}
-        
-        if (!seen) {
-          showOnboarding();
-        } else {
-          if (homePage) homePage.classList.add('active');
-        }
+
+        // Онбординг показывается при каждом входе
+        showOnboarding();
       })();
 
       // Проверяем демо-режим и показываем индикатор
