@@ -2014,11 +2014,16 @@ app.post("/api/admin/requests/:id/mark-paid", express.json(), asyncApi(async (re
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const id = sanitizeRequestId(req.params.id);
   if (!id || !isValidRequestId(id)) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
+  // Читаем текущий статус — если уже в работе, не откатываем
+  const { data: cur } = await supabase.from("track_requests").select("generation_status").eq("id", id).maybeSingle();
+  const curGs = cur?.generation_status || "";
+  const shouldAdvance = ["pending_payment"].includes(curGs);
   const { error: updErr } = await supabase
     .from("track_requests")
     .update({
       payment_status: "paid",
       payment_provider: req.body?.provider || "admin",
+      ...(shouldAdvance ? { generation_status: "pending" } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);
