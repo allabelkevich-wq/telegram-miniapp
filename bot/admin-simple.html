@@ -362,6 +362,37 @@
         </div>
         <div id="paymentsMsg" class="mono-msg"></div>
       </div>
+
+      <div class="mono-panel">
+        <h3>🔗 Реферальная программа</h3>
+        <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
+          <div style="background:#1e293b;border-radius:10px;padding:14px 20px;text-align:center;min-width:140px;flex:1;">
+            <div id="refTotalCount" style="font-size:2rem;font-weight:700;color:#a78bfa;">—</div>
+            <div style="font-size:0.78rem;color:#64748b;margin-top:4px;">Всего рефералов</div>
+          </div>
+          <div style="background:#1e293b;border-radius:10px;padding:14px 20px;text-align:center;min-width:140px;flex:1;">
+            <div id="refRewardedCount" style="font-size:2rem;font-weight:700;color:#22c55e;">—</div>
+            <div style="font-size:0.78rem;color:#64748b;margin-top:4px;">Награды выданы</div>
+          </div>
+        </div>
+        <div class="mono-table-wrap">
+          <table class="mono-table" id="referralsTable">
+            <thead>
+              <tr>
+                <th>Реферер ID</th>
+                <th>Реферал ID</th>
+                <th>Дата регистрации</th>
+                <th>Дата активации</th>
+                <th>Награда</th>
+              </tr>
+            </thead>
+            <tbody id="referralsTableBody">
+              <tr><td colspan="5" class="mono-muted">Загрузка…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="referralsMsg" class="mono-msg"></div>
+      </div>
     </div>
     <div class="bulk-actions-bar" id="bulkActionsBar" style="display:none;">
       <label><input type="checkbox" id="selectAllRequests" aria-label="Выделить все заявки"> Выделить все</label>
@@ -594,6 +625,7 @@
           if (tempEl && st.deepseek_temperature != null && Number.isFinite(Number(st.deepseek_temperature))) tempEl.value = Math.max(0, Math.min(2, Number(st.deepseek_temperature)));
         }
         await loadMonetizationData();
+        loadReferralData();
       } catch (e) {
         const msg = (e && e.message) || String(e);
         const el = document.getElementById('requests');
@@ -879,6 +911,50 @@
       } catch (e) {
         setMonoMsg('monetizationGlobalMsg', 'Не удалось загрузить монетизацию: ' + ((e && e.message) || String(e)), false);
       }
+    }
+
+    async function loadReferralData() {
+      const body = document.getElementById('referralsTableBody');
+      if (body) body.innerHTML = '<tr><td colspan="5" class="mono-muted">Загрузка…</td></tr>';
+      try {
+        const result = await fetchJson(API_BASE + '/api/admin/referrals' + authQueryFromPath(), { headers: authHeaders() });
+        const json = result.json;
+        if (json && json.success) {
+          const totalEl = document.getElementById('refTotalCount');
+          const rewEl = document.getElementById('refRewardedCount');
+          if (totalEl) totalEl.textContent = json.total || 0;
+          if (rewEl) rewEl.textContent = json.rewarded || 0;
+          renderReferralRows(json.rows || []);
+          setMonoMsg('referralsMsg', 'Данные рефералов обновлены.', true);
+        } else {
+          setMonoMsg('referralsMsg', 'Не удалось загрузить рефералов: ' + ((json && json.error) || 'unknown'), false);
+        }
+      } catch (e) {
+        setMonoMsg('referralsMsg', 'Ошибка: ' + ((e && e.message) || String(e)), false);
+      }
+    }
+
+    function renderReferralRows(rows) {
+      const body = document.getElementById('referralsTableBody');
+      if (!body) return;
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="5" class="mono-muted">Рефералов пока нет.</td></tr>';
+        return;
+      }
+      body.innerHTML = rows.map(function(r) {
+        const dateCreated = r.created_at ? new Date(r.created_at).toLocaleString('ru-RU') : '—';
+        const dateActivated = r.activated_at ? new Date(r.activated_at).toLocaleString('ru-RU') : '—';
+        const rewardBadge = r.reward_granted
+          ? '<span style="color:#22c55e;font-weight:600;">✓ Выдана</span>'
+          : '<span style="color:#f59e0b;">⏳ Ждёт</span>';
+        return '<tr>' +
+          '<td><code>' + escapeHtml(String(r.referrer_id || '—')) + '</code></td>' +
+          '<td><code>' + escapeHtml(String(r.referee_id || '—')) + '</code></td>' +
+          '<td class="mono-muted">' + escapeHtml(dateCreated) + '</td>' +
+          '<td class="mono-muted">' + escapeHtml(dateActivated) + '</td>' +
+          '<td>' + rewardBadge + '</td>' +
+          '</tr>';
+      }).join('');
     }
 
     function renderPricingRows(rows) {

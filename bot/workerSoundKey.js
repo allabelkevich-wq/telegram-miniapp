@@ -27,6 +27,46 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const SERPER_API_KEY = process.env.SERPER_API_KEY;
 // Примечание: DEEPSEEK_API_KEY и SUNO_API_KEY используются через модули deepseek.js и suno.js
 
+// ============================================================================
+// РЕФЕРАЛЬНАЯ НАГРАДА
+// ============================================================================
+async function triggerReferralRewardIfEligible(refereeTelegramId) {
+  if (!supabase || !BOT_TOKEN) return;
+  const { data: referral } = await supabase.from('referrals')
+    .select('*').eq('referee_id', Number(refereeTelegramId)).eq('reward_granted', false).maybeSingle();
+  if (!referral) return;
+
+  // Атомарно помечаем reward_granted = true (защита от двойного начисления при параллельных воркерах)
+  const { data: claimed } = await supabase.from('referrals')
+    .update({ reward_granted: true, reward_granted_at: new Date().toISOString(), activated_at: new Date().toISOString() })
+    .eq('id', referral.id).eq('reward_granted', false).select('id');
+  if (!claimed?.length) return;
+
+  // Начисляем кредит рефереру
+  const { data: rp } = await supabase.from('user_profiles')
+    .select('referral_credits').eq('telegram_id', Number(referral.referrer_id)).maybeSingle();
+  await supabase.from('user_profiles')
+    .update({ referral_credits: (rp?.referral_credits || 0) + 1 })
+    .eq('telegram_id', Number(referral.referrer_id));
+
+  // Уведомление рефереру в бот
+  try {
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: referral.referrer_id,
+        text: `🎁 *Твой друг получил первую песню по твоей ссылке!*\n\nТебе начислена 1 бесплатная генерация 🎵\nОткрой приложение, чтобы использовать её.`,
+        parse_mode: 'Markdown',
+      }),
+    });
+  } catch (e) {
+    console.warn('[Referral] Не удалось отправить уведомление рефереру:', e?.message);
+  }
+  console.log(`[Referral] Вознаграждение начислено: referee=${refereeTelegramId} → referrer=${referral.referrer_id}`);
+}
+// ============================================================================
+
 /** Веб-поиск через Serper (при генерации модель может вызывать web_search). Ключ: serper.dev */
 async function runWebSearch(query) {
   if (!SERPER_API_KEY || !query) return "Поиск недоступен или запрос пуст.";
@@ -1079,6 +1119,9 @@ ${extBlock ? "\n" + extBlock : ""}
         console.warn("[Воркер] Не удалось отправить сообщение о донате:", e?.message);
       }
       await setStep('delivery_done', 'Доставка пользователю успешна');
+      // Проверяем и начисляем реферальную награду пригласившему
+      try { await triggerReferralRewardIfEligible(request.telegram_user_id); }
+      catch (e) { console.warn('[Referral] Ошибка начисления награды:', e?.message); }
     }
     await setStep('pipeline_done', 'Генерация полностью завершена');
     

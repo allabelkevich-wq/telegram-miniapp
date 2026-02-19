@@ -393,6 +393,15 @@
     .request-help-row{display:flex;align-items:center;justify-content:space-between;gap:var(--spacing-sm);margin-bottom:var(--spacing-sm)}
     .request-help-row .request-label{margin-bottom:0;text-align:left;font-size:var(--fluid-base);letter-spacing:-0.2px;line-height:1.2;flex:1;min-width:0}
     /* Apple-style quick picker */
+    /* Referral card */
+    .referral-card{background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.05));border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:18px;margin:0 0 16px}
+    .referral-link-row{display:flex;gap:8px;align-items:center;margin:12px 0}
+    .referral-link-input{flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.78rem;padding:10px 12px;font-family:monospace;outline:none;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    .referral-share-btn{padding:10px 16px;border-radius:10px;background:linear-gradient(135deg,#d4af37,#e8c547);border:none;color:#000;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
+    .referral-stats{display:flex;gap:10px;margin-top:12px}
+    .referral-stat-box{flex:1;background:rgba(255,255,255,0.05);border-radius:10px;padding:10px;text-align:center}
+    .referral-stat-num{font-size:1.4rem;font-weight:700;color:#d4af37}
+    .referral-stat-label{font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:2px}
     .quick-picker{position:relative;margin-bottom:12px}
     .quick-picker-btn{width:100%;padding:12px 16px;border-radius:12px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.35);color:#d4af37;font-size:0.95rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:space-between;transition:background .2s}
     .quick-picker-btn:hover{background:rgba(212,175,55,0.16)}
@@ -602,6 +611,32 @@
         <button id="recoveryClaimBtn" style="width:100%;padding:14px;border-radius:11px;background:linear-gradient(135deg,#059669,#10b981);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;">
           🎁 Получить бесплатно
         </button>
+      </div>
+
+      <!-- Блок «Пригласи друга» (реферальная программа) -->
+      <div id="referralCard" style="display:none" class="referral-card">
+        <div style="font-weight:700;color:#d4af37;font-size:0.95rem;margin-bottom:4px">🔗 Пригласи друга</div>
+        <div style="font-size:0.82rem;color:rgba(255,255,255,0.6);line-height:1.5;margin-bottom:4px">
+          Друг получает первую песню бесплатно — ты получаешь бесплатную генерацию
+        </div>
+        <div class="referral-link-row">
+          <input id="referralLinkInput" class="referral-link-input" readonly value="" placeholder="Загрузка...">
+          <button type="button" id="referralShareBtn" class="referral-share-btn">Поделиться</button>
+        </div>
+        <div class="referral-stats">
+          <div class="referral-stat-box">
+            <div class="referral-stat-num" id="refInvitedCount">0</div>
+            <div class="referral-stat-label">Приглашено</div>
+          </div>
+          <div class="referral-stat-box">
+            <div class="referral-stat-num" id="refRewardedCount">0</div>
+            <div class="referral-stat-label">Активировано</div>
+          </div>
+          <div class="referral-stat-box">
+            <div class="referral-stat-num" id="refCreditsCount">0</div>
+            <div class="referral-stat-label">Бесплатных</div>
+          </div>
+        </div>
       </div>
 
       <div class="section">
@@ -1953,6 +1988,8 @@
             updatePaymentUiFromCatalog();
             // Проверяем зависшую заявку для всех пользователей (новичков и повторных)
             checkPendingRequestOnStart();
+            // Загружаем реферальные данные
+            loadReferralStats();
           } else {
             catalogLoadError = true;
             updatePaymentUiFromCatalog();
@@ -1963,6 +2000,29 @@
           updatePaymentUiFromCatalog();
         }
       }
+      // Загружает реферальную статистику и показывает блок «Пригласи друга»
+      async function loadReferralStats() {
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        var initData = getInitData();
+        if (!apiBase || !initData) return;
+        try {
+          var resp = await fetch(apiBase + '/api/referral/stats', { headers: { 'X-Telegram-Init': initData } });
+          if (!resp.ok) return;
+          var data = await resp.json().catch(function() { return {}; });
+          if (!data.code) return;
+          var inp = document.getElementById('referralLinkInput');
+          if (inp) inp.value = data.link || '';
+          var inv = document.getElementById('refInvitedCount');
+          if (inv) inv.textContent = data.invited_count || 0;
+          var rew = document.getElementById('refRewardedCount');
+          if (rew) rew.textContent = data.rewarded_count || 0;
+          var crd = document.getElementById('refCreditsCount');
+          if (crd) crd.textContent = data.credits || 0;
+          var card = document.getElementById('referralCard');
+          if (card) card.style.display = 'block';
+        } catch (e) { console.warn('[Referral] Не удалось загрузить статистику:', e); }
+      }
+
       // Проверяет при запуске есть ли зависшая заявка (работает и для новичков и для повторных)
       async function checkPendingRequestOnStart() {
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
@@ -1996,6 +2056,29 @@
           }
         } catch (e) { /* не критично */ }
       }
+
+      // ── Реферальная кнопка «Поделиться» ──────────────────────────────
+      (function() {
+        var shareBtn = document.getElementById('referralShareBtn');
+        if (!shareBtn) return;
+        shareBtn.addEventListener('click', function() {
+          var link = (document.getElementById('referralLinkInput') || {}).value || '';
+          if (!link) return;
+          var tgWeb = window.Telegram && window.Telegram.WebApp;
+          if (tgWeb && tgWeb.openTelegramLink) {
+            tgWeb.openTelegramLink('https://t.me/share/url?url=' + encodeURIComponent(link) +
+              '&text=' + encodeURIComponent('Получи персональную песню бесплатно в YupSoul!'));
+          } else if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(link).then(function() {
+              shareBtn.textContent = 'Скопировано!';
+              setTimeout(function() { shareBtn.textContent = 'Поделиться'; }, 2000);
+            });
+          } else {
+            shareBtn.textContent = 'Скопировано!';
+            setTimeout(function() { shareBtn.textContent = 'Поделиться'; }, 2000);
+          }
+        });
+      })();
 
       // ── Helper-функции для UI промокода и оплаты ──────────────────────
       function showPromoConfirmButton() {

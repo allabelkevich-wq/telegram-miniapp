@@ -270,6 +270,41 @@ async function consumeTrial(telegramUserId, trialKey = "first_song_gift") {
   return { ok: true };
 }
 
+// ============================================================================
+// РЕФЕРАЛЬНАЯ СИСТЕМА
+// ============================================================================
+
+function generateReferralCode() {
+  return Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
+async function getOrCreateReferralCode(telegramUserId) {
+  if (!supabase) return null;
+  const { data } = await supabase.from('user_profiles')
+    .select('referral_code').eq('telegram_id', Number(telegramUserId)).maybeSingle();
+  if (data?.referral_code) return data.referral_code;
+  const code = generateReferralCode();
+  await supabase.from('user_profiles')
+    .upsert({ telegram_id: Number(telegramUserId), referral_code: code },
+             { onConflict: 'telegram_id' });
+  return code;
+}
+
+async function consumeReferralCreditIfAvailable(telegramUserId) {
+  if (!supabase) return { ok: false };
+  const { data } = await supabase.from('user_profiles')
+    .select('referral_credits').eq('telegram_id', Number(telegramUserId)).maybeSingle();
+  if (!data?.referral_credits || data.referral_credits < 1) return { ok: false };
+  const { data: updated } = await supabase.from('user_profiles')
+    .update({ referral_credits: data.referral_credits - 1 })
+    .eq('telegram_id', Number(telegramUserId))
+    .eq('referral_credits', data.referral_credits)
+    .select('referral_credits');
+  return updated?.length ? { ok: true } : { ok: false };
+}
+
+// ============================================================================
+
 async function hasActiveSubscription(telegramUserId) {
   if (!supabase) return false;
   const nowIso = new Date().toISOString();
@@ -327,7 +362,11 @@ async function resolveAccessForRequest({ telegramUserId, mode }) {
   const trialAvailable = await isTrialAvailable(telegramUserId, "first_song_gift");
   console.log("[Access] Проверка пробной версии:", trialAvailable ? "доступна" : "недоступна");
   if (trialAvailable) return { allowed: true, source: "trial", sku };
-  
+
+  const referralCredit = await consumeReferralCreditIfAvailable(telegramUserId);
+  console.log("[Access] Проверка реферального кредита:", referralCredit.ok ? "кредит списан" : "нет кредитов");
+  if (referralCredit.ok) return { allowed: true, source: "referral_credit", sku };
+
   console.log("[Access] Доступ запрещен, требуется оплата");
   return { allowed: false, source: "payment_required", sku };
 }
@@ -806,6 +845,34 @@ bot.command("fixurl", async (ctx) => {
 });
 
 bot.command("start", async (ctx) => {
+  // --- Обработка реферального deep link ---
+  const payload = ctx.match; // "ref_A3K9PX" или пусто
+  const telegramUserId = ctx.from?.id;
+  if (payload?.startsWith('ref_') && telegramUserId) {
+    const refCode = payload.slice(4);
+    try {
+      const { data: referrer } = await supabase.from('user_profiles')
+        .select('telegram_id').eq('referral_code', refCode).maybeSingle();
+      if (referrer && Number(referrer.telegram_id) !== Number(telegramUserId)) {
+        const { data: existing } = await supabase.from('user_profiles')
+          .select('referred_by').eq('telegram_id', Number(telegramUserId)).maybeSingle();
+        if (!existing?.referred_by) {
+          await supabase.from('user_profiles')
+            .upsert({ telegram_id: Number(telegramUserId), referred_by: refCode },
+                     { onConflict: 'telegram_id' });
+          await supabase.from('referrals').insert({
+            referrer_id: Number(referrer.telegram_id),
+            referee_id: Number(telegramUserId),
+          }).select().maybeSingle();
+          console.log(`[Referral] Новый реферал: referrer=${referrer.telegram_id}, referee=${telegramUserId}, code=${refCode}`);
+        }
+      }
+    } catch (e) {
+      console.warn('[Referral] Ошибка обработки ref_ payload:', e?.message);
+    }
+  }
+  // -----------------------------------------
+
   const name = ctx.from?.first_name || "друг";
   const text =
     `Привет, ${name}!\n\n` +
@@ -2231,6 +2298,33 @@ app.get("/api/pricing/catalog", asyncApi(async (req, res) => {
   return res.json(response);
 }));
 
+// --- РЕФЕРАЛЬНАЯ СИСТЕМА ---
+
+app.get("/api/referral/stats", asyncApi(async (req, res) => {
+  const initData = req.headers["x-telegram-init"] || req.query?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ error: "Unauthorized" });
+
+  const code = await getOrCreateReferralCode(telegramUserId);
+  const botUsername = process.env.BOT_USERNAME || "yupsoul_bot";
+
+  const [invitedRes, rewardedRes, profileRes] = await Promise.all([
+    supabase.from("referrals").select("*", { count: "exact", head: true }).eq("referrer_id", Number(telegramUserId)),
+    supabase.from("referrals").select("*", { count: "exact", head: true }).eq("referrer_id", Number(telegramUserId)).eq("reward_granted", true),
+    supabase.from("user_profiles").select("referral_credits").eq("telegram_id", Number(telegramUserId)).maybeSingle(),
+  ]);
+
+  return res.json({
+    code,
+    link: `https://t.me/${botUsername}?start=ref_${code}`,
+    invited_count: invitedRes.count || 0,
+    rewarded_count: rewardedRes.count || 0,
+    credits: profileRes.data?.referral_credits || 0,
+  });
+}));
+
+// --- КОНЕЦ РЕФЕРАЛЬНОЙ СИСТЕМЫ ---
+
 app.post("/api/promos/validate", express.json(), asyncApi(async (req, res) => {
   const initData = req.headers["x-telegram-init"] || req.body?.initData || "";
   const telegramUserId = validateInitData(initData, BOT_TOKEN);
@@ -2636,6 +2730,22 @@ app.put("/api/admin/promos/:code", express.json(), asyncApi(async (req, res) => 
   const { error } = await supabase.from("promo_codes").upsert(payload, { onConflict: "code" });
   if (error) return res.status(500).json({ success: false, error: error.message });
   return res.json({ success: true, item: payload });
+}));
+
+app.get("/api/admin/referrals", asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+
+  const [{ data: rows }, { count: total }, { count: rewarded }] = await Promise.all([
+    supabase.from("referrals")
+      .select("id, referrer_id, referee_id, created_at, activated_at, reward_granted, reward_granted_at")
+      .order("created_at", { ascending: false }).limit(200),
+    supabase.from("referrals").select("*", { count: "exact", head: true }),
+    supabase.from("referrals").select("*", { count: "exact", head: true }).eq("reward_granted", true),
+  ]);
+
+  return res.json({ success: true, rows: rows || [], total: total || 0, rewarded: rewarded || 0 });
 }));
 
 app.use("/api", (err, req, res, next) => {
