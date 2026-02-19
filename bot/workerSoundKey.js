@@ -34,20 +34,32 @@ async function triggerReferralRewardIfEligible(refereeTelegramId) {
   if (!supabase || !BOT_TOKEN) return;
   const { data: referral } = await supabase.from('referrals')
     .select('*').eq('referee_id', Number(refereeTelegramId)).eq('reward_granted', false).maybeSingle();
-  if (!referral) return;
+  if (!referral || !referral.referrer_id) return;
 
   // Атомарно помечаем reward_granted = true (защита от двойного начисления при параллельных воркерах)
   const { data: claimed } = await supabase.from('referrals')
     .update({ reward_granted: true, reward_granted_at: new Date().toISOString(), activated_at: new Date().toISOString() })
     .eq('id', referral.id).eq('reward_granted', false).select('id');
-  if (!claimed?.length) return;
+  if (!claimed?.length) return; // уже выдано другим воркером
 
   // Начисляем кредит рефереру
-  const { data: rp } = await supabase.from('user_profiles')
+  const { data: rp, error: rpErr } = await supabase.from('user_profiles')
     .select('referral_credits').eq('telegram_id', Number(referral.referrer_id)).maybeSingle();
-  await supabase.from('user_profiles')
-    .update({ referral_credits: (rp?.referral_credits || 0) + 1 })
+  if (rpErr) {
+    console.error('[Referral] Ошибка чтения профиля реферера:', rpErr.message);
+    return;
+  }
+  if (!rp) {
+    console.warn('[Referral] Профиль реферера не найден:', referral.referrer_id);
+    return;
+  }
+  const { error: creditErr } = await supabase.from('user_profiles')
+    .update({ referral_credits: (rp.referral_credits || 0) + 1 })
     .eq('telegram_id', Number(referral.referrer_id));
+  if (creditErr) {
+    console.error('[Referral] Ошибка начисления кредита:', creditErr.message);
+    return;
+  }
 
   // Уведомление рефереру в бот
   try {
@@ -61,7 +73,7 @@ async function triggerReferralRewardIfEligible(refereeTelegramId) {
       }),
     });
   } catch (e) {
-    console.warn('[Referral] Не удалось отправить уведомление рефереру:', e?.message);
+    console.error('[Referral] Не удалось отправить уведомление рефереру:', e?.message);
   }
   console.log(`[Referral] Вознаграждение начислено: referee=${refereeTelegramId} → referrer=${referral.referrer_id}`);
 }

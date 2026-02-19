@@ -2009,8 +2009,8 @@
         try {
           var resp = await fetch(apiBase + '/api/referral/stats', { headers: { 'X-Telegram-Init': initData } });
           if (!resp.ok) return;
-          var data = await resp.json().catch(function() { return {}; });
-          if (!data.code) return;
+          var data = await resp.json().catch(function() { return null; });
+          if (!data || !data.code || !data.link) return;
           var inp = document.getElementById('referralLinkInput');
           if (inp) inp.value = data.link || '';
           var inv = document.getElementById('refInvitedCount');

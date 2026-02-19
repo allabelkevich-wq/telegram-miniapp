@@ -284,9 +284,13 @@ async function getOrCreateReferralCode(telegramUserId) {
     .select('referral_code').eq('telegram_id', Number(telegramUserId)).maybeSingle();
   if (data?.referral_code) return data.referral_code;
   const code = generateReferralCode();
-  await supabase.from('user_profiles')
+  const { error } = await supabase.from('user_profiles')
     .upsert({ telegram_id: Number(telegramUserId), referral_code: code },
              { onConflict: 'telegram_id' });
+  if (error) {
+    console.error('[Referral] Ошибка сохранения кода:', error.message);
+    return null;
+  }
   return code;
 }
 
@@ -2308,7 +2312,7 @@ app.get("/api/referral/stats", asyncApi(async (req, res) => {
   const code = await getOrCreateReferralCode(telegramUserId);
   const botUsername = process.env.BOT_USERNAME || "yupsoul_bot";
 
-  const [invitedRes, rewardedRes, profileRes] = await Promise.all([
+  const [invitedRes, rewardedRes, profileRes] = await Promise.allSettled([
     supabase.from("referrals").select("*", { count: "exact", head: true }).eq("referrer_id", Number(telegramUserId)),
     supabase.from("referrals").select("*", { count: "exact", head: true }).eq("referrer_id", Number(telegramUserId)).eq("reward_granted", true),
     supabase.from("user_profiles").select("referral_credits").eq("telegram_id", Number(telegramUserId)).maybeSingle(),
@@ -2316,10 +2320,10 @@ app.get("/api/referral/stats", asyncApi(async (req, res) => {
 
   return res.json({
     code,
-    link: `https://t.me/${botUsername}?start=ref_${code}`,
-    invited_count: invitedRes.count || 0,
-    rewarded_count: rewardedRes.count || 0,
-    credits: profileRes.data?.referral_credits || 0,
+    link: code ? `https://t.me/${botUsername}?start=ref_${code}` : null,
+    invited_count: invitedRes.status === "fulfilled" ? (invitedRes.value.count || 0) : 0,
+    rewarded_count: rewardedRes.status === "fulfilled" ? (rewardedRes.value.count || 0) : 0,
+    credits: profileRes.status === "fulfilled" ? (profileRes.value.data?.referral_credits || 0) : 0,
   });
 }));
 
@@ -2737,7 +2741,7 @@ app.get("/api/admin/referrals", asyncApi(async (req, res) => {
   if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
 
-  const [{ data: rows }, { count: total }, { count: rewarded }] = await Promise.all([
+  const [rowsRes, totalRes, rewardedRes] = await Promise.allSettled([
     supabase.from("referrals")
       .select("id, referrer_id, referee_id, created_at, activated_at, reward_granted, reward_granted_at")
       .order("created_at", { ascending: false }).limit(200),
@@ -2745,7 +2749,11 @@ app.get("/api/admin/referrals", asyncApi(async (req, res) => {
     supabase.from("referrals").select("*", { count: "exact", head: true }).eq("reward_granted", true),
   ]);
 
-  return res.json({ success: true, rows: rows || [], total: total || 0, rewarded: rewarded || 0 });
+  const rows = rowsRes.status === "fulfilled" ? (rowsRes.value.data || []) : [];
+  const total = totalRes.status === "fulfilled" ? (totalRes.value.count || 0) : 0;
+  const rewarded = rewardedRes.status === "fulfilled" ? (rewardedRes.value.count || 0) : 0;
+
+  return res.json({ success: true, rows, total, rewarded });
 }));
 
 app.use("/api", (err, req, res, next) => {
