@@ -435,23 +435,23 @@
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* Онбординг: полноэкранные слайды с автопереходом */
     #onboardingPage{position:fixed;inset:0;z-index:10001;background:#0A0A1A url('assets/bg-yupsoul.png') center/cover no-repeat;overflow:hidden}
-    #onboardingPage::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(1,6,26,.7) 0%,rgba(8,10,38,.85) 100%);z-index:0}
-    .onboarding-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;opacity:0;pointer-events:none;transition:opacity .5s ease;z-index:1}
+    #onboardingPage::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(4,4,20,.45) 0%,rgba(8,10,35,.65) 100%);z-index:0}
+    .onboarding-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 32px;text-align:center;opacity:0;pointer-events:none;transition:opacity .4s ease;z-index:1}
     .onboarding-slide.active{opacity:1;pointer-events:auto}
-    .onboarding-icon{font-size:5rem;margin-bottom:24px;animation:iconBounce .6s ease-out}
-    @keyframes iconBounce{0%{transform:scale(0.3);opacity:0}50%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
-    .onboarding-title{font-size:1.8rem;font-weight:800;color:#fff;margin:0 0 16px 0;line-height:1.2;max-width:320px}
-    .onboarding-text{font-size:1.05rem;line-height:1.65;color:rgba(255,255,255,0.88);margin:0 0 40px 0;max-width:340px}
-    .onboarding-btn{padding:18px 40px;border-radius:16px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1.1rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 12px 35px rgba(212,175,55,0.6);transition:transform .2s,box-shadow .2s;min-width:200px}
-    .onboarding-btn:hover{transform:translateY(-2px);box-shadow:0 14px 38px rgba(212,175,55,0.7)}
+    .onboarding-icon{font-size:3.8rem;margin-bottom:20px;animation:iconBounce .5s ease-out}
+    @keyframes iconBounce{0%{transform:scale(0.5);opacity:0}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+    .onboarding-title{font-size:1.6rem;font-weight:700;color:#fff;margin:0 0 14px 0;line-height:1.25;max-width:300px;letter-spacing:-0.2px}
+    .onboarding-text{font-size:1rem;line-height:1.6;color:rgba(255,255,255,0.72);margin:0 0 36px 0;max-width:300px}
+    .onboarding-btn{padding:15px 40px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1.05rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(212,175,55,0.3);transition:transform .2s,box-shadow .2s;min-width:180px}
+    .onboarding-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(212,175,55,0.4)}
     .onboarding-btn:active{transform:translateY(0)}
-    .onboarding-skip{position:absolute;top:max(16px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));padding:8px 16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.7);font-size:0.9rem;cursor:pointer;font-family:inherit;z-index:10;transition:background .2s}
-    .onboarding-skip:hover{background:rgba(255,255,255,0.15)}
-    .onboarding-dots{position:absolute;bottom:max(40px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10}
-    .onboarding-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.3);border:none;padding:0;cursor:pointer;transition:background .2s,width .2s}
-    .onboarding-dot.active{background:#a78bfa;width:24px;border-radius:4px}
-    .onboarding-progress{position:absolute;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.1);z-index:10;overflow:hidden}
-    .onboarding-progress-bar{height:100%;background:linear-gradient(90deg,#a78bfa,#ec4899);width:0;transition:width 5s linear}
+    .onboarding-skip{position:absolute;top:max(20px,env(safe-area-inset-top));right:max(20px,env(safe-area-inset-right));padding:6px 14px;background:none;border:none;color:rgba(255,255,255,0.45);font-size:0.88rem;cursor:pointer;font-family:inherit;z-index:10;transition:color .2s;letter-spacing:0.2px}
+    .onboarding-skip:hover{color:rgba(255,255,255,0.7)}
+    .onboarding-dots{position:absolute;bottom:max(36px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10}
+    .onboarding-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.2);border:none;padding:0;cursor:pointer;transition:background .2s,width .2s}
+    .onboarding-dot.active{background:rgba(167,139,250,0.85);width:20px;border-radius:3px}
+    .onboarding-progress{position:absolute;top:0;left:0;right:0;height:2px;background:none;z-index:10;overflow:hidden}
+    .onboarding-progress-bar{height:100%;background:linear-gradient(90deg,rgba(167,139,250,0.6),rgba(236,72,153,0.6));width:0;transition:width 2s linear}
     .onboarding-progress-bar.active{width:100%}
     .success-title{font-size:2.2rem;color:#a78bfa;font-weight:800;text-align:center;margin:20px 0;background:linear-gradient(90deg,#a78bfa,#f9a8d4);-webkit-background-clip:text;background-clip:text;color:transparent}
     .success-text{font-size:1.15rem;line-height:1.7;margin:20px 0;text-align:center;padding:0 10px}
@@ -2199,7 +2199,7 @@
           
           autoTimer = setTimeout(function() {
             goToStep(currentStep + 1);
-          }, 5000);
+          }, 2000);
         }
         
         function stopAutoProgress() {
