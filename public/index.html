@@ -348,15 +348,17 @@
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* Превью-карусель: польза бота в 3 слайда */
     .preview-carousel{width:100%;margin:0 0 20px 0;overflow:hidden;border-radius:16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12)}
-    .preview-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .preview-track{display:flex;flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
     .preview-track::-webkit-scrollbar{display:none}
-    .preview-slide{flex:0 0 100%;scroll-snap-align:start;scroll-snap-stop:always;padding:24px 20px;text-align:center;box-sizing:border-box;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-    .preview-slide-icon{font-size:2.8rem;margin-bottom:12px;line-height:1}
-    .preview-slide-title{font-size:1.05rem;font-weight:700;color:var(--tg-theme-text-color,#fff);margin:0 0 6px 0}
-    .preview-slide-text{font-size:0.9rem;color:var(--tg-theme-hint-color,rgba(255,255,255,0.75));line-height:1.5;margin:0}
+    .preview-slide{flex:0 0 100%;scroll-snap-align:start;scroll-snap-stop:always;padding:24px 20px;text-align:center;box-sizing:border-box;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:transparent}
+    .preview-slide-icon{font-size:2.8rem;margin-bottom:12px;line-height:1;display:block}
+    .preview-slide-title{font-size:1.05rem;font-weight:700;margin:0 0 6px 0;color:#fff;line-height:1.3}
+    .preview-slide-text{font-size:0.9rem;line-height:1.5;margin:0;color:rgba(255,255,255,0.85);max-width:100%}
+    .theme-light .preview-slide-title{color:#1f2937}
+    .theme-light .preview-slide-text{color:rgba(31,41,55,0.85)}
     .preview-dots{display:flex;justify-content:center;gap:8px;margin-top:12px}
-    .preview-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.3);border:none;padding:0;cursor:pointer;transition:background 0.2s}
-    .preview-dot.active{background:var(--tg-theme-button-color,#a78bfa)}
+    .preview-dot{width:8px !important;height:8px !important;min-width:8px !important;min-height:8px !important;border-radius:50%;background:rgba(255,255,255,0.3) !important;border:none;padding:0;cursor:pointer;transition:background 0.2s;font-size:0;line-height:0;overflow:hidden;flex-shrink:0;box-shadow:none}
+    .preview-dot.active{background:#a78bfa !important}
     .success-title{font-size:2.2rem;color:#a78bfa;font-weight:800;text-align:center;margin:20px 0;background:linear-gradient(90deg,#a78bfa,#f9a8d4);-webkit-background-clip:text;background-clip:text;color:transparent}
     .success-text{font-size:1.15rem;line-height:1.7;margin:20px 0;text-align:center;padding:0 10px}
     .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px 40px;text-align:center;min-height:70vh}
@@ -450,19 +452,19 @@
       <div class="preview-carousel" id="previewCarousel">
         <div class="preview-track" id="previewTrack">
           <div class="preview-slide">
-            <span class="preview-slide-icon">🎵</span>
-            <div class="preview-slide-title">Персональная песня</div>
-            <p class="preview-slide-text">По твоим данным и запросу создаётся уникальный трек — только для тебя.</p>
+            <span class="preview-slide-icon">✨</span>
+            <div class="preview-slide-title">Твоя песня силы</div>
+            <p class="preview-slide-text">Уникальный трек создаётся по твоим данным рождения и запросу. Слушай каждое утро — настраивайся на волну успеха.</p>
           </div>
           <div class="preview-slide">
-            <span class="preview-slide-icon">📱</span>
-            <div class="preview-slide-title">Трек в Telegram</div>
-            <p class="preview-slide-text">Песня придёт в чат с ботом. Слушай когда удобно — ничего не потеряется.</p>
+            <span class="preview-slide-icon">🎵</span>
+            <div class="preview-slide-title">Готово за 3 минуты</div>
+            <p class="preview-slide-text">Заполни форму → песня придёт в этот чат. Ничего не потеряется — слушай когда удобно.</p>
           </div>
           <div class="preview-slide">
             <span class="preview-slide-icon">🎁</span>
-            <div class="preview-slide-title">Первый раз — бесплатно</div>
-            <p class="preview-slide-text">Нажми «Начать», заполни пару полей — и получи свою первую песню в подарок.</p>
+            <div class="preview-slide-title">Первая — бесплатно</div>
+            <p class="preview-slide-text">Попробуй прямо сейчас без оплаты. Нажми «Начать» и получи свою первую песню в подарок.</p>
           </div>
         </div>
         <div class="preview-dots" id="previewDots">
@@ -1280,6 +1282,9 @@
         return s;
       }
       function applyTranslations() {
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:1284',message:'applyTranslations START',data:{currentLang:currentLang,startBtnInLang:LANG[currentLang]&&LANG[currentLang].startBtn?LANG[currentLang].startBtn:'MISSING',previewSlide1Before:document.querySelectorAll('.preview-slide-title')[0]?document.querySelectorAll('.preview-slide-title')[0].textContent:'NULL'},timestamp:Date.now(),hypothesisId:'A,C,E'})}).catch(()=>{});
+        // #endregion
         document.documentElement.lang = currentLang || 'ru';
         var map = [
           ['tagline','#homeTagline'], ['startBtn','#startBtn'], ['myHeroes','#goHeroesBtn'], ['admin','#adminLinkBtn'],
@@ -1922,8 +1927,17 @@
       }
       if (tg) loadMe();
       currentLang = detectLang();
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:1935',message:'Before applyTranslations',data:{previewCarouselExists:!!document.getElementById('previewCarousel'),startBtnExists:!!document.getElementById('startBtn'),startBtnText:document.getElementById('startBtn')?document.getElementById('startBtn').textContent:'NULL'},timestamp:Date.now(),hypothesisId:'A,B,C,D'})}).catch(()=>{});
+      // #endregion
       applyTranslations();
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:1939',message:'After applyTranslations END',data:{startBtnText:document.getElementById('startBtn')?document.getElementById('startBtn').textContent:'NULL',previewSlide1Title:document.querySelectorAll('.preview-slide-title')[0]?document.querySelectorAll('.preview-slide-title')[0].textContent:'NULL',previewSlide1Color:document.querySelectorAll('.preview-slide-title')[0]?window.getComputedStyle(document.querySelectorAll('.preview-slide-title')[0]).color:'NULL',previewSlide1FontSize:document.querySelectorAll('.preview-slide-title')[0]?window.getComputedStyle(document.querySelectorAll('.preview-slide-title')[0]).fontSize:'NULL'},timestamp:Date.now(),hypothesisId:'A,B,C'})}).catch(()=>{});
+      // #endregion
       
+      // #region agent log
+      setTimeout(function(){fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:1947',message:'DOM after 1sec',data:{startBtnFinal:document.getElementById('startBtn')?document.getElementById('startBtn').textContent:'NULL',startBtnComputed:document.getElementById('startBtn')?window.getComputedStyle(document.getElementById('startBtn')).fontSize+' / '+window.getComputedStyle(document.getElementById('startBtn')).color:'NULL',previewSlide1TitleFinal:document.querySelectorAll('.preview-slide-title')[0]?document.querySelectorAll('.preview-slide-title')[0].textContent:'NULL',previewSlide1TitleComputed:document.querySelectorAll('.preview-slide-title')[0]?window.getComputedStyle(document.querySelectorAll('.preview-slide-title')[0]).fontSize+' / '+window.getComputedStyle(document.querySelectorAll('.preview-slide-title')[0]).color:'NULL'},timestamp:Date.now(),hypothesisId:'A,B,C,E'})}).catch(()=>{});},1000);
+      // #endregion
       // Проверяем демо-режим и показываем индикатор
       function checkDemoMode() {
         if (window.demoMode || (!getInitData() && tg && tg.version)) {
@@ -2318,6 +2332,9 @@
         var currentPage = document.querySelector('.page.active');
         
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
+        // #region agent log
+        if (pageId === 'homePage') fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:goToPage',message:'homePage activated',data:{startBtnText:document.getElementById('startBtn')?document.getElementById('startBtn').textContent:'NULL',previewCarouselVisible:document.getElementById('previewCarousel')?window.getComputedStyle(document.getElementById('previewCarousel')).display:'NULL'},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
         // Всегда проверяем кнопку оплаты при переходах между страницами
         ensurePayButtonText();
         
