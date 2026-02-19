@@ -1426,11 +1426,11 @@ bot.command("admin", async (ctx) => {
 
   const getAdminUrl = () => {
     if (!BOT_PUBLIC_URL) return null;
-    const sep = "?";
     const token = ADMIN_SECRET ? "token=" + encodeURIComponent(ADMIN_SECRET) : "";
     const apiOrigin = "api_origin=" + encodeURIComponent(BOT_PUBLIC_URL);
-    const query = [token, apiOrigin].filter(Boolean).join("&");
-    return BOT_PUBLIC_URL + "/admin" + (query ? sep + query : "");
+    const v = "v=" + Date.now(); // cache-bust — каждый раз новая ссылка
+    const query = [token, apiOrigin, v].filter(Boolean).join("&");
+    return BOT_PUBLIC_URL + "/admin?" + query;
   };
 
   const sendAdminLink = () => {

@@ -1,1 +1,1 @@
-Deploy trigger: 2026-02-19T22:22:48Z - admin cache-control fix
+Deploy trigger: 2026-02-19T22:25:40Z - force rebuild v1.2.20
