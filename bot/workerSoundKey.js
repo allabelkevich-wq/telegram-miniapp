@@ -951,8 +951,11 @@ ${extBlock ? "\n" + extBlock : ""}
     const uppercaseAfter = countUppercaseChars(lyricsForSuno);
     const lineCount = lyricsForSuno.split(/\n/).filter((l) => l.trim()).length;
     console.log(`[Воркер] ЭТАП 2 — Парсинг: лирика ${lyricsForSuno.length} символов, ${lineCount} строк; title="${parsed.title || ""}"; style длина=${(parsed.style || "").length}`);
+    if (lineCount < 20) {
+      throw new Error(`Песня слишком короткая (${lineCount} строк, нужно минимум 20)`);
+    }
     if (lineCount < 32) {
-      throw new Error(`Песня слишком короткая (${lineCount} строк, нужно минимум 32)`);
+      console.warn(`[Воркер] ⚠️ Лирика короче обычного (${lineCount} строк) — отправляем в Suno, но рекомендуем проверить промпт`);
     }
     await setStepCompat('3', `Лирика: ${lineCount} строк, «${(parsed.title || "Sound Key").slice(0, 30)}»`, 'lyrics_ready');
     
