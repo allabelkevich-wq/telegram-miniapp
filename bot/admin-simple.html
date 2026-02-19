@@ -128,6 +128,10 @@
       <h1>👑 АДМИНКА YUP SOUL</h1>
       <p>Полный контроль генерации звуковых ключей / Full control of sound key generation</p>
       <p id="url-info" style="font-size:12px;color:#64748b;margin-top:8px;word-break:break-all;"></p>
+      <div id="loadingStatus" style="display:none;margin-top:10px;padding:8px 14px;background:rgba(102,126,234,0.12);border:1px solid rgba(102,126,234,0.3);border-radius:8px;font-size:13px;color:#a5b4fc;display:flex;align-items:center;gap:8px;">
+        <span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(102,126,234,0.3);border-top-color:#667eea;border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;"></span>
+        <span id="loadingStatusText">Загрузка данных…</span>
+      </div>
     </div>
     <div class="stats">
       <div class="stat-card active-filter" data-filter="all" onclick="filterByCard(this)" title="Показать все заявки">
@@ -548,20 +552,67 @@
       el.style.color = ok === true ? '#86efac' : (ok === false ? '#fca5a5' : '#94a3b8');
     }
 
-    async function fetchJson(url, opts) {
-      const res = await fetch(url, opts);
+    async function fetchJson(url, opts, timeoutMs) {
+      timeoutMs = timeoutMs || 15000;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      let res;
+      try {
+        res = await fetch(url, Object.assign({}, opts, { signal: controller.signal }));
+      } catch (e) {
+        clearTimeout(timer);
+        if (e && e.name === 'AbortError') throw new Error('Сервер не ответил за ' + (timeoutMs/1000) + ' сек. Render мог уснуть — обновите страницу (F5) через 30 сек.');
+        throw new Error('Сеть недоступна: ' + (e && e.message));
+      }
+      clearTimeout(timer);
       const text = await res.text();
       if (text.trim().startsWith('<')) {
         if (res.status === 502 || res.status === 503) {
           throw new Error('Сервер просыпается (502/503). Подождите 30–60 сек и обновите страницу (F5).');
         }
-        throw new Error('Сервер вернул HTML вместо данных. Код ответа: ' + res.status + '. Если открыли по ссылке из бота: в Render сервис «' + window.location.host + '» может быть Static Site, а API отдаёт Web Service с ботом. Задайте BOT_PUBLIC_URL = URL именно Web Service с ботом (Dashboard → Web Service → URL), перезапустите бота и откройте новую ссылку из /admin. Сейчас открыто: ' + window.location.origin);
+        throw new Error('Сервер вернул HTML вместо данных (код ' + res.status + '). Откройте по ссылке из бота (/admin).');
       }
       try {
         return { res, json: JSON.parse(text) };
       } catch (e) {
         throw new Error('Ответ не JSON (сервер недоступен или не тот адрес). Откройте по ссылке из бота (/admin).');
       }
+    }
+
+    function setLoadingStatus(visible, text) {
+      const el = document.getElementById('loadingStatus');
+      const textEl = document.getElementById('loadingStatusText');
+      if (!el) return;
+      el.style.display = visible ? 'flex' : 'none';
+      if (textEl && text) textEl.textContent = text;
+    }
+
+    // Проверяет доступность API и правильность токена, выводит статус
+    async function checkApiStatus() {
+      const token = getToken();
+      if (!token) return; // Нет токена — покажет форму входа
+      const statusEl = document.getElementById('loadingStatus');
+      const textEl = document.getElementById('loadingStatusText');
+      if (statusEl) statusEl.style.display = 'flex';
+      if (textEl) textEl.textContent = 'Проверка подключения к API…';
+      try {
+        const r = await fetchJson(API_BASE + '/api/admin/me' + authQueryFromPath(), { headers: authHeaders() }, 8000);
+        if (r.json && r.json.admin) {
+          if (textEl) textEl.textContent = '✅ API доступен, токен верный — загружаю данные…';
+        } else {
+          if (statusEl) statusEl.style.background = 'rgba(239,68,68,0.12)';
+          if (statusEl) statusEl.style.borderColor = 'rgba(239,68,68,0.3)';
+          if (textEl) { textEl.style.color = '#fca5a5'; textEl.textContent = '❌ Токен неверный (403). Проверьте ADMIN_SECRET в Render Dashboard.'; }
+        }
+      } catch (e) {
+        if (statusEl) statusEl.style.background = 'rgba(239,68,68,0.12)';
+        if (statusEl) statusEl.style.borderColor = 'rgba(239,68,68,0.3)';
+        if (textEl) { textEl.style.color = '#fca5a5'; textEl.textContent = '❌ API недоступен: ' + escapeHtml((e && e.message) || String(e)); }
+        const el = document.getElementById('requests');
+        if (el) el.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c">❌ ' + escapeHtml((e && e.message) || String(e)) + '<br><br><button onclick="window.location.reload()" style="margin-top:12px;padding:10px 24px;background:#667eea;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;">🔄 Обновить страницу</button></div>';
+        return false;
+      }
+      return true;
     }
 
     async function loadAdminData() {
@@ -574,6 +625,7 @@
         if (form && input) form.addEventListener('submit', function(e) { e.preventDefault(); const v = (input.value || '').trim(); if (v) { localStorage.setItem('adminToken', v); window.location.search = '?token=' + encodeURIComponent(v); } });
         return;
       }
+      setLoadingStatus(true, 'Загрузка статистики…');
       try {
         const statsResult = await fetchJson(API_BASE + '/api/admin/stats?' + new URLSearchParams({ token }).toString(), { headers: authHeaders() });
         if (statsResult.res.status === 503) {
@@ -600,6 +652,7 @@
         });
         // Загружаем незавершённые заявки (pending_payment) сразу при каждом обновлении
         loadUnpaidRequests();
+        setLoadingStatus(true, 'Загрузка заявок…');
         const listResult = await fetchJson(API_BASE + '/api/admin/requests?limit=50&status=' + currentFilter + authQuery(), { headers: authHeaders() });
         const listJson = listResult.json;
         const listRes = listResult.res;
@@ -624,12 +677,15 @@
           const tempEl = document.getElementById('settings-temperature');
           if (tempEl && st.deepseek_temperature != null && Number.isFinite(Number(st.deepseek_temperature))) tempEl.value = Math.max(0, Math.min(2, Number(st.deepseek_temperature)));
         }
+        setLoadingStatus(true, 'Загрузка монетизации и рефералов…');
         await loadMonetizationData();
         loadReferralData();
+        setLoadingStatus(false);
       } catch (e) {
+        setLoadingStatus(false);
         const msg = (e && e.message) || String(e);
         const el = document.getElementById('requests');
-        if (el) el.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c">❌ ' + escapeHtml(msg) + '<br><br>Откройте админку по ссылке из бота (напишите боту /admin).</div>';
+        if (el) el.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c">❌ ' + escapeHtml(msg) + '<br><br><button onclick="window.location.reload()" style="margin-top:12px;padding:10px 24px;background:#667eea;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;">🔄 Обновить страницу</button><br><br><span style="font-size:12px;color:#64748b">API: ' + escapeHtml(window.API_BASE || window.location.origin) + '</span></div>';
       }
     }
 
@@ -1461,11 +1517,14 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-      try { loadAdminData(); }
-      catch (e) {
-        const el = document.getElementById('requests');
-        if (el) el.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c">❌ Ошибка загрузки: ' + (e && e.message ? e.message : String(e)) + '</div>';
-      }
+      checkApiStatus().then(function(ok) {
+        if (ok !== false) {
+          loadAdminData().catch(function(e) {
+            const el = document.getElementById('requests');
+            if (el) el.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c">❌ ' + escapeHtml((e && e.message) ? e.message : String(e)) + '<br><br><button onclick="window.location.reload()" style="margin-top:12px;padding:10px 24px;background:#667eea;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;">🔄 Обновить страницу</button></div>';
+          });
+        }
+      });
     });
   </script>
 </body>
