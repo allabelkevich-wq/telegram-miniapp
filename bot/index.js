@@ -2830,7 +2830,7 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
       updated_at: new Date().toISOString(),
     }).eq("id", requestId);
     // Отправляем пользователю сообщение с кнопками «Оплатить» / «Отменить»
-    sendPendingPaymentBotMessage(telegramUserId, requestId);
+    await sendPendingPaymentBotMessage(telegramUserId, requestId);
     return res.status(402).json({
       ok: false,
       payment_required: true,
@@ -2852,7 +2852,7 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
         generation_status: "pending_payment",
         updated_at: new Date().toISOString(),
       }).eq("id", requestId);
-      sendPendingPaymentBotMessage(telegramUserId, requestId);
+      await sendPendingPaymentBotMessage(telegramUserId, requestId);
       return res.status(402).json({
         ok: false,
         payment_required: true,

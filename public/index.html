@@ -3376,11 +3376,12 @@
             return;
           }
           setPaymentStatus(t('paymentConfirmed'), 'ok');
-          await fetch(apiBase + '/api/payments/hot/confirm', {
+          var confirmResp = await fetch(apiBase + '/api/payments/hot/confirm', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
             body: JSON.stringify({ request_id: pendingPaymentRequestId, initData: initData })
           });
+          if (!confirmResp.ok) throw new Error('Ошибка подтверждения оплаты (' + confirmResp.status + ')');
           pendingPaymentRequestId = null;
           pendingPaymentSku = null;
           hidePaymentOverlay();

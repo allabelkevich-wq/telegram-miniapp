@@ -231,10 +231,14 @@ async function processOneRequest(row) {
 
 /** Ставим статус processing, выполняем processOneRequest, при ошибке — failed */
 async function runOneRow(row) {
-  await supabase.from("track_requests").update({
+  const { data: claimed } = await supabase.from("track_requests").update({
     status: "processing",
     updated_at: new Date().toISOString(),
-  }).eq("id", row.id);
+  }).eq("id", row.id).eq("status", "pending").select("id");
+  if (!claimed?.length) {
+    console.log("[Worker] Заявка", row.id, "уже захвачена другим воркером — пропускаем");
+    return;
+  }
   console.log("[Worker] Обрабатываю заявку", row.id);
   try {
     await processOneRequest({ ...row, status: "processing" });
