@@ -722,8 +722,8 @@
       const payLabel = currentPayFilter !== 'all' ? (' · Оплата: ' + currentPayFilter) : '';
       if (!data.length) {
         document.getElementById('requests').innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8">📭 Нет заявок' + escapeHtml(payLabel) + '</div>';
-        var bulkBar = document.getElementById('bulkActionsBar');
-        if (bulkBar) bulkBar.style.display = 'none';
+        const bulkBarEmpty = document.getElementById('bulkActionsBar');
+        if (bulkBarEmpty) bulkBarEmpty.style.display = 'none';
         return;
       }
       function stepMsg(steps, key) {
