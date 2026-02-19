@@ -284,6 +284,64 @@
     input,textarea,select{width:100%;padding:var(--spacing-md);border-radius:var(--radius-md);border:1px solid var(--tg-theme-border-color,#e5e7eb);background:var(--tg-theme-secondary-bg-color,#fff);color:var(--tg-theme-text-color,#2d2d2d);font-size:var(--fluid-base);transition:all .3s ease;font-family:'Comfortaa',sans-serif}
     input:focus,textarea:focus,select:focus{outline:none;border-color:var(--tg-theme-button-color,#a78bfa);box-shadow:0 0 0 3px rgba(167,139,250,.15)}
     input.valid,textarea.valid{border-color:#4ade80}
+    /* Улучшения для date/time inputs на Android */
+    input[type="date"],input[type="time"]{
+      font-size:1.1rem;
+      min-height:52px;
+      padding:15px 18px;
+      font-weight:600;
+      letter-spacing:0.4px;
+      -webkit-appearance:none;
+      -moz-appearance:none;
+      appearance:none;
+      background:rgba(255,255,255,0.12);
+      border:2px solid rgba(212,175,55,0.4);
+      color:#fff;
+      border-radius:12px;
+      transition:all 0.2s ease;
+    }
+    input[type="date"]:focus,input[type="time"]:focus{
+      border-color:rgba(212,175,55,0.8);
+      background:rgba(255,255,255,0.16);
+      outline:none;
+      box-shadow:0 0 0 3px rgba(212,175,55,0.15);
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator{
+      width:28px;
+      height:28px;
+      opacity:0.85;
+      cursor:pointer;
+      filter:invert(1) brightness(1.2);
+      padding:4px;
+      border-radius:6px;
+      transition:all 0.2s ease;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator:hover,
+    input[type="time"]::-webkit-calendar-picker-indicator:hover{
+      opacity:1;
+      background:rgba(212,175,55,0.2);
+    }
+    /* Placeholder для пустых date/time inputs */
+    input[type="date"]:not(:focus):invalid,
+    input[type="time"]:not(:focus):invalid{
+      color:rgba(255,255,255,0.5);
+      font-weight:500;
+    }
+    /* Улучшенная видимость для Android Xiaomi */
+    @media (max-width: 600px) {
+      input[type="date"],input[type="time"]{
+        font-size:1.15rem;
+        min-height:56px;
+        padding:16px 20px;
+        border-width:2.5px;
+      }
+      input[type="date"]::-webkit-calendar-picker-indicator,
+      input[type="time"]::-webkit-calendar-picker-indicator{
+        width:32px;
+        height:32px;
+      }
+    }
     .birthdate-wrap{position:relative}
     #birthdate{padding-right:2.5rem;min-width:0}
     .birthdate-check{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:#4ade80;font-size:1.25rem;display:none;font-weight:700}
@@ -580,19 +638,20 @@
         <div class="field">
           <label for="birthdate" data-icon="📅">Дата рождения</label>
           <div id="birthdateWrap" class="birthdate-wrap">
-            <input type="date" id="birthdate" required aria-label="Дата рождения">
+            <input type="date" id="birthdate" required aria-label="Дата рождения" max="2010-12-31">
             <span id="birthdateCheck" class="birthdate-check" aria-hidden="true">✓</span>
           </div>
+          <div style="font-size:0.85rem;color:var(--tg-theme-hint-color,#9ca3af);margin-top:6px;">Нажми на поле для выбора даты</div>
         </div>
         
         <div class="field">
           <label for="birthplace" data-icon="📍">Место рождения</label>
           <div id="birthplaceWrap" class="birthplace-wrap">
-              <input type="text" id="birthplace" placeholder="Город или страна — выбери из подсказок" required autocomplete="off" aria-label="Локация рождения">
+              <input type="text" id="birthplace" placeholder="Начни вводить город..." required autocomplete="off" aria-label="Локация рождения">
               <span id="birthplaceCheck" class="birthplace-check" aria-hidden="true">✓</span>
             <ul id="birthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true"></ul>
           </div>
-          <div id="birthplaceHint" class="birthplace-hint" style="display:none;">Выбери локацию из списка подсказок — так подтянутся координаты.</div>
+          <div id="birthplaceHint" class="birthplace-hint" style="display:block;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">💡 Начни вводить название города — появятся подсказки. Выбери из списка для точных координат.</div>
         </div>
         
         <div class="field">

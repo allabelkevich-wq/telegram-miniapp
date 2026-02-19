@@ -217,28 +217,58 @@ async function redeemPromoUsage({ promo, telegramUserId, requestId, orderId, dis
 async function isTrialAvailable(telegramUserId, trialKey = "first_song_gift") {
   console.log("[Trial] Проверка доступности пробной версии для пользователя:", telegramUserId, "ключ:", trialKey);
   
+  // ВАЖНО: Если telegramUserId null/undefined или невалидный — разрешаем trial
+  // (новый пользователь, первый визит, проблемы с initData)
+  if (!telegramUserId || !Number.isInteger(Number(telegramUserId))) {
+    console.log("[Trial] telegramUserId невалидный или отсутствует → разрешаем пробную версию");
+    return true;
+  }
+  
   if (!supabase) {
     console.log("[Trial] Supabase не подключен, разрешаем пробную версию");
     return true;
   }
   
-  const { data, error } = await supabase
+  // КРИТИЧНО: Сначала проверяем существует ли пользователь в app_users
+  // Если пользователя нет — это 100% первый визит, разрешаем trial
+  const { data: appUser, error: appUserError } = await supabase
+    .from("app_users")
+    .select("telegram_user_id")
+    .eq("telegram_user_id", Number(telegramUserId))
+    .maybeSingle();
+  
+  if (appUserError && !/does not exist|relation/i.test(appUserError.message)) {
+    console.error("[Trial] Ошибка запроса к app_users:", appUserError.message);
+    // При ошибке БД разрешаем trial (лучше дать бесплатный доступ, чем заблокировать)
+    console.log("[Trial] Ошибка БД app_users → разрешаем пробную версию");
+    return true;
+  }
+  
+  if (!appUser) {
+    console.log("[Trial] Пользователь не найден в app_users → первый визит → разрешаем пробную версию");
+    return true;
+  }
+  
+  console.log("[Trial] Пользователь найден в app_users, проверяем user_trials");
+  
+  // Пользователь существует, проверяем использовал ли он trial
+  const { data: trialData, error: trialError } = await supabase
     .from("user_trials")
-    .select("id")
+    .select("id, consumed_at")
     .eq("telegram_user_id", Number(telegramUserId))
     .eq("trial_key", trialKey)
     .maybeSingle();
   
-  if (error) {
-    console.error("[Trial] Ошибка запроса к user_trials:", error.message);
+  if (trialError && !/does not exist|relation/i.test(trialError.message)) {
+    console.error("[Trial] Ошибка запроса к user_trials:", trialError.message);
     // При любой ошибке БД разрешаем пробную версию —
     // consumeTrial защитит от повторного использования через duplicate key
-    console.log("[Trial] Ошибка БД → разрешаем пробную версию (consumeTrial проверит дубль)");
+    console.log("[Trial] Ошибка БД user_trials → разрешаем пробную версию (consumeTrial проверит дубль)");
     return true;
   }
   
-  const available = !data;
-  console.log("[Trial] Результат проверки:", available ? "доступна" : "уже использована", "данные:", data);
+  const available = !trialData;
+  console.log("[Trial] Результат проверки:", available ? "доступна" : "уже использована", "данные:", trialData);
   return available;
 }
 
@@ -2185,13 +2215,24 @@ app.get("/api/pricing/catalog", asyncApi(async (req, res) => {
   const initData = req.headers["x-telegram-init"] || req.query?.initData || "";
   const telegramUserId = validateInitData(initData, BOT_TOKEN);
   const catalog = await getPricingCatalog();
+  
+  console.log("[Pricing Catalog] Запрос от пользователя:", telegramUserId || "неизвестен", "initData длина:", initData ? initData.length : 0);
+  
+  // ВАЖНО: Если telegramUserId === null (первый визит, проблемы с initData),
+  // всегда возвращаем trialAvailable: true, чтобы пользователь мог попробовать бесплатно
   let trialAvailable = true;
   let hasSubscription = false;
-  if (telegramUserId != null) {
+  
+  if (telegramUserId != null && Number.isInteger(Number(telegramUserId))) {
+    console.log("[Pricing Catalog] Валидный telegramUserId, проверяем trial и подписку");
     trialAvailable = await isTrialAvailable(telegramUserId, "first_song_gift");
     hasSubscription = await hasActiveSubscription(telegramUserId);
+    console.log("[Pricing Catalog] ✅ User ID:", telegramUserId, "Trial available:", trialAvailable, "Has subscription:", hasSubscription);
+  } else {
+    console.log("[Pricing Catalog] ⚠️ Нет telegramUserId (первый визит или проблемы с initData) → trial available: true (по умолчанию)");
   }
-  return res.json({
+  
+  const response = {
     success: true,
     catalog,
     free_trial: {
@@ -2202,7 +2243,11 @@ app.get("/api/pricing/catalog", asyncApi(async (req, res) => {
     subscription_active: hasSubscription,
     display_currency: "USDT",
     alt_currencies: ["TON", "USD", "RUB"],
-  });
+  };
+  
+  console.log("[Pricing Catalog] Ответ:", JSON.stringify({ trial_available: trialAvailable, has_subscription: hasSubscription }));
+  
+  return res.json(response);
 }));
 
 app.post("/api/promos/validate", express.json(), asyncApi(async (req, res) => {
