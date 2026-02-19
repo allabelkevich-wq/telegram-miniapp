@@ -346,19 +346,26 @@
     .keys-composition-small .key-door{width:34px;height:50px;transform:rotate(6deg);opacity:.9}
     .app-logo{display:block;margin:0 auto;max-width:220px;width:100%;height:auto;border-radius:0;box-shadow:0 10px 28px rgba(214,172,83,.22)}
     .app-logo.success{max-width:180px;margin-bottom:15px}
-    /* Превью-карусель: польза бота в 3 слайда */
-    .preview-carousel{width:100%;margin:0 0 20px 0;overflow:hidden;border-radius:16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12)}
-    .preview-track{display:flex;flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-    .preview-track::-webkit-scrollbar{display:none}
-    .preview-slide{flex:0 0 100%;scroll-snap-align:start;scroll-snap-stop:always;padding:24px 20px;text-align:center;box-sizing:border-box;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:transparent}
-    .preview-slide-icon{font-size:2.8rem;margin-bottom:12px;line-height:1;display:block}
-    .preview-slide-title{font-size:1.05rem;font-weight:700;margin:0 0 6px 0;color:#fff;line-height:1.3}
-    .preview-slide-text{font-size:0.9rem;line-height:1.5;margin:0;color:rgba(255,255,255,0.85);max-width:100%}
-    .theme-light .preview-slide-title{color:#1f2937}
-    .theme-light .preview-slide-text{color:rgba(31,41,55,0.85)}
-    .preview-dots{display:flex;justify-content:center;gap:8px;margin-top:12px}
-    .preview-dot{width:8px !important;height:8px !important;min-width:8px !important;min-height:8px !important;border-radius:50%;background:rgba(255,255,255,0.3) !important;border:none;padding:0;cursor:pointer;transition:background 0.2s;font-size:0;line-height:0;overflow:hidden;flex-shrink:0;box-shadow:none}
-    .preview-dot.active{background:#a78bfa !important}
+    /* Онбординг: полноэкранные слайды с автопереходом */
+    #onboardingPage{position:fixed;inset:0;z-index:10001;background:#0A0A1A url('assets/bg-yupsoul.png') center/cover no-repeat;overflow:hidden}
+    #onboardingPage::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(1,6,26,.7) 0%,rgba(8,10,38,.85) 100%);z-index:0}
+    .onboarding-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;opacity:0;pointer-events:none;transition:opacity .5s ease;z-index:1}
+    .onboarding-slide.active{opacity:1;pointer-events:auto}
+    .onboarding-icon{font-size:5rem;margin-bottom:24px;animation:iconBounce .6s ease-out}
+    @keyframes iconBounce{0%{transform:scale(0.3);opacity:0}50%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+    .onboarding-title{font-size:1.8rem;font-weight:800;color:#fff;margin:0 0 16px 0;line-height:1.2;max-width:320px}
+    .onboarding-text{font-size:1.05rem;line-height:1.65;color:rgba(255,255,255,0.88);margin:0 0 40px 0;max-width:340px}
+    .onboarding-btn{padding:18px 40px;border-radius:16px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1.1rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 12px 35px rgba(212,175,55,0.6);transition:transform .2s,box-shadow .2s;min-width:200px}
+    .onboarding-btn:hover{transform:translateY(-2px);box-shadow:0 14px 38px rgba(212,175,55,0.7)}
+    .onboarding-btn:active{transform:translateY(0)}
+    .onboarding-skip{position:absolute;top:max(16px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));padding:8px 16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.7);font-size:0.9rem;cursor:pointer;font-family:inherit;z-index:10;transition:background .2s}
+    .onboarding-skip:hover{background:rgba(255,255,255,0.15)}
+    .onboarding-dots{position:absolute;bottom:max(40px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10}
+    .onboarding-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.3);border:none;padding:0;cursor:pointer;transition:background .2s,width .2s}
+    .onboarding-dot.active{background:#a78bfa;width:24px;border-radius:4px}
+    .onboarding-progress{position:absolute;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.1);z-index:10;overflow:hidden}
+    .onboarding-progress-bar{height:100%;background:linear-gradient(90deg,#a78bfa,#ec4899);width:0;transition:width 5s linear}
+    .onboarding-progress-bar.active{width:100%}
     .success-title{font-size:2.2rem;color:#a78bfa;font-weight:800;text-align:center;margin:20px 0;background:linear-gradient(90deg,#a78bfa,#f9a8d4);-webkit-background-clip:text;background-clip:text;color:transparent}
     .success-text{font-size:1.15rem;line-height:1.7;margin:20px 0;text-align:center;padding:0 10px}
     .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px 40px;text-align:center;min-height:70vh}
@@ -412,9 +419,46 @@
     </div>
   </div>
 
+  <!-- Онбординг (показывается 1 раз при первом визите) -->
+  <div id="onboardingPage" style="display:none">
+    <button class="onboarding-skip" id="onboardingSkip">Пропустить</button>
+    
+    <div class="onboarding-progress">
+      <div class="onboarding-progress-bar" id="onboardingProgressBar"></div>
+    </div>
+    
+    <!-- Слайд 1 -->
+    <div class="onboarding-slide active" data-step="1">
+      <span class="onboarding-icon">✨</span>
+      <h2 class="onboarding-title">Твоя песня силы</h2>
+      <p class="onboarding-text">Уникальный трек создаётся по твоим данным рождения и запросу. Слушай когда захочешь.</p>
+    </div>
+    
+    <!-- Слайд 2 -->
+    <div class="onboarding-slide" data-step="2">
+      <span class="onboarding-icon">💬</span>
+      <h2 class="onboarding-title">Разговор по душам</h2>
+      <p class="onboarding-text">AI-агент, который понимает тебя без слов. Задавай вопросы, получай поддержку — как с близким другом.</p>
+    </div>
+    
+    <!-- Слайд 3 -->
+    <div class="onboarding-slide" data-step="3">
+      <span class="onboarding-icon">🎁</span>
+      <h2 class="onboarding-title">Первая — бесплатно</h2>
+      <p class="onboarding-text">Попробуй прямо сейчас без оплаты. Нажми «Начать» и получи свою первую песню в подарок.</p>
+      <button class="onboarding-btn" id="onboardingStartBtn">Начать</button>
+    </div>
+    
+    <div class="onboarding-dots">
+      <button class="onboarding-dot active" data-step="1"></button>
+      <button class="onboarding-dot" data-step="2"></button>
+      <button class="onboarding-dot" data-step="3"></button>
+    </div>
+  </div>
+
   <!-- Страницы приложения — прямые дети body, вне .container, чтобы не создавать изолированный stacking context -->
     <!-- Главная страница -->
-    <div class="page active" id="homePage">
+    <div class="page" id="homePage">
       <header>
         <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
           <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
@@ -448,32 +492,6 @@
         </div>
       </div>
 
-      <!-- Превью: как бот даёт пользу (2–3 слайда) -->
-      <div class="preview-carousel" id="previewCarousel">
-        <div class="preview-track" id="previewTrack">
-          <div class="preview-slide">
-            <span class="preview-slide-icon">✨</span>
-            <div class="preview-slide-title">Твоя песня силы</div>
-            <p class="preview-slide-text">Уникальный трек создаётся по твоим данным рождения и запросу. Слушай каждое утро — настраивайся на волну успеха.</p>
-          </div>
-          <div class="preview-slide">
-            <span class="preview-slide-icon">🎵</span>
-            <div class="preview-slide-title">Готово за 3 минуты</div>
-            <p class="preview-slide-text">Заполни форму → песня придёт в этот чат. Ничего не потеряется — слушай когда удобно.</p>
-          </div>
-          <div class="preview-slide">
-            <span class="preview-slide-icon">🎁</span>
-            <div class="preview-slide-title">Первая — бесплатно</div>
-            <p class="preview-slide-text">Попробуй прямо сейчас без оплаты. Нажми «Начать» и получи свою первую песню в подарок.</p>
-          </div>
-        </div>
-        <div class="preview-dots" id="previewDots">
-          <button type="button" class="preview-dot active" aria-label="Слайд 1" data-index="0"></button>
-          <button type="button" class="preview-dot" aria-label="Слайд 2" data-index="1"></button>
-          <button type="button" class="preview-dot" aria-label="Слайд 3" data-index="2"></button>
-        </div>
-      </div>
-      
       <div class="section">
         <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="220" height="220">
         <p id="homeGreeting" class="tagline" style="margin-bottom:12px">Заходи, когда захочешь свою персональную песню.</p>
@@ -1935,9 +1953,101 @@
       fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:1939',message:'After applyTranslations END',data:{startBtnText:document.getElementById('startBtn')?document.getElementById('startBtn').textContent:'NULL',previewSlide1Title:document.querySelectorAll('.preview-slide-title')[0]?document.querySelectorAll('.preview-slide-title')[0].textContent:'NULL',previewSlide1Color:document.querySelectorAll('.preview-slide-title')[0]?window.getComputedStyle(document.querySelectorAll('.preview-slide-title')[0]).color:'NULL',previewSlide1FontSize:document.querySelectorAll('.preview-slide-title')[0]?window.getComputedStyle(document.querySelectorAll('.preview-slide-title')[0]).fontSize:'NULL'},timestamp:Date.now(),hypothesisId:'A,B,C'})}).catch(()=>{});
       // #endregion
       
-      // #region agent log
-      setTimeout(function(){fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:1947',message:'DOM after 1sec',data:{startBtnFinal:document.getElementById('startBtn')?document.getElementById('startBtn').textContent:'NULL',startBtnComputed:document.getElementById('startBtn')?window.getComputedStyle(document.getElementById('startBtn')).fontSize+' / '+window.getComputedStyle(document.getElementById('startBtn')).color:'NULL',previewSlide1TitleFinal:document.querySelectorAll('.preview-slide-title')[0]?document.querySelectorAll('.preview-slide-title')[0].textContent:'NULL',previewSlide1TitleComputed:document.querySelectorAll('.preview-slide-title')[0]?window.getComputedStyle(document.querySelectorAll('.preview-slide-title')[0]).fontSize+' / '+window.getComputedStyle(document.querySelectorAll('.preview-slide-title')[0]).color:'NULL'},timestamp:Date.now(),hypothesisId:'A,B,C,E'})}).catch(()=>{});},1000);
-      // #endregion
+      // ═══════════════════════════════════════════════════════════════════
+      // ОНБОРДИНГ: логика показа и автопереходов
+      // ═══════════════════════════════════════════════════════════════════
+      (function() {
+        var ONBOARDING_KEY = 'yupsoul_onboarding_seen';
+        var onboardingPage = document.getElementById('onboardingPage');
+        var homePage = document.getElementById('homePage');
+        var slides = document.querySelectorAll('.onboarding-slide');
+        var dots = document.querySelectorAll('.onboarding-dot');
+        var progressBar = document.getElementById('onboardingProgressBar');
+        var skipBtn = document.getElementById('onboardingSkip');
+        var startBtn = document.getElementById('onboardingStartBtn');
+        
+        var currentStep = 1;
+        var autoTimer = null;
+        
+        function showOnboarding() {
+          if (onboardingPage) onboardingPage.style.display = 'block';
+          if (homePage) homePage.classList.remove('active');
+          startAutoProgress();
+        }
+        
+        function hideOnboarding() {
+          if (onboardingPage) onboardingPage.style.display = 'none';
+          if (homePage) homePage.classList.add('active');
+          try { localStorage.setItem(ONBOARDING_KEY, 'true'); } catch(_) {}
+          stopAutoProgress();
+        }
+        
+        function goToStep(step) {
+          if (step < 1 || step > 3) return;
+          currentStep = step;
+          
+          slides.forEach(function(s) {
+            s.classList.toggle('active', parseInt(s.dataset.step) === step);
+          });
+          dots.forEach(function(d) {
+            d.classList.toggle('active', parseInt(d.dataset.step) === step);
+          });
+          
+          stopAutoProgress();
+          if (step < 3) startAutoProgress();
+        }
+        
+        function startAutoProgress() {
+          if (currentStep >= 3) return;
+          
+          if (progressBar) {
+            progressBar.classList.remove('active');
+            void progressBar.offsetWidth;
+            progressBar.classList.add('active');
+          }
+          
+          autoTimer = setTimeout(function() {
+            goToStep(currentStep + 1);
+          }, 5000);
+        }
+        
+        function stopAutoProgress() {
+          if (autoTimer) clearTimeout(autoTimer);
+          if (progressBar) progressBar.classList.remove('active');
+        }
+        
+        if (skipBtn) skipBtn.addEventListener('click', hideOnboarding);
+        if (startBtn) startBtn.addEventListener('click', hideOnboarding);
+        
+        dots.forEach(function(dot) {
+          dot.addEventListener('click', function() {
+            goToStep(parseInt(this.dataset.step));
+          });
+        });
+        
+        var touchStartX = 0;
+        var touchEndX = 0;
+        if (onboardingPage) {
+          onboardingPage.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+          });
+          onboardingPage.addEventListener('touchend', function(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            if (touchStartX - touchEndX > 50 && currentStep < 3) goToStep(currentStep + 1);
+            if (touchEndX - touchStartX > 50 && currentStep > 1) goToStep(currentStep - 1);
+          });
+        }
+        
+        var seen = false;
+        try { seen = localStorage.getItem(ONBOARDING_KEY) === 'true'; } catch(_) {}
+        
+        if (!seen) {
+          showOnboarding();
+        } else {
+          if (homePage) homePage.classList.add('active');
+        }
+      })();
+
       // Проверяем демо-режим и показываем индикатор
       function checkDemoMode() {
         if (window.demoMode || (!getInitData() && tg && tg.version)) {
