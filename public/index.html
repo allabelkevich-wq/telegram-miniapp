@@ -12,6 +12,18 @@
   <script>
     (function(){
       try {
+        var APP_VERSION = '1.2.19';
+        var CACHE_KEY = 'yupsoul_app_version';
+        var cached = localStorage.getItem(CACHE_KEY);
+        
+        // Если версия изменилась — принудительно перезагрузить без кэша
+        if (cached && cached !== APP_VERSION) {
+          localStorage.setItem(CACHE_KEY, APP_VERSION);
+          window.location.reload(true);
+          return;
+        }
+        localStorage.setItem(CACHE_KEY, APP_VERSION);
+        
         var qs = window.location.search;
         var m = qs.match(/[?&]v=(\d+)/);
         if (m && m[1] && m[1].length <= 6) {
@@ -667,7 +679,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026</p>
+        <p>YupSoul • 2026 • v1.2.19</p>
       </footer>
     </div>
     
@@ -890,7 +902,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026</p>
+        <p>YupSoul • 2026 • v1.2.19</p>
       </footer>
     </div>
     
@@ -992,7 +1004,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026</p>
+        <p>YupSoul • 2026 • v1.2.19</p>
       </footer>
     </div>
 
