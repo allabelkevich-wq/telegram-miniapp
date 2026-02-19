@@ -486,8 +486,8 @@
     .story-bar-fill.done{width:100%;transition:none}
     .story-bar-fill.playing{width:100%;transition:width var(--story-dur,4s) linear}
     /* Кнопка закрыть */
-    .stories-close{position:absolute;top:max(8px,env(safe-area-inset-top));right:14px;z-index:11;background:rgba(255,255,255,0.12);border:none;color:#fff;font-size:1.1rem;width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background .2s;padding:0;line-height:1}
-    .stories-close:hover{background:rgba(255,255,255,0.22)}
+    .stories-close{position:absolute;top:max(8px,env(safe-area-inset-top));right:14px;z-index:11;background:rgba(0,0,0,0.45);border:1.5px solid rgba(255,255,255,0.18);color:rgba(255,255,255,0.85);font-size:1rem;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;padding:0;line-height:1}
+    .stories-close:hover{background:rgba(0,0,0,0.65)}
     /* Зоны тапа */
     .stories-tap-prev,.stories-tap-next{position:absolute;top:0;bottom:0;width:40%;z-index:5;cursor:pointer}
     .stories-tap-prev{left:0}
@@ -2033,8 +2033,11 @@
             hasSubscriptionActive = !!(json.subscription_active);
             catalogLoadError = false;
             updatePaymentUiFromCatalog();
-            // Проверяем зависшую заявку для всех пользователей (новичков и повторных)
-            checkPendingRequestOnStart();
+            // Проверяем зависшую заявку (не при возврате с HOT Pay — там заявка уже оплачена)
+            var _curSearch = typeof window.location !== 'undefined' ? (window.location.search || '') : '';
+            if (_curSearch.indexOf('payment=success') === -1) {
+              checkPendingRequestOnStart();
+            }
             // Загружаем реферальные данные
             loadReferralStats();
           } else {
@@ -2368,7 +2371,8 @@
         function hideOnboarding() {
           if (autoTimer) clearTimeout(autoTimer);
           if (onboardingPage) onboardingPage.style.display = 'none';
-          if (homePage) homePage.classList.add('active');
+          var alreadyActive = document.querySelector('.page.active');
+          if (!alreadyActive && homePage) homePage.classList.add('active');
           try { localStorage.setItem(ONBOARDING_KEY, 'true'); } catch(_) {}
         }
 
@@ -2444,8 +2448,14 @@
           }, { passive: true });
         }
 
-        // Показываем онбординг при каждом входе
-        showOnboarding();
+        // Показываем онбординг при каждом входе, но не при возврате с HOT Pay
+        var _urlParams = typeof window.location !== 'undefined' ? (window.location.search || '') : '';
+        if (_urlParams.indexOf('payment=success') === -1) {
+          showOnboarding();
+        } else {
+          if (homePage) homePage.classList.add('active');
+          try { localStorage.setItem(ONBOARDING_KEY, 'true'); } catch(_) {}
+        }
       })();
 
       // Проверяем демо-режим и показываем индикатор
