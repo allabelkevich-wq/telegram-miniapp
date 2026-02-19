@@ -130,9 +130,9 @@
     <div class="header">
       <h1>👑 АДМИНКА YUP SOUL</h1>
       <p>Полный контроль генерации звуковых ключей / Full control of sound key generation</p>
-      <p style="font-size:11px;color:#475569;margin-top:4px;">build: 20260220-0125</p>
+      <p style="font-size:11px;color:#475569;margin-top:4px;">build: 20260219-2</p>
       <p id="url-info" style="font-size:12px;color:#64748b;margin-top:8px;word-break:break-all;"></p>
-      <div id="loadingStatus" style="display:none;margin-top:10px;padding:8px 14px;background:rgba(102,126,234,0.12);border:1px solid rgba(102,126,234,0.3);border-radius:8px;font-size:13px;color:#a5b4fc;display:flex;align-items:center;gap:8px;">
+      <div id="loadingStatus" style="display:none;margin-top:10px;padding:8px 14px;background:rgba(102,126,234,0.12);border:1px solid rgba(102,126,234,0.3);border-radius:8px;font-size:13px;color:#a5b4fc;align-items:center;gap:8px;">
         <span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(102,126,234,0.3);border-top-color:#667eea;border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;"></span>
         <span id="loadingStatusText">Загрузка данных…</span>
       </div>
@@ -591,34 +591,6 @@
       if (textEl && text) textEl.textContent = text;
     }
 
-    // Проверяет доступность API и правильность токена, выводит статус
-    async function checkApiStatus() {
-      const token = getToken();
-      if (!token) return; // Нет токена — покажет форму входа
-      const statusEl = document.getElementById('loadingStatus');
-      const textEl = document.getElementById('loadingStatusText');
-      if (statusEl) statusEl.style.display = 'flex';
-      if (textEl) textEl.textContent = 'Проверка подключения к API…';
-      try {
-        const r = await fetchJson(API_BASE + '/api/admin/me' + authQueryFromPath(), { headers: authHeaders() }, 8000);
-        if (r.json && r.json.admin) {
-          if (textEl) textEl.textContent = '✅ API доступен, токен верный — загружаю данные…';
-        } else {
-          if (statusEl) statusEl.style.background = 'rgba(239,68,68,0.12)';
-          if (statusEl) statusEl.style.borderColor = 'rgba(239,68,68,0.3)';
-          if (textEl) { textEl.style.color = '#fca5a5'; textEl.textContent = '❌ Токен неверный (403). Проверьте ADMIN_SECRET в Render Dashboard.'; }
-        }
-      } catch (e) {
-        if (statusEl) statusEl.style.background = 'rgba(239,68,68,0.12)';
-        if (statusEl) statusEl.style.borderColor = 'rgba(239,68,68,0.3)';
-        if (textEl) { textEl.style.color = '#fca5a5'; textEl.textContent = '❌ API недоступен: ' + escapeHtml((e && e.message) || String(e)); }
-        const el = document.getElementById('requests');
-        if (el) el.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c">❌ ' + escapeHtml((e && e.message) || String(e)) + '<br><br><button onclick="window.location.reload()" style="margin-top:12px;padding:10px 24px;background:#667eea;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;">🔄 Обновить страницу</button></div>';
-        return false;
-      }
-      return true;
-    }
-
     async function loadAdminData() {
       const token = getToken();
       if (!token) {
@@ -629,12 +601,29 @@
         if (form && input) form.addEventListener('submit', function(e) { e.preventDefault(); const v = (input.value || '').trim(); if (v) { localStorage.setItem('adminToken', v); window.location.search = '?token=' + encodeURIComponent(v); } });
         return;
       }
-      setLoadingStatus(true, 'Загрузка статистики…');
+      setLoadingStatus(true, 'Подключение к серверу…');
       try {
-        const statsResult = await fetchJson(API_BASE + '/api/admin/stats?' + new URLSearchParams({ token }).toString(), { headers: authHeaders() });
-        if (statsResult.res.status === 503) {
-          const msg = (statsResult.json && statsResult.json.error) || 'Сервис запускается';
-          document.getElementById('requests').innerHTML = '<div style="text-align:center;padding:40px;color:#f39c12">⏳ ' + escapeHtml(msg) + '<br><br>Обновите страницу через 20–30 сек (F5).</div>';
+        const statsResult = await fetchJson(API_BASE + '/api/admin/stats?' + new URLSearchParams({ token }).toString(), { headers: authHeaders() }, 20000);
+        // 403 — неверный токен: показываем форму ввода
+        if (statsResult.res.status === 403) {
+          setLoadingStatus(false);
+          const el = document.getElementById('requests');
+          if (el) el.innerHTML = '<div style="text-align:center;padding:40px;color:#fca5a5"><p style="font-size:18px;margin-bottom:12px">🔐 Токен неверный или устарел</p><p style="color:#94a3b8;margin-bottom:20px">Откройте ссылку заново командой <b>/admin</b> в боте</p><button onclick="window.location.reload()" style="padding:10px 24px;background:#667eea;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;">🔄 Обновить страницу</button></div>';
+          return;
+        }
+        // 502/503 — сервер просыпается: авто-ретрай через 20 сек
+        if (statsResult.res.status === 502 || statsResult.res.status === 503) {
+          setLoadingStatus(false);
+          let sec = 20;
+          const el = document.getElementById('requests');
+          const tick = () => {
+            if (!el) return;
+            if (sec <= 0) { window.location.reload(); return; }
+            el.innerHTML = '<div style="text-align:center;padding:40px;color:#f39c12">⏳ Сервер просыпается… перезагрузка через ' + sec + ' сек<br><br><button onclick="window.location.reload()" style="margin-top:12px;padding:10px 24px;background:#667eea;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;">🔄 Обновить сейчас</button></div>';
+            sec--;
+            setTimeout(tick, 1000);
+          };
+          tick();
           return;
         }
         const statsJson = statsResult.json;
@@ -1521,13 +1510,12 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-      checkApiStatus().then(function(ok) {
-        if (ok !== false) {
-          loadAdminData().catch(function(e) {
-            const el = document.getElementById('requests');
-            if (el) el.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c">❌ ' + escapeHtml((e && e.message) ? e.message : String(e)) + '<br><br><button onclick="window.location.reload()" style="margin-top:12px;padding:10px 24px;background:#667eea;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;">🔄 Обновить страницу</button></div>';
-          });
-        }
+      loadAdminData().catch(function(e) {
+        setLoadingStatus(false);
+        const msg = (e && e.message) ? e.message : String(e);
+        const isTimeout = msg && msg.includes('не ответил');
+        const el = document.getElementById('requests');
+        if (el) el.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c">❌ ' + escapeHtml(msg) + (isTimeout ? '<br><span style="color:#94a3b8;font-size:13px">Render мог уснуть — обновите страницу через 30 сек</span>' : '') + '<br><br><button onclick="window.location.reload()" style="margin-top:12px;padding:10px 24px;background:#667eea;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;">🔄 Обновить страницу</button><br><br><span style="font-size:12px;color:#64748b">API: ' + escapeHtml(window.API_BASE || window.location.origin) + '</span></div>';
       });
     });
   </script>
