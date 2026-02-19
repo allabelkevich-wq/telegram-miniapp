@@ -392,7 +392,23 @@
     .request-label{font-size:var(--fluid-md);text-align:center;margin-bottom:var(--spacing-sm);color:#a78bfa;font-weight:700;letter-spacing:-0.5px}
     .request-help-row{display:flex;align-items:center;justify-content:space-between;gap:var(--spacing-sm);margin-bottom:var(--spacing-sm)}
     .request-help-row .request-label{margin-bottom:0;text-align:left;font-size:var(--fluid-base);letter-spacing:-0.2px;line-height:1.2;flex:1;min-width:0}
-    /* Компактная откидная кнопка быстрых запросов — стиль Apple */
+    /* Apple-style quick picker */
+    .quick-picker{position:relative;margin-bottom:12px}
+    .quick-picker-btn{width:100%;padding:12px 16px;border-radius:12px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.35);color:#d4af37;font-size:0.95rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:space-between;transition:background .2s}
+    .quick-picker-btn:hover{background:rgba(212,175,55,0.16)}
+    .quick-picker-btn .qa{transition:transform .25s ease;font-size:0.75rem;opacity:0.7}
+    .quick-picker-btn.open .qa{transform:rotate(180deg)}
+    .quick-picker-sheet{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:200;background:var(--tg-theme-secondary-bg-color,#1a1730);border:1px solid rgba(212,175,55,0.2);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.45);overflow:hidden;animation:sheetIn .2s ease}
+    @keyframes sheetIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+    .quick-picker-scroll{max-height:260px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 0}
+    .quick-picker-scroll::-webkit-scrollbar{width:3px}
+    .quick-picker-scroll::-webkit-scrollbar-track{background:transparent}
+    .quick-picker-scroll::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.3);border-radius:2px}
+    .quick-cat{padding:10px 16px 4px;font-size:0.72rem;font-weight:700;color:rgba(212,175,55,0.55);letter-spacing:0.8px;text-transform:uppercase}
+    .quick-item{display:block;width:100%;padding:11px 16px;background:none;border:none;color:rgba(255,255,255,0.85);font-size:0.9rem;font-weight:500;cursor:pointer;font-family:inherit;text-align:left;transition:background .15s;border-bottom:1px solid rgba(255,255,255,0.04)}
+    .quick-item:last-child{border-bottom:none}
+    .quick-item:hover,.quick-item:active{background:rgba(212,175,55,0.1);color:#d4af37}
+    /* Старые стили (оставляем для совместимости) */
     .quick-dropdown{position:relative;flex:1 1 auto;min-width:0;margin-bottom:var(--spacing-sm);min-width:120px}
     @media (max-width: 380px){
       .request-help-row{flex-wrap:wrap}
@@ -786,19 +802,30 @@
         <div class="field">
           <div class="request-label">Отправь запрос</div>
           
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-            <button type="button" class="example-btn" data-text="Гармония в отношениях и любовь к себе" style="flex:1 1 calc(50% - 4px);min-width:140px;padding:10px 12px;font-size:0.9rem;border-radius:10px;background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.12));border:1px solid rgba(212,175,55,0.5);color:#d4af37;font-weight:600;cursor:pointer;font-family:inherit;">
-              Гармония и любовь
+          <div class="quick-picker">
+            <button type="button" id="quickPickerBtn" class="quick-picker-btn">
+              <span>✨ Быстрые запросы</span><span class="qa">▾</span>
             </button>
-            <button type="button" class="example-btn" data-text="Уверенность, предназначение и опора на себя" style="flex:1 1 calc(50% - 4px);min-width:140px;padding:10px 12px;font-size:0.9rem;border-radius:10px;background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.12));border:1px solid rgba(212,175,55,0.5);color:#d4af37;font-weight:600;cursor:pointer;font-family:inherit;">
-              Уверенность
-            </button>
-            <button type="button" class="example-btn" data-text="Раскрыть творческий потенциал без страха" style="flex:1 1 calc(50% - 4px);min-width:140px;padding:10px 12px;font-size:0.9rem;border-radius:10px;background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.12));border:1px solid rgba(212,175,55,0.5);color:#d4af37;font-weight:600;cursor:pointer;font-family:inherit;">
-              Творческий потенциал
-            </button>
-            <button type="button" class="example-btn" data-text="Отпустить прошлое и открыть новые возможности" style="flex:1 1 calc(50% - 4px);min-width:140px;padding:10px 12px;font-size:0.9rem;border-radius:10px;background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.12));border:1px solid rgba(212,175,55,0.5);color:#d4af37;font-weight:600;cursor:pointer;font-family:inherit;">
-              Отпустить прошлое
-            </button>
+            <div id="quickPickerSheet" class="quick-picker-sheet" style="display:none">
+              <div class="quick-picker-scroll">
+                <div class="quick-cat">😄 Забавные</div>
+                <button type="button" class="quick-item example-btn" data-text="Весёлая песня с самоиронией про мои слабости и привычки">Весёлая про слабости</button>
+                <button type="button" class="quick-item example-btn" data-text="Юмор и лёгкость — добрый взгляд на себя">Юмор и лёгкость</button>
+                <div class="quick-cat">🎂 День рождения</div>
+                <button type="button" class="quick-item example-btn" data-text="Трогательное поздравление с днём рождения — душевная песня-подарок">Трогательное поздравление</button>
+                <button type="button" class="quick-item example-btn" data-text="Забавное поздравление с днём рождения — тепло и с улыбкой">Забавное поздравление</button>
+                <div class="quick-cat">💫 Песня силы</div>
+                <button type="button" class="quick-item example-btn" data-text="Мощная песня о моей силе и преодолении трудностей">Сила и преодоление</button>
+                <button type="button" class="quick-item example-btn" data-text="Уверенность, предназначение и опора на себя">Уверенность и путь</button>
+                <div class="quick-cat">🌟 Самопрезентация</div>
+                <button type="button" class="quick-item example-btn" data-text="Яркая самопрезентация — кто я и что несу в мир">Кто я и моя миссия</button>
+                <div class="quick-cat">🌿 Гармония</div>
+                <button type="button" class="quick-item example-btn" data-text="Гармония в отношениях и любовь к себе">Гармония и любовь к себе</button>
+                <button type="button" class="quick-item example-btn" data-text="Отпустить прошлое и открыть новые возможности">Отпустить прошлое</button>
+                <button type="button" class="quick-item example-btn" data-text="Исцелить детские травмы и обрести свободу">Исцеление и свобода</button>
+                <button type="button" class="quick-item example-btn" data-text="Медитативная песня для практики и тишины">Тишина и медитация</button>
+              </div>
+            </div>
           </div>
           
           <textarea id="request" placeholder="Какую грань будем исследовать сегодня?" aria-label="Запрос" rows="4"></textarea>
@@ -2841,43 +2868,42 @@
         });
       });
 
-      if (quickToggle && quickPanel) {
-        quickToggle.addEventListener('click', function(e) {
+      (function() {
+        var pickerBtn = document.getElementById('quickPickerBtn');
+        var pickerSheet = document.getElementById('quickPickerSheet');
+        if (!pickerBtn || !pickerSheet) return;
+
+        function closeSheet() {
+          pickerSheet.style.display = 'none';
+          pickerBtn.classList.remove('open');
+        }
+        function openSheet() {
+          pickerSheet.style.display = 'block';
+          pickerBtn.classList.add('open');
+        }
+
+        pickerBtn.addEventListener('click', function(e) {
           e.stopPropagation();
-          var isOpen = quickPanel.classList.toggle('open');
-          this.classList.toggle('open', isOpen);
-          this.setAttribute('aria-expanded', String(isOpen));
-          this.textContent = isOpen ? t('hide') : t('quickRequests');
+          if (pickerSheet.style.display === 'none') openSheet();
+          else closeSheet();
         });
-        document.addEventListener('click', function closeQuickPanel(e) {
-          if (!quickPanel.classList.contains('open')) return;
-          var drop = quickPanel.closest('.quick-dropdown');
-          if (drop && drop.contains(e.target)) return;
-          quickPanel.classList.remove('open');
-          if (quickToggle) {
-            quickToggle.classList.remove('open');
-            quickToggle.setAttribute('aria-expanded', 'false');
-            quickToggle.textContent = t('quickRequests');
-          }
+
+        document.addEventListener('click', function(e) {
+          if (pickerSheet.style.display === 'none') return;
+          if (!pickerBtn.closest('.quick-picker').contains(e.target)) closeSheet();
         });
-      }
-      document.querySelectorAll('.example-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          var requestField = document.getElementById('request');
-          if (requestField) {
-            requestField.value = this.getAttribute('data-text') || '';
-            requestField.focus();
-          }
-          if (quickPanel) {
-            quickPanel.classList.remove('open');
-            if (quickToggle) {
-              quickToggle.classList.remove('open');
-              quickToggle.setAttribute('aria-expanded', 'false');
-              quickToggle.textContent = t('quickRequests');
+
+        pickerSheet.querySelectorAll('.quick-item').forEach(function(item) {
+          item.addEventListener('click', function() {
+            var requestField = document.getElementById('request');
+            if (requestField) {
+              requestField.value = this.getAttribute('data-text') || '';
+              requestField.focus();
             }
-          }
+            closeSheet();
+          });
         });
-      });
+      })();
 
       if (stepNext) stepNext.addEventListener('click', async function() {
         if (!validateStep(1) || !validateStep(2) || !validateStep(3)) return;
