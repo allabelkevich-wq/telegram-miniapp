@@ -2288,7 +2288,7 @@
         // Вернувшиеся пользователи видят онбординг быстрее
         var seen = false;
         try { seen = localStorage.getItem(ONBOARDING_KEY) === 'true'; } catch(_) {}
-        var SLIDE_DURATION = seen ? 1000 : 2000;
+        var SLIDE_DURATION = seen ? 3000 : 5000;
         // Синхронизируем CSS-анимацию прогресс-бара с SLIDE_DURATION
         if (progressBar) progressBar.style.transition = 'width ' + (SLIDE_DURATION / 1000) + 's linear';
 
