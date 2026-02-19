@@ -430,8 +430,8 @@
     <!-- Слайд 1 -->
     <div class="onboarding-slide active" data-step="1">
       <span class="onboarding-icon">✨</span>
-      <h2 class="onboarding-title">Твоя песня силы</h2>
-      <p class="onboarding-text">Уникальный трек создаётся по твоим данным рождения и запросу. Слушай когда захочешь.</p>
+      <h2 class="onboarding-title">Твои песни души</h2>
+      <p class="onboarding-text">Слушай свой персональный саундтрек в любой ситуации.</p>
     </div>
     
     <!-- Слайд 2 -->
@@ -2548,27 +2548,6 @@
         goToPage('formPage');
       });
 
-      // Превью-карусель: синхронизация точек со скроллом и клик по точке
-      (function() {
-        var track = document.getElementById('previewTrack');
-        var dots = document.getElementById('previewDots');
-        if (!track || !dots) return;
-        var dotBtns = dots.querySelectorAll('.preview-dot');
-        var slides = track.querySelectorAll('.preview-slide');
-        function updateDots() {
-          var w = track.offsetWidth;
-          var index = Math.round(track.scrollLeft / w);
-          index = Math.max(0, Math.min(index, slides.length - 1));
-          dotBtns.forEach(function(b, i) { b.classList.toggle('active', i === index); });
-        }
-        track.addEventListener('scroll', updateDots);
-        dotBtns.forEach(function(btn, i) {
-          btn.addEventListener('click', function() {
-            var w = track.offsetWidth;
-            track.scrollTo({ left: w * i, behavior: 'smooth' });
-          });
-        });
-      })();
 
       var stepNext = document.getElementById('stepNext');
       var quickToggle = document.getElementById('quickRequestsToggle');
