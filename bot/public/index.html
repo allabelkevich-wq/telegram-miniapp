@@ -636,8 +636,10 @@
   <!-- Страницы приложения — прямые дети body, вне .container, чтобы не создавать изолированный stacking context -->
     <!-- Главная страница -->
     <div class="page" id="homePage">
-      <header style="padding-bottom:8px">
-        <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
+
+      <!-- Логотип и приветствие — вверху, без карточки -->
+      <div style="position:relative;text-align:center;padding:max(36px,calc(env(safe-area-inset-top)+24px)) 20px 20px">
+        <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса" style="position:absolute;top:max(10px,env(safe-area-inset-top));right:4px">
           <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
             <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
             <span id="langSwitcherCurrent">RU</span>
@@ -649,10 +651,11 @@
             <button type="button" class="lang-opt" data-lang="fr">FR</button>
           </div>
         </div>
-        <h1 style="font-size:1.4rem;margin-bottom:2px">YupSoul</h1>
-        <div id="homeTagline" class="tagline">Исследуй свои грани так, как ты этого захочешь</div>
-      </header>
-      
+        <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="150" height="150">
+        <h1 style="font-size:1.7rem;margin:8px 0 4px;letter-spacing:0.3px">YupSoul</h1>
+        <p id="homeGreeting" style="font-size:0.93rem;color:rgba(255,255,255,0.55);text-align:center;margin:6px 0 0;line-height:1.55;max-width:280px;margin-left:auto;margin-right:auto">Заходи, когда захочешь свою персональную песню.</p>
+      </div>
+
       <!-- Баннер восстановления зависшей заявки -->
       <div id="recoveryBanner" style="display:none;margin:0 0 16px 0;background:rgba(5,150,105,0.15);border:1.5px solid rgba(16,185,129,0.5);border-radius:14px;padding:16px 18px;">
         <div id="recoveryBannerText" style="font-size:0.95rem;color:#d1fae5;line-height:1.55;margin-bottom:12px;">
@@ -690,14 +693,13 @@
         </div>
       </div>
 
-      <div class="section">
-        <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="150" height="150">
-        <p id="homeGreeting" style="font-size:0.95rem;color:rgba(255,255,255,0.6);text-align:center;margin:8px 0 20px;line-height:1.5">Заходи, когда захочешь свою персональную песню.</p>
+      <!-- Кнопка старта — без карточки -->
+      <div style="padding:4px 0 8px">
         <button id="startBtn">Начать</button>
-        <div id="masterNav" style="display:none; margin-top:20px">
+        <div id="masterNav" style="display:none; margin-top:16px">
           <button class="secondary" id="goHeroesBtn">👥 Мои герои</button>
         </div>
-        <div id="adminLinkWrap" style="display:none; margin-top:16px; text-align:center">
+        <div id="adminLinkWrap" style="display:none; margin-top:14px; text-align:center">
           <a href="#" id="adminLinkBtn" class="secondary" style="display:inline-block;padding:10px 20px;text-decoration:none;color:inherit;border-radius:8px;border:2px solid var(--tg-theme-button-color,#8b5cf6);color:var(--tg-theme-button-color,#8b5cf6)">👑 Админка</a>
         </div>
       </div>
