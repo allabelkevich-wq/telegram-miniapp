@@ -1168,6 +1168,7 @@
                 <div class="quick-cat">😄 Забавные</div>
                 <button type="button" class="quick-item example-btn" data-text="Весёлая песня с самоиронией про мои слабости и привычки">Весёлая про слабости</button>
                 <button type="button" class="quick-item example-btn" data-text="Юмор и лёгкость — добрый взгляд на себя">Юмор и лёгкость</button>
+                <button type="button" class="quick-item example-btn" data-text="Режим юмор 100% — весёлая песня с максимальным юмором и лёгкостью">Режим: юмор 100%</button>
                 <div class="quick-cat">🎂 День рождения</div>
                 <button type="button" class="quick-item example-btn" data-text="Трогательное поздравление с днём рождения — душевная песня-подарок">Трогательное поздравление</button>
                 <button type="button" class="quick-item example-btn" data-text="Забавное поздравление с днём рождения — тепло и с улыбкой">Забавное поздравление</button>
@@ -3395,8 +3396,21 @@
           if (selectedMode === 'couple') {
             var name2 = (document.getElementById('name2').value || '').trim();
             var birthdate2 = document.getElementById('birthdate2').value;
+            var birthplace2El = document.getElementById('birthplace2');
+            var birthplace2 = birthplace2El ? birthplace2El.value.trim() : '';
+            var bp2PlaceSelected = birthplace2El && birthplace2El.getAttribute('data-place-selected');
+            var bp2FromProfile = birthplace2El && birthplace2El.getAttribute('data-from-profile') === '1';
             if (name2.length < 2) { alert(t('alertName2Short')); return false; }
             if (!birthdate2) { alert(t('alertBirthdate2')); return false; }
+            if (birthplace2.length < 3) { alert(t('alertBirthplace2')); return false; }
+            if (!bp2PlaceSelected && !bp2FromProfile) {
+              alert(t('alertBirthplaceHint'));
+              try { birthplace2El && birthplace2El.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+              return false;
+            }
+            var birthtime2Val = (document.getElementById('unknown2') && document.getElementById('unknown2').checked) ? 'ok' : (document.getElementById('birthtime2') ? document.getElementById('birthtime2').value : '');
+            if (!birthtime2Val) { alert(t('alertBirthtime2')); return false; }
+            if (!(document.getElementById('gender2') && document.getElementById('gender2').value)) { alert(t('alertGender2')); return false; }
           }
           if (selectedMode === 'transit') {
             var tDate = document.getElementById('transitDate').value;
@@ -4420,6 +4434,16 @@
 
           // Предзаполняем person1 профилем текущего пользователя
           fillFormFromProfile(userProfile || (tg && tg.initDataUnsafe && tg.initDataUnsafe.user));
+          // Чтобы не требовало «выбери город из списка»: если у person1 уже есть город (3+ символов), считаем его выбранным
+          var bp1 = document.getElementById('birthplace');
+          if (bp1 && bp1.value.trim().length >= 3 && !bp1.getAttribute('data-place-selected')) {
+            bp1.setAttribute('data-place-selected', '1');
+            bp1.setAttribute('data-from-profile', '1');
+            var bw1 = document.getElementById('birthplaceWrap');
+            if (bw1) bw1.classList.add('has-place');
+            var bch1 = document.getElementById('birthplaceCheck');
+            if (bch1) bch1.setAttribute('aria-hidden', 'false');
+          }
 
           // Заполняем поля person2 из карточки героя
           var n2   = document.getElementById('name2');

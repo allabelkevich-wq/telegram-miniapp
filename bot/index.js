@@ -2443,9 +2443,9 @@ app.post("/api/promos/validate", express.json(), asyncApi(async (req, res) => {
   const telegramUserId = validateInitData(initData, BOT_TOKEN);
   if (telegramUserId == null) return res.status(401).json({ success: false, error: "Unauthorized" });
   const sku = String(req.body?.sku || "").trim();
-  const code = normalizePromoCode(req.body?.promo_code);
+  const code = normalizePromoCode(req.body?.promo_code || req.body?.code);
   if (!sku) return res.status(400).json({ success: false, error: "sku обязателен" });
-  if (!code) return res.status(400).json({ success: false, error: "promo_code обязателен" });
+  if (!code) return res.status(400).json({ success: false, error: "Промокод обязателен" });
   const price = await getSkuPrice(sku);
   if (!price) return res.status(404).json({ success: false, error: "SKU не найден" });
   const checked = await validatePromoForOrder({ promoCode: code, sku, telegramUserId });

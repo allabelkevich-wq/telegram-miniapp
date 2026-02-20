@@ -1,15 +1,14 @@
-# Render Blueprint: бот + воркер генерации (из папки bot/)
-# Деплой только из ветки main. В Dashboard → Repository → Branch = main.
+# Render Blueprint: бот + воркер генерации.
+# Деплой только из ветки main. Один источник правды: public/index.html (копируем в bot/public при сборке).
 # Переменные (BOT_TOKEN, SUPABASE_*, DEEPSEEK_API_KEY, SUNO_API_KEY) задай в Dashboard для обоих сервисов.
 services:
   - type: web
     name: yupsoul-bot
     runtime: node
     plan: free
-    rootDir: bot
-    # Важно: НЕ перезаписываем bot/public/index.html из корневого public/ (иначе улетают фиксы Mini App).
-    buildCommand: npm install
-    startCommand: npm start
+    # Без rootDir — сборка из корня репо, чтобы скопировать public/index.html в bot/public/
+    buildCommand: cp public/index.html bot/public/ && cd bot && npm install
+    startCommand: cd bot && npm start
     healthCheckPath: /healthz
 
   - type: worker
