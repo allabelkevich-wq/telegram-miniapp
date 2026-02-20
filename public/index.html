@@ -505,10 +505,11 @@
     .stories-tap-prev{left:0}
     .stories-tap-next{right:0}
     /* Бренд-блок — верхняя половина экрана */
-    .ob-brand{position:absolute;top:max(88px,calc(env(safe-area-inset-top)+68px));left:0;right:0;text-align:center;padding:0 32px;z-index:6;pointer-events:none}
-    .ob-brand-name{font-size:2.1rem;font-weight:800;background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 6s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-0.5px;padding-bottom:4px;line-height:1.2}
-    .ob-brand-divider{width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.5),transparent);margin:12px auto}
-    .ob-brand-tag{font-size:0.8rem;color:rgba(255,255,255,0.5);line-height:1.6;max-width:260px;margin:0 auto;letter-spacing:0.01em}
+    .ob-brand{position:absolute;top:max(80px,calc(env(safe-area-inset-top)+60px));left:0;right:0;text-align:center;padding:0 32px;z-index:6;pointer-events:none}
+    .ob-brand-logo{width:72px;height:72px;margin:0 auto 10px;display:block;opacity:0.95;filter:drop-shadow(0 4px 16px rgba(212,175,55,0.35))}
+    .ob-brand-name{font-size:1.7rem;font-weight:800;background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 6s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-0.5px;padding-bottom:3px;line-height:1.2;margin-bottom:0}
+    .ob-brand-divider{width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.45),transparent);margin:10px auto}
+    .ob-brand-tag{font-size:0.78rem;color:rgba(255,255,255,0.48);line-height:1.6;max-width:250px;margin:0 auto;letter-spacing:0.01em}
     /* Слайды — нижняя половина: центрированы в своей зоне */
     .onboarding-slide{position:absolute;left:0;right:0;bottom:0;top:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 36px max(80px,calc(env(safe-area-inset-bottom)+64px));text-align:center;opacity:0;pointer-events:none;transition:opacity .3s ease;z-index:1}
     .onboarding-slide.active{opacity:1;pointer-events:auto}
@@ -659,8 +660,9 @@
     <!-- Кнопка закрыть -->
     <button class="stories-close" id="onboardingSkip" aria-label="Закрыть">✕</button>
 
-    <!-- Бренд-блок: имя + слоган -->
+    <!-- Бренд-блок: лого + имя + слоган -->
     <div class="ob-brand">
+      <img src="assets/logo-yupsoul.png" alt="YupSoul" class="ob-brand-logo">
       <div class="ob-brand-name">YupSoul</div>
       <div class="ob-brand-divider"></div>
       <div class="ob-brand-tag">Первый в мире сервис, который превращает дату рождения в персональную музыку</div>
@@ -795,7 +797,7 @@
       </div><!-- /нижняя обёртка -->
 
       <footer>
-        <p>YupSoul • 2026 • v1.2.33</p>
+        <p>YupSoul • 2026 • v1.2.34</p>
       </footer>
     </div>
 
@@ -1227,7 +1229,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026 • v1.2.33</p>
+        <p>YupSoul • 2026 • v1.2.34</p>
       </footer>
     </div>
     
@@ -1330,7 +1332,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026 • v1.2.33</p>
+        <p>YupSoul • 2026 • v1.2.34</p>
       </footer>
     </div>
 
