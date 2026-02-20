@@ -517,8 +517,8 @@
     .song-preview h3{color:#a78bfa;font-size:1.4rem;margin-bottom:10px;text-align:center}
     .song-preview p{font-size:1.05rem;line-height:1.7;color:var(--tg-theme-text-color,#2d2d2d)}
     footer{text-align:center;padding:16px 0 12px;color:rgba(107,114,128,0.5);font-size:.78rem;margin-top:auto}
-    .footer-help{display:inline !important;color:rgba(212,175,55,0.38) !important;font-size:.78rem !important;cursor:pointer;border:none !important;background:none !important;font-family:inherit;padding:0 !important;margin:0 0 0 6px !important;border-radius:0 !important;box-shadow:none !important;animation:none !important;min-height:unset !important;width:auto !important;font-weight:400 !important;letter-spacing:0 !important;transition:color .2s;line-height:inherit !important;vertical-align:baseline}
-    .footer-help:hover{color:rgba(212,175,55,0.7) !important}
+    .footer-help{display:inline-flex !important;align-items:center;justify-content:center;color:rgba(212,175,55,0.4) !important;font-size:.78rem !important;cursor:pointer;border:none !important;background:none !important;font-family:inherit;padding:8px 16px !important;margin:0 !important;border-radius:20px !important;box-shadow:none !important;animation:none !important;min-height:unset !important;width:auto !important;font-weight:400 !important;letter-spacing:0.04em !important;transition:color .2s,background .2s}
+    .footer-help:hover,.footer-help:active{color:rgba(212,175,55,0.75) !important;background:rgba(212,175,55,0.06) !important}
     /* Страница помощи */
     #helpPage .help-header{padding:max(48px,calc(env(safe-area-inset-top)+32px)) 20px 16px;text-align:center}
     #helpPage .help-title{font-size:1.35rem;font-weight:800;color:#d4af37;margin-bottom:4px}
@@ -725,9 +725,13 @@
           <a href="#" id="adminLinkBtn" class="secondary" style="display:inline-block;padding:10px 20px;text-decoration:none;color:inherit;border-radius:8px;border:2px solid var(--tg-theme-button-color,#8b5cf6);color:var(--tg-theme-button-color,#8b5cf6)">👑 Админка</a>
         </div>
       </div>
-      
+
+      <div style="text-align:center;padding:4px 0 20px">
+        <button type="button" class="footer-help" onclick="goToPage('helpPage')">? помощь</button>
+      </div>
+
       <footer>
-        <p>YupSoul • 2026 • v1.2.19<button type="button" class="footer-help" onclick="goToPage('helpPage')">? помощь</button></p>
+        <p>YupSoul • 2026 • v1.2.19</p>
       </footer>
     </div>
 
