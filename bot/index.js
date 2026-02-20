@@ -710,11 +710,12 @@ async function saveRequest(data) {
     row.birthplace_lon = Number(data.birthplaceLon);
   }
   if (data.client_id && supabase) {
-    const { data: client, error: clientErr } = await supabase.from("clients").select("name, birth_date, birth_time, birth_place, birthtime_unknown, gender, preferred_style, notes").eq("id", data.client_id).maybeSingle();
+    const { data: client, error: clientErr } = await supabase.from("clients").select("name, birth_date, birth_time, birth_place, birthtime_unknown, gender, preferred_style, notes, relationship").eq("id", data.client_id).maybeSingle();
     if (!clientErr && client) {
       row = { ...row, client_id: data.client_id, name: client.name ?? row.name, birthdate: client.birth_date ?? row.birthdate, birthtime: client.birth_time ?? row.birthtime, birthplace: client.birth_place ?? row.birthplace, birthtime_unknown: !!client.birthtime_unknown, gender: client.gender ?? row.gender };
-      // Добавляем preferred_style и notes героя в текст запроса, чтобы они попали в промпт LLM
+      // Добавляем relationship, preferred_style и notes героя в текст запроса, чтобы они попали в промпт LLM
       const extras = [];
+      if (client.relationship) extras.push(`Социальная роль / отношение к заказчику: ${client.relationship}`);
       if (client.preferred_style) extras.push(`Предпочтительный музыкальный стиль: ${client.preferred_style}`);
       if (client.notes) extras.push(`Заметки о человеке: ${client.notes}`);
       if (extras.length) {
@@ -2994,6 +2995,7 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
       saveData.person2_birthtime = body.person2.birthtimeUnknown ? null : (body.person2.birthtime || null);
       saveData.person2_birthtime_unknown = !!body.person2.birthtimeUnknown;
       saveData.person2_gender = body.person2.gender || null;
+      if (body.person2.relationship) saveData.person2_relationship = body.person2.relationship;
     }
     if ((saveData.mode === "transit" || body.transit) && body.transit) {
       saveData.transit_date = body.transit.date || null;

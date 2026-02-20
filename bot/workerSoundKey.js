@@ -723,7 +723,7 @@ export async function generateSoundKey(requestId) {
 Дата рождения: ${request.person2_birthdate}
 Место рождения: ${request.person2_birthplace}
 Время рождения: ${request.person2_birthtime_unknown ? "неизвестно" : request.person2_birthtime}
-
+${request.person2_relationship ? `Роль в жизни заказчика: ${request.person2_relationship}` : ""}
 КОНФИГУРАЦИЯ ПОЛОВ: ${(request.gender || "—")}+${(request.person2_gender || "—")}
 ТИП СОЮЗА: ${pairType}
 

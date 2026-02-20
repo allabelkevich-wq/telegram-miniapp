@@ -775,7 +775,7 @@
       </div>
 
       <footer>
-        <p>YupSoul • 2026 • v1.2.21</p>
+        <p>YupSoul • 2026 • v1.2.22</p>
       </footer>
     </div>
 
@@ -932,13 +932,38 @@
         <div class="field"><label for="heroRelationship">Кто для тебя</label>
           <select id="heroRelationship">
             <option value="">— выбери —</option>
-            <option value="друг">Друг</option>
-            <option value="подруга">Подруга</option>
-            <option value="партнёр">Партнёр</option>
-            <option value="партнёрша">Партнёрша</option>
-            <option value="родственник">Родственник</option>
-            <option value="коллега">Коллега</option>
-            <option value="клиент">Клиент</option>
+            <optgroup label="Семья">
+              <option value="мама">Мама</option>
+              <option value="папа">Папа</option>
+              <option value="бабушка">Бабушка</option>
+              <option value="дедушка">Дедушка</option>
+              <option value="сестра">Сестра</option>
+              <option value="брат">Брат</option>
+              <option value="тётя">Тётя</option>
+              <option value="дядя">Дядя</option>
+              <option value="дочь">Дочь</option>
+              <option value="сын">Сын</option>
+            </optgroup>
+            <optgroup label="Любовь и партнёрство">
+              <option value="муж">Муж</option>
+              <option value="жена">Жена</option>
+              <option value="любимый">Любимый</option>
+              <option value="любимая">Любимая</option>
+              <option value="партнёр">Партнёр</option>
+              <option value="партнёрша">Партнёрша</option>
+            </optgroup>
+            <optgroup label="Друзья">
+              <option value="лучший друг">Лучший друг</option>
+              <option value="лучшая подруга">Лучшая подруга</option>
+              <option value="друг">Друг</option>
+              <option value="подруга">Подруга</option>
+            </optgroup>
+            <optgroup label="Работа">
+              <option value="коллега">Коллега</option>
+              <option value="партнёр по бизнесу">Партнёр по бизнесу</option>
+              <option value="наставник">Наставник</option>
+              <option value="клиент">Клиент</option>
+            </optgroup>
             <option value="другое">Другое</option>
           </select>
         </div>
@@ -1135,6 +1160,7 @@
               <option value="other">Другой</option>
             </select>
           </div>
+          <input type="hidden" id="person2Relationship">
         </div>
         
           <div id="transitForm" style="display:none">
@@ -1202,7 +1228,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026 • v1.2.21</p>
+        <p>YupSoul • 2026 • v1.2.22</p>
       </footer>
     </div>
     
@@ -1305,7 +1331,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026 • v1.2.21</p>
+        <p>YupSoul • 2026 • v1.2.22</p>
       </footer>
     </div>
 
@@ -3467,6 +3493,11 @@
         } else if (mode === 'transit' && transitForm) {
           transitForm.style.display = 'block';
         }
+        // Сбрасываем relationship person2 при смене режима
+        if (mode !== 'couple') {
+          var p2r = document.getElementById('person2Relationship');
+          if (p2r) p2r.value = '';
+        }
       }
 
       function updateStepUI() {
@@ -3641,7 +3672,10 @@
           if (birthplace2.length < 3) { alert(t('alertBirthplace2')); return; }
           if (!birthtimeUnknown2 && !birthtime2) { alert(t('alertBirthtime2')); return; }
           if (!gender2) { alert(t('alertGender2')); return; }
+          var p2relField = document.getElementById('person2Relationship');
+          var relationship2 = p2relField ? p2relField.value.trim() : '';
           payload.person2 = { name: name2, birthdate: birthdate2, birthplace: birthplace2, birthtime: birthtimeUnknown2 ? null : birthtime2, birthtimeUnknown: birthtimeUnknown2, gender: gender2 };
+          if (relationship2) payload.person2.relationship = relationship2;
           var bp2Field = document.getElementById('birthplace2');
           if (bp2Field && bp2Field.getAttribute('data-lat') && bp2Field.getAttribute('data-lon')) {
             payload.person2.birthplaceLat = parseFloat(bp2Field.getAttribute('data-lat'));
@@ -4593,6 +4627,8 @@
           if (bt2)  bt2.value  = (hero.birth_time || '').substring(0, 5);
           if (unk2) unk2.checked = !!hero.birthtime_unknown;
           if (g2)   g2.value   = hero.gender || '';
+          var p2rel = document.getElementById('person2Relationship');
+          if (p2rel) p2rel.value = hero.relationship || '';
           if (bp2) {
             bp2.value = hero.birth_place || '';
             if (hero.birth_place && hero.birth_place.trim().length >= 3) {
@@ -4608,10 +4644,16 @@
               if (bHint2) bHint2.style.display = 'none';
             }
           }
-          if (hero.preferred_style) {
+          // Собираем контекст пары для запроса
+          (function() {
             var reqEl = document.getElementById('request');
-            if (reqEl && !reqEl.value) reqEl.value = 'Создать песню для нас двоих. Предпочтительный стиль: ' + hero.preferred_style;
-          }
+            if (!reqEl || reqEl.value) return;
+            var parts = ['Создать совместную песню для нас двоих'];
+            if (hero.relationship) parts.push('Кем является ' + hero.name + ' для меня: ' + hero.relationship);
+            if (hero.preferred_style) parts.push('Предпочтительный стиль: ' + hero.preferred_style);
+            if (hero.notes) parts.push('Особенности и контекст: ' + hero.notes);
+            reqEl.value = parts.join('. ');
+          })();
 
           // Скроллим к secondPersonForm чтобы пользователь видел заполненные поля
           setTimeout(function() {
@@ -4633,10 +4675,16 @@
             forWhoEl.value = hero.id;
           }
           fillFormFromHero(hero);
-          if (hero.preferred_style) {
+          // Собираем контекст героя для запроса — relationship + preferred_style + notes
+          (function() {
             var reqEl = document.getElementById('request');
-            if (reqEl && !reqEl.value) reqEl.value = 'Создать песню. Предпочтительный стиль: ' + hero.preferred_style;
-          }
+            if (!reqEl || reqEl.value) return;
+            var parts = ['Создать персональную песню'];
+            if (hero.relationship) parts.push('Это моя ' + hero.relationship + ' — ' + (hero.name || ''));
+            if (hero.preferred_style) parts.push('Предпочтительный стиль: ' + hero.preferred_style);
+            if (hero.notes) parts.push('Особенности и контекст: ' + hero.notes);
+            if (parts.length > 1) reqEl.value = parts.join('. ');
+          })();
         }
       }
 
