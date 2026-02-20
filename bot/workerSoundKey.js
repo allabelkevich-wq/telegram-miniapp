@@ -1037,15 +1037,14 @@ ${extBlock ? "\n" + extBlock : ""}
       }
     }
 
-    // Шаг 10: Обновить статус заявки и сохранить поля песни в БД (cover_url при наличии)
+    // Шаг 10: Сохранить поля песни в БД, но НЕ ставить completed — статус поставим после проверки доставки
     const updatePayload = {
-      status: 'completed',
       audio_url: audioUrl,
       detailed_analysis: fullResponse,
       lyrics: lyricsForSuno,
       title: parsed.title,
       language: 'ru',
-      generation_status: 'completed',
+      generation_status: 'processing',
       error_message: null,
       updated_at: new Date().toISOString()
     };
@@ -1055,7 +1054,7 @@ ${extBlock ? "\n" + extBlock : ""}
       .update(updatePayload)
       .eq('id', requestId);
 
-    // Шаг 11: Сначала обложка (если есть), затем аудио
+    // Шаг 11: Сначала обложка (если есть), затем аудио — статус completed только при успешной доставке
     const caption = `🎵 ${request.name}, твоя персональная песня готова!\n\n— YupSoul`;
     await setStep('delivery_start', 'Отправка пользователю (обложка/аудио)');
     if (coverUrl) {
@@ -1068,6 +1067,17 @@ ${extBlock ? "\n" + extBlock : ""}
     
     if (!send.ok) {
       console.warn(`[Воркер] Ошибка отправки аудио: ${send.error}`);
+      // Песня готова, но не доставлена — ставим delivery_failed для админки
+      await supabase
+        .from('track_requests')
+        .update({
+          status: 'completed',
+          generation_status: 'delivery_failed',
+          delivery_status: 'failed',
+          error_message: `Доставка не удалась: ${send.error}`,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
       // Отправляем резервное сообщение
       try {
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -1084,6 +1094,17 @@ ${extBlock ? "\n" + extBlock : ""}
       await setStep('delivery_done', `Доставка с fallback: ${send.error}`);
     } else {
       console.log(`[Воркер] ✅ Заявка ${requestId} завершена для ${request.name}`);
+      // Доставка успешна — фиксируем completed и delivery_status
+      await supabase
+        .from('track_requests')
+        .update({
+          status: 'completed',
+          generation_status: 'completed',
+          delivery_status: 'sent',
+          error_message: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
 
       // Сопроводительное письмо — отдельным сообщением сразу после аудио
       const coverLetter = humanizeCoverLetter(parsed.cover_letter);

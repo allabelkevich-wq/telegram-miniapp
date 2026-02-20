@@ -135,6 +135,11 @@ comment on column track_requests.suno_style_sent is 'Точная строка s
 alter table track_requests add column if not exists cover_url text;
 comment on column track_requests.cover_url is 'URL обложки от Suno Cover API; отправляется в Telegram вместе с песней';
 
+-- 7.1. Статус доставки (sent=доставлено, failed=не доставлено — проверка получения, не только отправки)
+alter table track_requests add column if not exists delivery_status text;
+comment on column track_requests.delivery_status is 'Статус доставки: sent=доставлено, failed=не доставлено';
+create index if not exists idx_track_requests_delivery_status on track_requests (delivery_status);
+
 -- =============================================================================
 -- 8. Платежи HOT и тарифы (pricing, entitlements, subscriptions, user_trials)
 -- ВАЖНО: без этих таблиц все запросы будут требовать оплату (ошибка 402)
