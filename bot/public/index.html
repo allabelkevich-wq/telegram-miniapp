@@ -409,8 +409,8 @@
     .referral-card{background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.05));border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:18px;margin:0 0 16px}
     .referral-link-row{display:flex;gap:8px;align-items:center;margin:12px 0}
     .referral-link-input{flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.78rem;padding:10px 12px;font-family:monospace;outline:none;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-    .referral-share-btn{padding:10px 16px;border-radius:10px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.45);color:#d4af37;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;width:auto;min-height:unset;margin-top:0;box-shadow:none;animation:none;transition:background .2s}
-    .referral-share-btn:active{background:rgba(212,175,55,0.22)}
+    .referral-share-btn{padding:10px 16px !important;border-radius:10px !important;background:rgba(212,175,55,0.12) !important;border:1px solid rgba(212,175,55,0.45) !important;color:#d4af37 !important;font-weight:700 !important;font-size:0.85rem !important;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;width:auto !important;min-height:unset !important;margin-top:0 !important;box-shadow:none !important;animation:none !important;transition:background .2s;letter-spacing:0 !important}
+    .referral-share-btn:active{background:rgba(212,175,55,0.22) !important}
     .referral-stats{display:flex;gap:10px;margin-top:12px}
     .referral-stat-box{flex:1;background:rgba(255,255,255,0.05);border-radius:10px;padding:10px;text-align:center}
     .referral-stat-num{font-size:1.4rem;font-weight:700;color:#d4af37}
@@ -698,7 +698,8 @@
           <input id="referralLinkInput" class="referral-link-input" readonly value="" placeholder="Загрузка...">
           <button type="button" id="referralShareBtn" class="referral-share-btn">Поделиться</button>
         </div>
-        <div class="referral-stats">
+        <button type="button" id="refStatsToggle" style="background:none;border:none;color:rgba(212,175,55,0.4);font-size:0.75rem;padding:6px 0 0;cursor:pointer;font-family:inherit;width:auto;min-height:unset;box-shadow:none;animation:none;margin:0;font-weight:400;letter-spacing:0">▸ моя статистика</button>
+        <div class="referral-stats" id="refStatsBlock" style="display:none">
           <div class="referral-stat-box">
             <div class="referral-stat-num" id="refInvitedCount">0</div>
             <div class="referral-stat-label">Приглашено</div>
@@ -2219,9 +2220,14 @@
               if (rb) rb.textContent = '💳 Перейти к оплате';
             }
             banner.style.display = 'block';
+            // Когда баннер заказа показан — скрываем реферальный блок (не перегружаем экран)
+            var refCard = document.getElementById('referralCard');
+            if (refCard) refCard.style.display = 'none';
             var dismissBtn = document.getElementById('recoveryDismissBtn');
             if (dismissBtn) dismissBtn.addEventListener('click', function() {
               banner.style.display = 'none';
+              // После закрытия баннера — показываем реферальный блок если он был
+              if (refCard) refCard.style.display = 'block';
             });
             if (rb) rb.addEventListener('click', function() {
               banner.style.display = 'none';
@@ -2230,6 +2236,19 @@
           }
         } catch (e) { /* не критично */ }
       }
+
+      // ── Тогл статистики рефералов ─────────────────────────────────────
+      (function() {
+        var toggle = document.getElementById('refStatsToggle');
+        var block = document.getElementById('refStatsBlock');
+        if (!toggle || !block) return;
+        toggle.addEventListener('click', function() {
+          var open = block.style.display !== 'none';
+          block.style.display = open ? 'none' : 'flex';
+          toggle.textContent = open ? '▸ моя статистика' : '▾ моя статистика';
+          toggle.style.color = open ? 'rgba(212,175,55,0.4)' : 'rgba(212,175,55,0.7)';
+        });
+      })();
 
       // ── Реферальная кнопка «Поделиться» ──────────────────────────────
       (function() {
