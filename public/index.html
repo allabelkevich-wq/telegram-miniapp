@@ -4331,6 +4331,9 @@
 
         if (mode === 'couple') {
           // ── Режим «для двоих»: герой = второй человек ──
+          // В couple-режиме forWhoWrap не нужен — скрываем чтобы не перезаписал person1
+          var fww = document.getElementById('forWhoWrap');
+          if (fww) fww.style.display = 'none';
           // Заполняем все поля person2 из карточки героя
           var n2  = document.getElementById('name2');
           var bd2 = document.getElementById('birthdate2');
@@ -4344,38 +4347,34 @@
           if (bt2)  bt2.value = (hero.birth_time || '').substring(0, 5);
           if (unk2) unk2.checked = !!hero.birthtime_unknown;
           if (g2)   g2.value  = hero.gender || '';
-          if (bp2) {
-            bp2.value = hero.birth_place || '';
-            // Если место есть — помечаем как выбранное (для валидации)
-            if (hero.birth_place) {
-              bp2.setAttribute('data-place-selected', '1');
-              var w2 = bp2.closest('.birthplace-wrap') || bp2.parentNode;
-              if (w2 && w2.classList) w2.classList.add('has-place');
-            }
-          }
+          if (bp2) bp2.value = hero.birth_place || '';
           // Предзаполняем запрос стилем героя
           if (hero.preferred_style) {
             var reqEl = document.getElementById('request');
             if (reqEl && !reqEl.value) reqEl.value = 'Создать песню для нас двоих. Предпочтительный стиль: ' + hero.preferred_style;
           }
-          // Переходим сразу на шаг с данными (step 2)
-          var step2Btn = document.querySelector('.step-dot[data-step="2"]');
-          if (step2Btn && step2Btn.click) setTimeout(function(){ step2Btn.click(); }, 50);
 
         } else {
-          // ── Режим «соло»: выбираем героя в #forWho (value = hero.id) и заполняем форму ──
+          // ── Режим «соло»: герой = person1, clientId передаётся бэкенду ──
           var forWhoEl = document.getElementById('forWho');
-          if (forWhoEl && hero.id) forWhoEl.value = hero.id;
-          // Заполняем поля person1 данными героя (как при выборе из дропдауна)
+          if (forWhoEl && hero.id) {
+            // Гарантируем что опция существует до установки value (select может ещё не загрузиться)
+            if (!forWhoEl.querySelector('option[value="' + hero.id + '"]')) {
+              var pendingOpt = document.createElement('option');
+              pendingOpt.value = hero.id;
+              pendingOpt.textContent = hero.name || hero.id;
+              pendingOpt.setAttribute('data-pending', '1');
+              forWhoEl.appendChild(pendingOpt);
+            }
+            forWhoEl.value = hero.id;
+          }
+          // Заполняем поля person1 данными героя чтобы прошла валидация
           if (typeof fillFormFromHero === 'function') fillFormFromHero(hero);
           // Предзаполняем стиль в запросе
           if (hero.preferred_style) {
             var reqEl = document.getElementById('request');
             if (reqEl && !reqEl.value) reqEl.value = 'Создать песню. Предпочтительный стиль: ' + hero.preferred_style;
           }
-          // Переходим к шагу с данными (step 2)
-          var step2Btn = document.querySelector('.step-dot[data-step="2"]');
-          if (step2Btn && step2Btn.click) setTimeout(function(){ step2Btn.click(); }, 50);
         }
       }
 
