@@ -492,22 +492,21 @@
     #onboardingPage{position:fixed;inset:0;z-index:10001;background:#0A0A1A url('assets/bg-yupsoul.png') center/cover no-repeat;overflow:hidden;user-select:none}
     #onboardingPage::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(4,4,20,.5) 0%,rgba(8,10,35,.7) 100%);z-index:0}
     /* Прогресс-бары вверху (как в сторис) */
-    .stories-bars{position:absolute;top:max(52px,calc(env(safe-area-inset-top)+36px));left:16px;right:50px;display:flex;gap:5px;z-index:10}
+    .stories-bars{position:absolute;top:max(10px,calc(env(safe-area-inset-top)+6px));left:16px;right:50px;display:flex;gap:5px;z-index:10}
     .story-bar{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,0.25);overflow:hidden}
     .story-bar-fill{height:100%;width:0;background:rgba(255,255,255,0.9);border-radius:2px}
     .story-bar-fill.done{width:100%;transition:none}
     .story-bar-fill.playing{width:100%;transition:width var(--story-dur,4s) linear}
     /* Кнопка закрыть */
-    .stories-close{position:absolute;top:max(48px,calc(env(safe-area-inset-top)+32px));right:14px;z-index:11;background:rgba(15,12,40,0.72);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);font-size:0.9rem;width:30px;height:30px;min-width:30px;min-height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;padding:0;line-height:1;isolation:isolate;flex-shrink:0}
+    .stories-close{position:absolute;top:max(6px,calc(env(safe-area-inset-top)+4px));right:14px;z-index:11;background:rgba(15,12,40,0.72);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);font-size:0.9rem;width:30px;height:30px;min-width:30px;min-height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;padding:0;line-height:1;isolation:isolate;flex-shrink:0}
     .stories-close:hover{background:rgba(15,12,40,0.9)}
     /* Зоны тапа */
     .stories-tap-prev,.stories-tap-next{position:absolute;top:0;bottom:0;width:40%;z-index:5;cursor:pointer}
     .stories-tap-prev{left:0}
     .stories-tap-next{right:0}
     /* Бренд-блок — верхняя половина экрана */
-    .ob-brand{position:absolute;top:max(80px,calc(env(safe-area-inset-top)+60px));left:0;right:0;text-align:center;padding:0 32px;z-index:6;pointer-events:none}
-    .ob-brand-logo{width:72px;height:72px;margin:0 auto 10px;display:block;opacity:0.95;filter:drop-shadow(0 4px 16px rgba(212,175,55,0.35))}
-    .ob-brand-name{font-size:1.7rem;font-weight:800;background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 6s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-0.5px;padding-bottom:3px;line-height:1.2;margin-bottom:0}
+    .ob-brand{position:absolute;top:max(38px,calc(env(safe-area-inset-top)+24px));left:0;right:0;text-align:center;padding:0 32px;z-index:6;pointer-events:none}
+    .ob-brand-logo{width:80px;height:80px;margin:0 auto 12px;display:block;opacity:0.96;filter:drop-shadow(0 4px 18px rgba(212,175,55,0.32))}
     .ob-brand-divider{width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.45),transparent);margin:10px auto}
     .ob-brand-tag{font-size:0.78rem;color:rgba(255,255,255,0.48);line-height:1.6;max-width:250px;margin:0 auto;letter-spacing:0.01em}
     /* Слайды — нижняя половина: центрированы в своей зоне */
@@ -660,10 +659,9 @@
     <!-- Кнопка закрыть -->
     <button class="stories-close" id="onboardingSkip" aria-label="Закрыть">✕</button>
 
-    <!-- Бренд-блок: лого + имя + слоган -->
+    <!-- Бренд-блок: лого + слоган -->
     <div class="ob-brand">
       <img src="assets/logo-yupsoul.png" alt="YupSoul" class="ob-brand-logo">
-      <div class="ob-brand-name">YupSoul</div>
       <div class="ob-brand-divider"></div>
       <div class="ob-brand-tag">Первый в мире сервис, который превращает дату рождения в персональную музыку</div>
     </div>
@@ -797,7 +795,7 @@
       </div><!-- /нижняя обёртка -->
 
       <footer>
-        <p>YupSoul • 2026 • v1.2.34</p>
+        <p>YupSoul • 2026 • v1.2.35</p>
       </footer>
     </div>
 
@@ -1229,7 +1227,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026 • v1.2.34</p>
+        <p>YupSoul • 2026 • v1.2.35</p>
       </footer>
     </div>
     
@@ -1332,7 +1330,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026 • v1.2.34</p>
+        <p>YupSoul • 2026 • v1.2.35</p>
       </footer>
     </div>
 
