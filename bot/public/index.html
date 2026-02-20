@@ -926,10 +926,30 @@
             <option value="другое">Другое</option>
           </select>
         </div>
-        <div class="field"><label for="heroBirthdate">Дата рождения</label><input type="date" id="heroBirthdate"></div>
-        <div class="field"><label for="heroBirthtime">Время рождения</label><input type="time" id="heroBirthtime"></div>
-        <div class="field"><label for="heroBirthplace">Место рождения</label><input type="text" id="heroBirthplace" placeholder="Город, страна"></div>
-        <div class="checkbox" style="margin-bottom:15px"><input type="checkbox" id="heroBirthtimeUnknown"><label for="heroBirthtimeUnknown">Не знаю точное время</label></div>
+        <div class="field">
+          <label for="heroBirthdate" data-icon="📅">Дата рождения</label>
+          <input type="date" id="heroBirthdate">
+          <div style="font-size:0.85rem;color:var(--tg-theme-hint-color,#9ca3af);margin-top:6px;">Нажми на поле для выбора даты</div>
+        </div>
+        <div class="field">
+          <label for="heroBirthplace" data-icon="📍">Место рождения</label>
+          <div id="heroBirthplaceWrap" class="birthplace-wrap">
+            <input type="text" id="heroBirthplace" placeholder="Москва, Лондон, Нью-Йорк…" autocomplete="off">
+            <span id="heroBirthplaceCheck" class="birthplace-check" aria-hidden="true">✓</span>
+            <ul id="heroBirthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true"></ul>
+          </div>
+          <div id="heroBirthplaceHint" class="birthplace-hint" style="display:block;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">💡 Начни вводить город и выбери из выпавшего списка.</div>
+        </div>
+        <div class="field">
+          <label data-icon="🕐">Время рождения</label>
+          <div class="time-group" role="group" aria-label="Время рождения">
+            <input type="time" id="heroBirthtime" class="time-group-input">
+            <div class="checkbox time-group-checkbox">
+              <input type="checkbox" id="heroBirthtimeUnknown">
+              <label for="heroBirthtimeUnknown">Не знаю точное время</label>
+            </div>
+          </div>
+        </div>
         <div class="field"><label for="heroGender">Пол</label>
           <select id="heroGender">
             <option value="">Выбери</option>
@@ -4145,11 +4165,22 @@
         document.getElementById('heroRelationship').value = (h && h.relationship) || '';
         document.getElementById('heroBirthdate').value = (h && h.birth_date) || '';
         document.getElementById('heroBirthtime').value = ((h && h.birth_time) || '').substring(0, 5);
-        document.getElementById('heroBirthplace').value = (h && h.birth_place) || '';
         document.getElementById('heroBirthtimeUnknown').checked = !!(h && h.birthtime_unknown);
         document.getElementById('heroGender').value = (h && h.gender) || '';
         document.getElementById('heroStyle').value = (h && h.preferred_style) || '';
         document.getElementById('heroNotes').value = (h && h.notes) || '';
+        // Город: восстанавливаем значение и состояние чекмарка
+        var hpInput = document.getElementById('heroBirthplace');
+        var hpWrap  = document.getElementById('heroBirthplaceWrap');
+        var hpCheck = document.getElementById('heroBirthplaceCheck');
+        var hpHint  = document.getElementById('heroBirthplaceHint');
+        var birthPlaceVal = (h && h.birth_place) || '';
+        if (hpInput) hpInput.value = birthPlaceVal;
+        if (hpWrap)  hpWrap.classList.toggle('has-place', !!birthPlaceVal);
+        if (hpCheck) hpCheck.setAttribute('aria-hidden', birthPlaceVal ? 'false' : 'true');
+        if (hpInput && birthPlaceVal) hpInput.setAttribute('data-place-selected','1');
+        else if (hpInput) hpInput.removeAttribute('data-place-selected');
+        if (hpHint)  hpHint.style.display = 'none';
         formWrap.scrollTop = 0;
       }
 
@@ -4213,6 +4244,80 @@
         var minH = new Date(); minH.setFullYear(minH.getFullYear() - 100);
         heroBirthdateEl.min = minH.toISOString().split('T')[0];
       }
+
+      // ── Автодополнение города для формы героя ────────────────────────────
+      (function() {
+        var hInput = document.getElementById('heroBirthplace');
+        var hSugg  = document.getElementById('heroBirthplaceSuggestions');
+        var hWrap  = document.getElementById('heroBirthplaceWrap');
+        var hCheck = document.getElementById('heroBirthplaceCheck');
+        var hHint  = document.getElementById('heroBirthplaceHint');
+        if (!hInput) return;
+        var hDebounce = null;
+        var hLastQ = '';
+
+        function hHideSuggestions() {
+          if (hSugg) { hSugg.innerHTML = ''; hSugg.setAttribute('aria-hidden','true'); hSugg.style.display = 'none'; }
+        }
+        function hSelectPlace(displayName, lat, lon) {
+          hInput.value = (displayName || '').trim();
+          hInput.setAttribute('data-place-selected','1');
+          if (lat != null) hInput.setAttribute('data-lat', String(lat));
+          if (lon != null) hInput.setAttribute('data-lon', String(lon));
+          if (hWrap)  hWrap.classList.add('has-place');
+          if (hCheck) hCheck.setAttribute('aria-hidden','false');
+          if (hHint)  hHint.style.display = 'none';
+          hHideSuggestions();
+        }
+        function hClearSelection() {
+          hInput.removeAttribute('data-place-selected');
+          hInput.removeAttribute('data-lat');
+          hInput.removeAttribute('data-lon');
+          if (hWrap)  hWrap.classList.remove('has-place');
+          if (hCheck) hCheck.setAttribute('aria-hidden','true');
+        }
+        function hFetchPlaces(q) {
+          if (!q || q.length < 2) { hHideSuggestions(); return; }
+          var url = 'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=8&addressdetails=1';
+          fetch(url, { headers: { 'Accept':'application/json','Accept-Language':'ru','User-Agent':'YupSoulMiniApp/1.0' } })
+            .then(function(r){ return r.json(); })
+            .then(function(list){
+              if (hLastQ !== q || !hSugg) return;
+              hSugg.innerHTML = '';
+              (list || []).forEach(function(item) {
+                var li = document.createElement('li');
+                var main = item.display_name || (item.address && (item.address.city || item.address.town || item.address.village || item.address.state || item.address.country)) || '';
+                var country = item.address && item.address.country ? item.address.country : '';
+                li.textContent = main;
+                if (country) {
+                  var sp = document.createElement('div');
+                  sp.className = 'place-type';
+                  sp.textContent = country + (item.address.country_code ? ' (' + item.address.country_code.toUpperCase() + ')' : '');
+                  li.appendChild(sp);
+                }
+                li.addEventListener('click', function(){ hSelectPlace(item.display_name || main, item.lat, item.lon); });
+                hSugg.appendChild(li);
+              });
+              hSugg.style.display = (list && list.length) ? 'block' : 'none';
+              hSugg.setAttribute('aria-hidden', (list && list.length) ? 'false' : 'true');
+            })
+            .catch(function(){ hHideSuggestions(); });
+        }
+        hInput.addEventListener('input', function(){
+          var v = hInput.value.trim();
+          hClearSelection();
+          if (v) { hLastQ = v; clearTimeout(hDebounce); hDebounce = setTimeout(function(){ hFetchPlaces(v); }, 320); }
+          else hHideSuggestions();
+        });
+        hInput.addEventListener('focus', function(){
+          if (hHint) hHint.style.display = 'none';
+          var v = hInput.value.trim();
+          if (v && v.length >= 2) { hLastQ = v; hFetchPlaces(v); }
+        });
+        hInput.addEventListener('blur', function(){
+          setTimeout(hHideSuggestions, 200);
+        });
+      })();
 
       // ── Быстрый запуск из карточки героя ─────────────────────────────────
       function startHeroRequest(opts) {
