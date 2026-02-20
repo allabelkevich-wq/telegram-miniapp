@@ -721,6 +721,11 @@
         <p id="homeGreeting" style="font-size:0.93rem;color:rgba(255,255,255,0.55);text-align:center;margin:10px 0 0;line-height:1.55;max-width:280px;margin-left:auto;margin-right:auto">Заходи, когда захочешь свою персональную песню.</p>
       </div>
 
+      <!-- Кнопка старта — сразу под приветствием -->
+      <div style="padding:8px 0 16px">
+        <button id="startBtn">Начать</button>
+      </div>
+
       <!-- Баннер восстановления зависшей заявки -->
       <div id="recoveryBanner" style="display:none;margin:0 0 14px 0;background:rgba(5,150,105,0.10);border:1px solid rgba(16,185,129,0.28);border-radius:14px;padding:14px 16px;position:relative;">
         <button id="recoveryDismissBtn" style="position:absolute;top:8px;right:10px;background:none;border:none;color:rgba(255,255,255,0.3);font-size:1rem;line-height:1;cursor:pointer;padding:2px 4px;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;font-weight:400;" title="Закрыть">✕</button>
@@ -759,18 +764,15 @@
         </div>
       </div>
 
-      <!-- Кнопка старта — без карточки -->
-      <div style="padding:4px 0 8px">
-        <button id="startBtn">Начать</button>
-        <div id="masterNav" style="margin-top:16px">
-          <button class="secondary" id="goHeroesBtn">👥 Мои герои</button>
-        </div>
-        <div id="adminLinkWrap" style="display:none; margin-top:14px; text-align:center">
-          <a href="#" id="adminLinkBtn" class="secondary" style="display:inline-block;padding:10px 20px;text-decoration:none;color:inherit;border-radius:8px;border:2px solid var(--tg-theme-button-color,#8b5cf6);color:var(--tg-theme-button-color,#8b5cf6)">👑 Админка</a>
-        </div>
+      <!-- Навигация (Мои герои, Админка) -->
+      <div id="masterNav" style="margin-top:8px">
+        <button class="secondary" id="goHeroesBtn">👥 Мои герои</button>
+      </div>
+      <div id="adminLinkWrap" style="display:none; margin-top:14px; text-align:center">
+        <a href="#" id="adminLinkBtn" class="secondary" style="display:inline-block;padding:10px 20px;text-decoration:none;color:inherit;border-radius:8px;border:2px solid var(--tg-theme-button-color,#8b5cf6);color:var(--tg-theme-button-color,#8b5cf6)">👑 Админка</a>
       </div>
 
-      <div style="text-align:center;padding:4px 0 20px">
+      <div style="text-align:center;padding:16px 0 20px">
         <button type="button" class="footer-help" onclick="goToPage('helpPage')">? помощь</button>
       </div>
 
@@ -3388,6 +3390,8 @@
           if (activeBtn) activeBtn.classList.add('active');
         }
       }
+      // Делаем goToPage глобальной — нужно для onclick-атрибутов (кнопка Помощь, кнопки назад)
+      window.goToPage = goToPage;
 
       // Редирект с HOT: при открытии с ?payment=success показываем страницу «Спасибо за оплату»
       var search = typeof window.location !== 'undefined' && window.location.search ? window.location.search : '';
