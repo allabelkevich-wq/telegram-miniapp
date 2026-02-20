@@ -570,7 +570,10 @@
     .hero-hist-toggle{font-size:0.78rem;color:rgba(255,255,255,0.35);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;margin-bottom:8px;min-height:unset;width:auto;box-shadow:none;animation:none;letter-spacing:0}
     .hero-style-badge{display:inline-block;font-size:0.72rem;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.22);color:rgba(212,175,55,0.75);border-radius:6px;padding:2px 8px;margin-top:5px}
     /* Страница помощи */
-    #helpPage .help-header{padding:max(48px,calc(env(safe-area-inset-top)+32px)) 20px 16px 48px;text-align:center;position:relative}
+    #helpPage .help-header{padding:max(48px,calc(env(safe-area-inset-top)+32px)) 20px 16px 20px;position:relative}
+    #helpPage .help-back-row{display:flex;align-items:center;margin-bottom:12px}
+    #helpPage .help-back-btn{background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.5rem;cursor:pointer;padding:6px 10px;line-height:1;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;flex-shrink:0}
+    #helpPage .help-title-wrap{text-align:center;padding:0 40px}
     #helpPage .help-title{font-size:1.35rem;font-weight:700;color:#d4af37;margin-bottom:4px}
     #helpPage .help-subtitle{font-size:0.85rem;color:rgba(255,255,255,0.45);line-height:1.5}
     .help-section{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;margin:0 0 12px;overflow:hidden}
@@ -803,9 +806,13 @@
     <!-- Страница помощи и поддержки -->
     <div class="page" id="helpPage">
       <div class="help-header">
-        <button type="button" class="back-btn" onclick="goToPage('homePage')" style="position:absolute;left:16px;top:max(48px,calc(env(safe-area-inset-top)+16px));background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.4rem;cursor:pointer;padding:4px 8px;line-height:1">←</button>
-        <div class="help-title">Помощь и поддержка</div>
-        <div class="help-subtitle">Всё о YupSoul — просто и по делу</div>
+        <div class="help-back-row">
+          <button type="button" class="help-back-btn" onclick="goToPage('homePage')" aria-label="Назад">←</button>
+        </div>
+        <div class="help-title-wrap">
+          <div class="help-title">Помощь и поддержка</div>
+          <div class="help-subtitle">Всё о YupSoul — просто и по делу</div>
+        </div>
       </div>
       <div style="padding:12px 16px 36px">
 
