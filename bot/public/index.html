@@ -516,6 +516,26 @@
     .song-preview h3{color:#a78bfa;font-size:1.4rem;margin-bottom:10px;text-align:center}
     .song-preview p{font-size:1.05rem;line-height:1.7;color:var(--tg-theme-text-color,#2d2d2d)}
     footer{text-align:center;padding:16px 0 12px;color:rgba(107,114,128,0.5);font-size:.78rem;margin-top:auto}
+    .footer-help{display:inline-flex;align-items:center;gap:4px;color:rgba(212,175,55,0.4);font-size:.78rem;cursor:pointer;border:none;background:none;font-family:inherit;padding:2px 6px;border-radius:6px;transition:color .2s;text-decoration:none;margin-left:8px}
+    .footer-help:hover{color:rgba(212,175,55,0.75)}
+    /* Страница помощи */
+    #helpPage .help-header{padding:max(48px,calc(env(safe-area-inset-top)+32px)) 20px 16px;text-align:center}
+    #helpPage .help-title{font-size:1.35rem;font-weight:800;color:#d4af37;margin-bottom:4px}
+    #helpPage .help-subtitle{font-size:0.85rem;color:rgba(255,255,255,0.45);line-height:1.5}
+    .help-section{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;margin:0 0 10px;overflow:hidden}
+    .help-section-title{width:100%;background:none;border:none;color:rgba(255,255,255,0.85);font-size:0.95rem;font-weight:700;padding:15px 16px;text-align:left;cursor:pointer;font-family:inherit;display:flex;justify-content:space-between;align-items:center;gap:8px;line-height:1.35}
+    .help-section-title .hst-icon{font-size:1.1rem;flex-shrink:0}
+    .help-section-title .hst-chevron{font-size:0.7rem;opacity:0.45;transition:transform .25s;flex-shrink:0}
+    .help-section.open .hst-chevron{transform:rotate(180deg)}
+    .help-section-body{display:none;padding:0 16px 16px;font-size:0.87rem;color:rgba(255,255,255,0.6);line-height:1.65}
+    .help-section.open .help-section-body{display:block}
+    .help-section-body p{margin:0 0 8px}
+    .help-section-body p:last-child{margin:0}
+    .help-section-body ul{margin:6px 0 8px;padding-left:18px}
+    .help-section-body ul li{margin-bottom:4px}
+    .help-section-body strong{color:rgba(255,255,255,0.82)}
+    .help-support-btn{width:100%;padding:16px;border-radius:14px;background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08));border:1px solid rgba(212,175,55,0.35);color:#d4af37;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;transition:background .2s}
+    .help-support-btn:active{background:rgba(212,175,55,0.22)}
     .birthplace-wrap{position:relative}
     .birthplace-suggestions{display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--tg-theme-bg-color,rgba(15,12,40,0.98));border:2px solid rgba(212,175,55,0.5);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.3);max-height:280px;overflow-y:auto;z-index:50;list-style:none;padding:6px 0}
     .birthplace-suggestions li{padding:14px 18px;cursor:pointer;font-size:1.05rem;color:var(--tg-theme-text-color,#fff);border-bottom:1px solid rgba(255,255,255,0.1);transition:all .2s;font-weight:400}
@@ -704,10 +724,107 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026 • v1.2.19</p>
+        <p>YupSoul • 2026 • v1.2.19<button type="button" class="footer-help" onclick="goToPage('helpPage')">? помощь</button></p>
       </footer>
     </div>
-    
+
+    <!-- Страница помощи и поддержки -->
+    <div class="page" id="helpPage">
+      <div class="help-header">
+        <button type="button" class="back-btn" onclick="goToPage('homePage')" style="position:absolute;left:16px;top:max(48px,calc(env(safe-area-inset-top)+16px));background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.4rem;cursor:pointer;padding:4px 8px;line-height:1">←</button>
+        <div class="help-title">Помощь и поддержка</div>
+        <div class="help-subtitle">Всё о YupSoul — просто и по делу</div>
+      </div>
+      <div style="padding:0 16px 32px">
+
+        <!-- Что такое YupSoul -->
+        <div class="help-section open">
+          <button type="button" class="help-section-title" onclick="this.closest('.help-section').classList.toggle('open')">
+            <span class="hst-icon">🌟</span><span style="flex:1">Что такое YupSoul</span><span class="hst-chevron">▼</span>
+          </button>
+          <div class="help-section-body">
+            <p>YupSoul создаёт <strong>персональную песню именно для тебя</strong> — на основе даты, времени и места рождения. Система анализирует твою личность и пишет песню о твоих реальных качествах, пути и силе.</p>
+            <p>Это не шаблон и не случайный текст — каждая песня уникальна и принадлежит только тебе.</p>
+          </div>
+        </div>
+
+        <!-- Что можно создать -->
+        <div class="help-section">
+          <button type="button" class="help-section-title" onclick="this.closest('.help-section').classList.toggle('open')">
+            <span class="hst-icon">🎵</span><span style="flex:1">Что можно создать</span><span class="hst-chevron">▼</span>
+          </button>
+          <div class="help-section-body">
+            <ul>
+              <li><strong>Песня о себе</strong> — твой личный звуковой портрет: кто ты, твоя сила и внутренний путь</li>
+              <li><strong>Песня для пары</strong> — для двоих (влюблённых, друзей, подруг). Анализирует обе карты и отражает союз</li>
+              <li><strong>Энергия дня</strong> — песня под конкретную дату и место. Какие возможности открываются прямо сейчас</li>
+            </ul>
+            <p>Также есть <strong>быстрые запросы</strong> — готовые идеи: песня силы, поздравление с днём рождения, медитативная, про отпускание прошлого и другие.</p>
+          </div>
+        </div>
+
+        <!-- Сколько ждать -->
+        <div class="help-section">
+          <button type="button" class="help-section-title" onclick="this.closest('.help-section').classList.toggle('open')">
+            <span class="hst-icon">⏱</span><span style="flex:1">Сколько ждать песню</span><span class="hst-chevron">▼</span>
+          </button>
+          <div class="help-section-body">
+            <p>Обычно <strong>5–15 минут</strong>. Бот пришлёт уведомление в чат, как только песня будет готова.</p>
+            <p>Можно закрыть приложение — результат придёт сам, ты ничего не потеряешь.</p>
+          </div>
+        </div>
+
+        <!-- Не знаю время рождения -->
+        <div class="help-section">
+          <button type="button" class="help-section-title" onclick="this.closest('.help-section').classList.toggle('open')">
+            <span class="hst-icon">🕐</span><span style="flex:1">Не знаю точное время рождения</span><span class="hst-chevron">▼</span>
+          </button>
+          <div class="help-section-body">
+            <p>Не страшно. Отметь <strong>«Время неизвестно»</strong> — система создаст полноценную песню на основе остальных данных.</p>
+          </div>
+        </div>
+
+        <!-- Бесплатные генерации -->
+        <div class="help-section">
+          <button type="button" class="help-section-title" onclick="this.closest('.help-section').classList.toggle('open')">
+            <span class="hst-icon">🎁</span><span style="flex:1">Бесплатные генерации</span><span class="hst-chevron">▼</span>
+          </button>
+          <div class="help-section-body">
+            <p><strong>Первая генерация — бесплатно.</strong></p>
+            <p>Получить ещё бесплатные можно через реферальную программу: поделись своей ссылкой с другом. Когда он сделает первую генерацию — ты получишь бонус автоматически.</p>
+            <p>Реферальная ссылка — на главном экране в блоке «Пригласи друга».</p>
+          </div>
+        </div>
+
+        <!-- Оплата -->
+        <div class="help-section">
+          <button type="button" class="help-section-title" onclick="this.closest('.help-section').classList.toggle('open')">
+            <span class="hst-icon">💳</span><span style="flex:1">Оплата и промокоды</span><span class="hst-chevron">▼</span>
+          </button>
+          <div class="help-section-body">
+            <p>Дополнительные генерации оплачиваются по тарифу. Способы оплаты отображаются на экране при оформлении заявки.</p>
+            <p>Если у тебя есть <strong>промокод</strong> — введи его на экране оплаты. Промокоды чувствительны к регистру, вводи точно как написано.</p>
+          </div>
+        </div>
+
+        <!-- Проблемы и ошибки -->
+        <div class="help-section">
+          <button type="button" class="help-section-title" onclick="this.closest('.help-section').classList.toggle('open')">
+            <span class="hst-icon">⚠️</span><span style="flex:1">Что-то пошло не так</span><span class="hst-chevron">▼</span>
+          </button>
+          <div class="help-section-body">
+            <p><strong>Приложение закрылось или показало ошибку</strong> — попробуй открыть бота заново. Незавершённые заявки восстанавливаются автоматически.</p>
+            <p><strong>Оплатил, но песни нет</strong> — подожди до 20 минут. Если результата всё ещё нет — напиши в поддержку.</p>
+            <p><strong>Промокод не принимается</strong> — проверь регистр букв. Если всё верно — напиши нам с указанием кода.</p>
+          </div>
+        </div>
+
+        <!-- Кнопка поддержки -->
+        <button type="button" class="help-support-btn" id="helpSupportBtn">💬 Написать в поддержку</button>
+
+      </div>
+    </div>
+
     <!-- Страница «Мои герои» (тариф Мастер) -->
     <div class="page" id="heroesPage">
       <header>
@@ -3872,6 +3989,12 @@
         if (tg && tg.openTelegramLink) tg.openTelegramLink(botUrl);
         else if (tg && tg.openLink) tg.openLink(botUrl);
         else window.open(botUrl, '_blank');
+      });
+      var helpSupportBtn = document.getElementById('helpSupportBtn');
+      if (helpSupportBtn) helpSupportBtn.addEventListener('click', function() {
+        var supportUrl = 'https://t.me/Yup_Soul_bot';
+        if (tg && tg.openTelegramLink) tg.openTelegramLink(supportUrl);
+        else window.open(supportUrl, '_blank');
       });
       var newKeyBtn = document.getElementById('newKeyBtn');
       if (newKeyBtn) newKeyBtn.addEventListener('click', function() {
