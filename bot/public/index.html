@@ -279,7 +279,7 @@
     .lang-switcher-btn:hover{background:rgba(0,0,0,0.4);border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.85)}
     #langSwitcherIcon{font-size:11px;opacity:0.7;line-height:1}
     #langSwitcherCurrent{min-width:1.2em;text-align:center;font-size:9px}
-    .lang-dropdown{position:absolute;top:100%;right:0;margin-top:3px;min-width:0;width:max-content;padding:3px;background:var(--tg-theme-secondary-bg-color);border:1px solid var(--tg-theme-border-color);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.3);overflow:hidden;z-index:20}
+    .lang-dropdown{position:absolute;top:calc(100% + 4px);right:0;left:auto;margin-top:0;min-width:52px;width:max-content;max-width:80px;padding:3px;background:rgba(18,15,40,0.97);border:1px solid rgba(212,175,55,0.2);border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.5);overflow:hidden;z-index:9999}
     .lang-dropdown[hidden]{display:none !important}
     .lang-opt{display:block;width:100%;padding:5px 10px;text-align:left;background:transparent;border:none;border-radius:5px;color:var(--tg-theme-text-color);font-size:11px;cursor:pointer;font-family:inherit}
     .lang-opt:hover{background:rgba(255,255,255,0.08)}
@@ -409,7 +409,8 @@
     .referral-card{background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.05));border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:18px;margin:0 0 16px}
     .referral-link-row{display:flex;gap:8px;align-items:center;margin:12px 0}
     .referral-link-input{flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.78rem;padding:10px 12px;font-family:monospace;outline:none;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-    .referral-share-btn{padding:10px 16px;border-radius:10px;background:linear-gradient(135deg,#d4af37,#e8c547);border:none;color:#000;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;width:auto;min-height:unset;margin-top:0;box-shadow:none;animation:none}
+    .referral-share-btn{padding:10px 16px;border-radius:10px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.45);color:#d4af37;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;width:auto;min-height:unset;margin-top:0;box-shadow:none;animation:none;transition:background .2s}
+    .referral-share-btn:active{background:rgba(212,175,55,0.22)}
     .referral-stats{display:flex;gap:10px;margin-top:12px}
     .referral-stat-box{flex:1;background:rgba(255,255,255,0.05);border-radius:10px;padding:10px;text-align:center}
     .referral-stat-num{font-size:1.4rem;font-weight:700;color:#d4af37}
