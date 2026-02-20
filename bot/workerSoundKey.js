@@ -379,7 +379,8 @@ function parseResponse(text) {
   const styleFull = [style, vocal, mood, instruments, tempo].filter(Boolean).join(" | ");
   
   // Универсальный ограничитель конца лирики: MUSIC PROMPT / [style:] / СОПРОВОДИТЕЛЬНОЕ ПИСЬМО
-  const LYRICS_END_PATTERN = /\n\s*(?:MUSIC PROMPT|КЛЮЧЕВЫЕ ПРИНЦИПЫ|СОПРОВОДИТЕЛЬНОЕ ПИСЬМО|\[style:\s*[^\]]+\]|\[vocal:\s*[^\]]+\])/i;
+  // ВАЖНО: [vocal: ...] НЕ является концом лирики — LLM вставляет его как Suno-тег внутри куплетов
+  const LYRICS_END_PATTERN = /\n\s*(?:MUSIC PROMPT|КЛЮЧЕВЫЕ ПРИНЦИПЫ|СОПРОВОДИТЕЛЬНОЕ ПИСЬМО|\[style:\s*[^\]]+\])/i;
 
   // Лирика — от любого блока [Verse 1], [Verse 1:], [Chorus], [Intro] и т.д. до MUSIC PROMPT / [style:] / письма
   const lyricsStart = text.search(/\[(?:intro|verse\s*1|verse\s*2|pre-chorus|chorus|bridge|final\s*chorus|outro)\s*:?\]/i);
@@ -946,7 +947,10 @@ ${extBlock ? "\n" + extBlock : ""}
     const lineCount = lyricsClean.split(/\n/).filter((l) => l.trim()).length;
     console.log(`[Воркер] ЭТАП 2 — Парсинг: лирика ${lyricsClean.length} символов, ${lineCount} строк; title="${parsed.title || ""}"; style длина=${(parsed.style || "").length}`);
     if (lineCount < 20) {
-      throw new Error(`Песня слишком короткая (${lineCount} строк, нужно минимум 20)`);
+      // Диагностика: показываем что именно было извлечено как лирика
+      console.error(`[Воркер] ❌ Лирика слишком короткая (${lineCount} строк). Первые 400 символов извлечённой лирики: ${lyricsClean.slice(0, 400).replace(/\n/g, " ↵ ")}`);
+      console.error(`[Воркер] ❌ Весь полный ответ LLM сохранён в deepseek_response в БД — проверь в Подробнее в админке.`);
+      throw new Error(`Песня слишком короткая (${lineCount} строк, нужно минимум 20). Сырой ответ LLM сохранён в заявке — открой «Подробнее» в админке`);
     }
     if (lineCount < 32) {
       console.warn(`[Воркер] ⚠️ Лирика короче обычного (${lineCount} строк) — отправляем в Suno, но рекомендуем проверить промпт`);
