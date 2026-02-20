@@ -154,6 +154,9 @@
     .req-row-body .progress-container { margin:0 0 14px 0; }
     .req-row-body .details-section { margin:10px 0 0 0; padding:12px; }
     .req-row-body .actions { margin-top:14px; }
+    .detail-section-inline { background:rgba(255,255,255,0.025); border:1px solid #1e293b; border-radius:8px; overflow:hidden; }
+    .dsi-title { font-size:11px; font-weight:700; color:#94a3b8; padding:7px 12px; background:rgba(0,0,0,0.2); border-bottom:1px solid #1e293b; letter-spacing:0.3px; text-transform:uppercase; }
+    .dsi-body { padding:10px 12px; font-size:12px; }
     @media (max-width: 768px) {
       .header h1 { font-size: 26px; }
       .stat-number { font-size: 36px; }
@@ -418,10 +421,174 @@
       if (isOpen) {
         row.classList.remove('expanded');
         body.style.display = 'none';
-      } else {
-        row.classList.add('expanded');
-        body.style.display = 'block';
+        return;
       }
+      row.classList.add('expanded');
+      body.style.display = 'block';
+      // Загружаем полные детали только при первом раскрытии
+      if (row.getAttribute('data-loaded') === 'true') return;
+      row.setAttribute('data-loaded', 'true');
+      body.innerHTML = '<div style="padding:18px;color:#64748b;font-size:13px;display:flex;align-items:center;gap:10px;"><span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(102,126,234,0.3);border-top-color:#667eea;border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;"></span> Загрузка деталей…</div>';
+      loadFullDetail(id, body, row);
+    }
+
+    async function loadFullDetail(id, body, row) {
+      let r;
+      try {
+        const result = await fetchJson(API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + authQueryFromPath(), { headers: authHeaders() }, 12000);
+        if (!result.json?.success || !result.json?.data) throw new Error(result.json?.error || 'load error');
+        r = result.json.data;
+      } catch (e) {
+        body.innerHTML = '<div style="padding:14px;color:#fca5a5;font-size:13px;">❌ ' + escapeHtml(String(e?.message || e)) + ' <button onclick="this.closest(\'[data-loaded]\').removeAttribute(\'data-loaded\');toggleRow(\'' + escapeHtml(id) + '\')" style="background:rgba(102,126,234,0.2);border:1px solid #667eea;color:#a5b4fc;border-radius:5px;padding:3px 10px;cursor:pointer;font-family:inherit;font-size:12px;margin-left:8px;">↻ Повторить</button></div>';
+        row.removeAttribute('data-loaded');
+        return;
+      }
+
+      const gs = r.generation_status || r.status || 'pending';
+      const steps = normalizeSteps(r.generation_steps);
+      const order = getStatusOrder(gs);
+      const safeId = id.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
+      // ── Хелперы ──────────────────────────────────────────────────────────────
+      function stepVal(key) {
+        const v = steps[key]; return (v && String(v).trim()) ? String(v) : '';
+      }
+      function stepRow(label, key, col) {
+        const v = stepVal(key);
+        return `<div style="display:flex;gap:6px;align-items:flex-start;padding:3px 0;border-bottom:1px solid #1e293b;">
+          <span style="color:${v ? (col || '#86efac') : '#334155'};flex-shrink:0;width:14px;font-size:11px;">${v ? '✓' : '·'}</span>
+          <span style="color:#94a3b8;font-size:11px;min-width:160px;flex-shrink:0;">${escapeHtml(label)}</span>
+          <span style="font-size:11px;color:${v ? '#e2e8f0' : '#475569'};word-break:break-all;">${v ? escapeHtml(v.slice(0,120)) : '—'}</span>
+        </div>`;
+      }
+      function field(label, value, hint) {
+        if (!value && !hint) return '';
+        return `<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:4px;">
+          <span style="color:#64748b;font-size:11px;min-width:120px;flex-shrink:0;">${escapeHtml(label)}</span>
+          <span style="font-size:12px;color:#e2e8f0;word-break:break-word;">${value ? escapeHtml(String(value)) : ('<span style="color:#475569;">' + (hint||'—') + '</span>')}</span>
+        </div>`;
+      }
+
+      // ── Блок «Данные пользователя» ────────────────────────────────────────
+      const userBlock = `<div class="detail-section-inline">
+        <div class="dsi-title">👤 Данные пользователя</div>
+        <div class="dsi-body">
+          ${field('Имя', r.name)}
+          ${field('Telegram ID', r.telegram_user_id)}
+          ${field('Пол', r.gender)}
+          ${field('Дата рождения', r.birthdate)}
+          ${field('Время рождения', r.birthtime_unknown ? 'неизвестно' : r.birthtime)}
+          ${field('Место рождения', r.birthplace)}
+          ${r.person2_name ? `<div style="border-top:1px solid #1e293b;margin:8px 0 6px;padding-top:6px;color:#d4af37;font-size:11px;font-weight:700;">Партнёр</div>
+            ${field('Имя партнёра', r.person2_name)}
+            ${field('Пол партнёра', r.person2_gender)}
+            ${field('Дата рождения', r.person2_birthdate)}
+            ${field('Время рождения', r.person2_birthtime_unknown ? 'неизвестно' : r.person2_birthtime)}
+            ${field('Место рождения', r.person2_birthplace)}` : ''}
+          ${r.transit_date ? `<div style="border-top:1px solid #1e293b;margin:8px 0 6px;padding-top:6px;color:#f9a8d4;font-size:11px;font-weight:700;">Транзит</div>
+            ${field('Дата', r.transit_date)}
+            ${field('Время', r.transit_time)}
+            ${field('Локация', r.transit_location)}
+            ${field('Намерение', r.transit_intent)}` : ''}
+        </div>
+      </div>`;
+
+      // ── Блок «Оплата» ─────────────────────────────────────────────────────
+      const isPendingPay = ['pending','requires_payment'].includes(String((r.payment_status||'').toLowerCase()));
+      const payBlock = `<div class="detail-section-inline">
+        <div class="dsi-title">💳 Оплата</div>
+        <div class="dsi-body">
+          ${field('Статус', r.payment_status)}
+          ${field('Провайдер', r.payment_provider)}
+          ${field('Сумма', r.payment_amount != null ? r.payment_amount + ' ' + (r.payment_currency||'USDT') : null)}
+          ${field('Промокод', r.promo_code)}
+          ${field('Скидка', r.promo_discount_amount != null ? '-' + r.promo_discount_amount : null)}
+          ${field('Order ID', r.payment_order_id)}
+          ${field('Дата оплаты', r.paid_at ? new Date(r.paid_at).toLocaleString('ru-RU') : null)}
+        </div>
+        ${isPendingPay ? `<div style="margin-top:10px;"><button class="rmb rmb-green" style="padding:6px 14px;font-size:12px;" onclick="markPaid('${safeId}');loadFullDetail('${safeId}',document.getElementById('req-body-${escapeHtml(id)}'),document.getElementById('req-row-${escapeHtml(id)}'))">✅ Отметить оплаченным</button></div>` : ''}
+      </div>`;
+
+      // ── Блок «Заявка» ─────────────────────────────────────────────────────
+      const requestBlock = r.request ? `<div class="detail-section-inline">
+        <div class="dsi-title">💬 Текст заявки</div>
+        <div class="dsi-body" style="white-space:pre-wrap;font-size:12px;line-height:1.65;color:#cbd5e1;max-height:180px;overflow-y:auto;">${escapeHtml(r.request)}</div>
+      </div>` : '';
+
+      // ── Блок «Прогресс» ───────────────────────────────────────────────────
+      const progressBlock = `<div class="detail-section-inline">
+        <div class="dsi-title">⚙️ Цепочка генерации</div>
+        <div class="dsi-body">
+          ${stepRow('Заявка принята', 'request_loaded')}
+          ${stepRow('Старт астроблока', 'astro_start')}
+          ${stepRow('Снапшот сохранён', 'astro_snapshot_saved')}
+          ${stepRow('D-карты и Даши', 'astro_extensions')}
+          ${stepRow('Промт собран', 'prompt_compiled')}
+          ${stepRow('Запрос в DeepSeek', 'llm_request_start')}
+          ${stepRow('Ответ DeepSeek', 'llm_response_ready')}
+          ${stepRow('DeepSeek сохранён', 'llm_response_saved')}
+          ${stepRow('Лирика готова', 'lyrics_ready')}
+          ${stepRow('Старт Suno', 'suno_start')}
+          ${stepRow('Suno task', 'suno_task_created')}
+          ${stepRow('Аудио готово', 'audio_ready')}
+          ${stepRow('Доставка', 'delivery_done')}
+          ${stepRow('Финал', 'pipeline_done')}
+          ${steps.error ? `<div style="margin-top:8px;padding:8px;background:rgba(231,76,60,0.1);border-radius:6px;color:#fca5a5;font-size:11px;">❌ ${escapeHtml(String(steps.error))}</div>` : ''}
+        </div>
+      </div>`;
+
+      // ── Блок «DeepSeek» ───────────────────────────────────────────────────
+      const dsBlock = r.deepseek_response ? `<div class="detail-section-inline">
+        <div class="dsi-title">🤖 Ответ DeepSeek ${r.llm_truncated ? '<span style="color:#f39c12;font-size:10px;">⚠️ обрезан</span>' : ''}</div>
+        <div class="dsi-body" style="white-space:pre-wrap;font-size:11px;line-height:1.6;color:#cbd5e1;max-height:220px;overflow-y:auto;">${escapeHtml((r.deepseek_response||'').slice(0,3000))}${(r.deepseek_response||'').length>3000?'\n…[обрезано для отображения]':''}</div>
+      </div>` : '';
+
+      // ── Блок «Лирика» ─────────────────────────────────────────────────────
+      const lyricsBlock = r.lyrics ? `<div class="detail-section-inline">
+        <div class="dsi-title">🎵 Текст песни</div>
+        <div class="dsi-body" style="white-space:pre-wrap;font-size:12px;line-height:1.65;color:#e2e8f0;max-height:220px;overflow-y:auto;">${escapeHtml(r.lyrics)}</div>
+      </div>` : '';
+
+      // ── Блок «Аудио» ──────────────────────────────────────────────────────
+      const audioBlock = r.audio_url ? `<div class="detail-section-inline">
+        <div class="dsi-title">🔊 Аудио</div>
+        <div class="dsi-body">
+          <audio style="width:100%;margin-bottom:8px;" controls src="${escapeHtml(r.audio_url)}"></audio>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a href="${escapeHtml(r.audio_url)}" download target="_blank"><button class="rmb rmb-green" style="padding:6px 14px;font-size:12px;">⬇️ Скачать</button></a>
+            <button class="rmb rmb-blue" style="padding:6px 14px;font-size:12px;" onclick="deliver('${safeId}',this)">📤 Отправить пользователю</button>
+          </div>
+        </div>
+      </div>` : '';
+
+      // ── Блок «ID заявки» ─────────────────────────────────────────────────
+      const idBlock = `<div style="font-size:10px;color:#334155;font-family:monospace;padding:8px 0 4px;word-break:break-all;">
+        ID: ${escapeHtml(r.id||'')} · Создана: ${r.created_at ? new Date(r.created_at).toLocaleString('ru-RU') : '—'} · Режим: ${escapeHtml(r.mode||'single')}
+      </div>`;
+
+      // ── Кнопки действий ───────────────────────────────────────────────────
+      const actionsBlock = `<div style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 0 4px;border-top:1px solid #1e293b;margin-top:8px;">
+        <button class="rmb rmb-orange" style="padding:7px 14px;font-size:12px;" onclick="restart('${safeId}')">${gs === 'completed' ? '🔄 Перегенерировать' : '🔄 Перезапустить'}</button>
+        ${isPendingPay ? `<button class="rmb rmb-green" style="padding:7px 14px;font-size:12px;" onclick="markPaid('${safeId}')">✅ Оплачено</button>` : ''}
+        ${gs === 'pending_payment' ? `<button class="rmb rmb-red" style="padding:7px 14px;font-size:12px;" onclick="cancelRequest('${safeId}',this)">❌ Отменить</button>` : ''}
+        ${r.audio_url ? `<button class="rmb rmb-green" style="padding:7px 14px;font-size:12px;" onclick="deliver('${safeId}',this)">📤 Отправить</button>` : ''}
+        <button class="rmb rmb-red" style="padding:7px 14px;font-size:12px;margin-left:auto;" onclick="if(confirm('Удалить заявку?')){deleteRequests(['${safeId}'])}"  title="Удалить заявку">🗑 Удалить</button>
+      </div>`;
+
+      body.innerHTML = `
+        <div style="padding:4px 0 10px;">
+          ${idBlock}
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+            ${userBlock}
+            ${payBlock}
+          </div>
+          ${requestBlock}
+          ${progressBlock}
+          ${dsBlock}
+          ${lyricsBlock}
+          ${audioBlock}
+          ${actionsBlock}
+        </div>`;
     }
 
     function filterByCard(card) {
@@ -801,46 +968,6 @@
             <span class="req-chevron">›</span>
           </div>
           <div class="req-row-body" id="req-body-${safeIdAttr}">
-            <div style="font-size:11px;color:#64748b;margin-bottom:10px;font-family:monospace;">ID: ${escapeHtml(r.id || '')} · Режим: ${escapeHtml(r.mode || 'single')}${r.payment_amount != null ? ' · ' + escapeHtml(String(r.payment_amount)) + ' ' + escapeHtml(r.payment_currency || 'USDT') : ''}</div>
-            <div class="progress-container">
-              <div class="progress-title">Цепочка генерации</div>
-              <div class="progress-steps">
-                <div class="step ${order >= 1 ? 'done' : ''} ${order === 1 ? 'current' : ''}">
-                  <div class="step-circle">${order >= 1 ? '✓' : '1'}</div>
-                  <div class="step-label ru">Данные получены</div>
-                  ${stepMsg(steps, '1') ? '<div class="step-log" title="' + stepMsg(steps, '1') + '">' + stepMsg(steps, '1') + '</div>' : ''}
-                </div>
-                <div class="step ${order >= 2 ? 'done' : ''} ${order === 2 ? 'current' : ''}">
-                  <div class="step-circle">${order >= 2 ? '✓' : '2'}</div>
-                  <div class="step-label ru">Анализ ИИ</div>
-                  ${stepMsg(steps, '2') ? '<div class="step-log" title="' + stepMsg(steps, '2') + '">' + stepMsg(steps, '2') + '</div>' : ''}
-                </div>
-                <div class="step ${order >= 3 ? 'done' : ''} ${order === 3 ? 'current' : ''}">
-                  <div class="step-circle">${order >= 3 ? '✓' : '3'}</div>
-                  <div class="step-label ru">Текст песни</div>
-                  ${stepMsg(steps, '3') ? '<div class="step-log" title="' + stepMsg(steps, '3') + '">' + stepMsg(steps, '3') + '</div>' : ''}
-                </div>
-                <div class="step ${order >= 4 ? 'done' : ''} ${order === 4 ? 'current' : ''}">
-                  <div class="step-circle">${order >= 4 ? '✓' : '4'}</div>
-                  <div class="step-label ru">Аудио</div>
-                  ${stepMsg(steps, '4') ? '<div class="step-log" title="' + stepMsg(steps, '4') + '">' + stepMsg(steps, '4') + '</div>' : ''}
-                </div>
-              </div>
-              ${steps.error ? '<div style="margin-top:8px;padding:8px 10px;background:rgba(231,76,60,0.1);border-radius:6px;font-size:12px;color:#fca5a5;">❌ ' + stepMsg(steps, 'error') + '</div>' : ''}
-            </div>
-            <div class="details-section">
-              <div class="section-title">💬 Запрос</div>
-              <div class="content-text">${escapeHtml((r.request || '—').substring(0, 500))}${(r.request || '').length > 500 ? '…' : ''}</div>
-            </div>
-            ${stepsDigest(steps) ? '<div class="details-section"><div class="section-title">🧭 Этапы</div><div class="content-text" style="font-size:12px;">' + stepsDigest(steps) + '</div></div>' : ''}
-            <div class="actions" style="margin-top:12px;">
-              <button class="btn btn-primary" onclick="showDetails('${safeId}')">📋 Подробнее</button>
-              ${isPendingPay ? `<button class="btn btn-success" onclick="markPaid('${safeId}')">✅ Отметить оплаченным</button>` : ''}
-              ${gs === 'pending_payment' ? `<button class="btn btn-cancel" onclick="cancelRequest('${safeId}', this)">❌ Отменить заявку</button>` : ''}
-              <button class="btn btn-warning" onclick="restart('${safeId}')">${gs === 'completed' ? '🔄 Перегенерировать' : '🔄 Перезапустить'}</button>
-              ${r.audio_url ? `<button class="btn btn-success" onclick="window.open('${r.audio_url.replace(/'/g,"\\'")}')">▶️ Слушать</button>` : ''}
-              ${r.audio_url ? `<button class="btn btn-success" onclick="deliver('${safeId}', this)">📤 Отправить</button>` : ''}
-            </div>
           </div>
         </div>`;
       }).join('');
@@ -1545,6 +1672,29 @@
         if (btnEl) { btnEl.disabled = false; btnEl.textContent = origText; }
       }
     }
+
+    window.deleteRequests = async function deleteRequests(ids) {
+      if (!ids || !ids.length) return;
+      try {
+        const result = await fetchJson(
+          API_BASE + '/api/admin/requests/bulk-delete' + authQueryFromPath(),
+          { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify({ ids }) },
+          10000
+        );
+        if (result.json?.success) {
+          // Убираем строки из DOM
+          ids.forEach(id => {
+            const row = document.getElementById('req-row-' + id);
+            if (row) row.remove();
+          });
+          await refreshAfterAction();
+        } else {
+          alert('Ошибка удаления: ' + (result.json?.error || 'unknown'));
+        }
+      } catch (e) {
+        alert('Ошибка: ' + (e?.message || e));
+      }
+    };
 
     document.addEventListener('DOMContentLoaded', function() {
       loadAdminData().catch(function(e) {
