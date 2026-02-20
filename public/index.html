@@ -283,7 +283,7 @@
     .lang-dropdown[hidden]{display:none !important}
     .lang-opt{display:block;width:100%;padding:5px 0;text-align:center;background:transparent;border:none;border-radius:4px;color:rgba(255,255,255,0.55);font-size:9px;font-weight:600;letter-spacing:0.04em;cursor:pointer;font-family:inherit;transition:color .15s,background .15s;min-height:unset;animation:none;box-shadow:none;margin:0}
     .lang-opt:hover,.lang-opt:active{background:rgba(212,175,55,0.12);color:#d4af37}
-    h1{font-size:var(--fluid-2xl);background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 4s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:700;letter-spacing:-1px;line-height:1.1}
+    h1{font-size:var(--fluid-2xl);background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 4s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:700;letter-spacing:-1px;line-height:1.2;padding-bottom:4px}
     .subtitle{color:var(--subtitle-readable,var(--tg-theme-text-color));font-size:var(--fluid-base);margin-top:8px;font-weight:400}
     .tagline{color:#d4af37;font-size:var(--fluid-sm);font-weight:400;margin:6px 0 0;letter-spacing:0.1px;opacity:0.75}
     .section{background:var(--tg-theme-secondary-bg-color);border-radius:var(--radius-lg);padding:var(--spacing-lg) var(--spacing-lg);box-shadow:0 4px 18px rgba(212,175,55,0.08);border:1px solid rgba(255,255,255,0.06);position:relative;overflow:hidden;margin-bottom:var(--spacing-lg)}
@@ -504,19 +504,24 @@
     .stories-tap-prev,.stories-tap-next{position:absolute;top:0;bottom:0;width:40%;z-index:5;cursor:pointer}
     .stories-tap-prev{left:0}
     .stories-tap-next{right:0}
-    /* Слайды */
-    .onboarding-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:max(80px,calc(env(safe-area-inset-top)+72px)) 36px max(100px,calc(env(safe-area-inset-bottom)+80px));text-align:center;opacity:0;pointer-events:none;transition:opacity .3s ease;z-index:1}
+    /* Бренд-блок поверх слайдов */
+    .ob-brand{position:absolute;top:max(52px,calc(env(safe-area-inset-top)+36px));left:0;right:0;text-align:center;padding:0 28px;z-index:6;pointer-events:none}
+    .ob-brand-name{font-size:2rem;font-weight:800;background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 6s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-0.5px;padding-bottom:4px;line-height:1.2}
+    .ob-brand-divider{width:36px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent);margin:10px auto 10px}
+    .ob-brand-tag{font-size:0.78rem;color:rgba(255,255,255,0.45);line-height:1.55;max-width:260px;margin:0 auto;letter-spacing:0.01em}
+    /* Слайды — занимают нижние 55% экрана */
+    .onboarding-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:0 36px max(90px,calc(env(safe-area-inset-bottom)+74px));text-align:center;opacity:0;pointer-events:none;transition:opacity .3s ease;z-index:1}
     .onboarding-slide.active{opacity:1;pointer-events:auto}
-    .onboarding-icon{font-size:3.2rem;margin-bottom:16px;animation:iconBounce .4s ease-out}
+    .onboarding-icon{font-size:3rem;margin-bottom:14px;animation:iconBounce .4s ease-out}
     @keyframes iconBounce{0%{transform:scale(0.6);opacity:0}65%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
     .onboarding-title{font-size:1.45rem;font-weight:700;color:#fff;margin:0 0 10px 0;line-height:1.25;max-width:300px;letter-spacing:-0.2px}
     .onboarding-text{font-size:0.88rem;line-height:1.65;color:rgba(255,255,255,0.68);margin:0 0 24px 0;max-width:280px}
     .onboarding-btn{padding:13px 36px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:0.97rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(212,175,55,0.3);transition:transform .2s,box-shadow .2s;min-width:180px;width:auto;margin-top:0;min-height:unset;animation:none}
     /* Жёстко фиксируем размеры превью (сторис) — чтобы не перебивались кэшем/темой */
-    #onboardingPage .onboarding-icon{font-size:3.2rem !important}
-    #onboardingPage .onboarding-title{font-size:1.45rem !important;font-weight:700 !important}
-    #onboardingPage .onboarding-text{font-size:0.88rem !important;line-height:1.65 !important}
-    #onboardingPage .onboarding-btn{font-size:0.97rem !important}
+    #onboardingPage .onboarding-icon{font-size:3rem !important}
+    #onboardingPage .onboarding-title{font-size:1.4rem !important;font-weight:700 !important}
+    #onboardingPage .onboarding-text{font-size:0.86rem !important;line-height:1.6 !important}
+    #onboardingPage .onboarding-btn{font-size:0.95rem !important}
     .onboarding-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(212,175,55,0.4)}
     .onboarding-btn:active{transform:translateY(1px)}
     .onboarding-dots{display:none}
@@ -654,6 +659,13 @@
     <!-- Кнопка закрыть -->
     <button class="stories-close" id="onboardingSkip" aria-label="Закрыть">✕</button>
 
+    <!-- Бренд-блок: имя + слоган -->
+    <div class="ob-brand">
+      <div class="ob-brand-name">YupSoul</div>
+      <div class="ob-brand-divider"></div>
+      <div class="ob-brand-tag">Первый в мире сервис, который превращает дату рождения в персональную музыку</div>
+    </div>
+
     <!-- Зоны тапа: влево = назад, вправо = вперёд -->
     <div class="stories-tap-prev" id="storiesTapPrev"></div>
     <div class="stories-tap-next" id="storiesTapNext"></div>
@@ -783,7 +795,7 @@
       </div><!-- /нижняя обёртка -->
 
       <footer>
-        <p>YupSoul • 2026 • v1.2.31</p>
+        <p>YupSoul • 2026 • v1.2.32</p>
       </footer>
     </div>
 
@@ -1215,7 +1227,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026 • v1.2.31</p>
+        <p>YupSoul • 2026 • v1.2.32</p>
       </footer>
     </div>
     
@@ -1318,7 +1330,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026 • v1.2.31</p>
+        <p>YupSoul • 2026 • v1.2.32</p>
       </footer>
     </div>
 
