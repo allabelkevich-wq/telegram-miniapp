@@ -275,7 +275,7 @@
     }
     header{text-align:center;margin:var(--spacing-xl) 0 var(--spacing-lg);position:relative}
     .lang-switcher-compact{position:fixed;top:max(8px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));z-index:100}
-    .lang-switcher-btn{display:inline-flex;align-items:center;justify-content:center;gap:2px;width:32px;height:32px;padding:0;min-width:0;font-size:9px;line-height:1;background:rgba(0,0,0,0.28);border:1px solid rgba(255,255,255,0.1);border-radius:50%;color:rgba(255,255,255,0.6);cursor:pointer;font-family:inherit;font-weight:500;letter-spacing:0;transition:background .2s, border-color .2s, color .2s}
+    .lang-switcher-btn{display:inline-flex !important;align-items:center;justify-content:center;gap:2px;width:32px !important;height:32px !important;padding:0 !important;min-width:0 !important;min-height:unset !important;font-size:9px;line-height:1;background:rgba(0,0,0,0.28) !important;border:1px solid rgba(255,255,255,0.1) !important;border-radius:50% !important;color:rgba(255,255,255,0.6);cursor:pointer;font-family:inherit;font-weight:500;letter-spacing:0;transition:background .2s, border-color .2s, color .2s;box-shadow:none !important;animation:none !important;transform:none !important}
     .lang-switcher-btn:hover{background:rgba(0,0,0,0.4);border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.85)}
     #langSwitcherIcon{font-size:10px;opacity:0.6;line-height:1}
     #langSwitcherCurrent{text-align:center;font-size:9px;font-weight:600}
@@ -746,7 +746,7 @@
       <!-- Кнопка старта — без карточки -->
       <div style="padding:4px 0 8px">
         <button id="startBtn">Начать</button>
-        <div id="masterNav" style="display:none; margin-top:16px">
+        <div id="masterNav" style="margin-top:16px">
           <button class="secondary" id="goHeroesBtn">👥 Мои герои</button>
         </div>
         <div id="adminLinkWrap" style="display:none; margin-top:14px; text-align:center">
@@ -2122,14 +2122,11 @@
         if (tEl) tEl.textContent = title || '✨ Заявка принята!';
         if (dEl) dEl.innerHTML = desc || 'Анализирую твои данные и создаю уникальную песню.<br><br>🎵 Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.';
         ov.style.display = 'block';
-        // Навешиваем обработчик на кнопку «Продолжить»
+        // Только ручной клик — без авто-скрытия
         var btn = document.getElementById('confirmContinueBtn');
         if (btn) {
           btn.onclick = function() { hideConfirmOverlay(); if (onDone) onDone(); };
         }
-        // Фолбэк: автоскрытие через 8 сек если пользователь не нажал
-        if (_confirmAutoTimer) clearTimeout(_confirmAutoTimer);
-        _confirmAutoTimer = setTimeout(function() { hideConfirmOverlay(); if (onDone) onDone(); }, 8000);
       }
       function hideConfirmOverlay() {
         if (_confirmAutoTimer) { clearTimeout(_confirmAutoTimer); _confirmAutoTimer = null; }
