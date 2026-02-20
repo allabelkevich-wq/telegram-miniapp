@@ -451,10 +451,26 @@ async function createOrRefreshSubscription({ telegramUserId, planSku, source = "
   return { ok: true, renew_at: renewAt };
 }
 
+async function hasMasterAccess(telegramUserId) {
+  if (!supabase) return false;
+  const nowIso = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select("id")
+    .eq("telegram_user_id", Number(telegramUserId))
+    .eq("plan_sku", "master_monthly")
+    .eq("status", "active")
+    .gte("renew_at", nowIso)
+    .limit(1)
+    .maybeSingle();
+  if (error) return false;
+  return !!data;
+}
+
 async function grantPurchaseBySku({ telegramUserId, sku, source = "hot_payment", orderId = null }) {
   const normalizedSku = String(sku || "").trim();
   if (!normalizedSku) return { ok: false, error: "sku_required" };
-  if (normalizedSku === "soul_basic_sub" || normalizedSku === "soul_plus_sub") {
+  if (normalizedSku === "soul_basic_sub" || normalizedSku === "soul_plus_sub" || normalizedSku === "master_monthly") {
     return createOrRefreshSubscription({ telegramUserId, planSku: normalizedSku, source });
   }
   if (normalizedSku === "soul_chat_1day") {
@@ -3235,7 +3251,62 @@ async function startBotWithWebhook() {
   }
 }
 
+function registerMasterRoutes(expressApp) {
+  expressApp.get("/api/master/access", async (req, res) => {
+    const initData = req.query?.initData ?? req.headers["x-telegram-init"];
+    const telegramUserId = validateInitData(initData, BOT_TOKEN);
+    if (telegramUserId == null) return res.status(401).json({ error: "Неверные данные авторизации" });
+    const access = await hasMasterAccess(telegramUserId);
+    if (!access) return res.json({ access: false });
+    const nowIso = new Date().toISOString();
+    const { data } = supabase
+      ? await supabase.from("subscriptions").select("renew_at,source").eq("telegram_user_id", Number(telegramUserId)).eq("plan_sku", "master_monthly").eq("status", "active").gte("renew_at", nowIso).order("renew_at", { ascending: false }).limit(1).maybeSingle()
+      : { data: null };
+    return res.json({ access: true, renew_at: data?.renew_at ?? null, source: data?.source ?? null });
+  });
+
+  expressApp.post("/api/master/trial/start", async (req, res) => {
+    const initData = req.body?.initData ?? req.headers["x-telegram-init"];
+    const telegramUserId = validateInitData(initData, BOT_TOKEN);
+    if (telegramUserId == null) return res.status(401).json({ error: "Неверные данные авторизации" });
+
+    const alreadyHas = await hasMasterAccess(telegramUserId);
+    if (alreadyHas) return res.json({ ok: true, already_active: true });
+
+    if (supabase) {
+      const { data: usedTrial } = await supabase.from("user_trials").select("id").eq("telegram_user_id", Number(telegramUserId)).eq("trial_key", "master_access").maybeSingle();
+      if (usedTrial) return res.status(403).json({ error: "Пробный период уже был использован" });
+    }
+
+    const renewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    if (supabase) {
+      await supabase.from("user_trials").insert({ telegram_user_id: Number(telegramUserId), trial_key: "master_access", consumed_at: new Date().toISOString() });
+      await supabase.from("subscriptions").insert({ telegram_user_id: Number(telegramUserId), plan_sku: "master_monthly", status: "active", renew_at: renewAt, source: "trial", updated_at: new Date().toISOString() });
+    }
+    return res.json({ ok: true, renew_at: renewAt, source: "trial" });
+  });
+
+  expressApp.post("/api/master/subscribe", async (req, res) => {
+    const initData = req.body?.initData ?? req.headers["x-telegram-init"];
+    const telegramUserId = validateInitData(initData, BOT_TOKEN);
+    if (telegramUserId == null) return res.status(401).json({ error: "Неверные данные авторизации" });
+
+    const sku = "master_monthly";
+    const orderId = `master_${telegramUserId}_${Date.now()}`;
+
+    let amount = 299, currency = "RUB";
+    if (supabase) {
+      const { data: cat } = await supabase.from("pricing_catalog").select("price,currency").eq("sku", sku).maybeSingle();
+      if (cat) { amount = Number(cat.price); currency = cat.currency || "RUB"; }
+    }
+
+    const url = buildHotCheckoutUrl({ orderId, amount, currency, requestId: orderId, sku });
+    return res.json({ ok: true, payment_url: url });
+  });
+}
+
 if (process.env.RENDER_HEALTHZ_FIRST) {
+  registerMasterRoutes(app);
   app.use("/api", createHeroesRouter(supabase, BOT_TOKEN));
   app.use("/api", apiNotFoundJson);
   globalThis.__EXPRESS_APP__ = app;
@@ -3246,6 +3317,7 @@ if (process.env.RENDER_HEALTHZ_FIRST) {
   }
 } else {
   console.log("[HTTP] Слушаю порт", HEROES_API_PORT);
+  registerMasterRoutes(app);
   app.use("/api", createHeroesRouter(supabase, BOT_TOKEN));
   app.use("/api", apiNotFoundJson);
   app.listen(HEROES_API_PORT, "0.0.0.0", () => {

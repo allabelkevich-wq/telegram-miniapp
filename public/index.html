@@ -519,6 +519,34 @@
     footer{text-align:center;padding:16px 0 12px;color:rgba(107,114,128,0.5);font-size:.78rem;margin-top:auto}
     .footer-help{display:inline-flex !important;align-items:center;justify-content:center;color:rgba(212,175,55,0.4) !important;font-size:.78rem !important;cursor:pointer;border:none !important;background:none !important;font-family:inherit;padding:8px 16px !important;margin:0 !important;border-radius:20px !important;box-shadow:none !important;animation:none !important;min-height:unset !important;width:auto !important;font-weight:400 !important;letter-spacing:0.04em !important;transition:color .2s,background .2s}
     .footer-help:hover,.footer-help:active{color:rgba(212,175,55,0.75) !important;background:rgba(212,175,55,0.06) !important}
+    /* Карточки героев */
+    .hero-card{background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.12);border-radius:16px;padding:16px;margin-bottom:12px;transition:border-color .2s}
+    .hero-card.expanded{border-color:rgba(212,175,55,0.28)}
+    .hero-card-head{display:flex;align-items:center;gap:12px;cursor:pointer}
+    .hero-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,rgba(212,175,55,0.3),rgba(212,175,55,0.08));display:flex;align-items:center;justify-content:center;font-size:1.15rem;font-weight:800;color:#d4af37;flex-shrink:0;border:1px solid rgba(212,175,55,0.22)}
+    .hero-card-name{font-size:1rem;font-weight:700;color:#fff;line-height:1.25}
+    .hero-card-meta{font-size:0.77rem;color:rgba(255,255,255,0.4);margin-top:3px;line-height:1.4}
+    .hero-card-chevron{margin-left:auto;font-size:0.72rem;color:rgba(255,255,255,0.3);transition:transform .25s;flex-shrink:0}
+    .hero-card.expanded .hero-card-chevron{transform:rotate(180deg)}
+    .hero-card-body{display:none;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07)}
+    .hero-card.expanded .hero-card-body{display:block}
+    .hca-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+    .hca-btn{padding:8px 13px;border-radius:10px;border:1px solid rgba(212,175,55,0.28);background:rgba(212,175,55,0.07);color:#d4af37;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;transition:background .2s;letter-spacing:0;line-height:1.3}
+    .hca-btn:active{background:rgba(212,175,55,0.18)}
+    .hca-btn.hca-danger{border-color:rgba(239,68,68,0.28);color:rgba(239,68,68,0.7);background:rgba(239,68,68,0.06)}
+    .hca-btn.hca-secondary{border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.55);background:rgba(255,255,255,0.04)}
+    /* История генераций в карточке героя */
+    .hero-hist-section{margin-top:14px}
+    .hero-hist-loading{font-size:0.82rem;color:rgba(255,255,255,0.35);text-align:center;padding:12px 0}
+    .hero-hist-empty{font-size:0.82rem;color:rgba(255,255,255,0.3);text-align:center;padding:12px 0}
+    .hero-hist-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+    .hero-hist-title{font-size:0.88rem;font-weight:700;color:rgba(255,255,255,0.88);margin-bottom:4px}
+    .hero-hist-meta{font-size:0.74rem;color:rgba(255,255,255,0.35);margin-bottom:10px}
+    .hero-hist-block-label{font-size:0.74rem;font-weight:700;color:rgba(212,175,55,0.6);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px}
+    .hero-hist-text{font-size:0.8rem;color:rgba(255,255,255,0.55);line-height:1.55;white-space:pre-wrap;max-height:160px;overflow-y:auto;margin-bottom:10px}
+    .hero-hist-audio{display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;color:#d4af37;text-decoration:none;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);border-radius:8px;padding:6px 12px;margin-top:4px}
+    .hero-hist-toggle{font-size:0.78rem;color:rgba(255,255,255,0.35);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;margin-bottom:8px;min-height:unset;width:auto;box-shadow:none;animation:none;letter-spacing:0}
+    .hero-style-badge{display:inline-block;font-size:0.72rem;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.22);color:rgba(212,175,55,0.75);border-radius:6px;padding:2px 8px;margin-top:5px}
     /* Страница помощи */
     #helpPage .help-header{padding:max(48px,calc(env(safe-area-inset-top)+32px)) 20px 16px;text-align:center}
     #helpPage .help-title{font-size:1.35rem;font-weight:800;color:#d4af37;margin-bottom:4px}
@@ -834,36 +862,84 @@
 
     <!-- Страница «Мои герои» (тариф Мастер) -->
     <div class="page" id="heroesPage">
-      <header>
-        <h1>Мои герои</h1>
-        <div class="subtitle">Картотека клиентов</div>
-      </header>
-      <div class="section">
-        <div class="field">
-          <label>Поиск по имени</label>
-          <input type="text" id="heroesSearch" placeholder="Введите имя...">
+      <!-- Шапка страницы -->
+      <div style="padding:max(52px,calc(env(safe-area-inset-top)+36px)) 18px 0; display:flex; align-items:center; gap:12px; flex-shrink:0">
+        <button type="button" id="heroesBackBtn" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.4rem;cursor:pointer;padding:4px 8px;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;line-height:1">←</button>
+        <div style="flex:1">
+          <div style="font-size:1.15rem;font-weight:800;color:#fff;line-height:1.2">Мои герои</div>
+          <div style="font-size:0.75rem;color:rgba(212,175,55,0.65);margin-top:2px" id="masterAccessBadge"></div>
         </div>
-        <button class="secondary" id="heroesSearchBtn" style="margin-bottom:15px">Искать</button>
+      </div>
+
+      <!-- Paywall (показывается если нет доступа) -->
+      <div id="masterPaywall" style="display:none; padding:28px 20px 32px; overflow-y:auto; flex:1">
+        <div style="text-align:center; margin-bottom:20px">
+          <div style="font-size:2.6rem;margin-bottom:12px">✨</div>
+          <div style="font-size:1.2rem;font-weight:800;color:#d4af37;margin-bottom:8px">Личный кабинет героев</div>
+          <div style="font-size:0.85rem;color:rgba(255,255,255,0.5);line-height:1.6">Добавляй людей один раз — и генерируй для них<br>песни в один тап. Полная история с текстами.</div>
+        </div>
+        <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.18);border-radius:14px;padding:16px;margin-bottom:22px;font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.65">
+          <div style="color:#d4af37;font-weight:700;margin-bottom:8px">Что входит в тариф:</div>
+          <div>✦ Неограниченное число героев</div>
+          <div>✦ Быстрый запуск соло и совместных песен</div>
+          <div>✦ Предпочтения по стилю музыки</div>
+          <div>✦ Полная история генераций с текстами и анализом</div>
+          <div>✦ Аудио прямо из карточки героя</div>
+        </div>
+        <button type="button" id="masterTrialBtn" style="width:100%;padding:15px;border-radius:14px;background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.08));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:11px;box-shadow:none;animation:none;letter-spacing:0;min-height:unset">🎁 1 день бесплатно — попробовать</button>
+        <button type="button" id="masterSubBtn" style="width:100%;padding:13px;border-radius:14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.65);font-size:0.9rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;letter-spacing:0;min-height:unset">💳 Подписка — 299 руб/мес</button>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.25);text-align:center;margin-top:10px">Без автопродления • Оплата через HOT Pay</div>
+      </div>
+
+      <!-- Кабинет героев (показывается если есть доступ) -->
+      <div id="masterCabinet" style="display:none; padding:16px 16px 90px; overflow-y:auto; flex:1">
+        <!-- Строка поиска + кнопка добавить -->
+        <div style="display:flex;gap:10px;margin-bottom:16px">
+          <input type="text" id="heroesSearch" placeholder="Поиск по имени…" style="flex:1;margin:0;padding:10px 14px;font-size:0.88rem">
+          <button type="button" id="heroesSearchBtn" style="width:auto;padding:10px 14px;font-size:0.88rem;min-height:unset;box-shadow:none;animation:none;letter-spacing:0;background:rgba(212,175,55,0.12);border-color:rgba(212,175,55,0.3);color:#d4af37;flex-shrink:0">Найти</button>
+        </div>
         <div id="heroesList"></div>
-        <button id="addHeroBtn" style="margin-top:15px">➕ Добавить героя</button>
-        <div id="heroFormWrap" style="display:none; margin-top:25px; padding-top:20px; border-top:1px solid #e5e7eb">
-          <div class="field"><label for="heroName">Имя *</label><input type="text" id="heroName" placeholder="Имя героя" required></div>
-          <div class="field"><label for="heroBirthdate">Дата рождения</label><input type="date" id="heroBirthdate"></div>
-          <div class="field"><label for="heroBirthtime">Время рождения</label><input type="time" id="heroBirthtime"></div>
-          <div class="field"><label for="heroBirthplace">Место рождения</label><input type="text" id="heroBirthplace" placeholder="Город, страна"></div>
-          <div class="checkbox" style="margin-bottom:15px"><input type="checkbox" id="heroBirthtimeUnknown"><label for="heroBirthtimeUnknown">Не знаю точное время</label></div>
-          <div class="field"><label for="heroGender">Пол</label><select id="heroGender"><option value="">Выбери</option><option value="male">Мужской</option><option value="female">Женский</option><option value="other">Другой</option></select></div>
-          <div class="field"><label for="heroNotes">Досье / заметки</label><textarea id="heroNotes" placeholder="Заметки о клиенте" rows="3"></textarea></div>
-          <div class="btn-group">
-            <button class="secondary" id="heroFormCancel">Отмена</button>
-            <button id="heroFormSave">Сохранить</button>
-          </div>
+        <button type="button" id="addHeroBtn" style="margin-top:8px;width:100%;background:rgba(212,175,55,0.08);border:1px dashed rgba(212,175,55,0.35);color:rgba(212,175,55,0.8);font-size:0.9rem;padding:13px;border-radius:14px;box-shadow:none;animation:none;letter-spacing:0;min-height:unset">+ Добавить героя</button>
+      </div>
+
+      <!-- Форма добавления/редактирования героя -->
+      <div id="heroFormWrap" style="display:none; padding:16px 16px 90px; overflow-y:auto; flex:1">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+          <button type="button" id="heroFormCancel" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.3rem;cursor:pointer;padding:4px;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0">←</button>
+          <div style="font-size:1rem;font-weight:700;color:#fff" id="heroFormTitle">Добавить героя</div>
+        </div>
+        <div class="field"><label for="heroName">Имя *</label><input type="text" id="heroName" placeholder="Как зовут человека"></div>
+        <div class="field"><label for="heroRelationship">Кто для тебя</label>
+          <select id="heroRelationship">
+            <option value="">— выбери —</option>
+            <option value="друг">Друг</option>
+            <option value="подруга">Подруга</option>
+            <option value="партнёр">Партнёр</option>
+            <option value="партнёрша">Партнёрша</option>
+            <option value="родственник">Родственник</option>
+            <option value="коллега">Коллега</option>
+            <option value="клиент">Клиент</option>
+            <option value="другое">Другое</option>
+          </select>
+        </div>
+        <div class="field"><label for="heroBirthdate">Дата рождения</label><input type="date" id="heroBirthdate"></div>
+        <div class="field"><label for="heroBirthtime">Время рождения</label><input type="time" id="heroBirthtime"></div>
+        <div class="field"><label for="heroBirthplace">Место рождения</label><input type="text" id="heroBirthplace" placeholder="Город, страна"></div>
+        <div class="checkbox" style="margin-bottom:15px"><input type="checkbox" id="heroBirthtimeUnknown"><label for="heroBirthtimeUnknown">Не знаю точное время</label></div>
+        <div class="field"><label for="heroGender">Пол</label>
+          <select id="heroGender">
+            <option value="">Выбери</option>
+            <option value="female">Женский</option>
+            <option value="male">Мужской</option>
+            <option value="other">Другой</option>
+          </select>
+        </div>
+        <div class="field"><label for="heroStyle">Любимые стили музыки</label><input type="text" id="heroStyle" placeholder="поп, джаз, электронная…"></div>
+        <div class="field"><label for="heroNotes">Заметки</label><textarea id="heroNotes" placeholder="Что важно помнить об этом человеке" rows="2"></textarea></div>
+        <div style="display:flex;gap:10px;margin-top:6px">
+          <button type="button" id="heroFormSave" style="flex:2">Сохранить</button>
         </div>
       </div>
-      <div class="btn-group" style="margin-top:20px">
-        <button class="secondary" id="heroesBackBtn">← Назад</button>
-      </div>
-      <footer><p>YupSoul • 2026</p></footer>
     </div>
     
     <!-- Страница формы -->
@@ -871,6 +947,16 @@
       <header>
         <h1>YupSoul</h1>
       </header>
+
+      <!-- Выбор героя для мастер-пользователей (скрыт у обычных) -->
+      <div id="forWhoWrap" style="display:none; padding:0 16px; margin-bottom:2px">
+        <div class="field" style="margin-bottom:0">
+          <label for="forWho" style="font-size:0.82rem">Для кого генерируем?</label>
+          <select id="forWho">
+            <option value="">Для себя</option>
+          </select>
+        </div>
+      </div>
       
       <div class="section">
         <div class="step-panel" data-step="1">
@@ -3803,111 +3889,353 @@
       });
       
       var goHeroesBtn = document.getElementById('goHeroesBtn');
-      if (goHeroesBtn) goHeroesBtn.addEventListener('click', function() { goToPage('heroesPage'); loadHeroesList(); });
+      if (goHeroesBtn) goHeroesBtn.addEventListener('click', function() { goToPage('heroesPage'); initHeroesPage(); });
+
+      // ── Инициализация страницы героев ────────────────────────────────────
+      function initHeroesPage() {
+        var paywall = document.getElementById('masterPaywall');
+        var cabinet = document.getElementById('masterCabinet');
+        var formWrap = document.getElementById('heroFormWrap');
+        if (!paywall || !cabinet) return;
+        paywall.style.display = 'none';
+        cabinet.style.display = 'none';
+        if (formWrap) formWrap.style.display = 'none';
+        var badge = document.getElementById('masterAccessBadge');
+        if (badge) badge.textContent = 'Загрузка…';
+
+        heroesApi('/master/access', { method: 'GET' }).then(function(d) {
+          if (d && d.access) {
+            var sub = d.source === 'trial' ? 'Пробный период' : 'Подписка активна';
+            if (d.renew_at) {
+              var exp = new Date(d.renew_at);
+              sub += ' · до ' + exp.toLocaleDateString('ru-RU', { day:'numeric', month:'short' });
+            }
+            if (badge) badge.textContent = sub;
+            cabinet.style.display = 'block';
+            loadHeroesList();
+          } else {
+            if (badge) badge.textContent = '';
+            paywall.style.display = 'block';
+          }
+        }).catch(function() {
+          if (badge) badge.textContent = '';
+          paywall.style.display = 'block';
+        });
+      }
+
+      // ── Триал и подписка ─────────────────────────────────────────────────
+      var masterTrialBtn = document.getElementById('masterTrialBtn');
+      var masterSubBtn = document.getElementById('masterSubBtn');
+      if (masterTrialBtn) masterTrialBtn.addEventListener('click', function() {
+        masterTrialBtn.disabled = true;
+        masterTrialBtn.textContent = 'Подключаем…';
+        heroesApi('/master/trial/start', { method: 'POST', body: { initData: (tg && tg.initData) || '' } }).then(function(d) {
+          if (d && d.ok) {
+            var paywall = document.getElementById('masterPaywall');
+            var cabinet = document.getElementById('masterCabinet');
+            var badge = document.getElementById('masterAccessBadge');
+            if (paywall) paywall.style.display = 'none';
+            if (cabinet) { cabinet.style.display = 'block'; loadHeroesList(); }
+            if (badge) {
+              var exp = d.renew_at ? new Date(d.renew_at).toLocaleString('ru-RU', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
+              badge.textContent = 'Пробный период' + (exp ? ' · до ' + exp : '');
+            }
+          } else {
+            alert(d && d.error ? d.error : 'Не удалось активировать');
+            masterTrialBtn.disabled = false;
+            masterTrialBtn.textContent = '🎁 1 день бесплатно — попробовать';
+          }
+        }).catch(function(e) {
+          alert('Ошибка: ' + (e.message || e));
+          masterTrialBtn.disabled = false;
+          masterTrialBtn.textContent = '🎁 1 день бесплатно — попробовать';
+        });
+      });
+      if (masterSubBtn) masterSubBtn.addEventListener('click', function() {
+        masterSubBtn.disabled = true;
+        masterSubBtn.textContent = 'Открываем оплату…';
+        heroesApi('/master/subscribe', { method: 'POST', body: { initData: (tg && tg.initData) || '' } }).then(function(d) {
+          if (d && d.payment_url) {
+            if (tg && tg.openLink) tg.openLink(d.payment_url);
+            else window.open(d.payment_url, '_blank');
+          }
+          masterSubBtn.disabled = false;
+          masterSubBtn.textContent = '💳 Подписка — 299 руб/мес';
+        }).catch(function(e) {
+          alert('Ошибка: ' + (e.message || e));
+          masterSubBtn.disabled = false;
+          masterSubBtn.textContent = '💳 Подписка — 299 руб/мес';
+        });
+      });
+
+      // ── Список героев ─────────────────────────────────────────────────────
+      function escHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
       function loadHeroesList() {
         var listEl = document.getElementById('heroesList');
         if (!listEl) return;
-        listEl.innerHTML = '<p style="color:#6b7280">' + t('heroesLoading') + '</p>';
-        var search = (document.getElementById('heroesSearch') || {}).value;
-        var q = search ? '?search=' + encodeURIComponent(search) : '';
+        listEl.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:0.85rem;color:rgba(255,255,255,0.3)">Загрузка…</div>';
+        var search = (document.getElementById('heroesSearch') || {}).value || '';
+        var q = search.trim() ? '?search=' + encodeURIComponent(search.trim()) : '';
         heroesApi('/heroes' + q, { method: 'GET' }).then(function(d) {
           heroesCache = (d && d.clients) || [];
-          if (!heroesCache.length) { listEl.innerHTML = '<p style="color:#6b7280">' + t('heroesEmpty') + '</p>'; return; }
+          if (!heroesCache.length) {
+            listEl.innerHTML = '<div style="text-align:center;padding:32px 0">' +
+              '<div style="font-size:2rem;margin-bottom:10px">🌟</div>' +
+              '<div style="font-size:0.9rem;color:rgba(255,255,255,0.35);line-height:1.55">Пока нет ни одного героя.<br>Добавь первого — и создавай для него<br>персональные песни в один тап.</div></div>';
+            return;
+          }
           listEl.innerHTML = heroesCache.map(function(h) {
-            var dateStr = h.birth_date || '—';
-            var addStr = h.created_at ? new Date(h.created_at).toLocaleDateString('ru-RU') : '';
-            return '<div class="section" style="margin-bottom:12px" data-hero-id="' + (h.id || '') + '">' +
-              '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">' +
-              '<strong>' + (h.name || '—') + '</strong>' +
-              '<span style="font-size:.9rem;color:#6b7280">' + dateStr + (addStr ? ' · ' + addStr : '') + '</span>' +
+            var initials = (h.name || '?').trim().split(/\s+/).map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase();
+            var metaParts = [];
+            if (h.relationship) metaParts.push(h.relationship);
+            if (h.birth_date) metaParts.push(new Date(h.birth_date).toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' }));
+            if (h.birth_place) metaParts.push(h.birth_place);
+            return '<div class="hero-card" id="hcard-' + escHtml(h.id) + '">' +
+              '<div class="hero-card-head" onclick="toggleHeroCard(\'' + escHtml(h.id) + '\')">' +
+              '<div class="hero-avatar">' + escHtml(initials) + '</div>' +
+              '<div style="flex:1;min-width:0">' +
+              '<div class="hero-card-name">' + escHtml(h.name) + '</div>' +
+              '<div class="hero-card-meta">' + escHtml(metaParts.join(' · ')) + '</div>' +
+              (h.preferred_style ? '<div class="hero-style-badge">🎵 ' + escHtml(h.preferred_style) + '</div>' : '') +
               '</div>' +
-              (h.birth_place ? '<div style="font-size:.95rem;color:#6b7280;margin-top:6px">' + h.birth_place + '</div>' : '') +
-              '<div style="margin-top:10px;display:flex;gap:8px">' +
-              '<button type="button" class="secondary hero-edit-btn" style="padding:8px 14px;font-size:.9rem" data-id="' + (h.id || '') + '">Изменить</button>' +
-              '<button type="button" class="secondary hero-delete-btn" style="padding:8px 14px;font-size:.9rem;color:#dc2626" data-id="' + (h.id || '') + '" data-name="' + (h.name || '').replace(/"/g, '&quot;') + '">Удалить</button>' +
-              '</div></div>';
+              '<div class="hero-card-chevron">▼</div>' +
+              '</div>' +
+              '<div class="hero-card-body">' +
+              (h.notes ? '<div style="font-size:0.82rem;color:rgba(255,255,255,0.45);line-height:1.5;margin-bottom:12px">' + escHtml(h.notes) + '</div>' : '') +
+              '<div class="hca-row">' +
+              '<button type="button" class="hca-btn hero-solo-btn" data-id="' + escHtml(h.id) + '" data-name="' + escHtml(h.name) + '">🎵 Соло</button>' +
+              '<button type="button" class="hca-btn hero-duo-btn" data-id="' + escHtml(h.id) + '" data-name="' + escHtml(h.name) + '">🎶 Вместе со мной</button>' +
+              '<button type="button" class="hca-btn hca-secondary hero-edit-btn" data-id="' + escHtml(h.id) + '">✏️ Изменить</button>' +
+              '<button type="button" class="hca-btn hca-danger hero-delete-btn" data-id="' + escHtml(h.id) + '" data-name="' + escHtml(h.name) + '">Удалить</button>' +
+              '</div>' +
+              '<div class="hero-hist-section" id="hhist-' + escHtml(h.id) + '">' +
+              '<button type="button" class="hero-hist-toggle hero-hist-load-btn" data-id="' + escHtml(h.id) + '">▸ История генераций</button>' +
+              '<div class="hero-hist-content" id="hhist-content-' + escHtml(h.id) + '" style="display:none"></div>' +
+              '</div>' +
+              '</div>' +
+              '</div>';
           }).join('');
+
+          // Раскрытие карточки
+          listEl.querySelectorAll('.hero-hist-load-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              var id = btn.getAttribute('data-id');
+              var contentEl = document.getElementById('hhist-content-' + id);
+              if (!contentEl) return;
+              if (contentEl.style.display === 'block') { contentEl.style.display = 'none'; btn.textContent = '▸ История генераций'; return; }
+              contentEl.style.display = 'block';
+              btn.textContent = '▾ История генераций';
+              if (contentEl.dataset.loaded) return;
+              contentEl.dataset.loaded = '1';
+              contentEl.innerHTML = '<div class="hero-hist-loading">Загрузка истории…</div>';
+              heroesApi('/heroes/' + id + '/requests', { method: 'GET' }).then(function(d) {
+                var reqs = (d && d.requests) || [];
+                if (!reqs.length) { contentEl.innerHTML = '<div class="hero-hist-empty">Генераций пока нет</div>'; return; }
+                contentEl.innerHTML = reqs.map(function(r) {
+                  var statusEmoji = { completed:'✅', error:'❌', pending:'⏳', pending_payment:'💳' }[r.generation_status] || '🔄';
+                  var dateStr = r.created_at ? new Date(r.created_at).toLocaleString('ru-RU', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
+                  var html = '<div class="hero-hist-item">';
+                  html += '<div class="hero-hist-title">' + statusEmoji + ' ' + escHtml(r.title || '(без названия)') + '</div>';
+                  html += '<div class="hero-hist-meta">' + escHtml(dateStr) + (r.request_type ? ' · ' + escHtml(r.request_type) : '') + '</div>';
+                  if (r.lyrics) {
+                    html += '<div class="hero-hist-block-label">Текст песни</div>';
+                    html += '<div class="hero-hist-text">' + escHtml(r.lyrics) + '</div>';
+                  }
+                  if (r.detailed_analysis) {
+                    html += '<button type="button" class="hero-hist-toggle hha-toggle" style="margin-bottom:4px">▸ Анализ</button>';
+                    html += '<div class="hero-hist-text" style="display:none">' + escHtml(r.detailed_analysis) + '</div>';
+                  }
+                  if (r.cover_letter) {
+                    html += '<button type="button" class="hero-hist-toggle hha-toggle" style="margin-bottom:4px">▸ Сопроводительное письмо</button>';
+                    html += '<div class="hero-hist-text" style="display:none">' + escHtml(r.cover_letter) + '</div>';
+                  }
+                  if (r.audio_url) {
+                    html += '<a href="' + escHtml(r.audio_url) + '" target="_blank" class="hero-hist-audio">🎧 Слушать</a>';
+                  }
+                  html += '</div>';
+                  return html;
+                }).join('');
+                // Раскрытие анализа/письма
+                contentEl.querySelectorAll('.hha-toggle').forEach(function(tb) {
+                  tb.addEventListener('click', function() {
+                    var next = tb.nextElementSibling;
+                    if (!next) return;
+                    var open = next.style.display === 'block';
+                    next.style.display = open ? 'none' : 'block';
+                    tb.textContent = tb.textContent.replace(/^[▸▾]\s/, (open ? '▸ ' : '▾ '));
+                  });
+                });
+              }).catch(function() { contentEl.innerHTML = '<div class="hero-hist-empty">Не удалось загрузить историю</div>'; });
+            });
+          });
+
+          // Кнопки Соло / Вместе
+          listEl.querySelectorAll('.hero-solo-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              var heroId = btn.getAttribute('data-id');
+              var heroName = btn.getAttribute('data-name') || '';
+              var h = heroesCache.find(function(c){ return c.id === heroId; }) || {};
+              startHeroRequest({ hero: h, mode: 'single', forWho: heroName });
+            });
+          });
+          listEl.querySelectorAll('.hero-duo-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              var heroId = btn.getAttribute('data-id');
+              var heroName = btn.getAttribute('data-name') || '';
+              var h = heroesCache.find(function(c){ return c.id === heroId; }) || {};
+              startHeroRequest({ hero: h, mode: 'couple', forWho: heroName });
+            });
+          });
+
+          // Кнопки Изменить / Удалить
           listEl.querySelectorAll('.hero-edit-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function(e) {
+              e.stopPropagation();
               var id = btn.getAttribute('data-id');
               var h = heroesCache.find(function(c) { return c.id === id; });
               if (!h) return;
-              editingHeroId = id;
-              document.getElementById('heroName').value = h.name || '';
-              document.getElementById('heroBirthdate').value = h.birth_date || '';
-              document.getElementById('heroBirthtime').value = (h.birth_time || '').substring(0, 5);
-              document.getElementById('heroBirthplace').value = h.birth_place || '';
-              document.getElementById('heroBirthtimeUnknown').checked = !!h.birthtime_unknown;
-              document.getElementById('heroGender').value = h.gender || '';
-              document.getElementById('heroNotes').value = h.notes || '';
-              document.getElementById('heroFormWrap').style.display = 'block';
+              openHeroForm(h);
             });
           });
           listEl.querySelectorAll('.hero-delete-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function(e) {
+              e.stopPropagation();
               var id = btn.getAttribute('data-id');
               var name = btn.getAttribute('data-name') || 'этого героя';
-              if (!confirm(t('alertDeleteConfirm', { name: name }))) return;
-              heroesApi('/heroes/' + id, { method: 'DELETE' }).then(function() { loadHeroesList(); }).catch(function(e) { alert(t('alertError') + ': ' + (e.message || e)); });
+              if (!confirm('Удалить «' + name + '»?')) return;
+              heroesApi('/heroes/' + id, { method: 'DELETE' }).then(function() { loadHeroesList(); }).catch(function(e) { alert('Ошибка: ' + (e.message || e)); });
             });
           });
-        }).catch(function(e) {
-          listEl.innerHTML = '<p style="color:#dc2626">' + t('heroesLoadError') + '</p>';
+        }).catch(function() {
+          if (listEl) listEl.innerHTML = '<div style="color:rgba(239,68,68,0.7);font-size:0.85rem;text-align:center;padding:20px">Не удалось загрузить героев</div>';
         });
       }
-      var addHeroBtn = document.getElementById('addHeroBtn');
-      var heroFormWrap = document.getElementById('heroFormWrap');
-      var heroFormCancel = document.getElementById('heroFormCancel');
-      if (addHeroBtn) addHeroBtn.addEventListener('click', function() {
+
+      // Раскрытие/схлопывание карточки
+      window.toggleHeroCard = function(id) {
+        var card = document.getElementById('hcard-' + id);
+        if (!card) return;
+        card.classList.toggle('expanded');
+      };
+
+      // ── Форма героя ───────────────────────────────────────────────────────
+      function openHeroForm(h) {
+        var cabinet = document.getElementById('masterCabinet');
+        var formWrap = document.getElementById('heroFormWrap');
+        var titleEl = document.getElementById('heroFormTitle');
+        if (cabinet) cabinet.style.display = 'none';
+        if (!formWrap) return;
+        formWrap.style.display = 'block';
+        if (h && h.id) {
+          editingHeroId = h.id;
+          if (titleEl) titleEl.textContent = 'Изменить героя';
+        } else {
+          editingHeroId = null;
+          if (titleEl) titleEl.textContent = 'Добавить героя';
+        }
+        document.getElementById('heroName').value = (h && h.name) || '';
+        document.getElementById('heroRelationship').value = (h && h.relationship) || '';
+        document.getElementById('heroBirthdate').value = (h && h.birth_date) || '';
+        document.getElementById('heroBirthtime').value = ((h && h.birth_time) || '').substring(0, 5);
+        document.getElementById('heroBirthplace').value = (h && h.birth_place) || '';
+        document.getElementById('heroBirthtimeUnknown').checked = !!(h && h.birthtime_unknown);
+        document.getElementById('heroGender').value = (h && h.gender) || '';
+        document.getElementById('heroStyle').value = (h && h.preferred_style) || '';
+        document.getElementById('heroNotes').value = (h && h.notes) || '';
+        formWrap.scrollTop = 0;
+      }
+
+      function closeHeroForm() {
+        var cabinet = document.getElementById('masterCabinet');
+        var formWrap = document.getElementById('heroFormWrap');
+        if (formWrap) formWrap.style.display = 'none';
+        if (cabinet) cabinet.style.display = 'block';
         editingHeroId = null;
-        document.getElementById('heroName').value = '';
-        document.getElementById('heroBirthdate').value = '';
-        document.getElementById('heroBirthtime').value = '';
-        document.getElementById('heroBirthplace').value = '';
-        document.getElementById('heroBirthtimeUnknown').checked = false;
-        document.getElementById('heroGender').value = '';
-        document.getElementById('heroNotes').value = '';
-        heroFormWrap.style.display = 'block';
-      });
-      if (heroFormCancel) heroFormCancel.addEventListener('click', function() { heroFormWrap.style.display = 'none'; editingHeroId = null; });
+      }
+
+      var addHeroBtn = document.getElementById('addHeroBtn');
+      if (addHeroBtn) addHeroBtn.addEventListener('click', function() { openHeroForm(null); });
+      var heroFormCancel = document.getElementById('heroFormCancel');
+      if (heroFormCancel) heroFormCancel.addEventListener('click', closeHeroForm);
+
       var heroFormSave = document.getElementById('heroFormSave');
       if (heroFormSave) heroFormSave.addEventListener('click', function() {
         var name = (document.getElementById('heroName') || {}).value.trim();
-        if (!name) { alert(t('alertHeroName')); return; }
+        if (!name) { alert('Укажи имя героя'); return; }
+        heroFormSave.disabled = true;
+        heroFormSave.textContent = 'Сохраняем…';
         var payload = {
           initData: (tg && tg.initData) || '',
           name: name,
+          relationship: (document.getElementById('heroRelationship') || {}).value || null,
           birth_date: (document.getElementById('heroBirthdate') || {}).value || null,
           birth_time: (document.getElementById('heroBirthtime') || {}).value || null,
           birth_place: (document.getElementById('heroBirthplace') || {}).value.trim() || null,
           birthtime_unknown: (document.getElementById('heroBirthtimeUnknown') || {}).checked,
           gender: (document.getElementById('heroGender') || {}).value || null,
+          preferred_style: (document.getElementById('heroStyle') || {}).value.trim() || null,
           notes: (document.getElementById('heroNotes') || {}).value.trim() || null
         };
-        if (editingHeroId) {
-          heroesApi('/heroes/' + editingHeroId, { method: 'PATCH', body: payload }).then(function() {
-            heroFormWrap.style.display = 'none';
-            editingHeroId = null;
-            loadHeroesList();
-          }).catch(function(e) { alert(t('alertError') + ': ' + (e.message || e)); });
-        } else {
-          heroesApi('/heroes', { method: 'POST', body: payload }).then(function() {
-            heroFormWrap.style.display = 'none';
-            loadHeroesList();
-          }).catch(function(e) { alert(t('alertError') + ': ' + (e.message || e)); });
-        }
+        var apiCall = editingHeroId
+          ? heroesApi('/heroes/' + editingHeroId, { method: 'PATCH', body: payload })
+          : heroesApi('/heroes', { method: 'POST', body: payload });
+        apiCall.then(function() {
+          closeHeroForm();
+          loadHeroesList();
+        }).catch(function(e) {
+          alert('Ошибка: ' + (e.message || e));
+        }).finally(function() {
+          heroFormSave.disabled = false;
+          heroFormSave.textContent = 'Сохранить';
+        });
       });
+
       var heroesSearchBtn = document.getElementById('heroesSearchBtn');
       if (heroesSearchBtn) heroesSearchBtn.addEventListener('click', loadHeroesList);
       var heroesBackBtn = document.getElementById('heroesBackBtn');
-      if (heroesBackBtn) heroesBackBtn.addEventListener('click', function() { goToPage('homePage'); });
+      if (heroesBackBtn) heroesBackBtn.addEventListener('click', function() {
+        var formWrap = document.getElementById('heroFormWrap');
+        if (formWrap && formWrap.style.display !== 'none') { closeHeroForm(); return; }
+        goToPage('homePage');
+      });
       var todayHero = new Date();
       var heroBirthdateEl = document.getElementById('heroBirthdate');
       if (heroBirthdateEl) {
         heroBirthdateEl.max = todayHero.toISOString().split('T')[0];
         var minH = new Date(); minH.setFullYear(minH.getFullYear() - 100);
         heroBirthdateEl.min = minH.toISOString().split('T')[0];
+      }
+
+      // ── Быстрый запуск из карточки героя ─────────────────────────────────
+      function startHeroRequest(opts) {
+        var hero = opts.hero || {};
+        var mode = opts.mode || 'single';
+        var forWho = opts.forWho || hero.name || '';
+        goToPage('formPage');
+        // Устанавливаем режим (single/couple)
+        document.querySelectorAll('.mode-btn').forEach(function(b) {
+          b.classList.toggle('active', b.getAttribute('data-mode') === mode);
+        });
+        // Устанавливаем «для кого»
+        var forWhoEl = document.getElementById('forWho');
+        if (forWhoEl) forWhoEl.value = forWho;
+        // Подставляем дату/место из карточки героя
+        if (hero.birth_date) {
+          var bdEl = document.getElementById('birthdate2') || document.getElementById('partnerBirthdate');
+          if (bdEl) bdEl.value = hero.birth_date;
+        }
+        if (hero.preferred_style) {
+          var noteEl = document.getElementById('additionalNotes');
+          if (noteEl && !noteEl.value) noteEl.value = 'Стиль музыки: ' + hero.preferred_style;
+        }
+        // Переключаем на шаг 1 формы
+        var firstStepBtn = document.querySelector('.step-dots .step-dot[data-step="1"]') ||
+                           document.querySelector('[data-step="1"].step-panel');
+        if (firstStepBtn && firstStepBtn.click) firstStepBtn.click();
       }
 
       function fillFormFromProfile(profileOrTgUser) {

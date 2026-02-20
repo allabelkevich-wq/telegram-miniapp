@@ -80,6 +80,8 @@ function createHeroesRouter(supabase, botToken) {
     return res.json({ tariff: appUser.tariff || "basic", app_user_id: appUser.id });
   });
 
+  const HERO_SELECT = "id, name, birth_date, birth_time, birth_place, birthtime_unknown, gender, notes, preferred_style, relationship, created_at";
+
   router.post("/heroes", async (req, res) => {
     const initData = req.body?.initData ?? req.headers["x-telegram-init"];
     const telegramUserId = validateInitData(initData, botToken);
@@ -87,7 +89,7 @@ function createHeroesRouter(supabase, botToken) {
     const appUser = await getOrCreateAppUser(supabase, telegramUserId);
     if (!appUser) return res.status(500).json({ error: "Ошибка профиля" });
 
-    const { name, birth_date, birth_time, birth_place, birthtime_unknown, gender, notes } = req.body || {};
+    const { name, birth_date, birth_time, birth_place, birthtime_unknown, gender, notes, preferred_style, relationship } = req.body || {};
     if (!name || String(name).trim() === "") return res.status(400).json({ error: "Имя обязательно" });
 
     const row = {
@@ -99,9 +101,11 @@ function createHeroesRouter(supabase, botToken) {
       birthtime_unknown: !!birthtime_unknown,
       gender: gender || null,
       notes: notes != null ? String(notes).trim() : null,
+      preferred_style: preferred_style ? String(preferred_style).trim() : null,
+      relationship: relationship ? String(relationship).trim() : null,
     };
 
-    const { data, error } = await supabase.from("clients").insert(row).select("id, name, birth_date, birth_place, created_at").single();
+    const { data, error } = await supabase.from("clients").insert(row).select(HERO_SELECT).single();
     if (error) return res.status(500).json({ error: error.message });
     return res.status(201).json(data);
   });
@@ -113,7 +117,7 @@ function createHeroesRouter(supabase, botToken) {
     const appUser = await getOrCreateAppUser(supabase, telegramUserId);
     if (!appUser) return res.status(500).json({ error: "Ошибка профиля" });
 
-    let q = supabase.from("clients").select("id, name, birth_date, birth_time, birth_place, birthtime_unknown, gender, notes, created_at").eq("user_id", appUser.id).order("created_at", { ascending: false });
+    let q = supabase.from("clients").select(HERO_SELECT).eq("user_id", appUser.id).order("created_at", { ascending: false });
     const search = req.query?.search;
     if (search && String(search).trim()) q = q.ilike("name", `%${String(search).trim()}%`);
     const { data, error } = await q;
@@ -137,14 +141,39 @@ function createHeroesRouter(supabase, botToken) {
     if (req.body?.birthtime_unknown !== undefined) updates.birthtime_unknown = !!req.body.birthtime_unknown;
     if (req.body?.gender !== undefined) updates.gender = req.body.gender || null;
     if (req.body?.notes !== undefined) updates.notes = req.body.notes != null ? String(req.body.notes).trim() : null;
+    if (req.body?.preferred_style !== undefined) updates.preferred_style = req.body.preferred_style ? String(req.body.preferred_style).trim() : null;
+    if (req.body?.relationship !== undefined) updates.relationship = req.body.relationship ? String(req.body.relationship).trim() : null;
 
     if (Object.keys(updates).length === 0) return res.status(400).json({ error: "Нет полей для обновления" });
     if (updates.name !== undefined && updates.name === "") return res.status(400).json({ error: "Имя не может быть пустым" });
 
-    const { data, error } = await supabase.from("clients").update(updates).eq("id", id).eq("user_id", appUser.id).select("id, name, birth_date, birth_place, created_at").maybeSingle();
+    const { data, error } = await supabase.from("clients").update(updates).eq("id", id).eq("user_id", appUser.id).select(HERO_SELECT).maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
     if (!data) return res.status(404).json({ error: "Герой не найден" });
     return res.json(data);
+  });
+
+  // История генераций для конкретного героя — полные данные включая текст и анализ
+  router.get("/heroes/:id/requests", async (req, res) => {
+    const initData = req.query?.initData ?? req.headers["x-telegram-init"];
+    const telegramUserId = validateInitData(initData, botToken);
+    if (telegramUserId == null) return res.status(401).json({ error: "Неверные данные авторизации" });
+    const appUser = await getOrCreateAppUser(supabase, telegramUserId);
+    if (!appUser) return res.status(500).json({ error: "Ошибка профиля" });
+
+    const heroId = req.params.id;
+    const { data: hero } = await supabase.from("clients").select("id").eq("id", heroId).eq("user_id", appUser.id).maybeSingle();
+    if (!hero) return res.status(404).json({ error: "Герой не найден" });
+
+    const { data, error } = await supabase
+      .from("track_requests")
+      .select("id, title, lyrics, detailed_analysis, cover_letter, audio_url, generation_status, created_at, request_type, style_full, style_tags")
+      .eq("client_id", heroId)
+      .order("created_at", { ascending: false })
+      .limit(30);
+    if (error && /does not exist|relation/i.test(error.message)) return res.json({ requests: [] });
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ requests: data || [] });
   });
 
   router.delete("/heroes/:id", async (req, res) => {
