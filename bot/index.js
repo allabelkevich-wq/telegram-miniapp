@@ -1209,10 +1209,10 @@ async function sendAnalysisIfPaid(ctx) {
   }
 
   if (text.length <= TELEGRAM_MAX) {
-    await ctx.reply("📜 Твоя текстовая расшифровка к этой песне:\n\n" + text);
+    await ctx.reply("📜 Текстовая расшифровка запроса к этой песне:\n\n" + text);
     return;
   }
-  await ctx.reply("📜 Твоя расшифровка (несколько сообщений):");
+  await ctx.reply("📜 Текстовая расшифровка запроса (несколько сообщений):");
   for (let i = 0; i < text.length; i += TELEGRAM_MAX - 50) {
     await ctx.reply(text.slice(i, i + TELEGRAM_MAX - 50));
   }
