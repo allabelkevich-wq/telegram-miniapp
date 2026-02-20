@@ -564,7 +564,7 @@
     .hero-hist-toggle{font-size:0.78rem;color:rgba(255,255,255,0.35);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;margin-bottom:8px;min-height:unset;width:auto;box-shadow:none;animation:none;letter-spacing:0}
     .hero-style-badge{display:inline-block;font-size:0.72rem;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.22);color:rgba(212,175,55,0.75);border-radius:6px;padding:2px 8px;margin-top:5px}
     /* Страница помощи */
-    #helpPage .help-header{padding:max(48px,calc(env(safe-area-inset-top)+32px)) 20px 16px;text-align:center}
+    #helpPage .help-header{padding:max(48px,calc(env(safe-area-inset-top)+32px)) 20px 16px;text-align:center;position:relative}
     #helpPage .help-title{font-size:1.35rem;font-weight:700;color:#d4af37;margin-bottom:4px}
     #helpPage .help-subtitle{font-size:0.85rem;color:rgba(255,255,255,0.45);line-height:1.5}
     .help-section{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;margin:0 0 10px;overflow:hidden}
@@ -579,8 +579,9 @@
     .help-section-body ul{margin:6px 0 8px;padding-left:18px}
     .help-section-body ul li{margin-bottom:4px}
     .help-section-body strong{color:rgba(255,255,255,0.82)}
-    .help-support-btn{width:100%;padding:16px;border-radius:14px;background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08));border:1px solid rgba(212,175,55,0.35);color:#d4af37;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;transition:background .2s}
-    .help-support-btn:active{background:rgba(212,175,55,0.22)}
+    .help-support-btn{width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08)) !important;border:1px solid rgba(212,175,55,0.35);color:#d4af37 !important;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-top:16px;transition:background .2s;animation:none !important;box-shadow:none !important;min-height:48px}
+    .help-support-btn:hover{background:rgba(212,175,55,0.22) !important}
+    .help-support-btn:active{background:rgba(212,175,55,0.28) !important}
     .birthplace-wrap{position:relative}
     .birthplace-suggestions{display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--tg-theme-bg-color,rgba(15,12,40,0.98));border:2px solid rgba(212,175,55,0.5);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.3);max-height:280px;overflow-y:auto;z-index:50;list-style:none;padding:6px 0}
     .birthplace-suggestions li{padding:14px 18px;cursor:pointer;font-size:1.05rem;color:var(--tg-theme-text-color,#fff);border-bottom:1px solid rgba(255,255,255,0.1);transition:all .2s;font-weight:400}
@@ -782,7 +783,7 @@
       </div><!-- /нижняя обёртка -->
 
       <footer>
-        <p>YupSoul • 2026 • v1.2.28</p>
+        <p>YupSoul • 2026 • v1.2.29</p>
       </footer>
     </div>
 
@@ -1214,7 +1215,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026 • v1.2.28</p>
+        <p>YupSoul • 2026 • v1.2.29</p>
       </footer>
     </div>
     
@@ -1317,7 +1318,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026 • v1.2.28</p>
+        <p>YupSoul • 2026 • v1.2.29</p>
       </footer>
     </div>
 
@@ -4840,8 +4841,11 @@
       var helpSupportBtn = document.getElementById('helpSupportBtn');
       if (helpSupportBtn) helpSupportBtn.addEventListener('click', function() {
         var supportUrl = 'https://t.me/Yup_Soul_bot';
-        if (tg && tg.openTelegramLink) tg.openTelegramLink(supportUrl);
-        else window.open(supportUrl, '_blank');
+        try {
+          if (tg && tg.openLink) { tg.openLink(supportUrl); return; }
+          if (tg && tg.openTelegramLink) { tg.openTelegramLink(supportUrl); return; }
+        } catch(e) {}
+        window.open(supportUrl, '_blank');
       });
       var newKeyBtn = document.getElementById('newKeyBtn');
       if (newKeyBtn) newKeyBtn.addEventListener('click', function() {
