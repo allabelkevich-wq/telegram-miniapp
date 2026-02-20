@@ -496,11 +496,11 @@
     /* Слайды */
     .onboarding-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:max(80px,calc(env(safe-area-inset-top)+72px)) 36px max(100px,calc(env(safe-area-inset-bottom)+80px));text-align:center;opacity:0;pointer-events:none;transition:opacity .3s ease;z-index:1}
     .onboarding-slide.active{opacity:1;pointer-events:auto}
-    .onboarding-icon{font-size:4.2rem;margin-bottom:22px;animation:iconBounce .4s ease-out}
+    .onboarding-icon{font-size:3.2rem;margin-bottom:16px;animation:iconBounce .4s ease-out}
     @keyframes iconBounce{0%{transform:scale(0.6);opacity:0}65%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
-    .onboarding-title{font-size:1.7rem;font-weight:700;color:#fff;margin:0 0 14px 0;line-height:1.22;max-width:300px;letter-spacing:-0.3px}
-    .onboarding-text{font-size:1rem;line-height:1.62;color:rgba(255,255,255,0.72);margin:0 0 32px 0;max-width:290px}
-    .onboarding-btn{padding:15px 40px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1.05rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(212,175,55,0.3);transition:transform .2s,box-shadow .2s;min-width:180px;width:auto;margin-top:0;min-height:unset;animation:none}
+    .onboarding-title{font-size:1.45rem;font-weight:700;color:#fff;margin:0 0 10px 0;line-height:1.25;max-width:300px;letter-spacing:-0.2px}
+    .onboarding-text{font-size:0.88rem;line-height:1.65;color:rgba(255,255,255,0.68);margin:0 0 24px 0;max-width:280px}
+    .onboarding-btn{padding:13px 36px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:0.97rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(212,175,55,0.3);transition:transform .2s,box-shadow .2s;min-width:180px;width:auto;margin-top:0;min-height:unset;animation:none}
     .onboarding-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(212,175,55,0.4)}
     .onboarding-btn:active{transform:translateY(1px)}
     .onboarding-dots{display:none}
@@ -4320,45 +4320,54 @@
       })();
 
       // ── Быстрый запуск из карточки героя ─────────────────────────────────
-      function startHeroRequest(opts) {
-        var hero = opts.hero || {};
-        var mode = opts.mode || 'single';
+      // Хранит данные heroRequest пока loadForWhoSelect не завершился асинхронно
+      var _pendingHeroRequest = null;
 
-        goToPage('formPage');
-
-        // Правильно переключаем режим через setMode — показывает/скрывает secondPersonForm
-        if (typeof setMode === 'function') setMode(mode);
-
+      function _applyHeroRequest(hero, mode) {
+        setMode(mode);
         if (mode === 'couple') {
-          // ── Режим «для двоих»: герой = второй человек ──
-          // В couple-режиме forWhoWrap не нужен — скрываем чтобы не перезаписал person1
+          // Скрываем forWhoWrap (может быть показан async-колбэком loadForWhoSelect)
           var fww = document.getElementById('forWhoWrap');
           if (fww) fww.style.display = 'none';
-          // Заполняем все поля person2 из карточки героя
-          var n2  = document.getElementById('name2');
-          var bd2 = document.getElementById('birthdate2');
-          var bt2 = document.getElementById('birthtime2');
-          var unk2= document.getElementById('unknown2');
-          var g2  = document.getElementById('gender2');
-          var bp2 = document.getElementById('birthplace2');
 
-          if (n2)   n2.value  = hero.name || '';
-          if (bd2)  bd2.value = hero.birth_date || '';
-          if (bt2)  bt2.value = (hero.birth_time || '').substring(0, 5);
+          // Предзаполняем person1 профилем текущего пользователя
+          fillFormFromProfile(userProfile || (tg && tg.initDataUnsafe && tg.initDataUnsafe.user));
+
+          // Заполняем поля person2 из карточки героя
+          var n2   = document.getElementById('name2');
+          var bd2  = document.getElementById('birthdate2');
+          var bt2  = document.getElementById('birthtime2');
+          var unk2 = document.getElementById('unknown2');
+          var g2   = document.getElementById('gender2');
+          var bp2  = document.getElementById('birthplace2');
+
+          if (n2)   n2.value   = hero.name || '';
+          if (bd2)  bd2.value  = (hero.birth_date || '').substring(0, 10);
+          if (bt2)  bt2.value  = (hero.birth_time || '').substring(0, 5);
           if (unk2) unk2.checked = !!hero.birthtime_unknown;
-          if (g2)   g2.value  = hero.gender || '';
-          if (bp2) bp2.value = hero.birth_place || '';
-          // Предзаполняем запрос стилем героя
+          if (g2)   g2.value   = hero.gender || '';
+          if (bp2) {
+            bp2.value = hero.birth_place || '';
+            if (hero.birth_place && hero.birth_place.trim().length >= 3) {
+              bp2.setAttribute('data-from-profile', '1');
+              bp2.setAttribute('data-place-selected', '1');
+            }
+          }
           if (hero.preferred_style) {
             var reqEl = document.getElementById('request');
             if (reqEl && !reqEl.value) reqEl.value = 'Создать песню для нас двоих. Предпочтительный стиль: ' + hero.preferred_style;
           }
 
+          // Скроллим к secondPersonForm чтобы пользователь видел заполненные поля
+          setTimeout(function() {
+            var sf = document.getElementById('secondPersonForm');
+            if (sf) try { sf.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(e) {}
+          }, 100);
+
         } else {
-          // ── Режим «соло»: герой = person1, clientId передаётся бэкенду ──
+          // ── Режим «соло»: герой = person1 ──
           var forWhoEl = document.getElementById('forWho');
           if (forWhoEl && hero.id) {
-            // Гарантируем что опция существует до установки value (select может ещё не загрузиться)
             if (!forWhoEl.querySelector('option[value="' + hero.id + '"]')) {
               var pendingOpt = document.createElement('option');
               pendingOpt.value = hero.id;
@@ -4368,14 +4377,31 @@
             }
             forWhoEl.value = hero.id;
           }
-          // Заполняем поля person1 данными героя чтобы прошла валидация
-          if (typeof fillFormFromHero === 'function') fillFormFromHero(hero);
-          // Предзаполняем стиль в запросе
+          fillFormFromHero(hero);
           if (hero.preferred_style) {
             var reqEl = document.getElementById('request');
             if (reqEl && !reqEl.value) reqEl.value = 'Создать песню. Предпочтительный стиль: ' + hero.preferred_style;
           }
         }
+      }
+
+      function startHeroRequest(opts) {
+        var hero = opts.hero || {};
+        var mode = opts.mode || 'single';
+
+        _pendingHeroRequest = { hero: hero, mode: mode };
+        goToPage('formPage');
+
+        // Применяем немедленно
+        _applyHeroRequest(hero, mode);
+        // И повторяем через 600мс — после того как loadForWhoSelect завершит async-запрос
+        // и попытается перезаписать forWhoWrap/heroesCache
+        setTimeout(function() {
+          if (_pendingHeroRequest) {
+            _applyHeroRequest(_pendingHeroRequest.hero, _pendingHeroRequest.mode);
+            _pendingHeroRequest = null;
+          }
+        }, 600);
       }
 
       function fillFormFromProfile(profileOrTgUser) {
@@ -4468,16 +4494,25 @@
         var sel = document.getElementById('forWho');
         if (!wrap || !sel) return;
         if (userTariff !== 'master') { wrap.style.display = 'none'; return; }
-        wrap.style.display = 'block';
+        // Не показываем в couple-режиме (герой = person2, forWho не нужен)
+        if (selectedMode !== 'couple') wrap.style.display = 'block';
         heroesApi('/heroes', { method: 'GET' }).then(function(d) {
           heroesCache = (d && d.clients) || [];
           sel.innerHTML = '<option value="">' + t('forMyself') + '</option>' + heroesCache.map(function(h) { return '<option value="' + (h.id || '') + '">' + t('forHero', { name: h.name || '—' }) + '</option>'; }).join('');
-          sel.addEventListener('change', function() {
+          // Используем onchange вместо addEventListener чтобы не накапливать дублирующие слушатели
+          sel.onchange = function() {
             var id = sel.value;
             if (!id) { fillFormFromHero(null); return; }
             var hero = heroesCache.find(function(c) { return c.id === id; });
             if (hero) fillFormFromHero(hero);
-          });
+          };
+          // После загрузки тоже проверяем режим
+          if (selectedMode !== 'couple') wrap.style.display = 'block';
+          else wrap.style.display = 'none';
+          // Если есть ожидающий героям — переприменяем (защита от гонки)
+          if (_pendingHeroRequest) {
+            _applyHeroRequest(_pendingHeroRequest.hero, _pendingHeroRequest.mode);
+          }
         }).catch(function() { wrap.style.display = 'none'; });
       }
 
