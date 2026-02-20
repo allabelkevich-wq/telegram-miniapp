@@ -710,9 +710,16 @@ async function saveRequest(data) {
     row.birthplace_lon = Number(data.birthplaceLon);
   }
   if (data.client_id && supabase) {
-    const { data: client, error: clientErr } = await supabase.from("clients").select("name, birth_date, birth_time, birth_place, birthtime_unknown, gender").eq("id", data.client_id).maybeSingle();
+    const { data: client, error: clientErr } = await supabase.from("clients").select("name, birth_date, birth_time, birth_place, birthtime_unknown, gender, preferred_style, notes").eq("id", data.client_id).maybeSingle();
     if (!clientErr && client) {
       row = { ...row, client_id: data.client_id, name: client.name ?? row.name, birthdate: client.birth_date ?? row.birthdate, birthtime: client.birth_time ?? row.birthtime, birthplace: client.birth_place ?? row.birthplace, birthtime_unknown: !!client.birthtime_unknown, gender: client.gender ?? row.gender };
+      // Добавляем preferred_style и notes героя в текст запроса, чтобы они попали в промпт LLM
+      const extras = [];
+      if (client.preferred_style) extras.push(`Предпочтительный музыкальный стиль: ${client.preferred_style}`);
+      if (client.notes) extras.push(`Заметки о человеке: ${client.notes}`);
+      if (extras.length) {
+        row.request = [row.request || 'создать песню', ...extras].join('\n');
+      }
     }
   }
   const record = { id: null, ...row, created_at: new Date().toISOString() };

@@ -4337,9 +4337,10 @@
           var bdEl = document.getElementById('birthdate2') || document.getElementById('partnerBirthdate');
           if (bdEl) bdEl.value = hero.birth_date;
         }
+        // Подставляем preferred_style в поле запроса, если оно пустое
         if (hero.preferred_style) {
-          var noteEl = document.getElementById('additionalNotes');
-          if (noteEl && !noteEl.value) noteEl.value = 'Стиль музыки: ' + hero.preferred_style;
+          var reqEl = document.getElementById('request');
+          if (reqEl && !reqEl.value) reqEl.value = 'Создать песню. Предпочтительный стиль: ' + hero.preferred_style;
         }
         // Переключаем на шаг 1 формы
         var firstStepBtn = document.querySelector('.step-dots .step-dot[data-step="1"]') ||
