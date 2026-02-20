@@ -375,14 +375,18 @@ function parseResponse(text) {
   const titleMatch = text.match(/«([^»]+)»/);
   if (titleMatch) title = titleMatch[1].trim();
   
-  // Стиль, вокал, настроение из блока для Suno ([style:] [vocal:] [mood:])
+  // Стиль, вокал, настроение, инструменты, темп из блока MUSIC PROMPT для Suno
   const styleMatch = text.match(/\[style:\s*([^\]]+)\]/i);
   if (styleMatch) style = styleMatch[1].trim();
   const vocalMatch = text.match(/\[vocal:\s*([^\]]+)\]/i);
   const vocal = vocalMatch ? vocalMatch[1].trim() : "";
   const moodMatch = text.match(/\[mood:\s*([^\]]+)\]/i);
   const mood = moodMatch ? moodMatch[1].trim() : "";
-  const styleFull = [style, vocal, mood].filter(Boolean).join(" | ");
+  const instrumentsMatch = text.match(/\[instruments:\s*([^\]]+)\]/i);
+  const instruments = instrumentsMatch ? instrumentsMatch[1].trim() : "";
+  const tempoMatch = text.match(/\[tempo:\s*([^\]]+)\]/i);
+  const tempo = tempoMatch ? tempoMatch[1].trim() : "";
+  const styleFull = [style, vocal, mood, instruments, tempo].filter(Boolean).join(" | ");
   
   // Универсальный ограничитель конца лирики: MUSIC PROMPT / [style:] / СОПРОВОДИТЕЛЬНОЕ ПИСЬМО
   const LYRICS_END_PATTERN = /\n\s*(?:MUSIC PROMPT|КЛЮЧЕВЫЕ ПРИНЦИПЫ|СОПРОВОДИТЕЛЬНОЕ ПИСЬМО|\[style:\s*[^\]]+\]|\[vocal:\s*[^\]]+\])/i;
