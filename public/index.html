@@ -677,8 +677,9 @@
       </div>
 
       <!-- Баннер восстановления зависшей заявки -->
-      <div id="recoveryBanner" style="display:none;margin:0 0 14px 0;background:rgba(5,150,105,0.10);border:1px solid rgba(16,185,129,0.28);border-radius:14px;padding:14px 16px;">
-        <div id="recoveryBannerText" style="font-size:0.88rem;color:rgba(209,250,229,0.85);line-height:1.5;margin-bottom:10px;">
+      <div id="recoveryBanner" style="display:none;margin:0 0 14px 0;background:rgba(5,150,105,0.10);border:1px solid rgba(16,185,129,0.28);border-radius:14px;padding:14px 16px;position:relative;">
+        <button id="recoveryDismissBtn" style="position:absolute;top:8px;right:10px;background:none;border:none;color:rgba(255,255,255,0.3);font-size:1rem;line-height:1;cursor:pointer;padding:2px 4px;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;font-weight:400;" title="Закрыть">✕</button>
+        <div id="recoveryBannerText" style="font-size:0.88rem;color:rgba(209,250,229,0.85);line-height:1.5;margin-bottom:10px;padding-right:20px;">
           🎁 <strong style="color:#6ee7b7;">Твоя заявка ждёт!</strong> Получи первую песню бесплатно.
         </div>
         <button id="recoveryClaimBtn" style="width:100%;padding:12px;border-radius:11px;background:linear-gradient(135deg,#059669,#10b981);border:none;color:#fff;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;">
@@ -2217,6 +2218,10 @@
               if (rb) rb.textContent = '💳 Перейти к оплате';
             }
             banner.style.display = 'block';
+            var dismissBtn = document.getElementById('recoveryDismissBtn');
+            if (dismissBtn) dismissBtn.addEventListener('click', function() {
+              banner.style.display = 'none';
+            });
             if (rb) rb.addEventListener('click', function() {
               banner.style.display = 'none';
               showPaymentOverlay();
