@@ -4323,29 +4323,60 @@
       function startHeroRequest(opts) {
         var hero = opts.hero || {};
         var mode = opts.mode || 'single';
-        var forWho = opts.forWho || hero.name || '';
+
         goToPage('formPage');
-        // Устанавливаем режим (single/couple)
-        document.querySelectorAll('.mode-btn').forEach(function(b) {
-          b.classList.toggle('active', b.getAttribute('data-mode') === mode);
-        });
-        // Устанавливаем «для кого»
-        var forWhoEl = document.getElementById('forWho');
-        if (forWhoEl) forWhoEl.value = forWho;
-        // Подставляем дату/место из карточки героя
-        if (hero.birth_date) {
-          var bdEl = document.getElementById('birthdate2') || document.getElementById('partnerBirthdate');
-          if (bdEl) bdEl.value = hero.birth_date;
+
+        // Правильно переключаем режим через setMode — показывает/скрывает secondPersonForm
+        if (typeof setMode === 'function') setMode(mode);
+
+        if (mode === 'couple') {
+          // ── Режим «для двоих»: герой = второй человек ──
+          // Заполняем все поля person2 из карточки героя
+          var n2  = document.getElementById('name2');
+          var bd2 = document.getElementById('birthdate2');
+          var bt2 = document.getElementById('birthtime2');
+          var unk2= document.getElementById('unknown2');
+          var g2  = document.getElementById('gender2');
+          var bp2 = document.getElementById('birthplace2');
+
+          if (n2)   n2.value  = hero.name || '';
+          if (bd2)  bd2.value = hero.birth_date || '';
+          if (bt2)  bt2.value = (hero.birth_time || '').substring(0, 5);
+          if (unk2) unk2.checked = !!hero.birthtime_unknown;
+          if (g2)   g2.value  = hero.gender || '';
+          if (bp2) {
+            bp2.value = hero.birth_place || '';
+            // Если место есть — помечаем как выбранное (для валидации)
+            if (hero.birth_place) {
+              bp2.setAttribute('data-place-selected', '1');
+              var w2 = bp2.closest('.birthplace-wrap') || bp2.parentNode;
+              if (w2 && w2.classList) w2.classList.add('has-place');
+            }
+          }
+          // Предзаполняем запрос стилем героя
+          if (hero.preferred_style) {
+            var reqEl = document.getElementById('request');
+            if (reqEl && !reqEl.value) reqEl.value = 'Создать песню для нас двоих. Предпочтительный стиль: ' + hero.preferred_style;
+          }
+          // Переходим сразу на шаг с данными (step 2)
+          var step2Btn = document.querySelector('.step-dot[data-step="2"]');
+          if (step2Btn && step2Btn.click) setTimeout(function(){ step2Btn.click(); }, 50);
+
+        } else {
+          // ── Режим «соло»: выбираем героя в #forWho (value = hero.id) и заполняем форму ──
+          var forWhoEl = document.getElementById('forWho');
+          if (forWhoEl && hero.id) forWhoEl.value = hero.id;
+          // Заполняем поля person1 данными героя (как при выборе из дропдауна)
+          if (typeof fillFormFromHero === 'function') fillFormFromHero(hero);
+          // Предзаполняем стиль в запросе
+          if (hero.preferred_style) {
+            var reqEl = document.getElementById('request');
+            if (reqEl && !reqEl.value) reqEl.value = 'Создать песню. Предпочтительный стиль: ' + hero.preferred_style;
+          }
+          // Переходим к шагу с данными (step 2)
+          var step2Btn = document.querySelector('.step-dot[data-step="2"]');
+          if (step2Btn && step2Btn.click) setTimeout(function(){ step2Btn.click(); }, 50);
         }
-        // Подставляем preferred_style в поле запроса, если оно пустое
-        if (hero.preferred_style) {
-          var reqEl = document.getElementById('request');
-          if (reqEl && !reqEl.value) reqEl.value = 'Создать песню. Предпочтительный стиль: ' + hero.preferred_style;
-        }
-        // Переключаем на шаг 1 формы
-        var firstStepBtn = document.querySelector('.step-dots .step-dot[data-step="1"]') ||
-                           document.querySelector('[data-step="1"].step-panel');
-        if (firstStepBtn && firstStepBtn.click) firstStepBtn.click();
       }
 
       function fillFormFromProfile(profileOrTgUser) {
