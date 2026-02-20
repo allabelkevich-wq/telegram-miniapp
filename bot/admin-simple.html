@@ -568,7 +568,7 @@
 
       // ── Кнопки действий ───────────────────────────────────────────────────
       const actionsBlock = `<div style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 0 4px;border-top:1px solid #1e293b;margin-top:8px;">
-        <button class="rmb rmb-orange" style="padding:7px 14px;font-size:12px;" onclick="restart('${safeId}')">${gs === 'completed' ? '🔄 Перегенерировать' : '🔄 Перезапустить'}</button>
+        <button class="rmb rmb-orange" style="padding:7px 14px;font-size:12px;" onclick="restart('${safeId}',this)">${gs === 'completed' ? '🔄 Перегенерировать' : '🔄 Перезапустить'}</button>
         ${isPendingPay ? `<button class="rmb rmb-green" style="padding:7px 14px;font-size:12px;" onclick="markPaid('${safeId}')">✅ Оплачено</button>` : ''}
         ${gs === 'pending_payment' ? `<button class="rmb rmb-red" style="padding:7px 14px;font-size:12px;" onclick="cancelRequest('${safeId}',this)">❌ Отменить</button>` : ''}
         ${r.audio_url ? `<button class="rmb rmb-green" style="padding:7px 14px;font-size:12px;" onclick="deliver('${safeId}',this)">📤 Отправить</button>` : ''}
@@ -848,16 +848,23 @@
     async function refreshAfterAction() {
       const token = getToken();
       if (!token) return;
+
+      // Запоминаем позицию и открытые строки перед обновлением
+      const savedScroll = window.scrollY;
+      const expandedIds = [...document.querySelectorAll('.req-row.expanded')]
+        .map(r => r.getAttribute('data-request-id')).filter(Boolean);
+      const loadedIds = [...document.querySelectorAll('.req-row[data-loaded="true"]')]
+        .map(r => r.getAttribute('data-request-id')).filter(Boolean);
+
       const el = document.getElementById('requests');
-      // Плавное затухание вместо полного сброса
-      if (el) el.style.transition = 'opacity .2s';
-      if (el) el.style.opacity = '0.4';
+      if (el) el.style.opacity = '0.5';
+
       try {
         const [statsRes, listRes] = await Promise.all([
           fetchJson(API_BASE + '/api/admin/stats?' + new URLSearchParams({ token }).toString(), { headers: authHeaders() }, 10000),
           fetchJson(API_BASE + '/api/admin/requests?limit=50&status=' + currentFilter + authQuery(), { headers: authHeaders() }, 10000),
         ]);
-        // Обновляем счётчики
+
         if (statsRes.json && statsRes.json.success && statsRes.json.stats) {
           const s = statsRes.json.stats;
           document.getElementById('total').textContent = s.total;
@@ -869,16 +876,33 @@
           const cancelledEl = document.getElementById('stat-cancelled');
           if (cancelledEl) cancelledEl.textContent = s.cancelled || 0;
         }
-        // Обновляем список заявок
+
         if (listRes.json && listRes.json.success && Array.isArray(listRes.json.data)) {
           renderRequests(listRes.json.data);
+
+          // Восстанавливаем раскрытые строки без повторной загрузки деталей
+          for (const id of expandedIds) {
+            const row = document.getElementById('req-row-' + id);
+            const body = document.getElementById('req-body-' + id);
+            if (!row || !body) continue;
+            row.classList.add('expanded');
+            body.style.display = 'block';
+            if (loadedIds.includes(id)) {
+              row.setAttribute('data-loaded', 'true');
+              // Перезагружаем детали для раскрытых строк чтобы отобразить новый статус
+              loadFullDetail(id, body, row);
+            }
+          }
         }
-        // Обновляем незавершённые заявки
-        loadUnpaidRequests();
+
+        // Тихое обновление незавершённых заявок — без спиннера
+        loadUnpaidRequests(true);
       } catch(e) {
         // При ошибке просто восстанавливаем видимость
       } finally {
-        if (el) { el.style.opacity = '1'; el.style.transition = ''; }
+        if (el) { el.style.opacity = '1'; }
+        // Восстанавливаем позицию прокрутки
+        window.scrollTo({ top: savedScroll, behavior: 'instant' });
       }
     }
 
@@ -959,7 +983,7 @@
             <span class="req-row-status ${statusClass(gs)}" style="font-size:10px;padding:2px 8px;">${statusLabel(gs)}</span>
             ${paymentMethodBadge(r)}
             <div class="req-row-btns" onclick="event.stopPropagation()">
-              <button class="rmb rmb-orange" onclick="restart('${safeId}')" title="${gs === 'completed' ? 'Перегенерировать' : 'Перезапустить'}">↻</button>
+              <button class="rmb rmb-orange" onclick="restart('${safeId}',this)" title="${gs === 'completed' ? 'Перегенерировать' : 'Перезапустить'}">↻</button>
               ${isPendingPay ? `<button class="rmb rmb-green" onclick="markPaid('${safeId}')" title="Отметить оплаченным">✓ Оплачен</button>` : ''}
               ${gs === 'pending_payment' ? `<button class="rmb rmb-red" onclick="cancelRequest('${safeId}', this)" title="Отменить">✕</button>` : ''}
               ${r.audio_url ? `<button class="rmb rmb-green" onclick="window.open('${r.audio_url.replace(/'/g,"\\'")}');event.stopPropagation();" title="Слушать аудио">▶</button>` : ''}
@@ -1034,12 +1058,12 @@
     }
 
     // Загружает незавершённые заявки (pending_payment) в отдельную секцию вверху
-    async function loadUnpaidRequests() {
+    async function loadUnpaidRequests(silent) {
       const section = document.getElementById('unpaidSection');
       const list = document.getElementById('unpaidList');
       const badge = document.getElementById('unpaidBadge');
       if (!list) return;
-      list.innerHTML = '<div class="loading"><div class="spinner"></div>Загрузка…</div>';
+      if (!silent) list.innerHTML = '<div class="loading"><div class="spinner"></div>Загрузка…</div>';
       try {
         const result = await fetchJson(
           API_BASE + '/api/admin/requests?status=pending_payment&limit=50' + authQuery(),
@@ -1632,16 +1656,26 @@
       document.body.appendChild(modal);
     }
 
-    window.restart = async function restart(id) {
-      if (!confirm('Перезапустить генерацию? / Restart generation?')) return;
+    window.restart = async function restart(id, btnEl) {
+      if (!confirm('Перезапустить генерацию?')) return;
+      if (btnEl) { btnEl.disabled = true; btnEl.textContent = '⏳'; }
       try {
         const result = await fetchJson(API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + '/restart' + authQueryFromPath(), { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() } });
         const json = result.json;
         const res = result.res;
-        if (json.success) { alert('✅ Генерация перезапущена'); refreshAfterAction(); }
-        else alert('Ошибка: ' + (json.error || res.status));
+        if (json.success) {
+          // Обновляем бейдж статуса прямо в строке без перерисовки всего списка
+          const statusBadge = document.querySelector('#req-row-' + CSS.escape(id) + ' .req-status');
+          if (statusBadge) { statusBadge.className = 'req-status status-pending'; statusBadge.textContent = '⏳ В работе'; }
+          // Обновляем только счётчики и незавершённые
+          await refreshAfterAction();
+        } else {
+          alert('Ошибка: ' + (json.error || res.status));
+          if (btnEl) { btnEl.disabled = false; btnEl.textContent = '🔄'; }
+        }
       } catch (e) {
         alert('Ошибка: ' + (e && e.message ? e.message : e));
+        if (btnEl) { btnEl.disabled = false; btnEl.textContent = '🔄'; }
       }
     }
 
