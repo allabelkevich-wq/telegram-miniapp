@@ -511,18 +511,18 @@
     .stories-tap-prev{left:0}
     .stories-tap-next{right:0}
     /* Бренд-блок — верхняя часть, в потоке */
-    .ob-brand{position:relative;z-index:6;text-align:center;padding:20px 32px 0;pointer-events:none;flex-shrink:0}
-    .ob-brand-logo{width:90px;height:90px;margin:0 auto 10px;display:block;opacity:0.96;filter:drop-shadow(0 4px 18px rgba(212,175,55,0.32))}
-    .ob-brand-divider{width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.45),transparent);margin:10px auto}
-    .ob-brand-tag{font-size:0.78rem;color:rgba(255,255,255,0.48);line-height:1.6;max-width:250px;margin:0 auto;letter-spacing:0.01em}
-    /* Слайды — flex-grow, занимают всё оставшееся пространство */
-    .onboarding-slide{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:0 36px 16px;text-align:center}
+    .ob-brand{position:relative;z-index:6;text-align:center;padding:clamp(10px,3vh,24px) 32px 0;pointer-events:none;flex-shrink:0}
+    .ob-brand-logo{width:76px;height:76px;margin:0 auto 8px;display:block;opacity:0.96;filter:drop-shadow(0 4px 16px rgba(212,175,55,0.3))}
+    .ob-brand-divider{width:36px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent);margin:8px auto}
+    .ob-brand-tag{font-size:0.75rem;color:rgba(212,175,55,0.5);line-height:1.55;max-width:240px;margin:0 auto;letter-spacing:0.02em}
+    /* Слайды — flex-grow, контент у верхнего края своей зоны */
+    .onboarding-slide{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;justify-content:flex-start;flex:1;padding:clamp(20px,6vh,52px) 36px clamp(16px,4vh,32px);text-align:center}
     .onboarding-slide.active{display:flex}
-    .onboarding-icon{font-size:3rem !important;margin-bottom:14px;animation:iconBounce .4s ease-out}
+    .onboarding-icon{font-size:2.6rem !important;margin-bottom:12px;animation:iconBounce .4s ease-out}
     @keyframes iconBounce{0%{transform:scale(0.6);opacity:0}65%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
-    .onboarding-title{font-size:1.4rem !important;font-weight:700 !important;color:#fff;margin:0 0 10px 0;line-height:1.25;max-width:300px;letter-spacing:-0.2px}
-    .onboarding-text{font-size:0.86rem !important;line-height:1.6 !important;color:rgba(255,255,255,0.68);margin:0 0 24px 0;max-width:280px}
-    .onboarding-btn{padding:13px 36px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:0.95rem !important;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(212,175,55,0.3);transition:transform .2s,box-shadow .2s;min-width:180px;width:auto;margin-top:0;min-height:unset;animation:none}
+    .onboarding-title{font-size:1.25rem !important;font-weight:700 !important;color:rgba(255,248,225,0.96);margin:0 0 10px 0;line-height:1.3;max-width:280px;letter-spacing:-0.1px}
+    .onboarding-text{font-size:0.82rem !important;line-height:1.6 !important;color:rgba(255,255,255,0.55);margin:0 0 20px 0;max-width:260px}
+    .onboarding-btn{padding:12px 32px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:0.92rem !important;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(212,175,55,0.3);transition:transform .2s,box-shadow .2s;min-width:160px;width:auto;margin-top:0;min-height:unset;animation:none}
     .onboarding-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(212,175,55,0.4)}
     .onboarding-btn:active{transform:translateY(1px)}
     .onboarding-dots{display:none}
@@ -796,7 +796,7 @@
       </div><!-- /нижняя обёртка -->
 
       <footer>
-        <p>YupSoul • 2026 • v1.2.36</p>
+        <p>YupSoul • 2026 • v1.2.37</p>
       </footer>
     </div>
 
@@ -1228,7 +1228,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026 • v1.2.36</p>
+        <p>YupSoul • 2026 • v1.2.37</p>
       </footer>
     </div>
     
@@ -1331,7 +1331,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026 • v1.2.36</p>
+        <p>YupSoul • 2026 • v1.2.37</p>
       </footer>
     </div>
 
