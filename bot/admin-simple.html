@@ -1096,6 +1096,7 @@
               '<button class="btn btn-restore" style="min-width:120px;padding:8px 12px;font-size:13px;" onclick="restoreRequest(\'' + safeId + '\', this)" title="Засчитать как подарочный и перезапустить генерацию">🔄 Восстановить</button>' +
               '<button class="btn btn-success" style="min-width:110px;padding:8px 12px;font-size:13px;" onclick="markPaid(\'' + safeId + '\')">✅ Оплачено</button>' +
               '<button class="btn btn-cancel" style="min-width:110px;padding:8px 12px;font-size:13px;" onclick="cancelRequest(\'' + safeId + '\', this)">❌ Отменить</button>' +
+              '<button class="btn btn-danger" style="min-width:90px;padding:8px 12px;font-size:13px;background:#7f1d1d;border-color:#991b1b;color:#fca5a5;" onclick="deleteUnpaidRequest(\'' + safeId + '\', this)" title="Удалить заявку из базы навсегда">🗑 Удалить</button>' +
             '</div>' +
           '</div>';
         }).join('');
@@ -1124,6 +1125,45 @@
       } catch (e) {
         alert('Ошибка: ' + ((e && e.message) || String(e)));
         if (btn) { btn.disabled = false; btn.textContent = '❌ Отменить'; }
+      }
+    }
+
+    // Удаление заявки из базы навсегда
+    async function deleteUnpaidRequest(id, btn) {
+      if (!confirm('Удалить заявку ' + id.substring(0, 8) + ' НАВСЕГДА из базы?\nЭто действие нельзя отменить.')) return;
+      if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+      try {
+        const result = await fetchJson(
+          API_BASE + '/api/admin/requests/delete' + authQueryFromPath(),
+          { method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [id] }) }
+        );
+        if (result.json && result.json.success) {
+          // Убираем карточку без перезагрузки всего списка
+          const card = btn && btn.closest('.unpaid-card');
+          if (card) {
+            card.style.transition = 'opacity 0.3s';
+            card.style.opacity = '0';
+            setTimeout(function() {
+              card.remove();
+              // Обновляем счётчик
+              const remaining = document.querySelectorAll('#unpaidList .unpaid-card').length;
+              const badge = document.getElementById('unpaidBadge');
+              if (badge) badge.textContent = remaining;
+              if (!remaining) {
+                const section = document.getElementById('unpaidSection');
+                if (section) section.classList.remove('has-items');
+                const list = document.getElementById('unpaidList');
+                if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;">✅ Незавершённых заявок нет</div>';
+              }
+            }, 300);
+          }
+        } else {
+          alert('Ошибка: ' + ((result.json && result.json.error) || 'неизвестно'));
+          if (btn) { btn.disabled = false; btn.textContent = '🗑 Удалить'; }
+        }
+      } catch (e) {
+        alert('Ошибка: ' + ((e && e.message) || String(e)));
+        if (btn) { btn.disabled = false; btn.textContent = '🗑 Удалить'; }
       }
     }
 
