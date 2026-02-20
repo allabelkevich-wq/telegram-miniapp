@@ -487,41 +487,42 @@
     .keys-composition-small .key-door{width:34px;height:50px;transform:rotate(6deg);opacity:.9}
     .app-logo{display:block;margin:0 auto 4px;max-width:150px;width:100%;height:auto;border-radius:0;box-shadow:none;opacity:0.92}
     .app-logo.success{max-width:180px;margin-bottom:15px}
-    /* Онбординг: полноэкранные слайды с автопереходом */
     /* ── СТОРИС-ОНБОРДИНГ ── */
-    #onboardingPage{position:fixed;inset:0;z-index:10001;background:#0A0A1A url('assets/bg-yupsoul.png') center/cover no-repeat;overflow:hidden;user-select:none}
-    #onboardingPage::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(4,4,20,.5) 0%,rgba(8,10,35,.7) 100%);z-index:0}
-    /* Прогресс-бары вверху (как в сторис) */
-    .stories-bars{position:absolute;top:max(10px,calc(env(safe-area-inset-top)+6px));left:16px;right:50px;display:flex;gap:5px;z-index:10}
+    #onboardingPage{
+      position:fixed;inset:0;z-index:10001;
+      background:#0A0A1A url('assets/bg-yupsoul.png') center/cover no-repeat;
+      overflow:hidden;user-select:none;
+      display:flex;flex-direction:column;
+      padding-top:max(28px,calc(env(safe-area-inset-top)+14px));
+      padding-bottom:max(24px,calc(env(safe-area-inset-bottom)+12px));
+    }
+    #onboardingPage::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(4,4,20,.5) 0%,rgba(8,10,35,.75) 100%);z-index:0;pointer-events:none}
+    /* Прогресс-бары */
+    .stories-bars{position:relative;display:flex;gap:5px;z-index:10;padding:0 44px 0 16px;flex-shrink:0;margin-bottom:0}
     .story-bar{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,0.25);overflow:hidden}
     .story-bar-fill{height:100%;width:0;background:rgba(255,255,255,0.9);border-radius:2px}
     .story-bar-fill.done{width:100%;transition:none}
     .story-bar-fill.playing{width:100%;transition:width var(--story-dur,4s) linear}
     /* Кнопка закрыть */
-    .stories-close{position:absolute;top:max(6px,calc(env(safe-area-inset-top)+4px));right:14px;z-index:11;background:rgba(15,12,40,0.72);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);font-size:0.9rem;width:30px;height:30px;min-width:30px;min-height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;padding:0;line-height:1;isolation:isolate;flex-shrink:0}
+    .stories-close{position:absolute;top:max(24px,calc(env(safe-area-inset-top)+10px));right:14px;z-index:11;background:rgba(15,12,40,0.72);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);font-size:0.9rem;width:30px;height:30px;min-width:30px;min-height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;padding:0;line-height:1;isolation:isolate;flex-shrink:0}
     .stories-close:hover{background:rgba(15,12,40,0.9)}
     /* Зоны тапа */
     .stories-tap-prev,.stories-tap-next{position:absolute;top:0;bottom:0;width:40%;z-index:5;cursor:pointer}
     .stories-tap-prev{left:0}
     .stories-tap-next{right:0}
-    /* Бренд-блок — верхняя половина экрана */
-    .ob-brand{position:absolute;top:max(38px,calc(env(safe-area-inset-top)+24px));left:0;right:0;text-align:center;padding:0 32px;z-index:6;pointer-events:none}
-    .ob-brand-logo{width:80px;height:80px;margin:0 auto 12px;display:block;opacity:0.96;filter:drop-shadow(0 4px 18px rgba(212,175,55,0.32))}
+    /* Бренд-блок — верхняя часть, в потоке */
+    .ob-brand{position:relative;z-index:6;text-align:center;padding:20px 32px 0;pointer-events:none;flex-shrink:0}
+    .ob-brand-logo{width:90px;height:90px;margin:0 auto 10px;display:block;opacity:0.96;filter:drop-shadow(0 4px 18px rgba(212,175,55,0.32))}
     .ob-brand-divider{width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.45),transparent);margin:10px auto}
     .ob-brand-tag{font-size:0.78rem;color:rgba(255,255,255,0.48);line-height:1.6;max-width:250px;margin:0 auto;letter-spacing:0.01em}
-    /* Слайды — нижняя половина: центрированы в своей зоне */
-    .onboarding-slide{position:absolute;left:0;right:0;bottom:0;top:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 36px max(80px,calc(env(safe-area-inset-bottom)+64px));text-align:center;opacity:0;pointer-events:none;transition:opacity .3s ease;z-index:1}
-    .onboarding-slide.active{opacity:1;pointer-events:auto}
-    .onboarding-icon{font-size:3rem;margin-bottom:14px;animation:iconBounce .4s ease-out}
+    /* Слайды — flex-grow, занимают всё оставшееся пространство */
+    .onboarding-slide{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:0 36px 16px;text-align:center}
+    .onboarding-slide.active{display:flex}
+    .onboarding-icon{font-size:3rem !important;margin-bottom:14px;animation:iconBounce .4s ease-out}
     @keyframes iconBounce{0%{transform:scale(0.6);opacity:0}65%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
-    .onboarding-title{font-size:1.45rem;font-weight:700;color:#fff;margin:0 0 10px 0;line-height:1.25;max-width:300px;letter-spacing:-0.2px}
-    .onboarding-text{font-size:0.88rem;line-height:1.65;color:rgba(255,255,255,0.68);margin:0 0 24px 0;max-width:280px}
-    .onboarding-btn{padding:13px 36px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:0.97rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(212,175,55,0.3);transition:transform .2s,box-shadow .2s;min-width:180px;width:auto;margin-top:0;min-height:unset;animation:none}
-    /* Жёстко фиксируем размеры превью (сторис) — чтобы не перебивались кэшем/темой */
-    #onboardingPage .onboarding-icon{font-size:3rem !important}
-    #onboardingPage .onboarding-title{font-size:1.4rem !important;font-weight:700 !important}
-    #onboardingPage .onboarding-text{font-size:0.86rem !important;line-height:1.6 !important}
-    #onboardingPage .onboarding-btn{font-size:0.95rem !important}
+    .onboarding-title{font-size:1.4rem !important;font-weight:700 !important;color:#fff;margin:0 0 10px 0;line-height:1.25;max-width:300px;letter-spacing:-0.2px}
+    .onboarding-text{font-size:0.86rem !important;line-height:1.6 !important;color:rgba(255,255,255,0.68);margin:0 0 24px 0;max-width:280px}
+    .onboarding-btn{padding:13px 36px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:0.95rem !important;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(212,175,55,0.3);transition:transform .2s,box-shadow .2s;min-width:180px;width:auto;margin-top:0;min-height:unset;animation:none}
     .onboarding-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(212,175,55,0.4)}
     .onboarding-btn:active{transform:translateY(1px)}
     .onboarding-dots{display:none}
@@ -795,7 +796,7 @@
       </div><!-- /нижняя обёртка -->
 
       <footer>
-        <p>YupSoul • 2026 • v1.2.35</p>
+        <p>YupSoul • 2026 • v1.2.36</p>
       </footer>
     </div>
 
@@ -1227,7 +1228,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026 • v1.2.35</p>
+        <p>YupSoul • 2026 • v1.2.36</p>
       </footer>
     </div>
     
@@ -1330,7 +1331,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026 • v1.2.35</p>
+        <p>YupSoul • 2026 • v1.2.36</p>
       </footer>
     </div>
 
@@ -2750,7 +2751,7 @@
         }
 
         function showOnboarding() {
-          if (onboardingPage) onboardingPage.style.display = 'block';
+          if (onboardingPage) onboardingPage.style.display = 'flex';
           if (homePage) homePage.classList.remove('active');
           goToStep(1);
         }
