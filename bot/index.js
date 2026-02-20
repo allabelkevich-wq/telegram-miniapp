@@ -3044,26 +3044,20 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
       .maybeSingle();
     if (!promoErr && promo && promo.active) {
       const now = new Date();
-      const validFrom = promo.valid_from ? new Date(promo.valid_from) : null;
-      const validUntil = promo.valid_until ? new Date(promo.valid_until) : null;
+      const validFrom = promo.valid_from || promo.starts_at ? new Date(promo.valid_from || promo.starts_at) : null;
+      const validUntil = promo.valid_until || promo.expires_at ? new Date(promo.valid_until || promo.expires_at) : null;
       const isTimeValid = (!validFrom || now >= validFrom) && (!validUntil || now <= validUntil);
       const hasUsesLeft = promo.max_uses == null || (promo.used_count || 0) < promo.max_uses;
       if (isTimeValid && hasUsesLeft) {
-        // Промокод валидный — проверяем, даёт ли он 100% скидку
+        // Промокод валидный — используем applyPromoToAmount для единообразия с /api/promos/validate
         const sku = requestModeForAccess === "couple" ? "couple_song" : (requestModeForAccess === "transit" ? "transit_energy_song" : "single_song");
         const skuPrice = await getSkuPrice(sku);
         const baseAmount = skuPrice ? Number(skuPrice.price) : 0;
-        let discount = 0;
-        if (promo.discount_type === "percentage") {
-          discount = (baseAmount * Number(promo.discount_value || 0)) / 100;
-        } else {
-          discount = Number(promo.discount_value || 0);
-        }
-        const finalAmount = Math.max(0, baseAmount - discount);
-        if (finalAmount === 0) {
-          console.log("[submit-request] Промокод", promoCodeRaw, "даёт 100% скидку — разрешаем без оплаты");
+        const applied = applyPromoToAmount(baseAmount, promo);
+        if (applied.finalAmount === 0) {
+          console.log("[submit-request] Промокод", promoCodeRaw, "тип:", promo.type, "— даёт бесплатный доступ");
           promoGrantsAccess = true;
-          promoData = { code: promoCodeRaw, id: promo.id, discount, finalAmount: 0 };
+          promoData = { code: promoCodeRaw, id: promo.id, discount: applied.discountAmount, finalAmount: 0, used_count: promo.used_count || 0 };
         }
       }
     }
