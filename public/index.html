@@ -387,6 +387,17 @@
     #birthdate{padding-right:2.5rem;min-width:0}
     .birthdate-check{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:#4ade80;font-size:1.25rem;display:none;font-weight:700}
     .birthdate-wrap.has-date .birthdate-check{display:block}
+    /* Удобный ввод даты с компьютера: три выпадающих списка */
+    .date-group{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .date-group select{flex:1 1 auto;min-width:80px;max-width:120px}
+    .date-group .date-group-day{min-width:70px}
+    .date-group .date-group-month{min-width:110px}
+    .date-group .date-group-year{min-width:90px}
+    .birthdate-wrap .date-group + input[type="date"]{position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);opacity:0;pointer-events:none;overflow:hidden}
+    @media (max-width:480px){
+      .date-group{flex-direction:column;align-items:stretch;gap:12px}
+      .date-group select{width:100%;max-width:none;min-width:0;min-height:48px;font-size:1rem;-webkit-tap-highlight-color:rgba(167,139,250,0.2)}
+    }
     .time-group{display:flex;flex-direction:row;align-items:center;gap:var(--spacing-sm);flex-wrap:wrap;margin:0}
     .time-group-input{flex:0 0 auto;min-width:0;width:140px;max-width:160px}
     .time-group-checkbox{margin:0;flex:1 1 auto;align-self:center}
@@ -501,6 +512,11 @@
     .onboarding-title{font-size:1.45rem;font-weight:700;color:#fff;margin:0 0 10px 0;line-height:1.25;max-width:300px;letter-spacing:-0.2px}
     .onboarding-text{font-size:0.88rem;line-height:1.65;color:rgba(255,255,255,0.68);margin:0 0 24px 0;max-width:280px}
     .onboarding-btn{padding:13px 36px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:0.97rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(212,175,55,0.3);transition:transform .2s,box-shadow .2s;min-width:180px;width:auto;margin-top:0;min-height:unset;animation:none}
+    /* Жёстко фиксируем размеры превью (сторис) — чтобы не перебивались кэшем/темой */
+    #onboardingPage .onboarding-icon{font-size:3.2rem !important}
+    #onboardingPage .onboarding-title{font-size:1.45rem !important;font-weight:700 !important}
+    #onboardingPage .onboarding-text{font-size:0.88rem !important;line-height:1.65 !important}
+    #onboardingPage .onboarding-btn{font-size:0.97rem !important}
     .onboarding-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(212,175,55,0.4)}
     .onboarding-btn:active{transform:translateY(1px)}
     .onboarding-dots{display:none}
@@ -759,7 +775,7 @@
       </div>
 
       <footer>
-        <p>YupSoul • 2026 • v1.2.19</p>
+        <p>YupSoul • 2026 • v1.2.20</p>
       </footer>
     </div>
 
@@ -928,8 +944,15 @@
         </div>
         <div class="field">
           <label for="heroBirthdate" data-icon="📅">Дата рождения</label>
-          <input type="date" id="heroBirthdate">
-          <div style="font-size:0.85rem;color:var(--tg-theme-hint-color,#9ca3af);margin-top:6px;">Нажми на поле для выбора даты</div>
+          <div id="heroBirthdateWrap" class="birthdate-wrap">
+            <div class="date-group" role="group" aria-label="Дата рождения">
+              <select id="heroBirthdateDay" class="date-group-day" aria-label="День"><option value="">День</option></select>
+              <select id="heroBirthdateMonth" class="date-group-month" aria-label="Месяц"><option value="">Месяц</option></select>
+              <select id="heroBirthdateYear" class="date-group-year" aria-label="Год"><option value="">Год</option></select>
+            </div>
+            <input type="date" id="heroBirthdate" tabindex="-1">
+          </div>
+          <div style="font-size:0.85rem;color:var(--tg-theme-hint-color,#9ca3af);margin-top:6px;">Выбери день, месяц и год</div>
         </div>
         <div class="field">
           <label for="heroBirthplace" data-icon="📍">Место рождения</label>
@@ -1014,10 +1037,15 @@
         <div class="field">
           <label for="birthdate" data-icon="📅">Дата рождения</label>
           <div id="birthdateWrap" class="birthdate-wrap">
-            <input type="date" id="birthdate" required aria-label="Дата рождения" max="2010-12-31">
+            <div class="date-group" role="group" aria-label="Дата рождения">
+              <select id="birthdateDay" class="date-group-day" aria-label="День"><option value="">День</option></select>
+              <select id="birthdateMonth" class="date-group-month" aria-label="Месяц"><option value="">Месяц</option></select>
+              <select id="birthdateYear" class="date-group-year" aria-label="Год"><option value="">Год</option></select>
+            </div>
+            <input type="date" id="birthdate" required aria-label="Дата рождения" max="2010-12-31" tabindex="-1">
             <span id="birthdateCheck" class="birthdate-check" aria-hidden="true">✓</span>
           </div>
-          <div style="font-size:0.85rem;color:var(--tg-theme-hint-color,#9ca3af);margin-top:6px;">Нажми на поле для выбора даты</div>
+          <div style="font-size:0.85rem;color:var(--tg-theme-hint-color,#9ca3af);margin-top:6px;">Выбери день, месяц и год — удобно с телефона и с компьютера</div>
         </div>
         
         <div class="field">
@@ -1070,7 +1098,14 @@
           </div>
           <div class="field">
             <label for="birthdate2" data-icon="📅">Дата рождения второго</label>
-            <input type="date" id="birthdate2" max="2010-12-31">
+            <div id="birthdate2Wrap" class="birthdate-wrap">
+              <div class="date-group" role="group" aria-label="Дата рождения второго">
+                <select id="birthdate2Day" class="date-group-day" aria-label="День"><option value="">День</option></select>
+                <select id="birthdate2Month" class="date-group-month" aria-label="Месяц"><option value="">Месяц</option></select>
+                <select id="birthdate2Year" class="date-group-year" aria-label="Год"><option value="">Год</option></select>
+              </div>
+              <input type="date" id="birthdate2" max="2010-12-31" tabindex="-1">
+            </div>
           </div>
           <div class="field form-group location-input-wrapper">
             <label for="birthplace2" data-icon="📍">Место рождения второго</label>
@@ -1162,7 +1197,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026 • v1.2.19</p>
+        <p>YupSoul • 2026 • v1.2.20</p>
       </footer>
     </div>
     
@@ -1265,7 +1300,7 @@
       </div>
       
       <footer>
-        <p>YupSoul • 2026 • v1.2.19</p>
+        <p>YupSoul • 2026 • v1.2.20</p>
       </footer>
     </div>
 
@@ -1349,8 +1384,8 @@
           soulChatNoAccess: 'Soul Chat — диалоги с душой. Доступ по подписке Soul Basic (10 диалогов/мес) или Soul Plus (30 диалогов/мес).',
           soulChatDefault: 'Soul Chat — диалоги с душой по заявке. Доступ по подписке.',
           soulChatNoApi: 'Soul Chat — диалоги с душой по заявке. Доступ по подписке Soul Basic или Soul Plus. Оформи в приложении: «К оплате».',
-          greeting: 'Привет, {name}! Заходи, когда захочешь свою персональную песню.',
-          greetingDefault: 'Заходи, когда захочешь свою персональную песню.',
+          greeting: 'Привет, {name}! Заходи, когда захочешь послушать песню своей души. Открой мини‑приложение и создай свой персональный саундтрек.',
+          greetingDefault: 'Заходи, когда захочешь послушать песню своей души. Открой мини‑приложение и создай свой персональный саундтрек.',
           alertNameShort: 'Имя должно содержать минимум 2 символа', alertBirthdate: 'Выбери дату рождения',
           alertBirthplace: 'Место рождения должно содержать минимум 3 символа', alertBirthplaceHint: 'Выбери локацию из списка подсказок',
           alertBirthtime: 'Укажи время рождения или отметь "Не знаю"', alertGender: 'Укажи пол', alertLanguage: 'Выбери язык',
@@ -2784,40 +2819,92 @@
           var today = new Date();
           birthdateEl.max = today.toISOString().split('T')[0];
           var minDate = new Date();
-      minDate.setFullYear(minDate.getFullYear() - 100);
+          minDate.setFullYear(minDate.getFullYear() - 100);
           birthdateEl.min = minDate.toISOString().split('T')[0];
         }
         var unknown = document.getElementById('unknown');
         var birthtime = document.getElementById('birthtime');
         if (unknown && birthtime) unknown.addEventListener('change', function() {
-        birthtime.required = !unknown.checked;
+          birthtime.required = !unknown.checked;
         });
         var birthdateWrap = document.getElementById('birthdateWrap');
         var birthdateCheck = document.getElementById('birthdateCheck');
         var birthdateInput = document.getElementById('birthdate');
         var birthplaceInput = document.getElementById('birthplace');
         var monthsRu = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+        var monthsRuNom = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
         function formatDateRu(dateStr) {
           if (!dateStr) return '';
           var d = new Date(dateStr + 'T12:00:00');
           if (isNaN(d.getTime())) return dateStr;
           return d.getDate() + ' ' + monthsRu[d.getMonth()] + ' ' + d.getFullYear() + ' г.';
         }
-        if (birthdateInput && birthdateWrap) {
-          birthdateInput.addEventListener('change', function() {
-            if (birthdateInput.value) {
-              birthdateWrap.classList.add('has-date');
-              if (birthdateCheck) birthdateCheck.setAttribute('aria-hidden', 'false');
-            } else {
-              birthdateWrap.classList.remove('has-date');
-              if (birthdateCheck) birthdateCheck.setAttribute('aria-hidden', 'true');
-            }
-          });
-          if (birthdateInput.value) {
-            birthdateWrap.classList.add('has-date');
-            if (birthdateCheck) birthdateCheck.setAttribute('aria-hidden', 'false');
+        (function initDateGroups() {
+          var yearEnd = new Date().getFullYear();
+          var yearStart = yearEnd - 100;
+          function fillOneDateGroup(dayId, monthId, yearId, yearMax) {
+            yearMax = yearMax || yearEnd;
+            var dSel = document.getElementById(dayId);
+            var mSel = document.getElementById(monthId);
+            var ySel = document.getElementById(yearId);
+            if (dSel) { dSel.innerHTML = '<option value="">День</option>'; for (var i = 1; i <= 31; i++) dSel.innerHTML += '<option value="' + i + '">' + i + '</option>'; }
+            if (mSel) { mSel.innerHTML = '<option value="">Месяц</option>'; for (var j = 1; j <= 12; j++) mSel.innerHTML += '<option value="' + j + '">' + monthsRuNom[j - 1] + '</option>'; }
+            if (ySel) { ySel.innerHTML = '<option value="">Год</option>'; for (var k = yearMax; k >= yearStart; k--) ySel.innerHTML += '<option value="' + k + '">' + k + '</option>'; }
           }
-        }
+          function selectsToInput(dayId, monthId, yearId, inputId, wrapId, checkId) {
+            var d = document.getElementById(dayId);
+            var m = document.getElementById(monthId);
+            var y = document.getElementById(yearId);
+            var inp = document.getElementById(inputId);
+            var wrap = wrapId ? document.getElementById(wrapId) : null;
+            var chk = checkId ? document.getElementById(checkId) : null;
+            if (!inp || !d || !m || !y) return;
+            var day = parseInt(d.value, 10); var month = parseInt(m.value, 10); var year = parseInt(y.value, 10);
+            if (!day || !month || !year) { inp.value = ''; if (wrap) wrap.classList.remove('has-date'); if (chk) chk.setAttribute('aria-hidden', 'true'); return; }
+            var lastDay = new Date(year, month, 0).getDate();
+            if (day > lastDay) day = lastDay;
+            var yyyy = year; var mm = month < 10 ? '0' + month : '' + month; var dd = day < 10 ? '0' + day : '' + day;
+            inp.value = yyyy + '-' + mm + '-' + dd;
+            if (wrap) wrap.classList.add('has-date');
+            if (chk) chk.setAttribute('aria-hidden', 'false');
+          }
+          function inputToSelects(inputId, dayId, monthId, yearId, wrapId, checkId) {
+            var inp = document.getElementById(inputId);
+            var d = document.getElementById(dayId);
+            var m = document.getElementById(monthId);
+            var y = document.getElementById(yearId);
+            var wrap = wrapId ? document.getElementById(wrapId) : null;
+            var chk = checkId ? document.getElementById(checkId) : null;
+            if (!inp || !d || !m || !y) return;
+            var v = (inp.value || '').trim();
+            if (!v) { d.value = ''; m.value = ''; y.value = ''; if (wrap) wrap.classList.remove('has-date'); if (chk) chk.setAttribute('aria-hidden', 'true'); return; }
+            var parts = v.split(/[-T]/);
+            var yyyy = parseInt(parts[0], 10); var mm = parseInt(parts[1], 10); var dd = parseInt(parts[2], 10);
+            if (isNaN(yyyy) || isNaN(mm) || isNaN(dd)) return;
+            d.value = dd; m.value = mm; y.value = yyyy;
+            if (wrap) wrap.classList.add('has-date');
+            if (chk) chk.setAttribute('aria-hidden', 'false');
+          }
+          fillOneDateGroup('birthdateDay', 'birthdateMonth', 'birthdateYear', 2010);
+          fillOneDateGroup('birthdate2Day', 'birthdate2Month', 'birthdate2Year', 2010);
+          fillOneDateGroup('heroBirthdateDay', 'heroBirthdateMonth', 'heroBirthdateYear', yearEnd);
+          [['birthdateDay','birthdateMonth','birthdateYear','birthdate','birthdateWrap','birthdateCheck'],
+           ['birthdate2Day','birthdate2Month','birthdate2Year','birthdate2','birthdate2Wrap',null],
+           ['heroBirthdateDay','heroBirthdateMonth','heroBirthdateYear','heroBirthdate','heroBirthdateWrap',null]].forEach(function(ids) {
+            var dayId = ids[0], monthId = ids[1], yearId = ids[2], inputId = ids[3], wrapId = ids[4], checkId = ids[5];
+            var onCh = function() { selectsToInput(dayId, monthId, yearId, inputId, wrapId, checkId); };
+            var d = document.getElementById(dayId), m = document.getElementById(monthId), y = document.getElementById(yearId);
+            if (d) d.addEventListener('change', onCh);
+            if (m) m.addEventListener('change', onCh);
+            if (y) y.addEventListener('change', onCh);
+            inputToSelects(inputId, dayId, monthId, yearId, wrapId, checkId);
+          });
+          window.updateDateSelectsFromInput = function(inputId) {
+            var map = { birthdate: ['birthdate','birthdateDay','birthdateMonth','birthdateYear','birthdateWrap','birthdateCheck'], birthdate2: ['birthdate2','birthdate2Day','birthdate2Month','birthdate2Year','birthdate2Wrap',null], heroBirthdate: ['heroBirthdate','heroBirthdateDay','heroBirthdateMonth','heroBirthdateYear','heroBirthdateWrap',null] };
+            var cfg = map[inputId];
+            if (cfg) inputToSelects(cfg[0], cfg[1], cfg[2], cfg[3], cfg[4], cfg[5]);
+          };
+        })();
         if (birthplaceInput) {
           var suggestionsEl = document.getElementById('birthplaceSuggestions');
           var wrap = document.getElementById('birthplaceWrap');
@@ -4164,6 +4251,7 @@
         document.getElementById('heroName').value = (h && h.name) || '';
         document.getElementById('heroRelationship').value = (h && h.relationship) || '';
         document.getElementById('heroBirthdate').value = (h && h.birth_date) || '';
+        if (typeof updateDateSelectsFromInput === 'function') updateDateSelectsFromInput('heroBirthdate');
         document.getElementById('heroBirthtime').value = ((h && h.birth_time) || '').substring(0, 5);
         document.getElementById('heroBirthtimeUnknown').checked = !!(h && h.birthtime_unknown);
         document.getElementById('heroGender').value = (h && h.gender) || '';
@@ -4342,7 +4430,7 @@
           var bp2  = document.getElementById('birthplace2');
 
           if (n2)   n2.value   = hero.name || '';
-          if (bd2)  bd2.value  = (hero.birth_date || '').substring(0, 10);
+          if (bd2)  { bd2.value = (hero.birth_date || '').substring(0, 10); if (typeof updateDateSelectsFromInput === 'function') updateDateSelectsFromInput('birthdate2'); }
           if (bt2)  bt2.value  = (hero.birth_time || '').substring(0, 5);
           if (unk2) unk2.checked = !!hero.birthtime_unknown;
           if (g2)   g2.value   = hero.gender || '';
@@ -4417,7 +4505,7 @@
         var firstName = profileOrTgUser.first_name || profileOrTgUser.name;
         if (nameEl && firstName) nameEl.value = firstName;
         if (isProfile) {
-          if (bd) bd.value = (profileOrTgUser.birthdate || '').toString().slice(0, 10);
+          if (bd) { bd.value = (profileOrTgUser.birthdate || '').toString().slice(0, 10); if (typeof updateDateSelectsFromInput === 'function') updateDateSelectsFromInput('birthdate'); }
           if (bt) bt.value = (profileOrTgUser.birthtime || '').toString().slice(0, 5);
           if (bp) {
             bp.value = profileOrTgUser.birthplace || '';
@@ -4461,7 +4549,7 @@
         var unk = document.getElementById('unknown');
         var g = document.getElementById('gender');
         if (nameEl) nameEl.value = hero.name || '';
-        if (bd) bd.value = hero.birth_date || '';
+        if (bd) { bd.value = hero.birth_date || ''; if (typeof updateDateSelectsFromInput === 'function') updateDateSelectsFromInput('birthdate'); }
         if (bt) bt.value = (hero.birth_time || '').substring(0, 5);
         if (bp) {
           bp.value = hero.birth_place || '';
@@ -4547,7 +4635,7 @@
         var langEl = document.getElementById('language');
         var r = document.getElementById('request');
         if (n) n.value = '';
-        if (bd) bd.value = '';
+        if (bd) { bd.value = ''; if (typeof updateDateSelectsFromInput === 'function') updateDateSelectsFromInput('birthdate'); }
         if (bp) bp.value = '';
         if (bt) bt.value = '';
         var unknownChk = document.getElementById('unknown'); if (unknownChk) unknownChk.checked = false;

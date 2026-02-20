@@ -237,6 +237,22 @@
         <div id="unpaidList"><div class="loading"><div class="spinner"></div>Загрузка…</div></div>
       </div>
 
+      <!-- Отменённые заявки — удаление прямо отсюда -->
+      <div class="unpaid-section cancelled-section" id="cancelledSection" style="margin-top:16px;">
+        <div class="unpaid-section-header">
+          <div class="unpaid-section-title">
+            🚫 Отменённые заявки
+            <span class="unpaid-badge" id="cancelledBadge">0</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn btn-danger" id="deleteAllCancelledBtn" style="display:none;min-width:140px;padding:8px 14px;font-size:12px;" onclick="deleteAllCancelled()" title="Удалить все отменённые из базы">🗑 Удалить все</button>
+            <button class="btn btn-primary" style="min-width:100px;padding:8px 14px;font-size:12px;" onclick="loadCancelledRequests()">🔄 Обновить</button>
+          </div>
+        </div>
+        <p style="font-size:12px;color:#94a3b8;margin-bottom:10px;">Удаляйте отменённые заявки прямо отсюда — не переключаясь в список ниже.</p>
+        <div id="cancelledList"><div class="loading"><div class="spinner"></div>Загрузка…</div></div>
+      </div>
+
       <!-- Единая панель фильтров -->
       <div class="unified-filter">
         <div class="uf-row">
@@ -540,7 +556,7 @@
       // ── Блок «DeepSeek» ───────────────────────────────────────────────────
       const dsBlock = r.deepseek_response ? `<div class="detail-section-inline">
         <div class="dsi-title">🤖 Ответ DeepSeek ${r.llm_truncated ? '<span style="color:#f39c12;font-size:10px;">⚠️ обрезан</span>' : ''}</div>
-        <div class="dsi-body" style="white-space:pre-wrap;font-size:11px;line-height:1.6;color:#cbd5e1;max-height:220px;overflow-y:auto;">${escapeHtml((r.deepseek_response||'').slice(0,3000))}${(r.deepseek_response||'').length>3000?'\n…[обрезано для отображения]':''}</div>
+        <div class="dsi-body" style="white-space:pre-wrap;font-size:11px;line-height:1.6;color:#cbd5e1;max-height:60vh;overflow-y:auto;">${escapeHtml(r.deepseek_response||'')}</div>
       </div>` : '';
 
       // ── Блок «Лирика» ─────────────────────────────────────────────────────
@@ -805,8 +821,9 @@
         document.querySelectorAll('.stat-card').forEach(c => {
           c.classList.toggle('active-filter', c.getAttribute('data-filter') === currentFilter);
         });
-        // Загружаем незавершённые заявки (pending_payment) сразу при каждом обновлении
+        // Загружаем незавершённые и отменённые заявки сразу при каждом обновлении
         loadUnpaidRequests();
+        loadCancelledRequests();
         setLoadingStatus(true, 'Загрузка заявок…');
         const listResult = await fetchJson(API_BASE + '/api/admin/requests?limit=50&status=' + currentFilter + authQuery(), { headers: authHeaders() });
         const listJson = listResult.json;
@@ -895,8 +912,9 @@
           }
         }
 
-        // Тихое обновление незавершённых заявок — без спиннера
+        // Тихое обновление незавершённых и отменённых — без спиннера
         loadUnpaidRequests(true);
+        loadCancelledRequests(true);
       } catch(e) {
         // При ошибке просто восстанавливаем видимость
       } finally {
@@ -1164,6 +1182,115 @@
       } catch (e) {
         alert('Ошибка: ' + ((e && e.message) || String(e)));
         if (btn) { btn.disabled = false; btn.textContent = '🗑 Удалить'; }
+      }
+    }
+
+    // Загружает отменённые заявки в блок «Отменённые» — удаление прямо из незавершённых
+    async function loadCancelledRequests(silent) {
+      const section = document.getElementById('cancelledSection');
+      const list = document.getElementById('cancelledList');
+      const badge = document.getElementById('cancelledBadge');
+      const deleteAllBtn = document.getElementById('deleteAllCancelledBtn');
+      if (!list) return;
+      if (!silent) list.innerHTML = '<div class="loading"><div class="spinner"></div>Загрузка…</div>';
+      try {
+        const result = await fetchJson(
+          API_BASE + '/api/admin/requests?status=cancelled&limit=100' + authQuery(),
+          { headers: authHeaders() }
+        );
+        const items = (result.json && (result.json.data || result.json.requests)) || [];
+        if (badge) badge.textContent = items.length;
+        if (deleteAllBtn) {
+          deleteAllBtn.style.display = items.length ? 'inline-block' : 'none';
+        }
+        if (!items.length) {
+          if (section) section.classList.remove('has-items');
+          list.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;">🚫 Отменённых заявок нет</div>';
+          return;
+        }
+        if (section) section.classList.add('has-items');
+        list.innerHTML = items.map(function(r) {
+          const id = escapeHtml(r.id || '');
+          const idShort = (r.id || '').substring(0, 8);
+          const name = escapeHtml(r.name || '—');
+          const date = r.created_at ? new Date(r.created_at).toLocaleString('ru-RU') : '—';
+          const safeId = (r.id || '').replace(/'/g, "\\'");
+          return '<div class="unpaid-card cancelled-card">' +
+            '<div class="unpaid-info">' +
+              '<div class="unpaid-name">' + name + '</div>' +
+              '<div class="unpaid-meta">ID: <code>' + escapeHtml(idShort) + '</code> · ' + date + '</div>' +
+            '</div>' +
+            '<div class="unpaid-actions">' +
+              '<button class="btn btn-danger" style="min-width:90px;padding:8px 12px;font-size:13px;background:#7f1d1d;border-color:#991b1b;color:#fca5a5;" onclick="deleteCancelledRequest(\'' + safeId + '\', this)" title="Удалить из базы навсегда">🗑 Удалить</button>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      } catch (e) {
+        if (section) section.classList.remove('has-items');
+        list.innerHTML = '<div style="color:#e74c3c;padding:10px;">Ошибка загрузки: ' + escapeHtml((e && e.message) || String(e)) + '</div>';
+      }
+    }
+
+    async function deleteCancelledRequest(id, btn) {
+      if (!confirm('Удалить заявку ' + id.substring(0, 8) + ' из базы навсегда?')) return;
+      if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+      try {
+        const result = await fetchJson(
+          API_BASE + '/api/admin/requests/delete' + authQueryFromPath(),
+          { method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [id] }) }
+        );
+        if (result.json && result.json.success) {
+          const card = btn && btn.closest('.cancelled-card');
+          if (card) {
+            card.style.transition = 'opacity 0.3s';
+            card.style.opacity = '0';
+            setTimeout(function() {
+              card.remove();
+              const remaining = document.querySelectorAll('#cancelledList .cancelled-card').length;
+              const badge = document.getElementById('cancelledBadge');
+              if (badge) badge.textContent = remaining;
+              const deleteAllBtn = document.getElementById('deleteAllCancelledBtn');
+              if (deleteAllBtn) deleteAllBtn.style.display = remaining ? 'inline-block' : 'none';
+              if (!remaining) {
+                const list = document.getElementById('cancelledList');
+                if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;">🚫 Отменённых заявок нет</div>';
+              }
+            }, 300);
+          }
+        } else {
+          alert('Ошибка: ' + ((result.json && result.json.error) || 'неизвестно'));
+          if (btn) { btn.disabled = false; btn.textContent = '🗑 Удалить'; }
+        }
+      } catch (e) {
+        alert('Ошибка: ' + ((e && e.message) || String(e)));
+        if (btn) { btn.disabled = false; btn.textContent = '🗑 Удалить'; }
+      }
+    }
+
+    async function deleteAllCancelled() {
+      const cards = document.querySelectorAll('#cancelledList .cancelled-card');
+      const ids = [...cards].map(c => {
+        const btn = c.querySelector('button[onclick^="deleteCancelledRequest"]');
+        if (!btn) return null;
+        const m = btn.getAttribute('onclick').match(/deleteCancelledRequest\s*\(\s*['"]([^'"]+)['"]/);
+        return m ? m[1] : null;
+      }).filter(Boolean);
+      if (!ids.length) return;
+      if (!confirm('Удалить из базы все ' + ids.length + ' отменённых заявок навсегда?\nЭто действие нельзя отменить.')) return;
+      try {
+        const result = await fetchJson(
+          API_BASE + '/api/admin/requests/delete' + authQueryFromPath(),
+          { method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: ids }) }
+        );
+        const json = result.json || {};
+        if (json.success) {
+          alert('Удалено заявок: ' + (json.deleted || ids.length));
+          loadCancelledRequests(true);
+        } else {
+          alert('Ошибка: ' + (json.error || 'неизвестно'));
+        }
+      } catch (e) {
+        alert('Ошибка: ' + ((e && e.message) || String(e)));
       }
     }
 
