@@ -320,16 +320,6 @@ function sanitizeSongText(text) {
   return cleaned;
 }
 
-function countUppercaseChars(text) {
-  if (!text || typeof text !== "string") return 0;
-  const m = text.match(/[A-ZА-ЯЁ]/g);
-  return m ? m.length : 0;
-}
-
-function forceLyricsLowercase(text) {
-  if (!text || typeof text !== "string") return text;
-  return text.toLocaleLowerCase("ru-RU");
-}
 
 // Замена музыкальных терминов в сопроводительном письме на понятные слова
 function humanizeCoverLetter(text) {
@@ -950,9 +940,6 @@ ${extBlock ? "\n" + extBlock : ""}
       throw new Error('Не удалось извлечь лирику из ответа LLM. Ответ сохранён в заявке — открой «Подробнее» в админке и проверь формат.');
     }
     let lyricsForSuno = sanitizeSongText(parsed.lyrics);
-    const uppercaseBefore = countUppercaseChars(lyricsForSuno);
-    lyricsForSuno = forceLyricsLowercase(lyricsForSuno);
-    const uppercaseAfter = countUppercaseChars(lyricsForSuno);
     const lineCount = lyricsForSuno.split(/\n/).filter((l) => l.trim()).length;
     console.log(`[Воркер] ЭТАП 2 — Парсинг: лирика ${lyricsForSuno.length} символов, ${lineCount} строк; title="${parsed.title || ""}"; style длина=${(parsed.style || "").length}`);
     if (lineCount < 20) {
