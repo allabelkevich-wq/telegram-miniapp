@@ -939,9 +939,12 @@ ${extBlock ? "\n" + extBlock : ""}
       await supabase.from("track_requests").update({ deepseek_response: fullResponse, generation_status: "failed", error_message: "Не удалось извлечь лирику из ответа LLM", updated_at: new Date().toISOString() }).eq("id", requestId);
       throw new Error('Не удалось извлечь лирику из ответа LLM. Ответ сохранён в заявке — открой «Подробнее» в админке и проверь формат.');
     }
-    let lyricsForSuno = sanitizeSongText(parsed.lyrics);
-    const lineCount = lyricsForSuno.split(/\n/).filter((l) => l.trim()).length;
-    console.log(`[Воркер] ЭТАП 2 — Парсинг: лирика ${lyricsForSuno.length} символов, ${lineCount} строк; title="${parsed.title || ""}"; style длина=${(parsed.style || "").length}`);
+    const lyricsClean = sanitizeSongText(parsed.lyrics);
+    // В базу — оригинальный регистр (читаемо в админке)
+    // В Suno — строчные буквы: Suno читает ALL CAPS как аббревиатуры, ставит неправильное ударение
+    const lyricsForSuno = lyricsClean.toLocaleLowerCase("ru-RU");
+    const lineCount = lyricsClean.split(/\n/).filter((l) => l.trim()).length;
+    console.log(`[Воркер] ЭТАП 2 — Парсинг: лирика ${lyricsClean.length} символов, ${lineCount} строк; title="${parsed.title || ""}"; style длина=${(parsed.style || "").length}`);
     if (lineCount < 20) {
       throw new Error(`Песня слишком короткая (${lineCount} строк, нужно минимум 20)`);
     }
@@ -956,7 +959,7 @@ ${extBlock ? "\n" + extBlock : ""}
       .update({
         deepseek_response: fullResponse,
         llm_truncated: llmTruncated,
-        lyrics: lyricsForSuno,
+        lyrics: lyricsClean,
         title: parsed.title,
         detailed_analysis: parsed.detailed_analysis,
         status: 'processing',
