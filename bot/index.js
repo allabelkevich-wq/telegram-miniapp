@@ -2617,6 +2617,38 @@ app.get("/api/my/pending-request", asyncApi(async (req, res) => {
   return res.json({ ok: true, pending: true, request_id: data.id, mode: data.mode, created_at: data.created_at });
 }));
 
+// Отменяет незавершённую заявку пользователя (нажал крестик на баннере)
+app.post("/api/my/pending-request/dismiss", express.json(), asyncApi(async (req, res) => {
+  if (!supabase) return res.status(503).json({ ok: false });
+  const initData = req.headers["x-telegram-init"] || req.body?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (!telegramUserId) return res.status(401).json({ ok: false });
+
+  const requestId = String(req.body?.request_id || "").trim();
+  if (!requestId) return res.status(400).json({ ok: false, error: "request_id обязателен" });
+
+  // Убеждаемся что заявка принадлежит этому пользователю
+  const { data: row } = await supabase
+    .from("track_requests")
+    .select("id, generation_status")
+    .eq("id", requestId)
+    .eq("telegram_user_id", Number(telegramUserId))
+    .maybeSingle();
+
+  if (!row) return res.status(404).json({ ok: false, error: "Заявка не найдена" });
+  if (row.generation_status !== "pending_payment") {
+    return res.json({ ok: true, skipped: true }); // уже не в статусе ожидания — ок
+  }
+
+  await supabase
+    .from("track_requests")
+    .update({ generation_status: "cancelled", updated_at: new Date().toISOString() })
+    .eq("id", requestId);
+
+  console.log(`[Dismiss] Заявка ${requestId} отменена пользователем ${telegramUserId}`);
+  return res.json({ ok: true });
+}));
+
 // Активирует бесплатный пробный ключ для pending_payment заявки (восстановление)
 app.post("/api/free-trial/claim", express.json(), asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ ok: false, error: "Supabase недоступен" });

@@ -2226,8 +2226,17 @@
             var dismissBtn = document.getElementById('recoveryDismissBtn');
             if (dismissBtn) dismissBtn.addEventListener('click', function() {
               banner.style.display = 'none';
-              // После закрытия баннера — показываем реферальный блок если он был
               if (refCard) refCard.style.display = 'block';
+              // Отменяем заявку на сервере — при следующем входе баннер не появится
+              var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+              var initData = getInitData();
+              if (apiBase && initData && pendingPaymentRequestId) {
+                fetch(apiBase + '/api/my/pending-request/dismiss', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+                  body: JSON.stringify({ request_id: pendingPaymentRequestId })
+                }).catch(function() {});
+              }
             });
             if (rb) rb.addEventListener('click', function() {
               banner.style.display = 'none';
