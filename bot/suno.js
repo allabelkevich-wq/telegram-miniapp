@@ -5,7 +5,7 @@
  *   Get Music Generation Details, Callbacks — см. индекс llms.txt
  *
  * Модели: V4 (до 4 мин), V4_5 / V4_5PLUS / V4_5ALL (до 8 мин), V5 (лучшая экспрессия, быстрее).
- * Лимиты: prompt 5000 (V4 3000), style 1000 (V4 200), title 80 (V4_5ALL/V4) или 100 (V4_5, V4_5PLUS, V5).
+ * Лимиты: prompt 5000 (V4 3000), style 1000 (V4 200), title — API принимает макс 80 символов.
  * Расширенные параметры (опционально): negativeTags, vocalGender (m/f), styleWeight, weirdnessConstraint, audioWeight (0–1), personaId.
  * Concurrency: 20 запросов / 10 сек.
  * Переменные: SUNO_API_KEY; опционально BACKEND_URL или SUNO_CALLBACK_URL; SUNO_MODEL (V5, V4_5ALL, …).
@@ -13,10 +13,11 @@
 
 const SUNO_BASE = "https://api.sunoapi.org/api/v1";
 const POLL_INTERVAL_MS = 15000;
-const POLL_MAX_ATTEMPTS = 40; // ~10 min
+// Таймаут поллинга: по умолчанию 60 попыток × 15 с ≈ 15 мин; можно задать SUNO_POLL_MAX_ATTEMPTS в env
+const POLL_MAX_ATTEMPTS = Math.max(40, Math.min(120, parseInt(process.env.SUNO_POLL_MAX_ATTEMPTS, 10) || 60));
 
-const TITLE_MAX_V5 = 100;
-const TITLE_MAX_V4_5ALL = 80;
+/** Максимальная длина title в Suno API (ошибка "cannot exceed 80 characters" при большей длине). */
+const TITLE_MAX = 80;
 
 /**
  * Запуск генерации (custom mode). prompt = лирика, title и style обязательны.
@@ -50,13 +51,12 @@ export async function generateMusic(params) {
     return { ok: false, error: "prompt и title обязательны" };
   }
 
-  const titleMax = (model === "V5" || model === "V4_5" || model === "V4_5PLUS") ? TITLE_MAX_V5 : TITLE_MAX_V4_5ALL;
   const body = {
     customMode: true,
     instrumental: false,
     model: model || "V5",
     prompt: prompt.slice(0, 5000),
-    title: title.slice(0, titleMax),
+    title: String(title).slice(0, TITLE_MAX),
     style: (style || "Ambient, Cinematic").slice(0, 1000),
     callBackUrl: process.env.SUNO_CALLBACK_URL || (process.env.BACKEND_URL ? `${process.env.BACKEND_URL.replace(/\/$/, "")}/suno-callback` : "https://example.com/suno-callback"),
   };

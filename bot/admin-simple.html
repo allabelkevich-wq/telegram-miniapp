@@ -578,8 +578,10 @@
       </div>` : '';
 
       // ── Блок «ID заявки» ─────────────────────────────────────────────────
+      const deliveredStr = r.delivered_at ? new Date(r.delivered_at).toLocaleString('ru-RU') : null;
       const idBlock = `<div style="font-size:10px;color:#334155;font-family:monospace;padding:8px 0 4px;word-break:break-all;">
         ID: ${escapeHtml(r.id||'')} · Создана: ${r.created_at ? new Date(r.created_at).toLocaleString('ru-RU') : '—'} · Режим: ${escapeHtml(r.mode||'single')}
+        ${deliveredStr ? '<br><span style="color:#86efac;">✓ Доставлено в чат: ' + escapeHtml(deliveredStr) + '</span>' : ''}
       </div>`;
 
       // ── Кнопки действий ───────────────────────────────────────────────────
@@ -999,6 +1001,7 @@
               <span class="req-row-meta">${escapeHtml(r.mode || 'single')} · ${dateStr}</span>
             </div>
             <span class="req-row-status ${statusClass(gs)}" style="font-size:10px;padding:2px 8px;">${statusLabel(gs)}</span>
+            ${r.delivered_at ? '<span style="font-size:10px;color:#86efac;margin-left:4px;white-space:nowrap;" title="Доставлено в чат ' + (new Date(r.delivered_at).toLocaleString('ru-RU')) + '">✓ В чат</span>' : ''}
             ${paymentMethodBadge(r)}
             <div class="req-row-btns" onclick="event.stopPropagation()">
               <button class="rmb rmb-orange" onclick="restart('${safeId}',this)" title="${gs === 'completed' ? 'Перегенерировать' : 'Перезапустить'}">↻</button>

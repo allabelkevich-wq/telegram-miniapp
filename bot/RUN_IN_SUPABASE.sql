@@ -108,6 +108,7 @@ alter table track_requests add column if not exists deepseek_response text;
 alter table track_requests add column if not exists request_type text default 'general';
 create index if not exists idx_track_requests_generation_status on track_requests (generation_status);
 create index if not exists idx_track_requests_created_at on track_requests (created_at desc);
+alter table track_requests add column if not exists generation_retry_count integer not null default 0;
 
 -- 5. Режим «Для двоих» и «Энергия дня»
 alter table track_requests add column if not exists mode text default 'single';
@@ -134,6 +135,8 @@ comment on column track_requests.suno_style_sent is 'Точная строка s
 -- 7. Обложка к генерации (URL от Suno Cover API, отправляется пользователю вместе с аудио)
 alter table track_requests add column if not exists cover_url text;
 comment on column track_requests.cover_url is 'URL обложки от Suno Cover API; отправляется в Telegram вместе с песней';
+alter table track_requests add column if not exists delivered_at timestamptz;
+comment on column track_requests.delivered_at is 'Когда песня фактически отправлена пользователю в чат (аудио или fallback)';
 
 -- =============================================================================
 -- 8. Платежи HOT и тарифы (pricing, entitlements, subscriptions, user_trials)
@@ -251,8 +254,10 @@ on conflict (sku) do update set price=excluded.price, active=excluded.active, up
 insert into promo_codes (code, type, value, sku, max_uses, per_user_limit, active, metadata)
 values
   ('WELCOMEGIFT', 'free_generation', null, null, null, 1, true, '{"title":"Один бесплатный трек по промокоду"}'::jsonb),
-  ('SOUL10', 'discount_percent', 10, null, null, 5, true, '{"title":"Скидка 10%"}'::jsonb)
-on conflict (code) do update set active=excluded.active, updated_at=now();
+  ('SOUL10', 'discount_percent', 10, null, null, 5, true, '{"title":"Скидка 10%"}'::jsonb),
+  ('SOUL50', 'discount_percent', 50, null, null, 3, true, '{"title":"Скидка 50% на генерацию"}'::jsonb),
+  ('YUP50', 'discount_percent', 50, null, null, 3, true, '{"title":"Скидка 50% на генерацию"}'::jsonb)
+on conflict (code) do update set type=excluded.type, value=excluded.value, per_user_limit=excluded.per_user_limit, active=excluded.active, metadata=excluded.metadata, updated_at=now();
 
 -- =============================================================================
 -- 9. Soul Chat: доступ по времени + история сессий

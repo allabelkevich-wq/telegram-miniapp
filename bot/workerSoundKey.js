@@ -184,9 +184,9 @@ const SYSTEM_PROMPT_FALLBACK = `Ты — мудрый астролог-поэт 
 - **Припев (Chorus):** используй формулировку мантры/девиза из раздела ПРАКТИЧЕСКИЕ РЕКОМЕНДАЦИИ — можно слегка ритмизовать, но смысл и образ тот же.
 - **Бридж (Bridge):** вырази решение ключевого противоречия из раздела КЛЮЧЕВЫЕ ПРОТИВОРЕЧИЯ (ресурс для решения).
 - **Куплеты:** образы и метафоры только из СУТЬ ДУШИ, СИЛА И ТЕНЬ, ЭВОЛЮЦИОННЫЙ УРОВЕНЬ. Если идеи нет в анализе — её не должно быть в песне.
-- Название песни — метафора из анализа (архетип, миссия или ключевой образ), не абстрактное слово.
+- Название трека — короткое, по существу: метафора из анализа (архетип, миссия или ключевой образ). Без слова «песня» и без общих фраз. Один образ или 2–4 слова.
 
-ПЕСНЯ ДЛЯ [ИМЯ]: «[НАЗВАНИЕ-МЕТАФОРА ИЗ АНАЛИЗА]»
+ПЕСНЯ ДЛЯ [ИМЯ]: «[НАЗВАНИЕ — только метафора, без слова «песня»]»
 
 ЛИРИКА: Каждая строчка — метафора из твоего анализа. Припев = мантра из рекомендаций. Бридж = решение противоречия. НИКАКИХ астрологических терминов. Эмоциональная дуга от вызова к решению — только из этой карты.
 
@@ -346,6 +346,21 @@ function humanizeCoverLetter(text) {
 // ПАРСИНГ ОТВЕТА LLM
 // ============================================================================
 
+/** Убирает из названия слово «песня»/song и лишнее, оставляет по существу. */
+function sanitizeTitle(title) {
+  if (!title || typeof title !== "string") return title || "";
+  let s = title.trim();
+  if (!s) return "";
+  s = s
+    .replace(/\b(моя\s+)?песня\s*(о|об|про|просто)?\s*/gi, (_, _my, prep) => (prep ? prep + " " : ""))
+    .replace(/\b(my\s+)?song\s*(about|of|called)?\s*/gi, (_, _my, prep) => (prep ? prep + " " : ""))
+    .replace(/\s*[-—:]\s*песня\s*$/i, "")
+    .replace(/\s*[-—:]\s*song\s*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return s || title.trim().slice(0, 80);
+}
+
 function parseResponse(text) {
   if (!text || typeof text !== "string") return null;
   
@@ -501,6 +516,8 @@ function parseResponse(text) {
   }
 
   if (!title && lyrics) title = "Sound Key";
+  title = sanitizeTitle(title);
+
   if (!lyrics) return null;
 
   return {
@@ -944,16 +961,17 @@ ${extBlock ? "\n" + extBlock : ""}
     // В базу — оригинальный регистр (читаемо в админке)
     // В Suno — строчные буквы: Suno читает ALL CAPS как аббревиатуры, ставит неправильное ударение
     const lyricsForSuno = lyricsClean.toLocaleLowerCase("ru-RU");
+    const MIN_LYRICS_LINES = 12;
     const lineCount = lyricsClean.split(/\n/).filter((l) => l.trim()).length;
     console.log(`[Воркер] ЭТАП 2 — Парсинг: лирика ${lyricsClean.length} символов, ${lineCount} строк; title="${parsed.title || ""}"; style длина=${(parsed.style || "").length}`);
-    if (lineCount < 20) {
+    if (lineCount < MIN_LYRICS_LINES) {
       // Диагностика: показываем что именно было извлечено как лирика
       console.error(`[Воркер] ❌ Лирика слишком короткая (${lineCount} строк). Первые 400 символов извлечённой лирики: ${lyricsClean.slice(0, 400).replace(/\n/g, " ↵ ")}`);
       console.error(`[Воркер] ❌ Весь полный ответ LLM сохранён в deepseek_response в БД — проверь в Подробнее в админке.`);
-      throw new Error(`Песня слишком короткая (${lineCount} строк, нужно минимум 20). Сырой ответ LLM сохранён в заявке — открой «Подробнее» в админке`);
+      throw new Error(`Песня слишком короткая (${lineCount} строк, нужно минимум ${MIN_LYRICS_LINES}). Сырой ответ LLM сохранён в заявке — открой «Подробнее» в админке`);
     }
-    if (lineCount < 32) {
-      console.warn(`[Воркер] ⚠️ Лирика короче обычного (${lineCount} строк) — отправляем в Suno, но рекомендуем проверить промпт`);
+    if (lineCount < 24) {
+      console.warn(`[Воркер] ⚠️ Лирика короче обычного (${lineCount} строк) — отправляем в Suno`);
     }
     await setStepCompat('3', `Лирика: ${lineCount} строк, «${(parsed.title || "Sound Key").slice(0, 30)}»`, 'lyrics_ready');
     
@@ -1054,6 +1072,8 @@ ${extBlock ? "\n" + extBlock : ""}
       .from('track_requests')
       .update(updatePayload)
       .eq('id', requestId);
+    const { error: resetErr } = await supabase.from('track_requests').update({ generation_retry_count: 0, updated_at: new Date().toISOString() }).eq('id', requestId);
+    if (resetErr) { /* колонка generation_retry_count может отсутствовать до миграции */ }
 
     // Шаг 11: Сначала обложка (если есть), затем аудио
     const caption = `🎵 ${request.name}, твоя персональная песня готова!\n\n— YupSoul`;
@@ -1078,6 +1098,7 @@ ${extBlock ? "\n" + extBlock : ""}
             text: `🎵 ${request.name}, твоя персональная песня готова!\n\nАудиофайл временно недоступен для отправки. Напиши в поддержку — пришлём вручную в течение часа.\n\nСпасибо за терпение! ❤️`
           })
         });
+        await supabase.from('track_requests').update({ delivered_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', requestId);
       } catch (e) {
         console.error('[Воркер] Не удалось отправить резервное сообщение:', e.message);
       }
@@ -1143,6 +1164,7 @@ ${extBlock ? "\n" + extBlock : ""}
         console.warn("[Воркер] Не удалось отправить подсказку про расшифровку:", e?.message);
       }
       await setStep('delivery_done', 'Доставка пользователю успешна');
+      await supabase.from('track_requests').update({ delivered_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', requestId);
       // Проверяем и начисляем реферальную награду пригласившему
       try { await triggerReferralRewardIfEligible(request.telegram_user_id); }
       catch (e) { console.warn('[Referral] Ошибка начисления награды:', e?.message); }
@@ -1158,7 +1180,36 @@ ${extBlock ? "\n" + extBlock : ""}
       stepLog['pipeline_done'] = 'Завершено с ошибкой';
       try { await updateStepLog(requestId, stepLog); } catch (_) {}
     }
-    // Обновляем статус на failed (чтобы админка и другой воркер видели корректное состояние)
+
+    // Автоповтор: если попыток перегенерации ещё не исчерпаны — ставим заявку снова в pending и запускаем воркер через 10 с
+    const MAX_RETRIES = 2; // всего 3 попытки: первая + 2 перегенерации
+    const { data: row } = await supabase.from('track_requests').select('generation_retry_count').eq('id', requestId).single().catch(() => ({ data: null }));
+    const retryCount = Number(row?.generation_retry_count ?? 0);
+
+    if (retryCount < MAX_RETRIES && supabase) {
+      const nextCount = retryCount + 1;
+      const { error: updateErr } = await supabase
+        .from('track_requests')
+        .update({
+          status: 'pending',
+          generation_status: 'pending',
+          error_message: null,
+          generation_retry_count: nextCount,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
+      if (updateErr) {
+        console.error('[Воркер] Не удалось поставить заявку на перегенерацию:', updateErr.message);
+      } else {
+        console.log(`[Воркер] Заявка ${requestId} поставлена на перегенерацию (попытка ${nextCount}/${MAX_RETRIES + 1}) через 10 с`);
+        setTimeout(() => {
+          import('./workerSoundKey.js').then(({ generateSoundKey: run }) => run(requestId)).catch((e) => console.error('[Воркер] Ошибка автоповтора:', e?.message));
+        }, 10000);
+        return { ok: false, error: error.message, retryScheduled: true };
+      }
+    }
+
+    // Исчерпаны попытки или не удалось поставить retry — фиксируем failed
     const { error: updateErr } = await supabase
       .from('track_requests')
       .update({
@@ -1169,10 +1220,11 @@ ${extBlock ? "\n" + extBlock : ""}
       })
       .eq('id', requestId);
     if (updateErr) console.error('[Воркер] Не удалось обновить статус на failed:', updateErr.message);
-    
-    // Уведомить админа об ошибке
+
+    // Уведомить админа об ошибке (только когда перегенерации больше не будет)
     if (process.env.ADMIN_TELEGRAM_IDS && BOT_TOKEN) {
       const adminIds = process.env.ADMIN_TELEGRAM_IDS.split(',').map(id => id.trim());
+      const retryNote = retryCount >= MAX_RETRIES ? ` (после ${MAX_RETRIES + 1} попыток)` : '';
       for (const adminId of adminIds) {
         try {
           await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -1180,7 +1232,7 @@ ${extBlock ? "\n" + extBlock : ""}
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               chat_id: adminId,
-              text: `❌ Ошибка генерации для заявки ${requestId}\n\n${error.message?.substring(0, 300)}`
+              text: `❌ Ошибка генерации для заявки ${requestId}${retryNote}\n\n${error.message?.substring(0, 300)}`
             })
           });
         } catch (e) {
@@ -1188,7 +1240,7 @@ ${extBlock ? "\n" + extBlock : ""}
         }
       }
     }
-    
+
     return { ok: false, error: error.message };
   }
 }

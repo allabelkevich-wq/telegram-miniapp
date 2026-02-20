@@ -77,6 +77,8 @@ export async function chatCompletion(systemPrompt, userMessage, opts = {}) {
   let lastError = null;
   let lastUsage = null;
 
+  const requestTimeoutMs = Math.min(600000, Math.max(120000, parseInt(process.env.DEEPSEEK_REQUEST_TIMEOUT_MS, 10) || 600000)); // по умолчанию 10 мин
+
   async function oneRound(bodyToSend) {
     const res = await fetch(DEEPSEEK_API_URL, {
       method: "POST",
@@ -85,6 +87,7 @@ export async function chatCompletion(systemPrompt, userMessage, opts = {}) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify(bodyToSend),
+      signal: AbortSignal.timeout(requestTimeoutMs),
     });
 
     const raw = await res.text();
@@ -176,6 +179,9 @@ export async function chatCompletion(systemPrompt, userMessage, opts = {}) {
 
       return { ok: false, error: "Превышено число раундов вызова инструментов" };
     } catch (e) {
+      if (e?.name === "AbortError") {
+        return { ok: false, error: `Таймаут запроса к DeepSeek (превышено ${requestTimeoutMs / 60000} мин)` };
+      }
       lastError = e?.message || String(e);
       if (retryStatuses.some((s) => lastError.includes(String(s))) && attempt < maxAttempts) {
         await new Promise((r) => setTimeout(r, 5000));

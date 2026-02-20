@@ -1096,7 +1096,8 @@ bot.on("message:web_app_data", async (ctx) => {
 
   await ctx.reply(
     "✅ Заявка принята!\n\n" +
-    "Твой персональный звуковой ключ будет создан. Как только он будет готов — пришлю его сюда в чат. Ожидай уведомление.\n\n" +
+    "Песня генерируется на нашем сервере. Когда будет готова — придёт сюда в этот чат. Обычно это несколько минут (иногда до 5–10).\n\n" +
+    "Можешь закрыть приложение — ничего не пропадёт. Спасибо, что остаёшься с нами ❤️\n\n" +
     "Детальную расшифровку натальной карты можно запросить командой /get_analysis после оплаты."
   );
 
@@ -2031,7 +2032,7 @@ app.get("/api/admin/requests", asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const limit = Math.min(parseInt(req.query?.limit, 10) || 50, 100);
   const statusFilter = req.query?.status || "all";
-  const fullSelect = "id,name,gender,birthdate,birthplace,person2_name,person2_gender,person2_birthdate,person2_birthplace,status,generation_status,created_at,audio_url,mode,request,generation_steps,payment_status,payment_provider,telegram_user_id";
+  const fullSelect = "id,name,gender,birthdate,birthplace,person2_name,person2_gender,person2_birthdate,person2_birthplace,status,generation_status,created_at,delivered_at,audio_url,mode,request,generation_steps,payment_status,payment_provider,telegram_user_id";
   let q = supabase.from("track_requests").select(fullSelect).order("created_at", { ascending: false }).limit(limit);
   if (statusFilter === "pending") q = q.in("generation_status", ["pending", "astro_calculated", "lyrics_generated", "suno_processing"]);
   else if (statusFilter === "pending_payment") q = q.eq("generation_status", "pending_payment");
@@ -2070,8 +2071,8 @@ app.get("/api/admin/requests/:id", asyncApi(async (req, res) => {
   const id = sanitizeRequestId(req.params.id);
   if (!id) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
   if (!isValidRequestId(id)) return res.status(400).json({ success: false, error: "Используйте полный UUID заявки (с дефисами), не обрезанный ID" });
-  const fullCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message,llm_truncated,generation_steps,payment_status,payment_provider,telegram_user_id";
-  const coreCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message";
+  const fullCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message,llm_truncated,generation_steps,delivered_at,payment_status,payment_provider,telegram_user_id";
+  const coreCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message,delivered_at";
   const minCols = "id,name,gender,birthdate,birthplace,request,created_at,status,telegram_user_id";
   let usedFallbackCols = false;
   let result = await supabase.from("track_requests").select(fullCols).eq("id", id).maybeSingle();
@@ -2215,6 +2216,7 @@ app.post("/api/admin/requests/:id/deliver", asyncApi(async (req, res) => {
     });
     const audioData = await audioRes.json().catch(() => ({}));
     if (!audioData.ok) return res.status(500).json({ success: false, error: audioData.description || "Ошибка Telegram API" });
+    await supabase.from("track_requests").update({ delivered_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", id);
     return res.json({ success: true, message: "Песня отправлена пользователю" });
   } catch (e) {
     return res.status(500).json({ success: false, error: e?.message || "Ошибка отправки" });
@@ -3236,7 +3238,7 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   return res.status(200).json({
     ok: true,
     requestId,
-    message: "✨ Твой звуковой ключ создаётся! Первый трек — в подарок 🎁\nЧерез 2-3 минуты он придёт в этот чат.",
+    message: "✨ Твой звуковой ключ создаётся! Первый трек — в подарок 🎁\nПесня генерируется на сервере и придёт в этот чат. Обычно несколько минут (иногда до 5–10). Можно закрыть окно — ничего не пропадёт. Спасибо ❤️",
   });
 });
 
@@ -3300,6 +3302,78 @@ async function startBotWithWebhook() {
   } catch (err) {
     console.error("[Bot] Ошибка установки вебхука:", err?.message || err);
   }
+}
+
+/** Интервал проверки заявок (мс): зависшие в processing и долго ожидающие pending. */
+const DELIVERY_WATCHDOG_INTERVAL_MS = Math.max(60_000, parseInt(process.env.DELIVERY_WATCHDOG_INTERVAL_MS, 10) || 10 * 60_000);
+/** Считаем заявку «зависшей» в обработке после стольких мс. */
+const STALE_PROCESSING_MS = parseInt(process.env.STALE_PROCESSING_MS, 10) || 20 * 60 * 1000;
+/** Считаем заявку «долго ожидающей», если в pending/paid дольше стольких мс. */
+const PENDING_TOO_LONG_MS = parseInt(process.env.PENDING_TOO_LONG_MS, 10) || 15 * 60 * 1000;
+
+let _deliveryWatchdogStarted = false;
+/** Страховка доставки: раз в N минут проверяем зависшие (processing) и долго ожидающие (pending) заявки, перезапускаем воркер. */
+function startDeliveryWatchdog() {
+  if (!supabase || _deliveryWatchdogStarted) return;
+  _deliveryWatchdogStarted = true;
+  console.log("[Watchdog] Запуск: интервал", DELIVERY_WATCHDOG_INTERVAL_MS / 1000, "с, зависшие >", STALE_PROCESSING_MS / 60000, "мин, ожидание >", PENDING_TOO_LONG_MS / 60000, "мин");
+
+  async function tick() {
+    try {
+      const now = new Date();
+      const staleThreshold = new Date(now.getTime() - STALE_PROCESSING_MS).toISOString();
+      const pendingThreshold = new Date(now.getTime() - PENDING_TOO_LONG_MS).toISOString();
+
+      // 1) Зависшие в processing (воркер упал/таймаут) — сбрасываем в pending и перезапускаем одну
+      const { data: stale } = await supabase
+        .from("track_requests")
+        .select("id,name,updated_at")
+        .eq("generation_status", "processing")
+        .lt("updated_at", staleThreshold)
+        .order("updated_at", { ascending: true })
+        .limit(5);
+      if (stale?.length) {
+        const ids = stale.map((r) => r.id);
+        await supabase.from("track_requests").update({ status: "pending", generation_status: "pending", updated_at: now.toISOString() }).in("id", ids);
+        const oldest = stale[0];
+        console.log("[Watchdog] Зависшие в processing:", ids.length, "— сброшены в pending, перезапуск заявки", oldest.id);
+        if (ADMIN_IDS.length && BOT_TOKEN) {
+          const msg = `⏱ Заявка ${oldest.id} зависла в обработке > ${STALE_PROCESSING_MS / 60000} мин. Поставлена на перегенерацию.`;
+          for (const adminId of ADMIN_IDS) {
+            bot.api.sendMessage(adminId, msg).catch((e) => console.warn("[Watchdog] Уведомление админу:", e?.message));
+          }
+        }
+        import("./workerSoundKey.js").then((m) => m.generateSoundKey(oldest.id)).catch((e) => console.error("[Watchdog] Ошибка перезапуска воркера:", e?.message));
+        return;
+      }
+
+      // 2) Долго в pending при уже оплате — подхватываем одну заявку (воркер мог не запуститься)
+      const { data: longPending } = await supabase
+        .from("track_requests")
+        .select("id,name,updated_at")
+        .in("generation_status", ["pending", "astro_calculated", "lyrics_generated", "suno_processing"])
+        .in("payment_status", ["paid", "gift_used", "subscription_active"])
+        .lt("updated_at", pendingThreshold)
+        .order("updated_at", { ascending: true })
+        .limit(1);
+      if (longPending?.length) {
+        const r = longPending[0];
+        console.log("[Watchdog] Долго ожидающая заявка:", r.id, "— запуск воркера");
+        if (ADMIN_IDS.length && BOT_TOKEN) {
+          const msg = `⏱ Заявка ${r.id} (${r.name || "—"}) ожидала генерации > ${PENDING_TOO_LONG_MS / 60000} мин. Запущен воркер.`;
+          for (const adminId of ADMIN_IDS) {
+            bot.api.sendMessage(adminId, msg).catch((e) => console.warn("[Watchdog] Уведомление админу:", e?.message));
+          }
+        }
+        import("./workerSoundKey.js").then((m) => m.generateSoundKey(r.id)).catch((e) => console.error("[Watchdog] Ошибка запуска воркера:", e?.message));
+      }
+    } catch (e) {
+      console.error("[Watchdog] Ошибка:", e?.message || e);
+    }
+  }
+
+  tick();
+  setInterval(tick, DELIVERY_WATCHDOG_INTERVAL_MS);
 }
 
 function registerMasterRoutes(expressApp) {
@@ -3366,6 +3440,7 @@ if (process.env.RENDER_HEALTHZ_FIRST) {
   } else {
     startBotWithPolling();
   }
+  startDeliveryWatchdog();
 } else {
   console.log("[HTTP] Слушаю порт", HEROES_API_PORT);
   registerMasterRoutes(app);
@@ -3378,5 +3453,6 @@ if (process.env.RENDER_HEALTHZ_FIRST) {
     } else {
       startBotWithPolling();
     }
+    startDeliveryWatchdog();
   });
 }

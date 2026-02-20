@@ -1,1 +1,1 @@
-Deploy trigger: 2026-02-20T12:00:00Z - full deploy v1.2.21
+Deploy trigger: 2026-02-19 full deploy v1.2.22
