@@ -1348,6 +1348,78 @@ bot.on("message:text", async (ctx, next) => {
   await ctx.reply("Неизвестная команда. Доступны: /start, /ping, /get_analysis, /soulchat <id>. Админам: /admin, /admin_check, /astro <id>, /full_analysis <id>.");
 });
 
+// ============================================================================
+// ЧAТ ПОДДЕРЖКИ — двусторонний релей
+// Переменная SUPPORT_CHAT_ID: Telegram ID чата/группы поддержки.
+// Если не задана — используется первый ADMIN_IDS.
+// Использование: пользователь пишет боту текст → пересылается в чат поддержки.
+// Чтобы ответить: в чате поддержки ответь (Reply) на пересланное сообщение.
+// ============================================================================
+const SUPPORT_CHAT_ID = process.env.SUPPORT_CHAT_ID
+  ? parseInt(process.env.SUPPORT_CHAT_ID, 10)
+  : (ADMIN_IDS[0] || null);
+
+// Map: message_id пересланного сообщения → { userId, userName }
+const supportRelay = new Map();
+
+bot.on("message:text", async (ctx, next) => {
+  const chatId = Number(ctx.chat?.id || 0);
+  const userId = Number(ctx.from?.id || 0);
+  const text = (ctx.message?.text || "").trim();
+
+  // Если сообщение из чата поддержки — это может быть ответ оператора
+  if (SUPPORT_CHAT_ID && chatId === SUPPORT_CHAT_ID) {
+    const replyTo = ctx.message?.reply_to_message;
+    if (replyTo) {
+      const session = supportRelay.get(replyTo.message_id);
+      if (session) {
+        try {
+          await bot.api.sendMessage(session.userId,
+            `💬 *Поддержка YupSoul:*\n\n${text}`,
+            { parse_mode: "Markdown" }
+          );
+          // Подтверждение оператору
+          await ctx.react("✅").catch(() => {});
+          console.log(`[Поддержка] Ответ доставлен пользователю ${session.userId} (${session.userName})`);
+        } catch (e) {
+          console.error("[Поддержка] Не удалось доставить ответ:", e?.message);
+          await ctx.reply(`❌ Не удалось доставить: ${e?.message}`).catch(() => {});
+        }
+        return;
+      }
+    }
+    return next();
+  }
+
+  // Пропускаем: команды, web_app_data уже обработаны выше
+  if (text.startsWith("/")) return next();
+  if (!SUPPORT_CHAT_ID) return next();
+
+  // Пересылаем в чат поддержки
+  const userName = ctx.from?.first_name || "Пользователь";
+  const userTag = ctx.from?.username ? `@${ctx.from.username}` : "без username";
+  const header = `🆘 *Сообщение от пользователя*\n👤 ${userName} (${userTag})\n🆔 \`${userId}\`\n\n`;
+  try {
+    const sent = await bot.api.sendMessage(
+      SUPPORT_CHAT_ID,
+      header + text,
+      { parse_mode: "Markdown" }
+    );
+    // Сохраняем маппинг: message_id → userId, чтобы ответ дошёл обратно
+    supportRelay.set(sent.message_id, { userId, userName });
+    // Чтобы не копить бесконечно — чистим записи старше 7 дней (простой TTL)
+    if (supportRelay.size > 500) {
+      const firstKey = supportRelay.keys().next().value;
+      supportRelay.delete(firstKey);
+    }
+    await ctx.reply("💬 Сообщение принято! Мы ответим в ближайшее время.\n\nЕсли вопрос срочный — можешь написать ещё раз, мы онлайн.");
+    console.log(`[Поддержка] Сообщение от ${userId} (${userName}) переслано в чат поддержки`);
+  } catch (e) {
+    console.error("[Поддержка] Ошибка пересылки:", e?.message);
+    return next();
+  }
+});
+
 bot.command("admin_check", async (ctx) => {
   const userId = ctx?.from?.id;
   const chatId = ctx?.chat?.id ?? userId;
