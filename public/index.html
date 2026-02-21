@@ -485,7 +485,9 @@
     .app-logo{display:block;margin:12px auto 4px;max-width:150px;width:100%;height:auto;border-radius:0;box-shadow:none;opacity:0.92}
     /* Зона логотипа: свой плавный фон без стопов, чтобы в превью Telegram не было полосы через лого */
     #homePage > div:first-child{background:linear-gradient(180deg,rgba(1,6,26,0.55) 0%,transparent 100%);min-height:120px}
-    body.preview-mode #homePage > div:first-child{padding-top:max(90px,calc(env(safe-area-inset-top)+70px)) !important}
+    /* Жёсткий отступ от линии Telegram: и в CSS с !important, чтобы сработало после деплоя и без кэша */
+    #homePage > div:first-child{padding-top:max(140px,calc(env(safe-area-inset-top)+120px)) !important}
+    body.preview-mode #homePage > div:first-child{padding-top:max(140px,calc(env(safe-area-inset-top)+120px)) !important}
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* ── СТОРИС-ОНБОРДИНГ ── */
     #onboardingPage{
