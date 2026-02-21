@@ -1184,6 +1184,10 @@ async function sendAnalysisIfPaid(ctx) {
 bot.command("get_analysis", sendAnalysisIfPaid);
 bot.hears(/^(расшифровка|получить расшифровку|детальный анализ)$/i, sendAnalysisIfPaid);
 
+// Защита от злоупотреблений: кулдаун 10 мин между попытками повторной отправки
+const resendCooldownMs = 10 * 60 * 1000;
+const resendLastAttempt = new Map();
+
 // Пользователь пишет «песня не пришла» — пробуем повторно отправить не доставленные
 bot.hears(/^(песня не пришла|не пришла песня|не получил песню|не получила песню|повторно отправь|отправь снова)$/i, async (ctx) => {
   const telegramUserId = ctx.from?.id;
@@ -1191,6 +1195,14 @@ bot.hears(/^(песня не пришла|не пришла песня|не по
     await ctx.reply("Не удалось определить пользователя. Попробуй снова или напиши в поддержку.");
     return;
   }
+  const now = Date.now();
+  const last = resendLastAttempt.get(telegramUserId) || 0;
+  if (now - last < resendCooldownMs) {
+    const minsLeft = Math.ceil((resendCooldownMs - (now - last)) / 60000);
+    await ctx.reply(`Подожди ещё ${minsLeft} мин. — повторная попытка ограничена раз в 10 минут, чтобы избежать перегрузки.`);
+    return;
+  }
+  resendLastAttempt.set(telegramUserId, now);
   try {
     const { data: rows } = await supabase
       .from("track_requests")
@@ -1202,7 +1214,9 @@ bot.hears(/^(песня не пришла|не пришла песня|не по
       .limit(3);
     if (!rows?.length) {
       await ctx.reply(
-        "Проверил — у тебя нет песен, которые не удалось доставить. Если песня точно не пришла:\n\n" +
+        "Проверил — у тебя нет песен в очереди на повторную отправку.\n\n" +
+        "Если песня не пришла:\n" +
+        "• Подожди 15–20 минут — песня может ещё генерироваться\n" +
         "• Убедись, что не блокировал бота и нажал «Старт»\n" +
         "• Напиши в поддержку — пришлём вручную"
       );
@@ -1233,7 +1247,7 @@ bot.hears(/^(песня не пришла|не пришла песня|не по
       }
     }
     if (sent > 0) {
-      await ctx.reply(`✅ Отправил тебе ${sent} песню(и). Проверь чат — они должны появиться.`);
+      await ctx.reply(`✅ Отправил тебе ${sent} песню(и). Проверь чат — они должны появиться.\n\nСледующая попытка повторной отправки — через 10 минут.`);
     } else {
       await ctx.reply(
         "Не удалось отправить — возможно, чат с ботом был удалён. Напиши /start и попробуй снова, или обратись в поддержку."
