@@ -222,10 +222,24 @@ async function processOneRequest(row) {
 
   const caption = `${name}, твой персональный звуковой ключ готов. Слушай в тишине — это твой артефакт силы для игры жизни. ✨`;
   const send = await sendAudioToUser(telegramUserId, sunoResult.audioUrl, caption);
+  const now = new Date().toISOString();
   if (!send.ok) {
     console.warn("[Worker] Telegram send:", send.error);
+    await supabase.from("track_requests").update({
+      generation_status: "delivery_failed",
+      delivery_status: "failed",
+      error_message: `Доставка не удалась: ${send.error}`.slice(0, 500),
+      updated_at: now,
+    }).eq("id", id);
   } else {
     console.log("[Worker] Отправлено пользователю", telegramUserId, "заявка", id);
+    await supabase.from("track_requests").update({
+      generation_status: "completed",
+      delivery_status: "sent",
+      delivered_at: now,
+      error_message: null,
+      updated_at: now,
+    }).eq("id", id);
   }
 }
 

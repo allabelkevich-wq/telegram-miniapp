@@ -1284,9 +1284,10 @@ bot.hears(/^(песня не пришла|не пришла песня|не по
         const data = await res.json().catch(() => ({}));
         if (data.ok) {
           sent++;
+          const now = new Date().toISOString();
           await supabase
             .from("track_requests")
-            .update({ delivery_status: "sent", generation_status: "completed", error_message: null, updated_at: new Date().toISOString() })
+            .update({ delivery_status: "sent", generation_status: "completed", delivered_at: now, error_message: null, updated_at: now })
             .eq("id", row.id);
         }
       } catch (e) {
