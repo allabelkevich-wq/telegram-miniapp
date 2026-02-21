@@ -127,7 +127,7 @@
       background:
         radial-gradient(ellipse 80% 50% at 50% 0%, rgba(212,175,55,0.06), transparent 50%),
         radial-gradient(ellipse 60% 40% at 80% 80%, rgba(236,72,153,0.04), transparent 50%),
-        linear-gradient(180deg, rgba(1,6,26,0.5) 0%, rgba(8,10,38,0.65) 100%);
+        linear-gradient(180deg, rgba(1,6,26,0.5) 0%, rgba(4,7,30,0.56) 25%, rgba(6,9,34,0.61) 50%, rgba(7,9,36,0.63) 75%, rgba(8,10,38,0.65) 100%);
       pointer-events:none;
     }
     body::after {
@@ -136,7 +136,7 @@
       inset:0;
       z-index:0;
       /* Лёгкая затемняющая плёнка без белых пятен — убраны яркие radial-gradient «звёзды» */
-      background: linear-gradient(180deg, rgba(1,6,26,0.25) 0%, transparent 50%, rgba(8,10,38,0.2) 100%);
+      background: linear-gradient(180deg, rgba(1,6,26,0.25) 0%, rgba(4,7,30,0.12) 30%, rgba(5,8,32,0.08) 50%, rgba(6,9,34,0.12) 70%, rgba(8,10,38,0.2) 100%);
       pointer-events:none;
     }
     .content-wrapper { max-width: min(600px,100%); margin: 0 auto; padding: var(--spacing-lg); width: 100%; }
@@ -261,7 +261,7 @@
     }
     /* Остальные стили приложения */
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Comfortaa',sans-serif}
-    body::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(1,6,26,.62) 0%,rgba(8,10,38,.78) 100%);z-index:0}
+    body::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(1,6,26,.62) 0%,rgba(3,7,28,.65) 18%,rgba(5,8,32,.70) 40%,rgba(6,9,35,.74) 60%,rgba(7,10,37,.76) 82%,rgba(8,10,38,.78) 100%);z-index:0}
     .container{max-width:min(600px,100%);margin:0 auto;width:100%;position:relative;z-index:1;padding:0 var(--spacing-md)}
     .page{display:none !important}
     .page.active{
@@ -487,6 +487,7 @@
     .keys-composition-small .key-music{width:36px;height:50px;transform:rotate(-8deg);opacity:.9}
     .keys-composition-small .key-door{width:34px;height:50px;transform:rotate(6deg);opacity:.9}
     .app-logo{display:block;margin:12px auto 4px;max-width:150px;width:100%;height:auto;border-radius:0;box-shadow:none;opacity:0.92}
+    body.preview-mode #homePage > div:first-child{padding-top:max(90px,calc(env(safe-area-inset-top)+70px)) !important}
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* ── СТОРИС-ОНБОРДИНГ ── */
     #onboardingPage{
@@ -2904,6 +2905,7 @@
         if (!tg) {
           var p = document.getElementById('previewNav');
           if (p) p.classList.add('show');
+          document.body.classList.add('preview-mode');
         }
         var birthdateEl = document.getElementById('birthdate');
         if (birthdateEl) {
