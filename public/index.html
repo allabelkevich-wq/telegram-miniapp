@@ -486,8 +486,8 @@
     /* Зона логотипа: свой плавный фон без стопов, чтобы в превью Telegram не было полосы через лого */
     #homePage > div:first-child{background:linear-gradient(180deg,rgba(1,6,26,0.55) 0%,transparent 100%);min-height:120px}
     /* Жёсткий отступ от линии Telegram: и в CSS с !important, чтобы сработало после деплоя и без кэша */
-    #homePage > div:first-child{padding-top:max(140px,calc(env(safe-area-inset-top)+120px)) !important}
-    body.preview-mode #homePage > div:first-child{padding-top:max(140px,calc(env(safe-area-inset-top)+120px)) !important}
+    #homePage > div:first-child{padding-top:max(220px,calc(env(safe-area-inset-top)+200px)) !important}
+    body.preview-mode #homePage > div:first-child{padding-top:max(220px,calc(env(safe-area-inset-top)+200px)) !important}
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* ── СТОРИС-ОНБОРДИНГ ── */
     #onboardingPage{
@@ -722,7 +722,7 @@
     <div class="page" id="homePage">
 
       <!-- Логотип и приветствие — заметный отступ от линии под шапкой Telegram -->
-      <div style="position:relative;text-align:center;padding:max(100px,calc(env(safe-area-inset-top)+84px)) 20px 12px">
+      <div style="position:relative;text-align:center;padding:max(220px,calc(env(safe-area-inset-top)+200px)) 20px 12px">
         <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
           <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
             <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
