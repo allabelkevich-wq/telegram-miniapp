@@ -1058,7 +1058,7 @@ ${extBlock ? "\n" + extBlock : ""}
       detailed_analysis: fullResponse,
       lyrics: lyricsForSuno,
       title: parsed.title,
-      language: 'ru',
+      language: request.language || 'ru',
       generation_status: 'processing',
       error_message: null,
       updated_at: new Date().toISOString()

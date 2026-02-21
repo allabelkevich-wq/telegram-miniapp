@@ -1184,6 +1184,67 @@ async function sendAnalysisIfPaid(ctx) {
 bot.command("get_analysis", sendAnalysisIfPaid);
 bot.hears(/^(расшифровка|получить расшифровку|детальный анализ)$/i, sendAnalysisIfPaid);
 
+// Пользователь пишет «песня не пришла» — пробуем повторно отправить не доставленные
+bot.hears(/^(песня не пришла|не пришла песня|не получил песню|не получила песню|повторно отправь|отправь снова)$/i, async (ctx) => {
+  const telegramUserId = ctx.from?.id;
+  if (!telegramUserId || !supabase || !BOT_TOKEN) {
+    await ctx.reply("Не удалось определить пользователя. Попробуй снова или напиши в поддержку.");
+    return;
+  }
+  try {
+    const { data: rows } = await supabase
+      .from("track_requests")
+      .select("id,name,audio_url,title,delivery_status,generation_status")
+      .eq("telegram_user_id", Number(telegramUserId))
+      .not("audio_url", "is", null)
+      .eq("generation_status", "delivery_failed")
+      .order("created_at", { ascending: false })
+      .limit(3);
+    if (!rows?.length) {
+      await ctx.reply(
+        "Проверил — у тебя нет песен, которые не удалось доставить. Если песня точно не пришла:\n\n" +
+        "• Убедись, что не блокировал бота и нажал «Старт»\n" +
+        "• Напиши в поддержку — пришлём вручную"
+      );
+      return;
+    }
+    let sent = 0;
+    for (const row of rows) {
+      try {
+        const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            chat_id: String(telegramUserId),
+            audio: row.audio_url,
+            caption: `🎵 ${row.name || "Друг"}, твоя персональная песня!\n\n— YupSoul`,
+          }).toString(),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (data.ok) {
+          sent++;
+          await supabase
+            .from("track_requests")
+            .update({ delivery_status: "sent", generation_status: "completed", error_message: null, updated_at: new Date().toISOString() })
+            .eq("id", row.id);
+        }
+      } catch (e) {
+        console.warn("[resend] Ошибка отправки", row.id, e?.message);
+      }
+    }
+    if (sent > 0) {
+      await ctx.reply(`✅ Отправил тебе ${sent} песню(и). Проверь чат — они должны появиться.`);
+    } else {
+      await ctx.reply(
+        "Не удалось отправить — возможно, чат с ботом был удалён. Напиши /start и попробуй снова, или обратись в поддержку."
+      );
+    }
+  } catch (e) {
+    console.error("[resend] Ошибка:", e?.message);
+    await ctx.reply("Произошла ошибка. Напиши в поддержку.");
+  }
+});
+
 // Команда для админа: просмотр натальной карты по request_id
 bot.command("astro", async (ctx) => {
   const userId = ctx.from?.id;
