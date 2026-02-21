@@ -2170,7 +2170,24 @@ app.post("/api/admin/requests/:id/deliver", asyncApi(async (req, res) => {
       }).toString(),
     });
     const audioData = await audioRes.json().catch(() => ({}));
-    if (!audioData.ok) return res.status(500).json({ success: false, error: audioData.description || "Ошибка Telegram API" });
+    if (!audioData.ok) {
+      const rawError = audioData.description || "Ошибка Telegram API";
+      // «Чат не найден» = пользователь заблокировал бота, не нажал Старт или удалил переписку
+      const friendlyError = /chat not found|chat not found/i.test(rawError)
+        ? "Чат не найден. Пользователь мог заблокировать бота, не нажать «Старт» или удалить переписку. Попросите снова открыть бота и нажать «Старт»."
+        : rawError;
+      // Фиксируем неудачную доставку в БД (статус «Не доставлено»)
+      await supabase
+        .from("track_requests")
+        .update({
+          delivery_status: "failed",
+          generation_status: "delivery_failed",
+          error_message: rawError.slice(0, 500),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+      return res.status(500).json({ success: false, error: friendlyError });
+    }
     // Фиксируем успешную доставку в БД (для админки — проверка статуса получения)
     await supabase
       .from("track_requests")
