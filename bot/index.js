@@ -3478,6 +3478,82 @@ function startDeliveryWatchdog() {
   setInterval(tick, DELIVERY_WATCHDOG_INTERVAL_MS);
 }
 
+/** Раз в час: проверка, что все готовые песни (completed с audio_url) доставлены пользователям; повторная отправка при необходимости. */
+const HOURLY_DELIVERY_CHECK_MS = Math.max(60 * 60 * 1000, parseInt(process.env.HOURLY_DELIVERY_CHECK_MS, 10) || 60 * 60 * 1000);
+const HOURLY_DELIVERY_BATCH = Math.min(50, Math.max(5, parseInt(process.env.HOURLY_DELIVERY_BATCH, 10) || 20));
+let _hourlyDeliveryCheckStarted = false;
+function startHourlyDeliveryCheck() {
+  if (!supabase || !BOT_TOKEN || _hourlyDeliveryCheckStarted) return;
+  _hourlyDeliveryCheckStarted = true;
+  console.log("[HourlyCheck] Запуск: интервал", HOURLY_DELIVERY_CHECK_MS / 60000, "мин, батч до", HOURLY_DELIVERY_BATCH);
+
+  async function run() {
+    try {
+      const { data: rows } = await supabase
+        .from("track_requests")
+        .select("id,name,audio_url,telegram_user_id")
+        .not("audio_url", "is", null)
+        .or("delivered_at.is.null,delivery_status.neq.sent")
+        .in("generation_status", ["completed", "delivery_failed"])
+        .order("created_at", { ascending: true })
+        .limit(HOURLY_DELIVERY_BATCH);
+      if (!rows?.length) return;
+      let sent = 0;
+      let failed = 0;
+      const now = new Date().toISOString();
+      for (const row of rows) {
+        try {
+          const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              chat_id: String(row.telegram_user_id),
+              audio: row.audio_url,
+              caption: `🎵 ${row.name || "Друг"}, твоя персональная песня!\n\n— YupSoul`,
+            }).toString(),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (data.ok) {
+            sent++;
+            await supabase
+              .from("track_requests")
+              .update({ delivery_status: "sent", generation_status: "completed", delivered_at: now, error_message: null, updated_at: now })
+              .eq("id", row.id);
+          } else {
+            failed++;
+            await supabase
+              .from("track_requests")
+              .update({
+                delivery_status: "failed",
+                generation_status: "delivery_failed",
+                error_message: (data.description || "Ошибка доставки").slice(0, 500),
+                updated_at: now,
+              })
+              .eq("id", row.id);
+          }
+        } catch (e) {
+          failed++;
+          console.warn("[HourlyCheck] Ошибка отправки", row.id, e?.message);
+        }
+      }
+      if (sent > 0 || failed > 0) {
+        console.log("[HourlyCheck] Проверка доставки: отправлено", sent, ", не доставлено", failed);
+        if (ADMIN_IDS.length && BOT_TOKEN && (sent > 0 || failed > 0)) {
+          const msg = `📬 Раз в час: проверка доставки.\nОтправлено пользователям: ${sent}.\nНе удалось доставить: ${failed}.`;
+          for (const adminId of ADMIN_IDS) {
+            bot.api.sendMessage(adminId, msg).catch((e) => console.warn("[HourlyCheck] Уведомление админу:", e?.message));
+          }
+        }
+      }
+    } catch (e) {
+      console.error("[HourlyCheck] Ошибка:", e?.message || e);
+    }
+  }
+
+  run();
+  setInterval(run, HOURLY_DELIVERY_CHECK_MS);
+}
+
 function registerMasterRoutes(expressApp) {
   expressApp.get("/api/master/access", async (req, res) => {
     const initData = req.query?.initData ?? req.headers["x-telegram-init"];
@@ -3543,6 +3619,7 @@ if (process.env.RENDER_HEALTHZ_FIRST) {
     startBotWithPolling();
   }
   startDeliveryWatchdog();
+  startHourlyDeliveryCheck();
 } else {
   console.log("[HTTP] Слушаю порт", HEROES_API_PORT);
   registerMasterRoutes(app);
@@ -3556,5 +3633,6 @@ if (process.env.RENDER_HEALTHZ_FIRST) {
       startBotWithPolling();
     }
     startDeliveryWatchdog();
+    startHourlyDeliveryCheck();
   });
 }
