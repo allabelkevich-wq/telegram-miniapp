@@ -3303,7 +3303,7 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   const mode = body.person1 && body.mode === "couple" ? "couple" : "single";
   console.log(`[API] Заявка ${requestId} сохранена — ГЕНЕРИРУЕМ ПЕСНЮ БЕСПЛАТНО (режим: ${mode})`);
   const successText =
-    "✨ Твой звуковой ключ создаётся! Первый трек — в подарок 🎁\n\nЧерез 2–3 минуты он придёт в этот чат.";
+    "✨ Твой звуковой ключ создаётся! Первый трек — в подарок 🎁\n\nОн придёт в этот чат, когда будет готов.";
   bot.api.sendMessage(telegramUserId, successText).catch((e) => console.warn("[submit-request] sendMessage:", e?.message));
   if (ADMIN_IDS.length) {
     const requestPreview = (userRequest || "").trim().slice(0, 150);
