@@ -2492,6 +2492,7 @@
           block.style.display = open ? 'none' : 'flex';
           toggle.textContent = open ? '▸ моя статистика' : '▾ моя статистика';
           toggle.style.color = open ? 'rgba(212,175,55,0.4)' : 'rgba(212,175,55,0.7)';
+          if (!open && typeof loadReferralStats === 'function') loadReferralStats();
         });
       })();
 
@@ -3394,6 +3395,7 @@
           try { document.body.scrollTop = 0; } catch(e) {}
         }, 0);
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
+        if (pageId === 'homePage' && typeof loadReferralStats === 'function') loadReferralStats();
         // paymentPage теперь overlay — здесь ничего не делаем
         if (pageId === 'successPage') updateSoulChatHint();
         if (document.getElementById('previewNav') && document.getElementById('previewNav').classList.contains('show')) {
@@ -3418,6 +3420,7 @@
           var isOpen = body.style.display !== 'none';
           body.style.display = isOpen ? 'none' : 'block';
           if (chevron) chevron.style.transform = isOpen ? '' : 'rotate(90deg)';
+          if (!isOpen && typeof loadReferralStats === 'function') loadReferralStats();
         });
       }
 

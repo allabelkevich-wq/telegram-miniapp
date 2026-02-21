@@ -42,20 +42,35 @@ async function triggerReferralRewardIfEligible(refereeTelegramId) {
     .eq('id', referral.id).eq('reward_granted', false).select('id');
   if (!claimed?.length) return; // уже выдано другим воркером
 
-  // Начисляем кредит рефереру
+  // Начисляем кредит рефереру (создаём профиль, если реферер ещё не был в приложении)
+  const referrerTgId = Number(referral.referrer_id);
   const { data: rp, error: rpErr } = await supabase.from('user_profiles')
-    .select('referral_credits').eq('telegram_id', Number(referral.referrer_id)).maybeSingle();
+    .select('referral_credits').eq('telegram_id', referrerTgId).maybeSingle();
   if (rpErr) {
     console.error('[Referral] Ошибка чтения профиля реферера:', rpErr.message);
     return;
   }
-  if (!rp) {
-    console.warn('[Referral] Профиль реферера не найден:', referral.referrer_id);
-    return;
+  const newCredits = (rp?.referral_credits || 0) + 1;
+  let creditErr = null;
+  if (rp) {
+    const res = await supabase.from('user_profiles')
+      .update({ referral_credits: newCredits, updated_at: new Date().toISOString() })
+      .eq('telegram_id', referrerTgId);
+    creditErr = res.error;
+  } else {
+    const res = await supabase.from('user_profiles')
+      .insert({ telegram_id: referrerTgId, referral_credits: 1, updated_at: new Date().toISOString() });
+    creditErr = res.error;
+    if (creditErr && /duplicate|unique|already exists/i.test(creditErr.message)) {
+      const { data: rp2 } = await supabase.from('user_profiles').select('referral_credits').eq('telegram_id', referrerTgId).maybeSingle();
+      if (rp2) {
+        const res2 = await supabase.from('user_profiles')
+          .update({ referral_credits: (rp2.referral_credits || 0) + 1, updated_at: new Date().toISOString() })
+          .eq('telegram_id', referrerTgId);
+        creditErr = res2.error;
+      }
+    }
   }
-  const { error: creditErr } = await supabase.from('user_profiles')
-    .update({ referral_credits: (rp.referral_credits || 0) + 1 })
-    .eq('telegram_id', Number(referral.referrer_id));
   if (creditErr) {
     console.error('[Referral] Ошибка начисления кредита:', creditErr.message);
     return;
@@ -1092,6 +1107,9 @@ ${extBlock ? "\n" + extBlock : ""}
         console.error('[Воркер] Не удалось отправить резервное сообщение:', e.message);
       }
       await setStep('delivery_done', `Доставка с fallback: ${send.error}`);
+      // Песня сгенерирована — начисляем реферальную награду даже при ошибке доставки (друг «активировался»)
+      try { await triggerReferralRewardIfEligible(request.telegram_user_id); }
+      catch (e) { console.warn('[Referral] Ошибка начисления награды при delivery_failed:', e?.message); }
     } else {
       console.log(`[Воркер] ✅ Заявка ${requestId} завершена для ${request.name}`);
       // Доставка успешна — фиксируем completed и delivery_status
