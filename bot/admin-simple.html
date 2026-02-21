@@ -662,16 +662,17 @@
       return sorted;
     }
 
-    // Определяем «тип оплаты» для фильтрации и сортировки
+    // Определяем «тип оплаты» для фильтрации и сортировки (приоритет: промокод/бесплатно по данным, не только по провайдеру)
     function getPayType(r) {
       const provider = String(r.payment_provider || '').toLowerCase();
       const status   = String(r.payment_status  || '').toLowerCase();
       const promo    = r.promo_code ? String(r.promo_code).toUpperCase() : null;
+      const amount   = r.payment_amount != null ? Number(r.payment_amount) : null;
       const gs       = String(r.generation_status || '').toLowerCase();
       if (gs === 'pending_payment' || status === 'requires_payment') return 'awaiting';
       if (status === 'gift_used') return 'gift';
       if (provider === 'subscription' || status === 'subscription_active') return 'subscription';
-      if (provider === 'promo' || (promo && provider !== 'hot')) return 'promo';
+      if (provider === 'promo' || promo || (status === 'paid' && amount === 0)) return 'promo';
       if (provider === 'hot') return 'hot';
       if (provider === 'admin') return 'admin';
       if (provider === 'gift') return 'gift';
