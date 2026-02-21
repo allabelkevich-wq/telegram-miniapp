@@ -384,8 +384,9 @@
       }
     }
     .birthdate-wrap{position:relative}
+    .birthdate-wrap.has-date{padding-right:2.75rem}
     #birthdate{padding-right:2.5rem;min-width:0}
-    .birthdate-check{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:#4ade80;font-size:1.25rem;display:none;font-weight:700}
+    .birthdate-check{position:absolute;right:16px;top:50%;transform:translateY(-50%);pointer-events:none;color:#4ade80;font-size:1.15rem;display:none;font-weight:700}
     .birthdate-wrap.has-date .birthdate-check{display:block}
     /* Удобный ввод даты с компьютера: три выпадающих списка */
     .date-group{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -485,7 +486,7 @@
     .keys-composition-small{display:flex;align-items:center;justify-content:center;gap:12px;margin:15px 0}
     .keys-composition-small .key-music{width:36px;height:50px;transform:rotate(-8deg);opacity:.9}
     .keys-composition-small .key-door{width:34px;height:50px;transform:rotate(6deg);opacity:.9}
-    .app-logo{display:block;margin:0 auto 4px;max-width:150px;width:100%;height:auto;border-radius:0;box-shadow:none;opacity:0.92}
+    .app-logo{display:block;margin:12px auto 4px;max-width:150px;width:100%;height:auto;border-radius:0;box-shadow:none;opacity:0.92}
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* ── СТОРИС-ОНБОРДИНГ ── */
     #onboardingPage{
@@ -594,15 +595,15 @@
     .birthplace-suggestions li:last-child{border-bottom:none}
     .birthplace-suggestions li:hover,.birthplace-suggestions li.selected{background:rgba(212,175,55,.2);color:#fbbf24}
     .birthplace-suggestions .place-type{font-size:.9rem;color:rgba(255,255,255,0.6);margin-top:3px;font-weight:400}
-    #birthplace{padding-right:2.5rem;text-overflow:clip;min-width:0;font-size:1.05rem;font-weight:500}
-    .birthplace-check{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:#4ade80;font-size:1.25rem;display:none;font-weight:700}
+    #birthplace,#birthplace2,#heroBirthplace{padding-right:3rem;text-overflow:ellipsis;min-width:0;font-size:1.05rem;font-weight:500}
+    .birthplace-check{position:absolute;right:16px;top:50%;transform:translateY(-50%);pointer-events:none;color:#4ade80;font-size:1.15rem;display:none;font-weight:700;flex-shrink:0}
     .birthplace-wrap.has-place .birthplace-check{display:block}
     .birthplace-hint{margin-top:8px;font-size:.95rem;color:rgba(212,175,55,0.9);line-height:1.6;font-weight:500;background:rgba(212,175,55,0.08);padding:10px 14px;border-radius:10px;border:1px solid rgba(212,175,55,0.25)}
     @media (max-width: 600px) {
       .birthplace-suggestions{max-height:240px;border-width:2.5px}
       .birthplace-suggestions li{padding:16px 20px;font-size:1.2rem;font-weight:400;letter-spacing:0}
       .birthplace-suggestions .place-type{font-size:0.95rem;font-weight:400}
-      #birthplace{font-size:1.2rem;padding:16px 20px;font-weight:500;letter-spacing:0}
+      #birthplace,#birthplace2,#heroBirthplace{font-size:1.2rem;padding:16px 48px 16px 20px;font-weight:500;letter-spacing:0}
       .birthplace-hint{font-size:1rem;padding:12px 16px}
       .field input:not([type="checkbox"]):not([type="radio"]){
         font-size:1.15rem;
@@ -717,7 +718,7 @@
     <div class="page" id="homePage">
 
       <!-- Логотип и приветствие — вверху, без карточки -->
-      <div style="position:relative;text-align:center;padding:max(40px,calc(env(safe-area-inset-top)+28px)) 20px 12px">
+      <div style="position:relative;text-align:center;padding:max(48px,calc(env(safe-area-inset-top)+36px)) 20px 12px">
         <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
           <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
             <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
