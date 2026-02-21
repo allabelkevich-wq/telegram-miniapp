@@ -1231,6 +1231,81 @@ async function sendAnalysisIfPaid(ctx) {
 bot.command("get_analysis", sendAnalysisIfPaid);
 bot.hears(/^(расшифровка|получить расшифровку|детальный анализ)$/i, sendAnalysisIfPaid);
 
+// Защита от злоупотреблений: кулдаун 10 мин между попытками повторной отправки
+const resendCooldownMs = 10 * 60 * 1000;
+const resendLastAttempt = new Map();
+
+// Пользователь пишет «песня не пришла» — пробуем повторно отправить не доставленные
+bot.hears(/^(песня не пришла|не пришла песня|не получил песню|не получила песню|повторно отправь|отправь снова)$/i, async (ctx) => {
+  const telegramUserId = ctx.from?.id;
+  if (!telegramUserId || !supabase || !BOT_TOKEN) {
+    await ctx.reply("Не удалось определить пользователя. Попробуй снова или напиши в поддержку.");
+    return;
+  }
+  const now = Date.now();
+  const last = resendLastAttempt.get(telegramUserId) || 0;
+  if (now - last < resendCooldownMs) {
+    const minsLeft = Math.ceil((resendCooldownMs - (now - last)) / 60000);
+    await ctx.reply(`Подожди ещё ${minsLeft} мин. — повторная попытка ограничена раз в 10 минут, чтобы избежать перегрузки.`);
+    return;
+  }
+  resendLastAttempt.set(telegramUserId, now);
+  try {
+    const { data: rows } = await supabase
+      .from("track_requests")
+      .select("id,name,audio_url,title,delivery_status,generation_status")
+      .eq("telegram_user_id", Number(telegramUserId))
+      .not("audio_url", "is", null)
+      .eq("generation_status", "delivery_failed")
+      .order("created_at", { ascending: false })
+      .limit(3);
+    if (!rows?.length) {
+      await ctx.reply(
+        "Проверил — у тебя нет песен в очереди на повторную отправку.\n\n" +
+        "Если песня не пришла:\n" +
+        "• Подожди 15–20 минут — песня может ещё генерироваться\n" +
+        "• Убедись, что не блокировал бота и нажал «Старт»\n" +
+        "• Напиши в поддержку — пришлём вручную"
+      );
+      return;
+    }
+    let sent = 0;
+    for (const row of rows) {
+      try {
+        const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            chat_id: String(telegramUserId),
+            audio: row.audio_url,
+            caption: `🎵 ${row.name || "Друг"}, твоя персональная песня!\n\n— YupSoul`,
+          }).toString(),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (data.ok) {
+          sent++;
+          await supabase
+            .from("track_requests")
+            .update({ delivery_status: "sent", generation_status: "completed", error_message: null, updated_at: new Date().toISOString() })
+            .eq("id", row.id);
+        }
+      } catch (e) {
+        console.warn("[resend] Ошибка отправки", row.id, e?.message);
+      }
+    }
+    if (sent > 0) {
+      await ctx.reply(`✅ Отправил тебе ${sent} песню(и). Проверь чат — они должны появиться.\n\nСледующая попытка повторной отправки — через 10 минут.`);
+    } else {
+      await ctx.reply(
+        "Не удалось отправить — возможно, чат с ботом был удалён. Напиши /start и попробуй снова, или обратись в поддержку."
+      );
+    }
+  } catch (e) {
+    console.error("[resend] Ошибка:", e?.message);
+    await ctx.reply("Произошла ошибка. Напиши в поддержку.");
+  }
+});
+
 // Команда для админа: просмотр натальной карты по request_id
 bot.command("astro", async (ctx) => {
   const userId = ctx.from?.id;
@@ -2011,10 +2086,11 @@ app.get("/api/admin/stats", asyncApi(async (req, res) => {
   }
   if (result.error) return res.status(500).json({ success: false, error: result.error.message });
   const rows = result.data || [];
-  const stats = { total: rows.length, pending: 0, pending_payment: 0, cancelled: 0, astro_calculated: 0, lyrics_generated: 0, suno_processing: 0, completed: 0, failed: 0 };
+  const stats = { total: rows.length, pending: 0, pending_payment: 0, cancelled: 0, astro_calculated: 0, lyrics_generated: 0, suno_processing: 0, completed: 0, delivery_failed: 0, failed: 0 };
   rows.forEach((r) => {
     const s = (r.generation_status ?? r.status) || "pending";
     if (s === "completed") stats.completed++;
+    else if (s === "delivery_failed") stats.delivery_failed++;
     else if (s === "failed") stats.failed++;
     else if (s === "cancelled") stats.cancelled++;
     else if (s === "pending_payment") stats.pending_payment++;
@@ -2032,11 +2108,12 @@ app.get("/api/admin/requests", asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const limit = Math.min(parseInt(req.query?.limit, 10) || 50, 100);
   const statusFilter = req.query?.status || "all";
-  const fullSelect = "id,name,gender,birthdate,birthplace,person2_name,person2_gender,person2_birthdate,person2_birthplace,status,generation_status,created_at,delivered_at,audio_url,mode,request,generation_steps,payment_status,payment_provider,telegram_user_id";
+  const fullSelect = "id,name,gender,birthdate,birthplace,person2_name,person2_gender,person2_birthdate,person2_birthplace,status,generation_status,delivery_status,delivered_at,created_at,audio_url,mode,request,generation_steps,payment_status,payment_provider,telegram_user_id";
   let q = supabase.from("track_requests").select(fullSelect).order("created_at", { ascending: false }).limit(limit);
   if (statusFilter === "pending") q = q.in("generation_status", ["pending", "astro_calculated", "lyrics_generated", "suno_processing"]);
   else if (statusFilter === "pending_payment") q = q.eq("generation_status", "pending_payment");
   else if (statusFilter === "completed") q = q.eq("generation_status", "completed");
+  else if (statusFilter === "delivery_failed") q = q.eq("generation_status", "delivery_failed");
   else if (statusFilter === "failed") q = q.eq("generation_status", "failed");
   else if (statusFilter === "cancelled") q = q.eq("generation_status", "cancelled");
   // "all" — без фильтра
@@ -2071,8 +2148,13 @@ app.get("/api/admin/requests/:id", asyncApi(async (req, res) => {
   const id = sanitizeRequestId(req.params.id);
   if (!id) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
   if (!isValidRequestId(id)) return res.status(400).json({ success: false, error: "Используйте полный UUID заявки (с дефисами), не обрезанный ID" });
+<<<<<<< HEAD
   const fullCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message,llm_truncated,generation_steps,delivered_at,payment_status,payment_provider,telegram_user_id";
   const coreCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message,delivered_at";
+=======
+  const fullCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,delivery_status,error_message,llm_truncated,generation_steps,payment_status,payment_provider,telegram_user_id";
+  const coreCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,error_message";
+>>>>>>> cursor/-bc-9243cce4-5779-4bf8-88c6-2ca7938de67b-3d1b
   const minCols = "id,name,gender,birthdate,birthplace,request,created_at,status,telegram_user_id";
   let usedFallbackCols = false;
   let result = await supabase.from("track_requests").select(fullCols).eq("id", id).maybeSingle();
@@ -2215,8 +2297,32 @@ app.post("/api/admin/requests/:id/deliver", asyncApi(async (req, res) => {
       }).toString(),
     });
     const audioData = await audioRes.json().catch(() => ({}));
-    if (!audioData.ok) return res.status(500).json({ success: false, error: audioData.description || "Ошибка Telegram API" });
-    await supabase.from("track_requests").update({ delivered_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", id);
+    if (!audioData.ok) {
+      const rawError = audioData.description || "Ошибка Telegram API";
+      const friendlyError = /chat not found|chat not found/i.test(rawError)
+        ? "Чат не найден. Пользователь мог заблокировать бота, не нажать «Старт» или удалить переписку. Попросите снова открыть бота и нажать «Старт»."
+        : rawError;
+      await supabase
+        .from("track_requests")
+        .update({
+          delivery_status: "failed",
+          generation_status: "delivery_failed",
+          error_message: rawError.slice(0, 500),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+      return res.status(500).json({ success: false, error: friendlyError });
+    }
+    await supabase
+      .from("track_requests")
+      .update({
+        delivery_status: "sent",
+        generation_status: "completed",
+        delivered_at: new Date().toISOString(),
+        error_message: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
     return res.json({ success: true, message: "Песня отправлена пользователю" });
   } catch (e) {
     return res.status(500).json({ success: false, error: e?.message || "Ошибка отправки" });

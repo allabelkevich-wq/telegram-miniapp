@@ -50,6 +50,7 @@
     .request-status { padding: 8px 20px; border-radius: 20px; font-weight: bold; min-width: 140px; text-align: center; }
     .status-pending { background: #f39c12; color: #000; }
     .status-completed { background: #27ae60; color: #fff; }
+    .status-delivery-failed { background: #e67e22; color: #fff; }
     .status-failed { background: #e74c3c; color: #fff; }
     .status-payment { background: #8b5cf6; color: #fff; }
     .status-cancelled { background: #475569; color: #fff; }
@@ -175,7 +176,7 @@
     <div class="header">
       <h1>👑 АДМИНКА YUP SOUL</h1>
       <p>Полный контроль генерации звуковых ключей / Full control of sound key generation</p>
-      <p style="font-size:11px;color:#475569;margin-top:4px;">build: 20260219-2</p>
+      <p style="font-size:11px;color:#475569;margin-top:4px;">build: 20260220 (delivery status)</p>
       <p id="url-info" style="font-size:12px;color:#64748b;margin-top:8px;word-break:break-all;"></p>
       <div id="loadingStatus" style="display:none;margin-top:10px;padding:8px 14px;background:rgba(102,126,234,0.12);border:1px solid rgba(102,126,234,0.3);border-radius:8px;font-size:13px;color:#a5b4fc;align-items:center;gap:8px;">
         <span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(102,126,234,0.3);border-top-color:#667eea;border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;"></span>
@@ -196,6 +197,11 @@
       <div class="stat-card completed" data-filter="completed" onclick="filterByCard(this)" title="Показать завершённые">
         <div class="stat-label">✅ Готово</div>
         <div class="stat-number" id="completed">-</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px;">нажми → список</div>
+      </div>
+      <div class="stat-card" style="border-left-color:#e67e22;" data-filter="delivery_failed" onclick="filterByCard(this)" title="Песни готовы, но не доставлены пользователям">
+        <div class="stat-label">📭 Не доставлено</div>
+        <div class="stat-number" id="stat-delivery-failed">-</div>
         <div style="font-size:11px;color:#64748b;margin-top:4px;">нажми → список</div>
       </div>
       <div class="stat-card failed" data-filter="failed" onclick="filterByCard(this)" title="Показать с ошибками">
@@ -261,6 +267,7 @@
           <button class="uf-btn filter-btn" data-filter="pending">⏳ В работе</button>
           <button class="uf-btn filter-btn" data-filter="pending_payment">💳 Оплата</button>
           <button class="uf-btn filter-btn" data-filter="completed">✅ Готово</button>
+          <button class="uf-btn filter-btn" data-filter="delivery_failed">📭 Не доставлено</button>
           <button class="uf-btn filter-btn" data-filter="failed">❌ Ошибки</button>
           <button class="uf-btn filter-btn" data-filter="cancelled">🚫 Отменённые</button>
         </div>
@@ -577,11 +584,17 @@
         </div>
       </div>` : '';
 
+      // ── Баннер «Не доставлено» ──────────────────────────────────────────
+      const isDeliveryFailed = (r.generation_status || '') === 'delivery_failed' || (r.delivery_status || '') === 'failed';
+      const deliveryBanner = isDeliveryFailed ? `<div style="margin-bottom:14px;padding:12px 16px;background:rgba(230,126,34,0.15);border:1px solid rgba(230,126,34,0.4);border-radius:8px;color:#fcd34d;">
+        <strong>📭 Песня готова, но не доставлена пользователю.</strong> ${r.error_message ? escapeHtml(String(r.error_message).slice(0, 120)) : ''} Нажми «📤 Отправить пользователю» для повторной доставки.
+      </div>` : '';
+
       // ── Блок «ID заявки» ─────────────────────────────────────────────────
       const deliveredStr = r.delivered_at ? new Date(r.delivered_at).toLocaleString('ru-RU') : null;
       const idBlock = `<div style="font-size:10px;color:#334155;font-family:monospace;padding:8px 0 4px;word-break:break-all;">
         ID: ${escapeHtml(r.id||'')} · Создана: ${r.created_at ? new Date(r.created_at).toLocaleString('ru-RU') : '—'} · Режим: ${escapeHtml(r.mode||'single')}
-        ${deliveredStr ? '<br><span style="color:#86efac;">✓ Доставлено в чат: ' + escapeHtml(deliveredStr) + '</span>' : ''}
+        ${deliveredStr ? '<br><span style="color:#86efac;">✓ Доставлено в чат: ' + escapeHtml(deliveredStr) + '</span>' : ''}${r.delivery_status === 'sent' ? ' · ✅ Доставлено' : (r.delivery_status === 'failed' || isDeliveryFailed ? ' · 📭 Не доставлено' : '')}
       </div>`;
 
       // ── Кнопки действий ───────────────────────────────────────────────────
@@ -595,6 +608,7 @@
 
       body.innerHTML = `
         <div style="padding:4px 0 10px;">
+          ${deliveryBanner}
           ${idBlock}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
             ${userBlock}
@@ -812,6 +826,8 @@
           document.getElementById('total').textContent = s.total;
           document.getElementById('pending').textContent = (s.pending || 0) + (s.astro_calculated || 0) + (s.lyrics_generated || 0) + (s.suno_processing || 0);
           document.getElementById('completed').textContent = s.completed || 0;
+          const dfEl = document.getElementById('stat-delivery-failed');
+          if (dfEl) dfEl.textContent = s.delivery_failed || 0;
           document.getElementById('failed').textContent = s.failed || 0;
           // Показываем счётчик ожидающих оплаты
           const ppEl = document.getElementById('stat-pending-payment');
@@ -889,6 +905,8 @@
           document.getElementById('total').textContent = s.total;
           document.getElementById('pending').textContent = (s.pending || 0) + (s.astro_calculated || 0) + (s.lyrics_generated || 0) + (s.suno_processing || 0);
           document.getElementById('completed').textContent = s.completed || 0;
+          const dfEl = document.getElementById('stat-delivery-failed');
+          if (dfEl) dfEl.textContent = s.delivery_failed || 0;
           document.getElementById('failed').textContent = s.failed || 0;
           const ppEl = document.getElementById('stat-pending-payment');
           if (ppEl) ppEl.textContent = s.pending_payment || 0;
@@ -927,11 +945,12 @@
     }
 
     function getStatusOrder(status) {
-      const order = { pending_payment: -1, pending: 1, astro_calculated: 2, lyrics_generated: 3, suno_processing: 4, completed: 5, failed: 0, cancelled: -2 };
+      const order = { pending_payment: -1, pending: 1, astro_calculated: 2, lyrics_generated: 3, suno_processing: 4, completed: 5, delivery_failed: 4.5, failed: 0, cancelled: -2 };
       return order[status] !== undefined ? order[status] : 1;
     }
     function statusClass(gs) {
       if (gs === 'completed') return 'status-completed';
+      if (gs === 'delivery_failed') return 'status-delivery-failed';
       if (gs === 'failed') return 'status-failed';
       if (gs === 'pending_payment') return 'status-payment';
       if (gs === 'cancelled') return 'status-cancelled';
@@ -939,6 +958,7 @@
     }
     function statusLabel(gs) {
       if (gs === 'completed') return '✅ Готово';
+      if (gs === 'delivery_failed') return '📭 Не доставлено';
       if (gs === 'failed') return '❌ Ошибка';
       if (gs === 'pending_payment') return '💳 Ожидает оплаты';
       if (gs === 'cancelled') return '🚫 Отменена';
