@@ -705,9 +705,9 @@
     .profile-create-btn:active{transform:scale(0.98)}
     /* ── ФОРМА: СВОДКА ПРОФИЛЯ ── */
     #formProfileSummary{display:none;padding:0 16px;margin-bottom:8px}
-    .fps-card{background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:14px;padding:11px 14px;display:flex;align-items:center;gap:0}
-    .fps-name{font-size:0.95rem;font-weight:600;color:rgba(255,255,255,0.88);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .fps-date{font-size:0.85rem;font-weight:500;color:rgba(212,175,55,0.75);white-space:nowrap;margin-right:10px;flex-shrink:0}
+    .fps-card{background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:14px;padding:11px 14px;display:flex;align-items:center;gap:0;width:100%;box-sizing:border-box}
+    .fps-name{font-size:0.95rem;font-weight:600;color:rgba(255,255,255,0.9);flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px}
+    .fps-date{font-size:0.85rem;font-weight:500;color:rgba(212,175,55,0.8);white-space:nowrap;margin-right:10px;flex-shrink:0}
     .fps-edit-btn{background:none;border:none;color:rgba(212,175,55,0.55);font-size:0.8rem;cursor:pointer;padding:4px 6px;min-height:unset;box-shadow:none;animation:none;margin:0;font-weight:500;white-space:nowrap;flex-shrink:0;letter-spacing:0.01em}
   </style>
 </head>
@@ -2797,7 +2797,7 @@
           if (birthtimeEl && p.birthtime) birthtimeEl.value = p.birthtime;
           if (unknownEl && p.birthtime_unknown) unknownEl.checked = true;
 
-          // Сводка: только имя и дата рождения
+          // Сводка: имя + дата рождения
           var summaryNameEl = document.getElementById('formProfileSummaryName');
           var summaryDateEl = document.getElementById('formProfileSummaryDate');
           var dateStr = '';
@@ -2806,8 +2806,13 @@
             dateStr = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
           }
 
-          if (summary && summaryNameEl && p.name) {
-            if (summaryNameEl) summaryNameEl.textContent = p.name;
+          // Имя: из профиля ИЛИ из Telegram (first_name)
+          var tgUser2 = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+          var summaryName = p.name || (tgUser2 && tgUser2.first_name) || '';
+
+          // Показываем карточку если есть хотя бы имя или дата
+          if (summary && (summaryName || dateStr)) {
+            if (summaryNameEl) summaryNameEl.textContent = summaryName;
             if (summaryDateEl) summaryDateEl.textContent = dateStr;
             summary.style.display = 'block';
             if (stepPanel2) stepPanel2.style.display = 'none';
