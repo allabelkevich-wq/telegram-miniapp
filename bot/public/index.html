@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+  <meta name="theme-color" content="#08071a">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -2078,6 +2079,11 @@
             
         tg.ready();
             tg.expand();
+            // Закрашиваем шапку Telegram в цвет фона — убирает золотистую полоску
+            try {
+              if (tg.setHeaderColor) tg.setHeaderColor('#08071a');
+              if (tg.setBackgroundColor) tg.setBackgroundColor('#08071a');
+            } catch(e) {}
             console.log('[Telegram] ready() и expand() выполнены');
             
             if (tg.enableClosingConfirmation) {
