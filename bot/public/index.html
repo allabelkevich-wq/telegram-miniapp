@@ -177,31 +177,29 @@
     .example-btn:hover { opacity: 0.95; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(212, 175, 55, 0.5); background: linear-gradient(135deg, #e0b83a, #f0d050, #e0b83a); }
     .example-btn.special { background: linear-gradient(135deg, #d4af37, #e8c547); border-color: rgba(212, 175, 55, 0.7); }
     .mode-selector {
-      margin: 20px 0; padding: 18px; background: rgba(255, 255, 255, 0.06); backdrop-filter: blur(12px);
-      border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.16);
-      box-shadow: 0 4px 18px rgba(139, 92, 246, 0.06);
+      margin: 20px 0; padding: 20px 18px; background: rgba(255,255,255,0.04); backdrop-filter: blur(12px);
+      border-radius: 18px; border: 1px solid rgba(255,255,255,0.1);
     }
-    .mode-selector h3 { font-size: 0.95rem; color: var(--tg-theme-text-color, #fff); margin: 0 0 6px 0; font-weight: 600; text-align: center; }
-    .mode-subtitle { font-size: 0.75rem; color: var(--tg-theme-hint-color, rgba(255,255,255,.6)); margin: 0 0 12px 0; text-align: center; }
-    .mode-buttons { display: flex; flex-direction: column; gap: 8px; }
+    .mode-selector h3 { font-size: 1rem; color: #fff; margin: 0 0 4px; font-weight: 700; text-align: center; letter-spacing: 0.01em; }
+    .mode-subtitle { font-size: 0.78rem; color: rgba(255,255,255,0.4); margin: 0 0 16px; text-align: center; }
+    .mode-buttons { display: flex; flex-direction: column; gap: 10px; }
     .mode-btn {
-      background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.15);
-      color: var(--tg-theme-text-color,#fff); padding: 13px 16px; border-radius: 12px; cursor: pointer; transition: all 0.2s;
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      text-align: left; width: 100%; box-sizing: border-box;
+      background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.1);
+      color: #fff; padding: 16px 18px; border-radius: 14px; cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+      display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+      text-align: left; width: 100%; box-sizing: border-box; animation: none; box-shadow: none; margin: 0;
     }
-    .mode-btn:active { transform: scale(0.98); }
+    .mode-btn:active { transform: scale(0.985); }
     .mode-btn.active {
       background: linear-gradient(135deg, #d4af37 0%, #ec4899 100%);
       border-color: transparent; color: #fff;
-      box-shadow: 0 4px 18px rgba(212,175,55,0.35);
-    }
-    .mode-btn.active .mode-info {
-      border-color: rgba(255,255,255,0.5); color: rgba(255,255,255,0.75);
+      box-shadow: 0 6px 22px rgba(212,175,55,0.3);
     }
     .mode-icon { display: none; }
-    .mode-label { font-weight: 600; font-size: 0.95rem; flex: 1; }
-    .mode-desc { display: none; }
+    .mode-label { font-weight: 700; font-size: 1rem; line-height: 1.2; }
+    .mode-desc { display: block; font-size: 0.78rem; font-weight: 400; opacity: 0.65; line-height: 1.4; }
+    .mode-btn.active .mode-desc { opacity: 0.85; }
     .mode-info {
       width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(212,175,55,0.4);
       color: rgba(212,175,55,0.7); font-size: 0.7rem; font-weight: 700;
@@ -1848,9 +1846,9 @@
           unknownTime: 'Exakte Zeit unbekannt', cancel: 'Abbrechen', save: 'Speichern', back: '← Zurück',
           gender: 'Geschlecht', genderSelect: 'Wählen', male: 'Männlich', female: 'Weiblich', other: 'Divers',
           modeType: 'Song-Format', modeSubtitle: 'Für wen erstellen wir?',
-          modeSingle: 'Für mich', modeSingleDesc: 'Ein Lied über dich — dein Charakter, Stärken, innere Welt. Nur deine Daten.',
-          modeCouple: 'Zu zweit', modeCoupleDesc: 'Ein Lied für zwei Menschen — eure Verbindung und Resonanz. Daten beider nötig.',
-          modeTransit: 'Tagesenergie', modeTransitDesc: 'Ein Lied für heute — seine Stimmung, Rhythmus und Farbe. Keine Geburtsdaten nötig.',
+          modeSingle: 'Über mich', modeSingleDesc: 'Ein Lied nach deinem Geburtsdatum.',
+          modeCouple: 'Über uns zwei', modeCoupleDesc: 'Ein Lied für zwei Menschen.',
+          modeTransit: 'Energie des Moments', modeTransitDesc: 'Ein Lied über den heutigen Tag.',
           namePh: 'Wie heißt du?', birthdateLabel: 'Geburtsdatum', birthplacePh: 'Stadt oder Land — wähle aus den Vorschlägen',
           birthplaceHint: 'Stadt eintippen und aus der Liste auswählen.',
           unknownTimeShort: 'Unbekannt', secondPersonTitle: 'Zu zweit', name2Ph: 'Name der zweiten Person',
@@ -1965,9 +1963,9 @@
           unknownTime: "Heure exacte inconnue", cancel: 'Annuler', save: 'Enregistrer', back: '← Retour',
           gender: 'Genre', genderSelect: 'Choisir', male: 'Homme', female: 'Femme', other: 'Autre',
           modeType: "Format de chanson", modeSubtitle: 'Pour qui créons-nous ?',
-          modeSingle: 'Pour moi', modeSingleDesc: 'Une chanson sur toi — ton caractère, tes forces, ton monde intérieur. Seules tes données.',
-          modeCouple: 'À deux', modeCoupleDesc: 'Une chanson pour deux — votre lien, résonance, ce qui vous unit. Les deux dates requises.',
-          modeTransit: "Énergie du jour", modeTransitDesc: "Une chanson pour aujourd'hui — son humeur, son rythme, sa couleur. Sans données de naissance.",
+          modeSingle: 'À mon sujet', modeSingleDesc: 'Une chanson selon ta date de naissance.',
+          modeCouple: 'Nous deux', modeCoupleDesc: 'Une chanson pour deux personnes.',
+          modeTransit: "Énergie du moment", modeTransitDesc: "Une chanson sur la journée d'aujourd'hui.",
           namePh: "Comment tu t'appelles ?", birthdateLabel: 'Date de naissance', birthplacePh: 'Ville ou pays — choisis parmi les suggestions',
           birthplaceHint: 'Tape ta ville et choisis dans la liste.',
           unknownTimeShort: 'Inconnu', secondPersonTitle: 'À deux', name2Ph: "Nom de la deuxième personne",
@@ -2898,6 +2896,21 @@
           if (birthtimeEl && p.birthtime) birthtimeEl.value = p.birthtime;
           if (unknownEl && p.birthtime_unknown) unknownEl.checked = true;
 
+          // Язык песни: используем сохранённый, но если это 'ru' — проверяем реальный язык Telegram
+          // Украинцы должны получать песню на украинском, а не на русском
+          var langEl = document.getElementById('language');
+          if (langEl) {
+            var tgLc = ((tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code) || '').toLowerCase();
+            var telegramSongLang = /^uk/.test(tgLc) ? 'uk' : /^en/.test(tgLc) ? 'en' : /^de/.test(tgLc) ? 'de' : /^fr/.test(tgLc) ? 'fr' : 'ru';
+            // Если в профиле нет языка ИЛИ он 'ru' но Telegram говорит 'uk' — ставим язык Telegram
+            var profileLang = p.language || '';
+            if (profileLang && !(profileLang === 'ru' && telegramSongLang !== 'ru')) {
+              langEl.value = profileLang;
+            } else {
+              langEl.value = telegramSongLang;
+            }
+          }
+
           // Показываем компактную карточку только если есть имя И дата
           if (p.name && p.birthdate) {
             var summaryNameEl = document.getElementById('formProfileSummaryName');
@@ -2922,6 +2935,12 @@
           }
         } catch(e) {
           console.warn('[Form] Ошибка загрузки профиля:', e);
+        }
+        // Дефолтный язык песни по Telegram language_code (если select ещё пустой)
+        var langElFallback = document.getElementById('language');
+        if (langElFallback && !langElFallback.value) {
+          var tgLcFb = ((tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code) || '').toLowerCase();
+          langElFallback.value = /^uk/.test(tgLcFb) ? 'uk' : /^en/.test(tgLcFb) ? 'en' : /^de/.test(tgLcFb) ? 'de' : /^fr/.test(tgLcFb) ? 'fr' : 'ru';
         }
       }
 

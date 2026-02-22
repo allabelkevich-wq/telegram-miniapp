@@ -2414,8 +2414,12 @@ app.get("/api/admin/requests", asyncApi(async (req, res) => {
   const limit = Math.min(parseInt(req.query?.limit, 10) || 50, 100);
   const statusFilter = req.query?.status || "all";
   const requestIdSearch = String(req.query?.request_id || req.query?.id || "").trim().toLowerCase().replace(/[^0-9a-f-]/g, "");
+  const userIdSearch = String(req.query?.user_id || req.query?.telegram_user_id || "").trim().replace(/[^0-9]/g, "");
   const fullSelect = "id,name,gender,birthdate,birthplace,person2_name,person2_gender,person2_birthdate,person2_birthplace,status,generation_status,delivery_status,delivered_at,created_at,audio_url,mode,request,generation_steps,payment_status,payment_provider,promo_code,promo_discount_amount,payment_amount,telegram_user_id";
-  let q = supabase.from("track_requests").select(fullSelect).order("created_at", { ascending: false }).limit(requestIdSearch ? 200 : limit);
+  let q = supabase.from("track_requests").select(fullSelect).order("created_at", { ascending: false }).limit(userIdSearch || requestIdSearch ? 200 : limit);
+  if (userIdSearch) {
+    q = q.eq("telegram_user_id", Number(userIdSearch));
+  }
   if (statusFilter === "pending") q = q.in("generation_status", ["pending", "astro_calculated", "lyrics_generated", "suno_processing"]);
   else if (statusFilter === "pending_payment") q = q.eq("generation_status", "pending_payment");
   else if (statusFilter === "completed") q = q.eq("generation_status", "completed");
