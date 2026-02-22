@@ -2947,6 +2947,67 @@ app.post("/api/promos/validate", express.json(), asyncApi(async (req, res) => {
   });
 }));
 
+// ── ПОДПИСКА: получить ссылку на оплату прямо из Mini App ───────────────────
+app.post("/api/payments/subscription/checkout", express.json(), asyncApi(async (req, res) => {
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const initData = req.headers["x-telegram-init"] || req.body?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, error: "Unauthorized" });
+
+  const PLAN_MAP = { plan_basic: "soul_basic_sub", plan_plus: "soul_plus_sub", plan_master: "master_monthly" };
+  const planKey = String(req.body?.plan_key || "").trim();
+  const sku = PLAN_MAP[planKey];
+  if (!sku) return res.status(400).json({ success: false, error: "Неверный plan_key" });
+
+  const planInfo = PLAN_META[sku] || { name: sku, tracks: 0 };
+  const priceData = await getSkuPrice(sku);
+  if (!priceData) return res.status(400).json({ success: false, error: "Цена не найдена для SKU" });
+
+  const itemId = pickHotItemId(sku);
+  if (!itemId) return res.status(400).json({ success: false, error: "HOT_ITEM_ID не настроен" });
+
+  // Проверяем активную подписку
+  const existing = await getActiveSubscriptionFull(telegramUserId);
+  if (existing && existing.plan_sku === sku) {
+    return res.json({ success: false, already_subscribed: true, error: "Подписка уже активна" });
+  }
+
+  const orderId = crypto.randomUUID();
+  const requestId = crypto.randomUUID();
+
+  await supabase.from("track_requests").insert({
+    id: requestId,
+    telegram_user_id: Number(telegramUserId),
+    name: String(req.body?.name || ""),
+    mode: `sub_${sku}`,
+    payment_status: "pending",
+    payment_provider: "hot",
+    payment_order_id: orderId,
+    payment_amount: Number(priceData.price),
+    payment_currency: priceData.currency || "USDT",
+    payment_raw: JSON.stringify({ provider: "hot", sku, plan: planKey }),
+    generation_status: "pending_payment",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+
+  const checkoutUrl = buildHotCheckoutUrl({
+    itemId, orderId,
+    amount: Number(priceData.price),
+    currency: priceData.currency || "USDT",
+    requestId, sku,
+  });
+
+  console.log(`[subscription/checkout] sku=${sku}, orderId=${orderId.slice(0, 8)}, userId=${telegramUserId}`);
+  return res.json({
+    success: true,
+    checkout_url: checkoutUrl,
+    plan_name: planInfo.name,
+    price: priceData.price,
+    currency: priceData.currency || "USDT",
+  });
+}));
+
 // create: owner-check (заявка принадлежит telegram_user_id), идемпотентность (already_paid + тот же payment_order_id)
 app.post("/api/payments/hot/create", express.json(), asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });

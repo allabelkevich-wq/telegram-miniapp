@@ -1270,13 +1270,16 @@
             <p class="mode-subtitle">Для кого создаём?</p>
             <div class="mode-buttons">
               <button type="button" class="mode-btn active" data-mode="single">
-                <span class="mode-label" data-i18n="modeSingle">Для себя</span>
+                <span class="mode-label" data-i18n="modeSingle">Обо мне</span>
+                <span class="mode-desc" data-i18n="modeSingleDesc">Песня по твоей дате рождения</span>
               </button>
               <button type="button" class="mode-btn" data-mode="couple">
-                <span class="mode-label" data-i18n="modeCouple">Для двоих</span>
+                <span class="mode-label" data-i18n="modeCouple">Про двоих</span>
+                <span class="mode-desc" data-i18n="modeCoupleDesc">Песня для двух людей</span>
               </button>
               <button type="button" class="mode-btn" data-mode="transit">
-                <span class="mode-label" data-i18n="modeTransit">Энергия дня</span>
+                <span class="mode-label" data-i18n="modeTransit">Энергия момента</span>
+                <span class="mode-desc" data-i18n="modeTransitDesc">Песня о сегодняшнем дне</span>
               </button>
             </div>
           </div>
@@ -1610,9 +1613,9 @@
           unknownTime: 'Не знаю точное время', cancel: 'Отмена', save: 'Сохранить', back: '← Назад',
           gender: 'Пол', genderSelect: 'Выбери', male: 'Мужской', female: 'Женский', other: 'Другой',
           modeType: 'Формат песни', modeSubtitle: 'Для кого создаём?',
-          modeSingle: 'Для себя', modeSingleDesc: 'Песня о тебе — твой характер, сильные стороны, внутренний мир. Только твои данные.',
-          modeCouple: 'Для двоих', modeCoupleDesc: 'Песня о двух людях — ваша связь, резонанс, то что вас объединяет. Нужны данные обоих.',
-          modeTransit: 'Энергия дня', modeTransitDesc: 'Песня под сегодняшний день — его настроение, ритм и цвет. Без данных о рождении.',
+          modeSingle: 'Обо мне', modeSingleDesc: 'Песня по твоей дате рождения',
+          modeCouple: 'Про двоих', modeCoupleDesc: 'Песня для двух людей',
+          modeTransit: 'Энергия момента', modeTransitDesc: 'Песня о сегодняшнем дне',
           namePh: 'Как тебя зовут?', birthdateLabel: 'Дата рождения', birthplacePh: 'Город или страна — выбери из подсказок',
           birthplaceHint: 'Начни вводить город и выбери из выпавшего списка.',
           unknownTimeShort: 'Не знаю', secondPersonTitle: 'Для двоих', name2Ph: 'Имя второго человека',
@@ -1728,9 +1731,9 @@
           unknownTime: "I don't know exact time", cancel: 'Cancel', save: 'Save', back: '← Back',
           gender: 'Gender', genderSelect: 'Choose', male: 'Male', female: 'Female', other: 'Other',
           modeType: 'Song format', modeSubtitle: 'Who is it for?',
-          modeSingle: 'For myself', modeSingleDesc: 'A song about you — your character, strengths, inner world. Only your data needed.',
-          modeCouple: 'For two', modeCoupleDesc: 'A song about two people — your bond, resonance, what connects you. Both dates needed.',
-          modeTransit: 'Day energy', modeTransitDesc: "A song for today — its mood, rhythm and colour. No birth data required.",
+          modeSingle: 'About me', modeSingleDesc: 'A song by your date of birth',
+          modeCouple: 'About us', modeCoupleDesc: 'A song for two people',
+          modeTransit: 'This moment', modeTransitDesc: "A song about today",
           namePh: "What's your name?", birthdateLabel: 'Date of birth', birthplacePh: 'City or country — choose from suggestions',
           birthplaceHint: 'Start typing your city and pick from the list.',
           unknownTimeShort: "Don't know", secondPersonTitle: 'For two', name2Ph: "Second person's name",
@@ -4828,12 +4831,44 @@
         var price = PLAN_PRICES[planKey] || '';
         var tracks = PLAN_TRACKS[planKey] || '';
         if (title) title.textContent = planName + (price ? ' — ' + price + '/мес' : '');
-        if (desc) desc.textContent = (tracks ? tracks + ' персональных треков в месяц. ' : '') + 'Для оформления мы откроем бот — там завершите оплату. После оплаты подписка активируется автоматически.';
+        if (desc) desc.textContent = (tracks ? tracks + ' персональных треков в месяц.' : '') + ' Оплата через HOT Pay. Приложение остаётся открытым.';
         if (btn) {
           btn.textContent = 'Перейти к оплате →';
-          btn.onclick = function() {
-            overlay.style.display = 'none';
-            if (tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/' + BOT_USERNAME + '?start=' + planKey);
+          btn.onclick = async function() {
+            btn.textContent = 'Загружаем…';
+            btn.disabled = true;
+            try {
+              var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+              var initData = getInitData ? getInitData() : '';
+              var resp = await fetch(apiBase + '/api/payments/subscription/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+                body: JSON.stringify({ initData: initData, plan_key: planKey, name: (userProfile && userProfile.name) || '' })
+              });
+              var data = await resp.json().catch(function() { return {}; });
+              if (data.already_subscribed) {
+                overlay.style.display = 'none';
+                alert('У тебя уже активна эта подписка.');
+                return;
+              }
+              if (!data.success || !data.checkout_url) {
+                btn.textContent = 'Перейти к оплате →';
+                btn.disabled = false;
+                alert('Не удалось создать ссылку на оплату. Попробуй ещё раз.');
+                return;
+              }
+              overlay.style.display = 'none';
+              // Открываем оплату без закрытия приложения
+              if (tg && tg.openLink) {
+                tg.openLink(data.checkout_url);
+              } else {
+                window.open(data.checkout_url, '_blank');
+              }
+            } catch(e) {
+              btn.textContent = 'Перейти к оплате →';
+              btn.disabled = false;
+              alert('Ошибка соединения. Попробуй ещё раз.');
+            }
           };
         }
         overlay.style.display = 'flex';
