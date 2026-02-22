@@ -257,7 +257,8 @@
     .step-panel { margin-top: 20px; }
     .step-nav { display: flex; gap: 12px; margin-top: 16px; }
     .step-nav button { flex: 1; text-transform: none; letter-spacing: 0; }
-    .form-submit-sticky { position: sticky; bottom: 0; background: linear-gradient(to top, #08071a 85%, transparent); padding: 16px 0 8px; margin: 0 -2px; z-index: 5; }
+    .form-submit-sticky { position: sticky; bottom: 0; background: linear-gradient(to top, #08071a 85%, transparent); padding: 16px 0 8px; margin: 0; z-index: 5; display: flex; flex-direction: column; align-items: stretch; gap: 0; }
+    .form-submit-sticky button#stepNext { flex: none; width: 100%; }
     .form-nav-links{display:flex;justify-content:center;gap:14px;margin-top:18px;padding:10px 0}
     .form-nav-link{background:none;border:none;color:rgba(212,175,55,0.55);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;animation:none;font-weight:500}
     .form-nav-link:hover{color:rgba(212,175,55,0.8)}
@@ -491,11 +492,12 @@
     .keys-composition-small .key-door{width:34px;height:50px;transform:rotate(6deg);opacity:.9}
     .app-logo{display:block;margin:0 auto;max-width:140px;width:100%;height:auto;border-radius:0;box-shadow:none;opacity:0.94}
     /* Главная — минимализм: контент по центру, забота о взгляде */
-    #homeHero{position:relative;text-align:center;background:linear-gradient(180deg,rgba(1,6,26,0.4) 0%,transparent 100%);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:max(48px,calc(env(safe-area-inset-top)+32px)) var(--spacing-lg) var(--spacing-xl);gap:0;box-sizing:border-box;min-height:0}
+    #homeHero{position:relative;text-align:center;background:linear-gradient(180deg,rgba(1,6,26,0.4) 0%,transparent 100%);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:var(--spacing-lg) var(--spacing-lg) var(--spacing-xl);gap:0;box-sizing:border-box;min-height:0}
     #homeHero .home-tagline{font-size:0.72rem;font-weight:400;letter-spacing:0.14em;color:rgba(212,175,55,0.45);margin-top:var(--spacing-md);text-transform:uppercase}
     #homeHero .home-greeting{font-size:0.95rem;color:rgba(255,255,255,0.6);line-height:1.6;max-width:240px;margin:var(--spacing-lg) auto var(--spacing-xl);letter-spacing:0.01em}
-    #homeHero #startBtn{margin-top:0;min-width:180px;padding:14px 28px;font-weight:600;letter-spacing:0.02em;border-radius:var(--radius-lg)}
-    #homeHero .lang-switcher-compact{position:absolute;top:max(16px,calc(env(safe-area-inset-top)+8px));right:var(--spacing-md)}
+    #homeHero #startBtn{margin-top:0;width:auto;max-width:280px;padding:14px 36px;font-weight:600;letter-spacing:0.02em;border-radius:50px;align-self:center}
+    #homeTopBar .lang-switcher-compact{position:static}
+    .lang-switcher-compact{position:static}
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* ── СТОРИС-ОНБОРДИНГ ── */
     #onboardingPage{
@@ -650,8 +652,8 @@
     
     @media (max-width:480px){.container{padding:0 var(--spacing-sm)}h1{font-size:var(--fluid-2xl)}.subtitle{font-size:var(--fluid-base)}.tagline{font-size:var(--fluid-md)}.section{padding:var(--spacing-lg) var(--spacing-md)}.btn-group{flex-direction:column}.btn-group button{width:100%}button{font-size:1rem;padding:13px 20px;min-height:48px}.price-tag{font-size:1.25rem;padding:10px 15px}.success-icon{font-size:4rem}.success-title{font-size:1.9rem}.success-text{font-size:1.05rem}.preview-nav-buttons{flex-direction:column;align-items:center}.preview-nav button{width:100%;max-width:200px}}
 
-    /* ── ИКОНКА ПРОФИЛЯ (фиксированная, главная страница) ── */
-    #profileIconBtn{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,calc(env(safe-area-inset-right)+12px));z-index:200;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(236,72,153,0.14));border:1.5px solid rgba(212,175,55,0.4);cursor:pointer;padding:0;margin:0;min-height:unset;box-shadow:0 2px 12px rgba(0,0,0,0.3);animation:none;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;color:#d4af37;font-family:inherit;letter-spacing:0;line-height:1;transition:background .2s,border-color .2s}
+    /* ── ИКОНКА ПРОФИЛЯ (в шапке главной страницы) ── */
+    #profileIconBtn{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(236,72,153,0.14));border:1.5px solid rgba(212,175,55,0.4);cursor:pointer;padding:0;margin:0;min-height:unset;box-shadow:0 2px 12px rgba(0,0,0,0.3);animation:none;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;color:#d4af37;font-family:inherit;letter-spacing:0;line-height:1;transition:background .2s,border-color .2s;flex-shrink:0}
     #profileIconBtn:active{background:rgba(212,175,55,0.28)}
 
     /* ── ПРОФИЛЬ — НОВЫЙ ДИЗАЙН (Suno-style) ── */
@@ -817,16 +819,11 @@
 
   <!-- Страницы приложения -->
     <!-- Главная страница -->
-    <div class="page" id="homePage" style="position:fixed">
+    <div class="page" id="homePage">
 
-      <!-- Иконка профиля — правый верхний угол -->
-      <button id="profileIconBtn" onclick="goToProfileFrom('homePage')" aria-label="Профиль" title="Профиль">
-        <span id="profileIconInitial">👤</span>
-      </button>
-
-      <!-- Лого и приветствие — по центру -->
-      <div id="homeHero">
-        <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
+      <!-- Шапка: язык слева, профиль справа -->
+      <div id="homeTopBar" style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:max(10px,env(safe-area-inset-top)) 12px 0;min-height:48px;">
+        <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса" style="position:static;">
           <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
             <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
             <span id="langSwitcherCurrent">RU</span>
@@ -838,6 +835,13 @@
             <button type="button" class="lang-opt" data-lang="fr">FR</button>
           </div>
         </div>
+        <button id="profileIconBtn" onclick="goToProfileFrom('homePage')" aria-label="Профиль" title="Профиль">
+          <span id="profileIconInitial">👤</span>
+        </button>
+      </div>
+
+      <!-- Лого и приветствие — по центру -->
+      <div id="homeHero">
         <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="140" height="140">
         <div class="home-tagline">Музыка твоей души</div>
         <p id="homeGreeting" class="home-greeting">Привет 👋</p>
@@ -3951,6 +3955,7 @@
           if (!target) return;
         }
         target.classList.add('active');
+        // Иконка профиля — всегда видима внутри #homeTopBar (не нужно управлять)
         // Сброс скролла у всех .page-scroll при переходе
         try {
           var scrollArea = document.querySelector('#' + pageId + ' .page-scroll');
