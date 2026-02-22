@@ -910,35 +910,46 @@ bot.command("start", async (ctx) => {
   // -----------------------------------------
 
   const name = ctx.from?.first_name || "друг";
-  const text =
-    `Привет, ${name}!\n\n` +
-    `Заходи, когда захочешь вспомнить, кто ты.\n\n` +
-    `Открой мини‑приложение и создай свой персональный звуковой ключ.`;
-  
-  // Принудительно обновляем Menu Button при каждом /start, чтобы избежать старых Vercel-ссылок
+  const isReturning = payload === "song_ready" || payload === "miniapp_start";
+  const isPlanInquiry = payload === "plan_basic" || payload === "plan_plus";
+
+  let text;
+  if (isPlanInquiry) {
+    const planName = payload === "plan_plus" ? "Soul Plus" : "Soul Basic";
+    text =
+      `${name}, отлично — ты хочешь оформить **${planName}**.\n\n` +
+      `Напиши нам «хочу ${planName}» — и мы пришлём инструкцию по оплате.\n\n` +
+      `Или напиши в любое время — мы на связи 👋`;
+  } else if (isReturning) {
+    text = `${name}, ты вернулся — хорошо.\n\nПесня уже ждёт тебя здесь, в этом чате. Если ещё не пришла — подожди пару минут.\n\nГотов создать ещё одну?`;
+  } else {
+    text =
+      `${name}, привет.\n\n` +
+      `У каждого человека есть своя музыка — та, что написана по его дате рождения.\n\n` +
+      `YupSoul создаёт её. Первая песня — в подарок.\n\n` +
+      `Нажми кнопку ниже, чтобы начать ↓`;
+  }
+
+  // Обновляем Menu Button при каждом /start
   try {
     await bot.api.setChatMenuButton({
       chat_id: ctx.chat?.id,
-      menu_button: { type: "web_app", text: "YupSoul", web_app: { url: MINI_APP_URL } },
+      menu_button: { type: "web_app", text: "🎵 YupSoul", web_app: { url: MINI_APP_URL } },
     });
     console.log("[start] Menu Button обновлён для chat", ctx.chat?.id, "→", MINI_APP_URL);
   } catch (menuErr) {
     console.warn("[start] Не удалось обновить Menu Button:", menuErr?.message);
   }
-  
+
   const replyMarkup = {
     reply_markup: {
       inline_keyboard: [[
-        // Стабильный URL (без timestamp) — кнопка в сообщениях живёт после следующих деплоев
-        { text: "🎵 Открыть YupSoul", web_app: { url: MINI_APP_STABLE_URL } }
+        { text: "🎵 Создать свою песню", web_app: { url: MINI_APP_STABLE_URL } }
       ]]
     }
   };
   try {
-    // Сначала быстрый ответ без кнопки — убирает колесо загрузки у сообщения пользователя
-    await ctx.reply(text);
-    // Затем кнопка отдельным сообщением
-    await ctx.reply("Открыть приложение:", replyMarkup);
+    await ctx.reply(text, replyMarkup);
   } catch (e) {
     console.error("[start] Ошибка ответа:", e?.message || e);
     try {
@@ -1784,21 +1795,36 @@ bot.command("admin", async (ctx) => {
   }
 });
 
-// Регистрация команд в Telegram (меню бота)
-const commands = [
-  { command: "start", description: "Начать / открыть приложение" },
-  { command: "ping", description: "Проверка связи с ботом" },
-  { command: "fixurl", description: "Исправить все ссылки на мини-приложение (меню + кнопка 'Открыть')" },
-  { command: "get_analysis", description: "Расшифровка карты (после оплаты)" },
-  { command: "soulchat", description: "Разговор по душам по заявке" },
-  { command: "admin", description: "Админ: ссылка на админку и список заявок" },
-  { command: "admin_check", description: "Админ: проверка базы" },
+// ── МЕНЮ КОМАНД ─────────────────────────────────────────────────────────────
+// Пользователи видят только своё меню — без единого намёка на «Admin»
+const userCommands = [
+  { command: "start",        description: "🎵 Открыть YupSoul" },
+  { command: "soulchat",     description: "💬 Разговор по душам" },
+  { command: "get_analysis", description: "🔮 Моя расшифровка" },
 ];
-bot.api.setMyCommands(commands).catch(() => {});
-bot.api.setMyCommands(commands, { scope: { type: "all_private_chats" } }).catch(() => {});
 
-// Для русскоязычного меню (часть клиентов показывает команды по языку)
-bot.api.setMyCommands(commands, { language_code: "ru" }).catch(() => {});
+// Полное меню — только для каждого конкретного админа
+const adminCommands = [
+  { command: "start",        description: "🎵 Открыть YupSoul" },
+  { command: "soulchat",     description: "💬 Разговор по душам" },
+  { command: "get_analysis", description: "🔮 Моя расшифровка" },
+  { command: "admin",        description: "👑 Панель управления" },
+  { command: "admin_check",  description: "👑 Проверка базы" },
+  { command: "fixurl",       description: "🔧 Обновить ссылки Mini App" },
+  { command: "ping",         description: "🔧 Проверка связи" },
+];
+
+// Всем приватным чатам — только пользовательское меню
+bot.api.setMyCommands(userCommands, { scope: { type: "all_private_chats" } }).catch(() => {});
+bot.api.setMyCommands(userCommands, { scope: { type: "all_private_chats" }, language_code: "ru" }).catch(() => {});
+
+// Каждому админу — полное меню поверх общего
+if (ADMIN_IDS.length) {
+  for (const adminId of ADMIN_IDS) {
+    bot.api.setMyCommands(adminCommands, { scope: { type: "chat", chat_id: adminId } }).catch(() => {});
+  }
+  console.log(`[Bot] Админские команды установлены для ${ADMIN_IDS.length} пользователей`);
+}
 
 // HTTP: сначала слушаем порт (для Render health check), потом подключаем API и бота
 const app = express();
@@ -2693,7 +2719,7 @@ app.get("/api/referral/stats", asyncApi(async (req, res) => {
   if (telegramUserId == null) return res.status(401).json({ error: "Unauthorized" });
 
   const code = await getOrCreateReferralCode(telegramUserId);
-  const botUsername = RESOLVED_BOT_USERNAME || process.env.BOT_USERNAME || "yupsoul_bot";
+  const botUsername = RESOLVED_BOT_USERNAME || process.env.BOT_USERNAME || "Yup_Soul_bot";
 
   const [invitedRes, rewardedRes, profileRes] = await Promise.allSettled([
     supabase.from("referrals").select("*", { count: "exact", head: true }).eq("referrer_id", Number(telegramUserId)),

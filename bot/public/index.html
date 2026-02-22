@@ -1563,6 +1563,7 @@
       var tg = null;
       var INIT_DATA_STORAGE_KEY = 'tg_init_data';
       var LANG_STORAGE_KEY = 'yupsoul_lang';
+      var BOT_USERNAME = 'Yup_Soul_bot'; // единственное место для имени бота
       var LANG = {
         ru: {
           tagline: 'Исследуй свои грани так, как ты этого захочешь',
@@ -4626,12 +4627,12 @@
       // Кнопки оформления планов — временно открывают поддержку
       var planBtnBasic = document.getElementById('planBtnBasic');
       if (planBtnBasic) planBtnBasic.addEventListener('click', function() {
-        if (tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/yupsoul_bot?start=plan_basic');
+        if (tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/' + BOT_USERNAME + '?start=plan_basic');
         else goToHelpFrom('profilePage');
       });
       var planBtnPlus = document.getElementById('planBtnPlus');
       if (planBtnPlus) planBtnPlus.addEventListener('click', function() {
-        if (tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/yupsoul_bot?start=plan_plus');
+        if (tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/' + BOT_USERNAME + '?start=plan_plus');
         else goToHelpFrom('profilePage');
       });
       var profileRefShareBtn = document.getElementById('profileRefShareBtn');
@@ -5363,14 +5364,14 @@
 
       var soulChatBtn = document.getElementById('soulChatBtn');
       if (soulChatBtn) soulChatBtn.addEventListener('click', function() {
-        var botUrl = 'https://t.me/Yup_Soul_bot';
+        var botUrl = 'https://t.me/' + BOT_USERNAME;
         if (tg && tg.openTelegramLink) tg.openTelegramLink(botUrl);
         else window.open(botUrl, '_blank');
       });
       var soulChatPayBtn = document.getElementById('soulChatPayBtn');
       if (soulChatPayBtn) soulChatPayBtn.addEventListener('click', function() { goToPage('formPage'); setTimeout(function() { var stepNext = document.getElementById('stepNext'); if (stepNext) stepNext.click(); }, 100); });
       function openBotLink(payload) {
-        var botUrl = 'https://t.me/Yup_Soul_bot' + (payload ? '?start=' + payload : '');
+        var botUrl = 'https://t.me/' + BOT_USERNAME + (payload ? '?start=' + payload : '');
         if (tg && tg.openTelegramLink) tg.openTelegramLink(botUrl);
         else if (tg && tg.openLink) tg.openLink(botUrl);
         else window.open(botUrl, '_blank');
@@ -5381,7 +5382,7 @@
       if (openBotBeforeSubmitBtn) openBotBeforeSubmitBtn.addEventListener('click', function() { openBotLink('miniapp_start'); });
       var helpSupportBtn = document.getElementById('helpSupportBtn');
       if (helpSupportBtn) helpSupportBtn.addEventListener('click', function() {
-        var supportUrl = 'https://t.me/Yup_Soul_bot';
+        var supportUrl = 'https://t.me/' + BOT_USERNAME;
         try {
           if (tg && tg.openLink) { tg.openLink(supportUrl); return; }
           if (tg && tg.openTelegramLink) { tg.openTelegramLink(supportUrl); return; }
