@@ -705,9 +705,10 @@
     .profile-create-btn:active{transform:scale(0.98)}
     /* ── ФОРМА: СВОДКА ПРОФИЛЯ ── */
     #formProfileSummary{display:none;padding:0 16px;margin-bottom:8px}
-    .fps-card{background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:14px;padding:11px 14px;display:flex;align-items:center;gap:0;width:100%;box-sizing:border-box}
-    .fps-name{font-size:0.95rem;font-weight:600;color:rgba(255,255,255,0.9);flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px}
-    .fps-date{font-size:0.85rem;font-weight:500;color:rgba(212,175,55,0.8);white-space:nowrap;margin-right:10px;flex-shrink:0}
+    .fps-card{background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:8px;width:100%;box-sizing:border-box}
+    .fps-name{font-size:0.92rem;font-weight:600;color:rgba(255,255,255,0.9);flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .fps-sep{font-size:0.75rem;color:rgba(255,255,255,0.2);flex-shrink:0}
+    .fps-date{font-size:0.85rem;font-weight:400;color:rgba(212,175,55,0.8);white-space:nowrap;flex-shrink:0}
     .fps-edit-btn{background:none;border:none;color:rgba(212,175,55,0.55);font-size:0.8rem;cursor:pointer;padding:4px 6px;min-height:unset;box-shadow:none;animation:none;margin:0;font-weight:500;white-space:nowrap;flex-shrink:0;letter-spacing:0.01em}
   </style>
 </head>
@@ -1238,8 +1239,9 @@
         <div id="formProfileSummary">
           <div class="fps-card">
             <span id="formProfileSummaryName" class="fps-name">…</span>
+            <span id="formProfileSummarySep" class="fps-sep" style="display:none">·</span>
             <span id="formProfileSummaryDate" class="fps-date"></span>
-            <button type="button" id="formProfileEditBtn" class="fps-edit-btn">✎ Изменить</button>
+            <button type="button" id="formProfileEditBtn" class="fps-edit-btn">Изменить</button>
           </div>
         </div>
 
@@ -1401,21 +1403,26 @@
           </div>
           
           <textarea id="request" placeholder="Какую грань будем исследовать сегодня?" aria-label="Запрос" rows="4"></textarea>
-          <div style="font-size:0.85rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">
-            💡 Опиши, что хочешь исследовать, или выбери готовый запрос выше
+          <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-top:8px;line-height:1.5;">
+            Опиши, что хочешь исследовать, или выбери готовый запрос выше
           </div>
         </div>
-        
-        <!-- Активация бота — обязательный шаг для получения песни -->
-        <div id="botActivateBlock" style="margin-bottom:14px;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.18);border-radius:14px;padding:14px 16px;">
-          <div style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-bottom:10px;line-height:1.5;">📬 Песня придёт в чат с ботом. Чтобы бот мог написать тебе — открой его заранее.</div>
-          <button type="button" id="openBotBeforeSubmitBtn" style="width:100%;padding:11px 18px;border-radius:11px;background:rgba(212,175,55,0.15);border:1.5px solid rgba(212,175,55,0.35);color:#d4af37;font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;margin:0;letter-spacing:0.01em;">
-            📲 Открыть бота (нажать там «Старт»)
-          </button>
-        </div>
+
+        <!-- Кнопка отправки -->
         <div class="step-nav">
           <button id="stepNext">Отправить заявку</button>
         </div>
+
+        <!-- Активация бота — тихо, под кнопкой -->
+        <div id="botActivateBlock" style="margin-top:12px;text-align:center;">
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-bottom:8px;line-height:1.5;">
+            Песня придёт в чат с ботом. Ещё не открывал бота?
+          </div>
+          <button type="button" id="openBotBeforeSubmitBtn" style="background:none;border:none;color:rgba(212,175,55,0.6);font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;margin:0;padding:4px 0;text-decoration:underline;text-underline-offset:3px;letter-spacing:0.01em;">
+            Открыть бота
+          </button>
+        </div>
+
         <p id="submitHint" style="display:none"></p>
         <!-- Навигация: Профиль, Помощь, Мои герои -->
         <div class="form-nav-links">
@@ -2812,9 +2819,11 @@
           var summaryName = p.name || (tgUser2 && tgUser2.first_name) || '';
 
           // Показываем карточку если есть хотя бы имя или дата
+          var sumSepEl = document.getElementById('formProfileSummarySep');
           if (summary && (summaryName || dateStr)) {
-            if (summaryNameEl) summaryNameEl.textContent = summaryName;
+            if (summaryNameEl) summaryNameEl.textContent = summaryName || '';
             if (summaryDateEl) summaryDateEl.textContent = dateStr;
+            if (sumSepEl) sumSepEl.style.display = (summaryName && dateStr) ? 'inline' : 'none';
             summary.style.display = 'block';
             if (stepPanel2) stepPanel2.style.display = 'none';
           }
