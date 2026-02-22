@@ -102,21 +102,16 @@
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
+    html { height: 100%; }
     body {
       background: linear-gradient(160deg,#08071a 0%,#100828 40%,#0b1022 70%,#08071a 100%) !important;
       color: var(--tg-theme-text-color) !important;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: var(--fluid-base);
       margin: 0;
-      padding: var(--spacing-lg) var(--spacing-md);
-      padding-left: max(var(--spacing-md), env(safe-area-inset-left));
-      padding-right: max(var(--spacing-md), env(safe-area-inset-right));
-      padding-bottom: max(var(--spacing-lg), env(safe-area-inset-bottom));
-      min-height: 100vh;
-      min-height: -webkit-fill-available;
-      /* Убираем flex — страницы в нормальном потоке, скролл через window.scrollTo */
-      position: relative;
-      overflow-x: hidden;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
       -webkit-tap-highlight-color: transparent;
     }
     body::before {
@@ -273,16 +268,11 @@
     /* Остальные стили приложения */
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Comfortaa',sans-serif}
     .container{max-width:min(600px,100%);margin:0 auto;width:100%;position:relative;z-index:1;padding:0 var(--spacing-md)}
-    .page{display:none !important}
-    .page.active{
-      display:block !important;
-      position:relative;
-      z-index:2;
-      width:100% !important;
-      min-height:100vh !important;
-      padding:var(--spacing-lg) var(--spacing-md) calc(var(--spacing-lg)*2);
-      box-sizing:border-box;
-    }
+    .page{position:fixed;inset:0;display:none !important;flex-direction:column;overflow:hidden}
+    .page.active{display:flex !important}
+    .page-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 var(--spacing-md) calc(env(safe-area-inset-bottom) + 24px)}
+    .page-header{flex-shrink:0}
+    .page-footer{flex-shrink:0;padding:var(--spacing-md);padding-bottom:max(var(--spacing-md),env(safe-area-inset-bottom))}
     header{text-align:center;margin:var(--spacing-xl) 0 var(--spacing-lg);position:relative}
     .lang-switcher-compact{position:fixed;top:max(8px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));z-index:100}
     .lang-switcher-btn{display:inline-flex !important;align-items:center;justify-content:center;gap:2px;width:32px !important;height:32px !important;padding:0 !important;min-width:0 !important;min-height:unset !important;font-size:9px;line-height:1;background:rgba(0,0,0,0.28) !important;border:1px solid rgba(255,255,255,0.1) !important;border-radius:50% !important;color:rgba(255,255,255,0.6);cursor:pointer;font-family:inherit;font-weight:500;letter-spacing:0;transition:background .2s, border-color .2s, color .2s;box-shadow:none !important;animation:none !important;transform:none !important}
@@ -500,7 +490,7 @@
     .keys-composition-small .key-door{width:34px;height:50px;transform:rotate(6deg);opacity:.9}
     .app-logo{display:block;margin:0 auto;max-width:140px;width:100%;height:auto;border-radius:0;box-shadow:none;opacity:0.94}
     /* Главная — минимализм: контент по центру, забота о взгляде */
-    #homeHero{position:relative;text-align:center;background:linear-gradient(180deg,rgba(1,6,26,0.4) 0%,transparent 100%);min-height:min(100vh,620px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:max(48px,calc(env(safe-area-inset-top)+32px)) var(--spacing-lg) calc(var(--spacing-xl)*2);gap:0;box-sizing:border-box}
+    #homeHero{position:relative;text-align:center;background:linear-gradient(180deg,rgba(1,6,26,0.4) 0%,transparent 100%);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:max(48px,calc(env(safe-area-inset-top)+32px)) var(--spacing-lg) var(--spacing-xl);gap:0;box-sizing:border-box;min-height:0}
     #homeHero .home-tagline{font-size:0.72rem;font-weight:400;letter-spacing:0.14em;color:rgba(212,175,55,0.45);margin-top:var(--spacing-md);text-transform:uppercase}
     #homeHero .home-greeting{font-size:0.95rem;color:rgba(255,255,255,0.6);line-height:1.6;max-width:240px;margin:var(--spacing-lg) auto var(--spacing-xl);letter-spacing:0.01em}
     #homeHero #startBtn{margin-top:0;min-width:180px;padding:14px 28px;font-weight:600;letter-spacing:0.02em;border-radius:var(--radius-lg)}
@@ -590,7 +580,12 @@
     .hero-hist-toggle{font-size:0.78rem;color:rgba(255,255,255,0.35);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;margin-bottom:8px;min-height:unset;width:auto;box-shadow:none;animation:none;letter-spacing:0}
     .hero-style-badge{display:inline-block;font-size:0.72rem;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.22);color:rgba(212,175,55,0.75);border-radius:6px;padding:2px 8px;margin-top:5px}
     /* Страница помощи */
-    #helpPage .help-header{padding:max(48px,calc(env(safe-area-inset-top)+32px)) 20px 16px 20px;position:relative}
+    #helpPage .help-header{padding:max(20px,calc(env(safe-area-inset-top)+12px)) 20px 16px 20px}
+    #loadingPage{align-items:center;justify-content:center}
+    #successPage,.page#paymentThanksPage{flex-direction:column}
+    .ppc-feature{display:flex;align-items:center;gap:4px}
+    .ppc-info{width:14px;height:14px;border-radius:50%;border:1px solid rgba(212,175,55,0.35);color:rgba(212,175,55,0.6);font-size:0.6rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;line-height:1;font-style:normal;user-select:none;margin-left:2px}
+    .ppc-info:active{color:#d4af37;border-color:#d4af37}
     #helpPage .help-back-row{display:flex;align-items:center;margin-bottom:12px}
     #helpPage .help-back-btn{background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.5rem;cursor:pointer;padding:6px 10px;line-height:1;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;flex-shrink:0}
     #helpPage .help-title-wrap{text-align:center;padding:0 40px}
@@ -655,12 +650,11 @@
     @media (max-width:480px){.container{padding:0 var(--spacing-sm)}h1{font-size:var(--fluid-2xl)}.subtitle{font-size:var(--fluid-base)}.tagline{font-size:var(--fluid-md)}.section{padding:var(--spacing-lg) var(--spacing-md)}.btn-group{flex-direction:column}.btn-group button{width:100%}button{font-size:1rem;padding:13px 20px;min-height:48px}.price-tag{font-size:1.25rem;padding:10px 15px}.success-icon{font-size:4rem}.success-title{font-size:1.9rem}.success-text{font-size:1.05rem}.preview-nav-buttons{flex-direction:column;align-items:center}.preview-nav button{width:100%;max-width:200px}}
 
     /* ── ИКОНКА ПРОФИЛЯ (фиксированная, главная страница) ── */
-    #profileIconBtn{position:fixed;top:max(12px,env(safe-area-inset-top));right:max(12px,calc(env(safe-area-inset-right)+12px));z-index:200;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(236,72,153,0.14));border:1.5px solid rgba(212,175,55,0.4);cursor:pointer;padding:0;margin:0;min-height:unset;box-shadow:0 2px 12px rgba(0,0,0,0.3);animation:none;display:none;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;color:#d4af37;font-family:inherit;letter-spacing:0;line-height:1;transition:background .2s,border-color .2s}
+    #profileIconBtn{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,calc(env(safe-area-inset-right)+12px));z-index:200;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(236,72,153,0.14));border:1.5px solid rgba(212,175,55,0.4);cursor:pointer;padding:0;margin:0;min-height:unset;box-shadow:0 2px 12px rgba(0,0,0,0.3);animation:none;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;color:#d4af37;font-family:inherit;letter-spacing:0;line-height:1;transition:background .2s,border-color .2s}
     #profileIconBtn:active{background:rgba(212,175,55,0.28)}
 
     /* ── ПРОФИЛЬ — НОВЫЙ ДИЗАЙН (Suno-style) ── */
-    #profilePage{overflow-y:auto}
-    .profile-header{display:flex;align-items:center;gap:12px;padding:max(52px,calc(env(safe-area-inset-top)+36px)) 18px 16px;flex-shrink:0;position:sticky;top:0;background:linear-gradient(180deg,#08071a 60%,transparent);z-index:10}
+    .profile-header{display:flex;align-items:center;gap:12px;padding:max(20px,calc(env(safe-area-inset-top)+12px)) 18px 16px;flex-shrink:0;background:#08071a;z-index:10}
     .profile-back-btn{background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.4rem;cursor:pointer;padding:4px 8px;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;line-height:1}
     .profile-header-title{font-size:1.05rem;font-weight:600;color:rgba(255,255,255,0.85);letter-spacing:0.02em}
     .profile-scroll{padding:0 18px calc(env(safe-area-inset-bottom)+80px)}
@@ -690,8 +684,13 @@
     .ppc-name{font-size:1rem;font-weight:700;color:#fff;margin-bottom:8px}
     .ppc-features{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;flex:1}
     .ppc-feature{font-size:0.75rem;color:rgba(255,255,255,0.55);line-height:1.4}
-    .ppc-price{font-size:0.85rem;font-weight:700;color:rgba(212,175,55,0.85);margin-bottom:8px}
+    .ppc-price-wrap{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+    .ppc-price{font-size:0.85rem;font-weight:700;color:rgba(212,175,55,0.85)}
+    .ppc-save{font-size:0.68rem;font-weight:600;color:#ec4899;background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.25);border-radius:10px;padding:2px 6px;white-space:nowrap}
     .profile-plan-card.current .ppc-price{color:rgba(255,255,255,0.4);font-size:0.75rem;font-weight:400}
+    .profile-plan-card.master{background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(236,72,153,0.07));border-color:rgba(212,175,55,0.5);grid-column:1 / -1}
+    .ppc-badge.master-badge{color:#d4af37}
+    .ppc-btn.master-btn{background:linear-gradient(135deg,rgba(212,175,55,0.3),rgba(236,72,153,0.25));border:1px solid rgba(212,175,55,0.5);color:#d4af37}
     .ppc-btn{padding:8px 14px;border-radius:10px;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.35);color:#d4af37;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;margin:0;letter-spacing:0.02em;width:100%}
     .ppc-btn:active{background:rgba(212,175,55,0.25)}
     .ppc-btn.popular-btn{background:linear-gradient(135deg,rgba(236,72,153,0.25),rgba(212,175,55,0.18));border-color:rgba(236,72,153,0.45);color:#ec4899}
@@ -723,7 +722,6 @@
   </style>
 </head>
 <body>
-<div id="modeTooltip"></div>
   <!-- Панель навигации для превью (показывается только в браузере) -->
   <div class="container">
     <div class="preview-nav" id="previewNav">
@@ -795,16 +793,16 @@
     </div>
   </div>
 
-  <!-- Иконка профиля — фиксированная, показывается только на главной -->
-  <button id="profileIconBtn" onclick="goToProfileFrom('homePage')" aria-label="Профиль" title="Профиль">
-    <span id="profileIconInitial">👤</span>
-  </button>
-
-  <!-- Страницы приложения — прямые дети body, вне .container, чтобы не создавать изолированный stacking context -->
+  <!-- Страницы приложения -->
     <!-- Главная страница -->
-    <div class="page" id="homePage">
+    <div class="page" id="homePage" style="position:fixed">
 
-      <!-- Логотип и приветствие — по центру, без суеты -->
+      <!-- Иконка профиля — правый верхний угол -->
+      <button id="profileIconBtn" onclick="goToProfileFrom('homePage')" aria-label="Профиль" title="Профиль">
+        <span id="profileIconInitial">👤</span>
+      </button>
+
+      <!-- Лого и приветствие — по центру -->
       <div id="homeHero">
         <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
           <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
@@ -825,7 +823,7 @@
       </div>
 
       <!-- Нижняя зона — тихо, когда пусто -->
-      <div class="home-lower" style="padding:var(--spacing-lg) var(--spacing-md) calc(var(--spacing-xl) + env(safe-area-inset-bottom))">
+      <div class="home-lower" style="flex-shrink:0;padding:var(--spacing-md) var(--spacing-md) max(var(--spacing-lg),env(safe-area-inset-bottom))">
 
       <!-- Баннер восстановления — мягко, без давления -->
       <div id="recoveryBanner" style="display:none;margin:0 0 var(--spacing-md) 0;background:rgba(5,150,105,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius-md);padding:var(--spacing-md) var(--spacing-lg);position:relative;">
@@ -847,7 +845,7 @@
       <nav class="home-nav" style="display:flex;justify-content:center;gap:14px;margin-top:var(--spacing-lg);padding:8px 0;">
         <button type="button" class="home-nav-link" onclick="goToProfileFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">Профиль</button>
         <button type="button" class="home-nav-link" onclick="goToHelpFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">Помощь</button>
-        <button type="button" class="home-nav-link" onclick="goToHeroesFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">Мои друзья</button>
+        <button type="button" class="home-nav-link" onclick="goToHeroesFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">Лаборатория</button>
       </nav>
 
       </div><!-- /нижняя обёртка -->
@@ -859,7 +857,7 @@
 
     <!-- Страница помощи и поддержки -->
     <div class="page" id="helpPage">
-      <div class="help-header">
+      <div class="help-header page-header">
         <div class="help-back-row">
           <button type="button" class="help-back-btn" onclick="goBack()" aria-label="Назад">←</button>
         </div>
@@ -868,7 +866,7 @@
           <div class="help-subtitle">Всё о YupSoul — просто и по делу</div>
         </div>
       </div>
-      <div style="padding:12px 16px 36px">
+      <div class="page-scroll" style="padding-top:12px">
 
         <!-- Что такое YupSoul -->
         <div class="help-section open">
@@ -966,7 +964,7 @@
         <div class="profile-header-title">Профиль</div>
       </div>
 
-      <div class="profile-scroll">
+      <div class="profile-scroll page-scroll">
         <!-- Идентификация: аватар + имя + план -->
         <div class="profile-identity">
           <div class="profile-avatar-wrap" id="profileAvatarWrap" title="Изменить фото">
@@ -1000,8 +998,8 @@
             <div class="ppc-badge">Текущий</div>
             <div class="ppc-name">Free</div>
             <div class="ppc-features">
-              <div class="ppc-feature">✦ 1 трек в подарок</div>
-              <div class="ppc-feature">✦ Все форматы</div>
+              <div class="ppc-feature">✦ 1 трек в подарок <i class="ppc-info" data-tip="Первая песня создаётся бесплатно — без условий и скрытых платежей.">i</i></div>
+              <div class="ppc-feature">✦ Все форматы <i class="ppc-info" data-tip="Доступны все три формата: Для себя, Для двоих и Энергия дня.">i</i></div>
             </div>
             <div class="ppc-price">Уже у тебя</div>
           </div>
@@ -1010,25 +1008,47 @@
             <div class="ppc-badge" style="visibility:hidden">—</div>
             <div class="ppc-name">Basic</div>
             <div class="ppc-features">
-              <div class="ppc-feature">✦ 3 трека/мес</div>
-              <div class="ppc-feature">✦ 10 soulchat</div>
-              <div class="ppc-feature">✦ История заказов</div>
+              <div class="ppc-feature">✦ 5 треков/мес <i class="ppc-info" data-tip="5 новых персональных песен каждый месяц. Разовая цена — $5.99/трек. По подписке выходит $3/трек. Экономия 50%.">i</i></div>
+              <div class="ppc-feature">✦ Soul Chat <i class="ppc-info" data-tip="Soul Chat — живой разговор с твоей душой на основе твоих личных данных. Задавай вопросы о себе, своём характере, пути и предназначении. Каждый ответ уникален — как ты сам.">i</i></div>
+              <div class="ppc-feature">✦ История заказов <i class="ppc-info" data-tip="Все твои песни сохраняются в истории. Можно вернуться, переслушать и поделиться в любое время.">i</i></div>
             </div>
-            <div class="ppc-price">$14.99/мес</div>
+            <div class="ppc-price-wrap">
+              <div class="ppc-price">$14.99/мес</div>
+              <div class="ppc-save">−50% vs разовых</div>
+            </div>
             <button class="ppc-btn" id="planBtnBasic">Оформить</button>
           </div>
           <!-- Soul Plus -->
           <div class="profile-plan-card popular" id="planCardPlus">
-            <div class="ppc-badge hot">🔥 Популярный</div>
+            <div class="ppc-badge hot">✦ Популярный</div>
             <div class="ppc-name">Plus</div>
             <div class="ppc-features">
-              <div class="ppc-feature">✦ 7 треков/мес</div>
-              <div class="ppc-feature">✦ 30 soulchat</div>
-              <div class="ppc-feature">✦ Приоритетная очередь</div>
-              <div class="ppc-feature">✦ Эксклюзивные форматы</div>
+              <div class="ppc-feature">✦ 10 треков/мес <i class="ppc-info" data-tip="10 персональных песен в месяц. Разовая цена — $5.99/трек. По подписке выходит $2.5/трек. Экономия 58%.">i</i></div>
+              <div class="ppc-feature">✦ Soul Chat без лимита <i class="ppc-info" data-tip="Soul Chat — живой разговор с твоей душой. В Plus — без ограничений по количеству сессий. Общайся когда угодно.">i</i></div>
+              <div class="ppc-feature">✦ Приоритет обработки <i class="ppc-info" data-tip="Твои заявки идут в первую очередь — песня готова быстрее, чем у других пользователей.">i</i></div>
+              <div class="ppc-feature">✦ Эксклюзивные стили <i class="ppc-info" data-tip="Доступ к редким музыкальным стилям и форматам, которых нет в бесплатном и Basic тарифе.">i</i></div>
             </div>
-            <div class="ppc-price">$24.99/мес</div>
+            <div class="ppc-price-wrap">
+              <div class="ppc-price">$24.99/мес</div>
+              <div class="ppc-save">−58% vs разовых</div>
+            </div>
             <button class="ppc-btn popular-btn" id="planBtnPlus">Оформить</button>
+          </div>
+          <!-- Мастер — Лаборатория -->
+          <div class="profile-plan-card master" id="planCardMaster">
+            <div class="ppc-badge master-badge">Мастер</div>
+            <div class="ppc-name">Лаборатория</div>
+            <div class="ppc-features">
+              <div class="ppc-feature">✦ 30 треков/мес <i class="ppc-info" data-tip="30 персональных песен каждый месяц — для себя и для близких. Максимальный объём.">i</i></div>
+              <div class="ppc-feature">✦ Картотека людей <i class="ppc-info" data-tip="Добавляй близких в Лабораторию и создавай для них песни в один тап. Данные сохраняются — вводить повторно не нужно.">i</i></div>
+              <div class="ppc-feature">✦ История генераций <i class="ppc-info" data-tip="Полная история всех созданных песен с текстами, аудио и датами — для тебя и для каждого из твоих людей.">i</i></div>
+              <div class="ppc-feature">✦ Soul Chat без лимита <i class="ppc-info" data-tip="Неограниченный доступ к Soul Chat — разговаривай с душой столько, сколько нужно.">i</i></div>
+            </div>
+            <div class="ppc-price-wrap">
+              <div class="ppc-price" id="masterPriceEl">299 ₽/мес</div>
+              <div class="ppc-save">−83% vs разовых</div>
+            </div>
+            <button class="ppc-btn master-btn" id="planBtnMaster">Открыть Лабораторию</button>
           </div>
         </div>
 
@@ -1037,22 +1057,22 @@
         <div class="profile-track-list">
           <div class="profile-track-item">
             <div>
-              <div class="pti-name">🎵 Для себя</div>
-              <div class="pti-desc">Глубокий анализ натальной карты</div>
+              <div class="pti-name">Для себя</div>
+              <div class="pti-desc">Твоя личность в звуке</div>
             </div>
             <div class="pti-price">$5.99</div>
           </div>
           <div class="profile-track-item">
             <div>
-              <div class="pti-name">💑 Для двоих</div>
-              <div class="pti-desc">Совместимость и дуэт</div>
+              <div class="pti-name">Для двоих</div>
+              <div class="pti-desc">Ваша связь и резонанс</div>
             </div>
             <div class="pti-price">$8.99</div>
           </div>
           <div class="profile-track-item">
             <div>
-              <div class="pti-name">⚡ Энергия дня</div>
-              <div class="pti-desc">Транзитная энергия момента</div>
+              <div class="pti-name">Энергия дня</div>
+              <div class="pti-desc">Песня под сегодняшний день</div>
             </div>
             <div class="pti-price">$6.99</div>
           </div>
@@ -1083,16 +1103,16 @@
     <!-- Страница «Мои герои» (тариф Мастер) -->
     <div class="page" id="heroesPage">
       <!-- Шапка страницы -->
-      <div style="padding:max(52px,calc(env(safe-area-inset-top)+36px)) 18px 0; display:flex; align-items:center; gap:12px; flex-shrink:0">
+      <div class="page-header" style="padding:max(20px,calc(env(safe-area-inset-top)+12px)) 18px 12px; display:flex; align-items:center; gap:12px;">
         <button type="button" id="heroesBackBtn" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.4rem;cursor:pointer;padding:4px 8px;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;line-height:1">←</button>
         <div style="flex:1">
-          <div style="font-size:1.15rem;font-weight:700;color:#fff;line-height:1.2">Мои друзья</div>
+          <div style="font-size:1.15rem;font-weight:700;color:#fff;line-height:1.2">Лаборатория</div>
           <div style="font-size:0.75rem;color:rgba(212,175,55,0.65);margin-top:2px" id="masterAccessBadge"></div>
         </div>
       </div>
 
       <!-- Paywall (показывается если нет доступа) -->
-      <div id="masterPaywall" style="display:none; padding:28px 20px 32px; overflow-y:auto; flex:1">
+      <div id="masterPaywall" class="page-scroll" style="display:none; padding-top:28px;">
         <div style="text-align:center; margin-bottom:20px">
           <div style="font-size:2.6rem;margin-bottom:12px">✨</div>
           <div style="font-size:1.2rem;font-weight:700;color:#d4af37;margin-bottom:8px">Личный кабинет героев</div>
@@ -1116,7 +1136,7 @@
       </div>
 
       <!-- Кабинет героев (показывается если есть доступ) -->
-      <div id="masterCabinet" style="display:none; padding:16px 16px 90px; overflow-y:auto; flex:1">
+      <div id="masterCabinet" class="page-scroll" style="display:none;">
         <!-- Строка поиска + кнопка добавить -->
         <div style="display:flex;gap:10px;margin-bottom:16px">
           <input type="text" id="heroesSearch" placeholder="Поиск по имени…" style="flex:1;margin:0;padding:11px 14px;font-size:0.88rem">
@@ -1203,14 +1223,15 @@
     
     <!-- Страница формы -->
     <div class="page" id="formPage">
-      <header>
+      <header class="page-header">
         <button type="button" onclick="window.goToPage('homePage')" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.55);font-size:1.5rem;cursor:pointer;padding:4px 8px;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;line-height:1" aria-label="Назад">‹</button>
         <h1>YupSoul</h1>
         <div style="font-size:0.78rem;font-weight:400;letter-spacing:0.12em;color:rgba(212,175,55,0.5);margin:2px 0 0;text-transform:uppercase">Музыка твоей души</div>
       </header>
 
+      <div class="page-scroll">
       <!-- Выбор героя для мастер-пользователей (скрыт у обычных) -->
-      <div id="forWhoWrap" style="display:none; padding:0 16px; margin-bottom:16px">
+      <div id="forWhoWrap" style="display:none; padding:0; margin-bottom:16px">
         <div class="field" style="margin-bottom:0">
           <label for="forWho" style="font-size:0.82rem">Для кого генерируем?</label>
           <select id="forWho">
@@ -1437,13 +1458,11 @@
         <div class="form-nav-links">
           <button type="button" class="form-nav-link" onclick="goToProfileFrom('formPage')">Профиль</button>
           <button type="button" class="form-nav-link" onclick="goToHelpFrom('formPage')">Помощь</button>
-          <button type="button" class="form-nav-link" onclick="goToHeroesFrom('formPage')">Мои друзья</button>
+          <button type="button" class="form-nav-link" onclick="goToHeroesFrom('formPage')">Лаборатория</button>
         </div>
       </div>
       
-      <footer>
-        <p>YupSoul • 2026 • v1.2.37</p>
-      </footer>
+      </div><!-- /page-scroll -->
     </div>
     
     <!-- paymentPage убран из .page-системы — заменён на #paymentOverlay ниже -->
@@ -1463,13 +1482,13 @@
     
     <!-- Страница успеха -->
     <div class="page" id="successPage">
-      <header>
+      <header class="page-header">
         <h1>YupSoul</h1>
         <div style="font-size:0.78rem;font-weight:400;letter-spacing:0.12em;color:rgba(212,175,55,0.5);margin:2px 0 0;text-transform:uppercase">Музыка твоей души</div>
         <div class="subtitle">Песня создана!</div>
       </header>
       
-      <div class="section">
+      <div class="section page-scroll">
         <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo success" width="180" height="180">
         <h2 class="success-title">Готово!</h2>
         <p class="success-text">
@@ -1546,7 +1565,7 @@
         <div class="form-nav-links">
           <button type="button" class="form-nav-link" onclick="goToProfileFrom('successPage')">Профиль</button>
           <button type="button" class="form-nav-link" onclick="goToHelpFrom('successPage')">Помощь</button>
-          <button type="button" class="form-nav-link" onclick="goToHeroesFrom('successPage')">Мои друзья</button>
+          <button type="button" class="form-nav-link" onclick="goToHeroesFrom('successPage')">Лаборатория</button>
         </div>
       </div>
 
@@ -1557,12 +1576,12 @@
 
     <!-- Страница «Спасибо за оплату» (редирект с HOT) -->
     <div class="page" id="paymentThanksPage">
-      <header>
+      <header class="page-header">
         <h1>YupSoul</h1>
         <div style="font-size:0.78rem;font-weight:400;letter-spacing:0.12em;color:rgba(212,175,55,0.5);margin:2px 0 0;text-transform:uppercase">Музыка твоей души</div>
         <div class="subtitle">заявка принята</div>
       </header>
-      <div class="section" style="text-align:center; padding: 40px 20px">
+      <div class="section page-scroll" style="text-align:center; padding-top:40px">
         <div class="success-icon" style="font-size:4rem; margin-bottom:20px">✓</div>
         <h2 class="success-title" style="font-size:1.6rem; margin:0 0 16px 0">Спасибо за оплату</h2>
         <p class="success-text" id="paymentThanksMessage" style="margin:0 0 16px 0; font-size:1rem">
@@ -1583,11 +1602,11 @@
       var LANG = {
         ru: {
           tagline: 'Исследуй свои грани так, как ты этого захочешь',
-          startBtn: 'Создать свою песню', myProfile: '👤 Профиль', myHeroes: '👥 Мои друзья', admin: '👑 Админка',
+          startBtn: 'Создать свою песню', myProfile: '👤 Профиль', myHeroes: 'Лаборатория', admin: '👑 Админка',
           profileTitle: 'Профиль', profileSubtitle: 'Твои данные и бесплатные генерации',
           profileFreeCredits: 'Бесплатных генераций', profileInviteFriend: 'Пригласи друга', profileShare: 'Поделиться',
           profileInvited: 'Приглашено', profileActivated: 'Активировано', profileCreateSong: 'Создать песню',
-          heroesTitle: 'Мои друзья', heroesSubtitle: 'Картотека клиентов',
+          heroesTitle: 'Лаборатория', heroesSubtitle: 'Картотека людей',
           searchByName: 'Поиск по имени', searchPlaceholder: 'Введите имя...', searchBtn: 'Искать',
           addHero: '➕ Добавить героя', heroName: 'Имя *', heroBirthdate: 'Дата рождения', heroBirthtime: 'Время рождения',
           heroBirthplace: 'Место рождения', heroBirthplacePh: 'Город, страна', heroNotes: 'Досье / заметки', heroNotesPh: 'Заметки о клиенте',
@@ -1701,11 +1720,11 @@
         },
         en: {
           tagline: 'Explore your edges the way you want',
-          startBtn: 'Create My Song', myProfile: '👤 Profile', myHeroes: '👥 My Friends', admin: '👑 Admin',
+          startBtn: 'Create My Song', myProfile: '👤 Profile', myHeroes: 'Lab', admin: '👑 Admin',
           profileTitle: 'Profile', profileSubtitle: 'Your data and free generations',
           profileFreeCredits: 'Free generations', profileInviteFriend: 'Invite a friend', profileShare: 'Share',
           profileInvited: 'Invited', profileActivated: 'Activated', profileCreateSong: 'Create song',
-          heroesTitle: 'My Heroes', heroesSubtitle: 'Client directory',
+          heroesTitle: 'Laboratory', heroesSubtitle: 'People directory',
           searchByName: 'Search by name', searchPlaceholder: 'Enter name...', searchBtn: 'Search',
           addHero: '➕ Add Hero', heroName: 'Name *', heroBirthdate: 'Date of birth', heroBirthtime: 'Time of birth',
           heroBirthplace: 'Place of birth', heroBirthplacePh: 'City, country', heroNotes: 'Notes', heroNotesPh: 'Client notes',
@@ -1818,11 +1837,11 @@
         },
         de: {
           tagline: 'Erkunde deine Facetten, wie du es möchtest',
-          startBtn: 'Mein Lied erschaffen', myProfile: '👤 Profil', myHeroes: '👥 Meine Freunde', admin: '👑 Admin',
+          startBtn: 'Mein Lied erschaffen', myProfile: '👤 Profil', myHeroes: 'Labor', admin: '👑 Admin',
           profileTitle: 'Profil', profileSubtitle: 'Deine Daten und kostenlose Generierungen',
           profileFreeCredits: 'Kostenlose Generierungen', profileInviteFriend: 'Freund einladen', profileShare: 'Teilen',
           profileInvited: 'Eingeladen', profileActivated: 'Aktiviert', profileCreateSong: 'Lied erstellen',
-          heroesTitle: 'Meine Helden', heroesSubtitle: 'Klientenkartei',
+          heroesTitle: 'Labor', heroesSubtitle: 'Personen-Kartei',
           searchByName: 'Suche nach Name', searchPlaceholder: 'Name eingeben...', searchBtn: 'Suchen',
           addHero: '➕ Held hinzufügen', heroName: 'Name *', heroBirthdate: 'Geburtsdatum', heroBirthtime: 'Geburtszeit',
           heroBirthplace: 'Geburtsort', heroBirthplacePh: 'Stadt, Land', heroNotes: 'Notizen', heroNotesPh: 'Klientennotizen',
@@ -1935,11 +1954,11 @@
         },
         fr: {
           tagline: 'Explore tes facettes comme tu le souhaites',
-          startBtn: 'Créer ma chanson', myProfile: '👤 Profil', myHeroes: '👥 Mes amis', admin: '👑 Admin',
+          startBtn: 'Créer ma chanson', myProfile: '👤 Profil', myHeroes: 'Labo', admin: '👑 Admin',
           profileTitle: 'Profil', profileSubtitle: 'Tes données et générations gratuites',
           profileFreeCredits: 'Générations gratuites', profileInviteFriend: 'Inviter un ami', profileShare: 'Partager',
           profileInvited: 'Invités', profileActivated: 'Activés', profileCreateSong: 'Créer une chanson',
-          heroesTitle: 'Mes héros', heroesSubtitle: 'Répertoire des clients',
+          heroesTitle: 'Laboratoire', heroesSubtitle: 'Répertoire des personnes',
           searchByName: 'Rechercher par nom', searchPlaceholder: 'Entrer le nom...', searchBtn: 'Rechercher',
           addHero: '➕ Ajouter un héros', heroName: 'Nom *', heroBirthdate: 'Date de naissance', heroBirthtime: 'Heure de naissance',
           heroBirthplace: 'Lieu de naissance', heroBirthplacePh: 'Ville, pays', heroNotes: 'Notes', heroNotesPh: 'Notes client',
@@ -3783,26 +3802,15 @@
           if (!target) return;
         }
         target.classList.add('active');
-        // Задаём min-height через реальную высоту вьюпорта Telegram (100vh ненадёжен в WebView)
+        // Сброс скролла у всех .page-scroll при переходе
         try {
-          var vh = (tg && tg.viewportHeight && tg.viewportHeight > 100)
-            ? tg.viewportHeight
-            : (window.innerHeight && window.innerHeight > 100 ? window.innerHeight : 600);
-          target.style.minHeight = Math.max(vh, 400) + 'px';
+          var scrollArea = document.querySelector('#' + pageId + ' .page-scroll');
+          if (scrollArea) scrollArea.scrollTop = 0;
         } catch(e) {}
-        // Скролл к началу страницы
-        setTimeout(function() {
-          try { window.scrollTo(0, 0); } catch(e) {}
-          try { document.documentElement.scrollTop = 0; } catch(e) {}
-          try { document.body.scrollTop = 0; } catch(e) {}
-        }, 0);
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
         if (pageId === 'formPage') loadSavedProfileForForm();
         if (pageId === 'homePage' && typeof loadReferralStats === 'function') loadReferralStats();
         if (pageId === 'profilePage' && typeof loadProfilePage === 'function') loadProfilePage();
-        // Иконка профиля — только на главной
-        var profileIconBtn = document.getElementById('profileIconBtn');
-        if (profileIconBtn) profileIconBtn.style.display = pageId === 'homePage' ? 'flex' : 'none';
         // paymentPage теперь overlay — здесь ничего не делаем
         if (pageId === 'successPage') updateSoulChatHint();
         if (document.getElementById('previewNav') && document.getElementById('previewNav').classList.contains('show')) {
@@ -4683,6 +4691,34 @@
         if (tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/' + BOT_USERNAME + '?start=plan_plus');
         else goToHelpFrom('profilePage');
       });
+      var planBtnMaster = document.getElementById('planBtnMaster');
+      if (planBtnMaster) planBtnMaster.addEventListener('click', function() {
+        goToHeroesFrom('profilePage');
+      });
+
+      // Тултипы для фич тарифов (.ppc-info)
+      (function() {
+        var tooltip = document.getElementById('modeTooltip');
+        if (!tooltip) return;
+        var timer = null;
+        function hide() { tooltip.style.display = 'none'; clearTimeout(timer); }
+        document.querySelectorAll('.ppc-info').forEach(function(icon) {
+          icon.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var text = this.getAttribute('data-tip') || '';
+            if (!text) return;
+            tooltip.textContent = text;
+            tooltip.style.display = 'block';
+            var rect = this.getBoundingClientRect();
+            var tw = tooltip.offsetWidth || 220;
+            var left = Math.min(rect.left, window.innerWidth - tw - 12);
+            tooltip.style.left = Math.max(8, left) + 'px';
+            tooltip.style.top = (rect.bottom + 8) + 'px';
+            clearTimeout(timer);
+            timer = setTimeout(hide, 4000);
+          });
+        });
+      })();
       var profileRefShareBtn = document.getElementById('profileRefShareBtn');
       if (profileRefShareBtn) profileRefShareBtn.addEventListener('click', function() {
         var link = (document.getElementById('profileRefLinkInput') || {}).value || '';
