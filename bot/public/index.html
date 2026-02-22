@@ -188,24 +188,38 @@
     }
     .mode-selector h3 { font-size: 0.95rem; color: var(--tg-theme-text-color, #fff); margin: 0 0 6px 0; font-weight: 600; text-align: center; }
     .mode-subtitle { font-size: 0.75rem; color: var(--tg-theme-hint-color, rgba(255,255,255,.6)); margin: 0 0 12px 0; text-align: center; }
-    .mode-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .mode-buttons { display: flex; flex-direction: column; gap: 8px; }
     .mode-btn {
-      background: rgba(255, 255, 255, 0.08); border: 1.5px solid rgba(255, 255, 255, 0.18);
-      color: var(--tg-theme-text-color, #fff); padding: 12px 8px; border-radius: 10px; cursor: pointer; transition: all 0.25s;
-      text-align: center; font-size: 13px; line-height: 1.35;
+      background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.15);
+      color: var(--tg-theme-text-color,#fff); padding: 13px 16px; border-radius: 12px; cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      text-align: left; width: 100%; box-sizing: border-box;
     }
-    .mode-btn:hover {
-      background: rgba(212,175,55,0.12); border-color: rgba(212,175,55,0.4);
-      transform: translateY(-1px); box-shadow: 0 4px 12px rgba(212,175,55,0.15);
-    }
+    .mode-btn:active { transform: scale(0.98); }
     .mode-btn.active {
-      background: linear-gradient(135deg, #d4af37, #ec4899);
-      border-color: #d4af37; color: var(--tg-theme-button-text-color, #fff);
-      box-shadow: 0 4px 16px rgba(212,175,55,0.3);
+      background: linear-gradient(135deg, rgba(212,175,55,0.22), rgba(236,72,153,0.18));
+      border-color: rgba(212,175,55,0.55); color: #fff;
+      box-shadow: 0 3px 14px rgba(212,175,55,0.2);
     }
-    .mode-icon { font-size: 24px; display: block; margin: 0 auto 6px; }
-    .mode-label { font-weight: 600; font-size: 0.9rem; display: block; margin: 0 0 2px; line-height: 1.25; }
-    .mode-desc { font-size: 0.72rem; opacity: 0.85; display: block; margin-top: 2px; line-height: 1.3; }
+    .mode-icon { display: none; }
+    .mode-label { font-weight: 600; font-size: 0.95rem; flex: 1; }
+    .mode-desc { display: none; }
+    .mode-info {
+      width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(212,175,55,0.4);
+      color: rgba(212,175,55,0.7); font-size: 0.7rem; font-weight: 700;
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0; cursor: pointer; line-height: 1; transition: border-color 0.2s, color 0.2s;
+      font-style: normal; user-select: none;
+    }
+    .mode-info:active { color: #d4af37; border-color: #d4af37; }
+    /* Тултип подсказки */
+    #modeTooltip {
+      display: none; position: fixed; z-index: 9999;
+      background: rgba(25,25,35,0.97); border: 1px solid rgba(212,175,55,0.3);
+      color: rgba(255,255,255,0.88); font-size: 0.8rem; line-height: 1.45;
+      padding: 9px 13px; border-radius: 10px; max-width: 220px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4); pointer-events: none;
+    }
     .location-input-wrapper { position: relative; }
     .location-input {
       width: 100%; padding: 12px 16px; background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.05));
@@ -249,17 +263,9 @@
     .form-nav-link{background:none;border:none;color:rgba(212,175,55,0.55);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;animation:none;font-weight:500}
     .form-nav-link:hover{color:rgba(212,175,55,0.8)}
     @media (max-width: 600px) {
-      .mode-buttons { grid-template-columns: 1fr; gap: 8px; }
-      .mode-btn { display: flex; align-items: center; gap: 14px; padding: 11px 16px; text-align: left; }
-      .mode-label { margin: 0; font-size: 0.88rem; }
-      .mode-desc { margin: 0; font-size: 0.75rem; }
       .examples-grid { grid-template-columns: 1fr; }
       .content-wrapper { padding: 15px; }
       #payBtn { padding: 14px; font-size: 15px; }
-    }
-    @media (min-width: 601px) and (max-width: 768px) {
-      .mode-buttons { grid-template-columns: repeat(2, 1fr); }
-      .examples-grid { grid-template-columns: repeat(2, 1fr); }
     }
     /* Остальные стили приложения */
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Comfortaa',sans-serif}
@@ -704,16 +710,17 @@
     .profile-create-btn{width:100%;padding:15px 24px;border-radius:16px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;letter-spacing:0.02em;box-shadow:0 4px 20px rgba(212,175,55,0.2);transition:transform .15s,box-shadow .15s}
     .profile-create-btn:active{transform:scale(0.98)}
     /* ── ФОРМА: СВОДКА ПРОФИЛЯ ── */
-    #formProfileSummary{display:none;padding:0 16px;margin-bottom:8px}
-    .fps-card{background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:14px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;box-sizing:border-box}
-    .fps-info{flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:0.9rem;line-height:1.3}
-    .fps-name{font-weight:600;color:rgba(255,255,255,0.92)}
-    .fps-sep{color:rgba(255,255,255,0.25);margin:0 4px}
-    .fps-date{font-weight:400;color:rgba(212,175,55,0.85)}
-    .fps-edit-btn{background:none;border:none;color:rgba(212,175,55,0.55);font-size:0.8rem;cursor:pointer;padding:4px 0;min-height:unset;box-shadow:none;animation:none;margin:0;font-weight:500;white-space:nowrap;flex-shrink:0;letter-spacing:0.01em;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(212,175,55,0.25)}
+    #formProfileSummary{display:none;margin-bottom:12px}
+    .fps-card{background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.18);border-radius:12px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-sizing:border-box}
+    .fps-info{flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    .fps-name{font-size:0.95rem;font-weight:600;color:rgba(255,255,255,0.92)}
+    .fps-sep{font-size:0.85rem;color:rgba(255,255,255,0.22);margin:0 5px}
+    .fps-date{font-size:0.88rem;font-weight:400;color:rgba(212,175,55,0.82)}
+    .fps-edit-btn{background:none;border:none;color:rgba(212,175,55,0.45);font-size:0.78rem;cursor:pointer;padding:4px 0;min-height:unset;box-shadow:none;animation:none;margin:0;font-weight:400;white-space:nowrap;flex-shrink:0;letter-spacing:0.03em;text-transform:uppercase}
   </style>
 </head>
 <body>
+<div id="modeTooltip"></div>
   <!-- Панель навигации для превью (показывается только в браузере) -->
   <div class="container">
     <div class="preview-nav" id="previewNav">
@@ -1216,16 +1223,19 @@
             <p class="mode-subtitle">Для кого создаём?</p>
             <div class="mode-buttons">
               <button type="button" class="mode-btn active" data-mode="single">
-                <span class="mode-label">Для себя</span>
-                <span class="mode-desc">Глубокий анализ</span>
+                <span class="mode-label" data-i18n="modeSingle">Для себя</span>
+                <span class="mode-desc" data-i18n="modeSingleDesc">Глубокий анализ</span>
+                <i class="mode-info" aria-label="Подробнее">i</i>
               </button>
               <button type="button" class="mode-btn" data-mode="couple">
-                <span class="mode-label">Для двоих</span>
-                <span class="mode-desc">Дуэт/пара</span>
+                <span class="mode-label" data-i18n="modeCouple">Для двоих</span>
+                <span class="mode-desc" data-i18n="modeCoupleDesc">Дуэт/пара</span>
+                <i class="mode-info" aria-label="Подробнее">i</i>
               </button>
               <button type="button" class="mode-btn" data-mode="transit">
-                <span class="mode-label">Энергия дня</span>
-                <span class="mode-desc">Энергия момента</span>
+                <span class="mode-label" data-i18n="modeTransit">Энергия дня</span>
+                <span class="mode-desc" data-i18n="modeTransitDesc">Энергия момента</span>
+                <i class="mode-info" aria-label="Подробнее">i</i>
               </button>
             </div>
           </div>
@@ -4010,10 +4020,40 @@
       }
 
       document.querySelectorAll('.mode-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function(e) {
+          if (e.target.classList.contains('mode-info')) return;
           setMode(this.getAttribute('data-mode'));
         });
       });
+
+      // Тултип для кнопок режима
+      (function() {
+        var tooltip = document.getElementById('modeTooltip');
+        var tooltipTimer = null;
+        function hideTooltip() {
+          if (tooltip) tooltip.style.display = 'none';
+          clearTimeout(tooltipTimer);
+        }
+        document.querySelectorAll('.mode-info').forEach(function(icon) {
+          icon.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!tooltip) return;
+            var descEl = this.closest('.mode-btn').querySelector('.mode-desc');
+            var text = descEl ? descEl.textContent.trim() : '';
+            if (!text) return;
+            tooltip.textContent = text;
+            var rect = this.getBoundingClientRect();
+            tooltip.style.display = 'block';
+            var tw = tooltip.offsetWidth || 180;
+            var left = Math.min(rect.left, window.innerWidth - tw - 12);
+            tooltip.style.left = Math.max(8, left) + 'px';
+            tooltip.style.top = (rect.bottom + 8) + 'px';
+            clearTimeout(tooltipTimer);
+            tooltipTimer = setTimeout(hideTooltip, 3000);
+          });
+        });
+        document.addEventListener('click', hideTooltip);
+      })();
 
       (function() {
         var pickerBtn = document.getElementById('quickPickerBtn');
