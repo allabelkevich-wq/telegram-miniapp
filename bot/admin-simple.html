@@ -243,6 +243,12 @@
       <!-- Единая панель фильтров -->
       <div class="unified-filter">
         <div class="uf-row">
+          <span class="uf-label">Поиск по ID:</span>
+          <input type="text" id="searchRequestId" placeholder="Например bb3688da" maxlength="36" style="width:180px;padding:8px 12px;border-radius:8px;border:1px solid #4a5568;background:#2d3748;color:#fff;font-size:14px;font-family:monospace;">
+          <button type="button" class="uf-btn" id="searchRequestIdBtn" style="padding:8px 16px;">🔍 Найти</button>
+          <button type="button" class="uf-btn" id="clearSearchIdBtn" style="padding:8px 12px;display:none;">✕ Сбросить</button>
+        </div>
+        <div class="uf-row">
           <span class="uf-label">Статус:</span>
           <button class="uf-btn filter-btn active" data-filter="all">📋 Все</button>
           <button class="uf-btn filter-btn" data-filter="pending">⏳ В работе</button>
@@ -408,6 +414,7 @@
     let currentFilter = 'all';
     let currentSort = 'date_desc';
     let currentPayFilter = 'all';
+    let currentSearchRequestId = '';
 
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
@@ -826,7 +833,8 @@
         loadUnpaidRequests();
         loadCancelledRequests();
         setLoadingStatus(true, 'Загрузка заявок…');
-        const listResult = await fetchJson(API_BASE + '/api/admin/requests?limit=50&status=' + currentFilter + authQuery(), { headers: authHeaders() });
+        const listUrl = API_BASE + '/api/admin/requests?limit=' + (currentSearchRequestId ? '200' : '50') + '&status=' + currentFilter + (currentSearchRequestId ? '&request_id=' + encodeURIComponent(currentSearchRequestId) : '') + authQuery();
+        const listResult = await fetchJson(listUrl, { headers: authHeaders() });
         const listJson = listResult.json;
         const listRes = listResult.res;
         if (listJson.success && Array.isArray(listJson.data)) renderRequests(listJson.data);
@@ -880,7 +888,7 @@
       try {
         const [statsRes, listRes] = await Promise.all([
           fetchJson(API_BASE + '/api/admin/stats?' + new URLSearchParams({ token }).toString(), { headers: authHeaders() }, 10000),
-          fetchJson(API_BASE + '/api/admin/requests?limit=50&status=' + currentFilter + authQuery(), { headers: authHeaders() }, 10000),
+          fetchJson(API_BASE + '/api/admin/requests?limit=' + (currentSearchRequestId ? '200' : '50') + '&status=' + currentFilter + (currentSearchRequestId ? '&request_id=' + encodeURIComponent(currentSearchRequestId) : '') + authQuery(), { headers: authHeaders() }, 10000),
         ]);
 
         if (statsRes.json && statsRes.json.success && statsRes.json.stats) {
@@ -968,7 +976,8 @@
       data = sortRequests(data);
       const payLabel = currentPayFilter !== 'all' ? (' · Оплата: ' + currentPayFilter) : '';
       if (!data.length) {
-        document.getElementById('requests').innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8">📭 Нет заявок' + escapeHtml(payLabel) + '</div>';
+        const searchHint = currentSearchRequestId ? ' по ID «' + escapeHtml(currentSearchRequestId) + '»' : '';
+        document.getElementById('requests').innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8">📭 Нет заявок' + searchHint + payLabel + '</div>';
         const bulkBarEmpty = document.getElementById('bulkActionsBar');
         if (bulkBarEmpty) bulkBarEmpty.style.display = 'none';
         return;
@@ -1669,16 +1678,41 @@
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', function() {
+        if (btn.id === 'searchRequestIdBtn') return;
         currentFilter = this.getAttribute('data-filter') || 'all';
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
-        // Синхронизируем подсветку карточек
         document.querySelectorAll('.stat-card').forEach(c => {
           c.classList.toggle('active-filter', c.getAttribute('data-filter') === currentFilter);
         });
         refreshAfterAction();
       });
     });
+
+    (function initSearchByRequestId() {
+      const input = document.getElementById('searchRequestId');
+      const btn = document.getElementById('searchRequestIdBtn');
+      const clearBtn = document.getElementById('clearSearchIdBtn');
+      function doSearch() {
+        const raw = (input && input.value) ? input.value.trim().toLowerCase().replace(/[^0-9a-f-]/g, '') : '';
+        currentSearchRequestId = raw;
+        if (clearBtn) clearBtn.style.display = currentSearchRequestId ? 'inline-block' : 'none';
+        refreshAfterAction();
+      }
+      function clearSearch() {
+        currentSearchRequestId = '';
+        if (input) input.value = '';
+        if (clearBtn) clearBtn.style.display = 'none';
+        refreshAfterAction();
+      }
+      if (btn) btn.addEventListener('click', doSearch);
+      if (clearBtn) clearBtn.addEventListener('click', clearSearch);
+      if (input) {
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') { e.preventDefault(); doSearch(); }
+        });
+      }
+    })();
 
     document.getElementById('settings-save-btn')?.addEventListener('click', async function() {
       const input = document.getElementById('settings-max-tokens');

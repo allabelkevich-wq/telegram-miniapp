@@ -783,10 +783,14 @@ async function sendPendingPaymentBotMessage(telegramUserId, requestId) {
   // Используем СТАБИЛЬНЫЙ URL (без timestamp) — кнопки в сообщениях живут дольше одного деплоя
   const payUrl = MINI_APP_STABLE_URL + "?requestId=" + encodeURIComponent(requestId);
   const shortId = String(requestId || "").substring(0, 8);
+  const trialAvailable = supabase ? await isTrialAvailable(telegramUserId, "first_song_gift") : false;
+  const firstSongHint = trialAvailable
+    ? "\n\n🎁 _Если это твоя первая песня — открой приложение по кнопке ниже и на главном экране нажми «Получить бесплатно»._"
+    : "";
   try {
     await bot.api.sendMessage(
       telegramUserId,
-      `⏳ *Заявка создана, но ожидает оплаты*\n\nID: \`${shortId}\`\n\nВыбери действие:`,
+      `⏳ *Заявка создана, но ожидает оплаты*\n\nID: \`${shortId}\`\n\nВыбери действие:${firstSongHint}`,
       {
         parse_mode: "Markdown",
         reply_markup: {
@@ -1260,12 +1264,26 @@ bot.hears(/^(песня не пришла|не пришла песня|не по
       .order("created_at", { ascending: false })
       .limit(3);
     if (!rows?.length) {
+      // Проверяем: может у пользователя заявка в ожидании оплаты, но он имеет право на первую песню бесплатно
+      const { data: pendingRow } = await supabase
+        .from("track_requests")
+        .select("id")
+        .eq("telegram_user_id", Number(telegramUserId))
+        .eq("generation_status", "pending_payment")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const trialAvailable = await isTrialAvailable(telegramUserId, "first_song_gift");
+      const pendingHint = (pendingRow && trialAvailable)
+        ? "\n\n🎁 У тебя есть заявка, которая ждёт активации подарка. Открой приложение (кнопка в меню чата или «Оплатить сейчас» выше) и на главном экране нажми «Получить бесплатно» — так придёт первая песня."
+        : "";
       await ctx.reply(
         "Проверил — у тебя нет песен в очереди на повторную отправку.\n\n" +
         "Если песня не пришла:\n" +
         "• Подожди 15–20 минут — песня может ещё генерироваться\n" +
         "• Убедись, что не блокировал бота и нажал «Старт»\n" +
-        "• Напиши в поддержку — пришлём вручную"
+        "• Напиши в поддержку — пришлём вручную" +
+        pendingHint
       );
       return;
     }
@@ -2109,16 +2127,20 @@ app.get("/api/admin/requests", asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const limit = Math.min(parseInt(req.query?.limit, 10) || 50, 100);
   const statusFilter = req.query?.status || "all";
+  const requestIdSearch = String(req.query?.request_id || req.query?.id || "").trim().toLowerCase().replace(/[^0-9a-f-]/g, "");
   const fullSelect = "id,name,gender,birthdate,birthplace,person2_name,person2_gender,person2_birthdate,person2_birthplace,status,generation_status,delivery_status,delivered_at,created_at,audio_url,mode,request,generation_steps,payment_status,payment_provider,promo_code,promo_discount_amount,payment_amount,telegram_user_id";
-  let q = supabase.from("track_requests").select(fullSelect).order("created_at", { ascending: false }).limit(limit);
+  let q = supabase.from("track_requests").select(fullSelect).order("created_at", { ascending: false }).limit(requestIdSearch ? 200 : limit);
   if (statusFilter === "pending") q = q.in("generation_status", ["pending", "astro_calculated", "lyrics_generated", "suno_processing"]);
   else if (statusFilter === "pending_payment") q = q.eq("generation_status", "pending_payment");
   else if (statusFilter === "completed") q = q.eq("generation_status", "completed");
   else if (statusFilter === "delivery_failed") q = q.eq("generation_status", "delivery_failed");
   else if (statusFilter === "failed") q = q.eq("generation_status", "failed");
   else if (statusFilter === "cancelled") q = q.eq("generation_status", "cancelled");
-  // "all" — без фильтра
   let result = await q;
+  if (requestIdSearch && result.data && result.data.length) {
+    result.data = result.data.filter((r) => (r.id || "").toLowerCase().startsWith(requestIdSearch));
+    if (result.data.length > 50) result.data = result.data.slice(0, 50);
+  }
   if (result.error && /does not exist|column/i.test(result.error.message)) {
     const minSelect = "id, name, status, created_at, request, telegram_user_id";
     let q2 = supabase.from("track_requests").select(minSelect).order("created_at", { ascending: false }).limit(limit);
