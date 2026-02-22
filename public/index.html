@@ -656,7 +656,12 @@
     .profile-header-title{font-size:1.05rem;font-weight:600;color:rgba(255,255,255,0.85);letter-spacing:0.02em}
     .profile-scroll{padding:0 18px calc(env(safe-area-inset-bottom)+80px)}
     .profile-identity{text-align:center;margin-bottom:28px;padding-top:8px}
-    .profile-avatar{width:72px;height:72px;margin:0 auto 14px;border-radius:50%;background:linear-gradient(135deg,#d4af37,#ec4899);display:flex;align-items:center;justify-content:center;font-size:2rem;color:#fff;font-weight:700;letter-spacing:0;box-shadow:0 0 0 4px rgba(212,175,55,0.12),0 4px 24px rgba(212,175,55,0.18)}
+    .profile-avatar-wrap{position:relative;width:72px;height:72px;margin:0 auto 14px;cursor:pointer}
+    .profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#d4af37,#ec4899);display:flex;align-items:center;justify-content:center;font-size:2rem;color:#fff;font-weight:700;letter-spacing:0;box-shadow:0 0 0 4px rgba(212,175,55,0.12),0 4px 24px rgba(212,175,55,0.18);overflow:hidden;transition:filter .2s}
+    .profile-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+    .profile-avatar-wrap:active .profile-avatar{filter:brightness(0.75)}
+    .profile-avatar-edit{position:absolute;bottom:0;right:0;width:22px;height:22px;border-radius:50%;background:#1a1628;border:1.5px solid rgba(212,175,55,0.5);display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:rgba(212,175,55,0.85);pointer-events:none}
+    .profile-avatar-spinner{position:absolute;inset:0;border-radius:50%;background:rgba(10,8,25,0.6);display:none;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(212,175,55,0.8)}
     .profile-name{font-size:1.3rem;font-weight:700;color:#fff;letter-spacing:0.01em;margin-bottom:8px}
     .profile-plan-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.28);border-radius:20px;padding:4px 12px;font-size:0.75rem;font-weight:600;color:rgba(212,175,55,0.85);letter-spacing:0.04em;text-transform:uppercase}
     .profile-balance-card{background:linear-gradient(135deg,rgba(212,175,55,0.07),rgba(236,72,153,0.04));border:1px solid rgba(212,175,55,0.2);border-radius:18px;padding:18px 20px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
@@ -957,7 +962,15 @@
       <div class="profile-scroll">
         <!-- Идентификация: аватар + имя + план -->
         <div class="profile-identity">
-          <div id="profileAvatar" class="profile-avatar">👤</div>
+          <div class="profile-avatar-wrap" id="profileAvatarWrap" title="Изменить фото">
+            <div id="profileAvatar" class="profile-avatar">
+              <span id="profileAvatarInitial">👤</span>
+            </div>
+            <div class="profile-avatar-edit">✎</div>
+            <div class="profile-avatar-spinner" id="profileAvatarSpinner">…</div>
+          </div>
+          <!-- Скрытый input для выбора фото -->
+          <input type="file" id="avatarFileInput" accept="image/*" style="display:none">
           <div id="profileName" class="profile-name">Загрузка…</div>
           <div id="profilePlanBadge" class="profile-plan-badge">✦ YupSoul Free</div>
         </div>
@@ -2638,6 +2651,7 @@
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         var initData = getInitData();
         var avatarEl = document.getElementById('profileAvatar');
+        var avatarInitialEl = document.getElementById('profileAvatarInitial');
         var nameEl = document.getElementById('profileName');
         var planBadgeEl = document.getElementById('profilePlanBadge');
         var creditsEl = document.getElementById('profileCreditsCount');
@@ -2651,8 +2665,25 @@
         if (refRewEl) refRewEl.textContent = '0';
         var tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
         var displayName = (tgUser && tgUser.first_name) ? tgUser.first_name : 'Гость';
-        // Сразу ставим инициал в аватар
-        if (avatarEl) avatarEl.textContent = displayName.charAt(0).toUpperCase();
+
+        function setAvatarPhoto(src) {
+          if (!avatarEl) return;
+          var existing = avatarEl.querySelector('img');
+          if (!existing) {
+            var img = document.createElement('img');
+            img.alt = 'avatar';
+            avatarEl.insertBefore(img, avatarEl.firstChild);
+            existing = img;
+          }
+          existing.src = src;
+          existing.style.display = 'block';
+          if (avatarInitialEl) avatarInitialEl.style.display = 'none';
+        }
+
+        // Сначала — инициал
+        if (avatarInitialEl) avatarInitialEl.textContent = displayName.charAt(0).toUpperCase();
+        // Telegram photo_url (если доступно)
+        if (tgUser && tgUser.photo_url) setAvatarPhoto(tgUser.photo_url);
         if (!initData || !apiBase) {
           if (nameEl) nameEl.textContent = displayName;
           return;
@@ -2675,7 +2706,12 @@
           var pricingData = (pricingResp.status === 'fulfilled') ? await pricingResp.value.json().catch(function(){ return null; }) : null;
 
           if (nameEl) nameEl.textContent = displayName;
-          if (avatarEl) avatarEl.textContent = displayName.charAt(0).toUpperCase();
+          if (avatarInitialEl) avatarInitialEl.textContent = displayName.charAt(0).toUpperCase();
+
+          // Фото из профиля (приоритет выше Telegram photo_url)
+          if (profileJson.profile && profileJson.profile.avatar_url) {
+            setAvatarPhoto(profileJson.profile.avatar_url);
+          }
 
           // Обновляем иконку профиля на главной
           var profileIconInitial = document.getElementById('profileIconInitial');
@@ -4609,6 +4645,75 @@
           } catch (e) {}
         }
       });
+
+      // ── ЗАГРУЗКА ФОТО ПРОФИЛЯ ─────────────────────────────────────────────
+      (function setupAvatarUpload() {
+        var wrap = document.getElementById('profileAvatarWrap');
+        var input = document.getElementById('avatarFileInput');
+        var spinner = document.getElementById('profileAvatarSpinner');
+
+        if (!wrap || !input) return;
+
+        wrap.addEventListener('click', function() { input.click(); });
+
+        input.addEventListener('change', function() {
+          var file = input.files && input.files[0];
+          if (!file) return;
+          if (!file.type.startsWith('image/')) { alert('Выбери изображение'); return; }
+
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            var src = e.target.result;
+            var img = new Image();
+            img.onload = function() {
+              // Ресайз до 256×256 через Canvas
+              var SIZE = 256;
+              var canvas = document.createElement('canvas');
+              canvas.width = SIZE; canvas.height = SIZE;
+              var ctx = canvas.getContext('2d');
+              // Кроп по центру
+              var sw = img.width, sh = img.height;
+              var side = Math.min(sw, sh);
+              var sx = (sw - side) / 2, sy = (sh - side) / 2;
+              ctx.drawImage(img, sx, sy, side, side, 0, 0, SIZE, SIZE);
+              var base64 = canvas.toDataURL('image/jpeg', 0.85);
+
+              // Показываем превью сразу
+              var avatarEl = document.getElementById('profileAvatar');
+              var initEl   = document.getElementById('profileAvatarInitial');
+              if (avatarEl) {
+                var existing = avatarEl.querySelector('img');
+                if (!existing) { existing = document.createElement('img'); existing.alt='avatar'; avatarEl.insertBefore(existing, avatarEl.firstChild); }
+                existing.src = base64; existing.style.display = 'block';
+              }
+              if (initEl) initEl.style.display = 'none';
+
+              // Загружаем на сервер
+              var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+              var initData = getInitData();
+              if (!apiBase || !initData) return;
+              if (spinner) { spinner.style.display = 'flex'; }
+              fetch(apiBase + '/api/user/avatar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+                body: JSON.stringify({ initData: initData, avatar_base64: base64 })
+              })
+              .then(function(r) { return r.json(); })
+              .then(function(json) {
+                if (spinner) spinner.style.display = 'none';
+                if (!json.ok) console.warn('[Avatar] upload error:', json.error);
+              })
+              .catch(function(err) {
+                if (spinner) spinner.style.display = 'none';
+                console.warn('[Avatar] upload failed:', err);
+              });
+            };
+            img.src = src;
+          };
+          reader.readAsDataURL(file);
+          input.value = ''; // сбрасываем для повторного выбора
+        });
+      })();
 
       // ── Инициализация страницы героев ────────────────────────────────────
       function initHeroesPage() {

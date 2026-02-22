@@ -2106,6 +2106,53 @@ app.post("/api/user/profile", express.json(), asyncApi(async (req, res) => {
   return res.json({ profile: data || null });
 }));
 
+// ── АВАТАР ПОЛЬЗОВАТЕЛЯ ──────────────────────────────────────────────────────
+app.post("/api/user/avatar", express.json({ limit: "3mb" }), asyncApi(async (req, res) => {
+  const initData = req.body?.initData ?? req.headers["x-telegram-init"];
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ error: "Unauthorized" });
+  if (!supabase) return res.status(503).json({ error: "База недоступна" });
+
+  const base64 = req.body?.avatar_base64;
+  if (!base64 || typeof base64 !== "string") return res.status(400).json({ error: "Нет данных изображения" });
+
+  // Обрезаем data-url префикс
+  const raw = base64.replace(/^data:image\/[a-z]+;base64,/, "");
+  if (raw.length > 2 * 1024 * 1024) return res.status(413).json({ error: "Файл слишком большой (макс. 2 МБ)" });
+
+  const buf = Buffer.from(raw, "base64");
+  const filename = `avatar_${telegramUserId}.jpg`;
+  let avatarUrl = null;
+
+  // Пробуем Supabase Storage
+  try {
+    const { error: upErr } = await supabase.storage
+      .from("user-avatars")
+      .upload(filename, buf, { contentType: "image/jpeg", upsert: true });
+
+    if (!upErr) {
+      const { data: urlData } = supabase.storage.from("user-avatars").getPublicUrl(filename);
+      avatarUrl = urlData?.publicUrl || null;
+    }
+  } catch (_) {}
+
+  // Fallback: сохраняем сжатый base64 прямо в профиль (только если маленький)
+  if (!avatarUrl) {
+    if (raw.length <= 150_000) {
+      avatarUrl = base64; // храним data-url
+    } else {
+      return res.status(507).json({ error: "Хранилище недоступно, загрузите фото меньшего размера" });
+    }
+  }
+
+  const { error } = await supabase
+    .from("user_profiles")
+    .upsert({ telegram_id: Number(telegramUserId), avatar_url: avatarUrl, updated_at: new Date().toISOString() }, { onConflict: "telegram_id" });
+
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json({ ok: true, avatar_url: avatarUrl });
+}));
+
 function resolveAdminAuth(req) {
   const initData = req.headers["x-telegram-init"] || req.query?.initData || req.body?.initData;
   const telegramUserId = validateInitData(initData, BOT_TOKEN);
