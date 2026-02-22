@@ -1288,8 +1288,17 @@
           </div>
         </div>
 
+        <!-- Сводка профиля для возвращающегося пользователя -->
+        <div id="formProfileSummary" style="display:none;margin-bottom:12px">
+          <div class="fps-card">
+            <div class="fps-info">
+              <span id="formProfileSummaryName" class="fps-name"></span><span id="formProfileSummarySep" class="fps-sep" style="display:none"> · </span><span id="formProfileSummaryDate" class="fps-date"></span>
+            </div>
+            <button type="button" id="formProfileEditBtn" class="fps-edit-btn">Изменить</button>
+          </div>
+        </div>
+
         <div class="step-panel" data-step="2">
-        <div style="font-size:0.75rem;color:rgba(212,175,55,0.45);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;margin-top:4px;">Твои данные</div>
         <div class="field">
           <label for="name" data-icon="👤">Имя</label>
             <input type="text" id="name" placeholder="Как тебя зовут?" required aria-label="Имя">
@@ -2846,8 +2855,14 @@
         }
       }
 
-      // Автозаполнение формы из сохранённого профиля
+      // Автозаполнение формы из профиля + компактная карточка для повторных визитов
       async function loadSavedProfileForForm() {
+        var summary = document.getElementById('formProfileSummary');
+        var stepPanel2 = document.querySelector('.step-panel[data-step="2"]');
+        // Сброс: всегда показываем поля, прячем карточку
+        if (summary) summary.style.display = 'none';
+        if (stepPanel2) stepPanel2.style.display = '';
+
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         var initData = getInitData();
         if (!apiBase || !initData) return;
@@ -2861,7 +2876,7 @@
           var p = json && json.profile;
           if (!p) return;
 
-          // Предзаполняем поля — пользователь видит свои данные и может их изменить
+          // Предзаполняем скрытые поля
           var nameEl = document.getElementById('name');
           var birthdateEl = document.getElementById('birthdate');
           var birthplaceEl = document.getElementById('birthplace');
@@ -2885,6 +2900,29 @@
           if (birthplaceEl && p.birthplace) birthplaceEl.value = p.birthplace;
           if (birthtimeEl && p.birthtime) birthtimeEl.value = p.birthtime;
           if (unknownEl && p.birthtime_unknown) unknownEl.checked = true;
+
+          // Показываем компактную карточку только если есть имя И дата
+          if (p.name && p.birthdate) {
+            var summaryNameEl = document.getElementById('formProfileSummaryName');
+            var summaryDateEl = document.getElementById('formProfileSummaryDate');
+            var sumSepEl = document.getElementById('formProfileSummarySep');
+            var d = new Date(p.birthdate + 'T00:00:00');
+            var dateStr = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            if (summaryNameEl) summaryNameEl.textContent = p.name;
+            if (summaryDateEl) summaryDateEl.textContent = dateStr;
+            if (sumSepEl) sumSepEl.style.display = 'inline';
+            if (summary) summary.style.display = 'block';
+            if (stepPanel2) stepPanel2.style.display = 'none';
+          }
+
+          // Кнопка «Изменить» — показывает поля и прячет карточку
+          var editBtn = document.getElementById('formProfileEditBtn');
+          if (editBtn) {
+            editBtn.onclick = function() {
+              if (stepPanel2) stepPanel2.style.display = '';
+              if (summary) summary.style.display = 'none';
+            };
+          }
         } catch(e) {
           console.warn('[Form] Ошибка загрузки профиля:', e);
         }
