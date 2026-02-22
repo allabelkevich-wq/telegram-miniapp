@@ -721,7 +721,7 @@
     .profile-create-btn{width:100%;padding:15px 24px;border-radius:16px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;letter-spacing:0.02em;box-shadow:0 4px 20px rgba(212,175,55,0.2);transition:transform .15s,box-shadow .15s}
     .profile-create-btn:active{transform:scale(0.98)}
     /* ── ФОРМА: СВОДКА ПРОФИЛЯ ── */
-    #formProfileSummary{display:none;margin-bottom:12px}
+
     .fps-card{background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.18);border-radius:12px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-sizing:border-box}
     .fps-info{flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
     .fps-name{font-size:0.95rem;font-weight:600;color:rgba(255,255,255,0.92)}
@@ -1288,17 +1288,8 @@
           </div>
         </div>
 
-        <!-- Сводка профиля для возвращающегося пользователя -->
-        <div id="formProfileSummary">
-          <div class="fps-card">
-            <div class="fps-info">
-              <span id="formProfileSummaryName" class="fps-name"></span><span id="formProfileSummarySep" class="fps-sep" style="display:none">·</span><span id="formProfileSummaryDate" class="fps-date"></span>
-            </div>
-            <button type="button" id="formProfileEditBtn" class="fps-edit-btn">Изменить</button>
-          </div>
-        </div>
-
         <div class="step-panel" data-step="2">
+        <div style="font-size:0.75rem;color:rgba(212,175,55,0.45);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;margin-top:4px;">Твои данные</div>
         <div class="field">
           <label for="name" data-icon="👤">Имя</label>
             <input type="text" id="name" placeholder="Как тебя зовут?" required aria-label="Имя">
@@ -2855,15 +2846,8 @@
         }
       }
 
-      // Автозаполнение формы из сохранённого профиля + сворачивание для повторных пользователей
+      // Автозаполнение формы из сохранённого профиля
       async function loadSavedProfileForForm() {
-        // Сбрасываем состояние сводки
-        var summary = document.getElementById('formProfileSummary');
-        var summaryText = document.getElementById('formProfileSummaryText');
-        var stepPanel2 = document.querySelector('.step-panel[data-step="2"]');
-        if (summary) summary.style.display = 'none';
-        if (stepPanel2) stepPanel2.style.display = '';
-
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         var initData = getInitData();
         if (!apiBase || !initData) return;
@@ -2875,9 +2859,9 @@
           });
           var json = await resp.json().catch(function() { return {}; });
           var p = json && json.profile;
-          if (!p || !p.name || !p.birthdate) return;
+          if (!p) return;
 
-          // Заполняем поля
+          // Предзаполняем поля — пользователь видит свои данные и может их изменить
           var nameEl = document.getElementById('name');
           var birthdateEl = document.getElementById('birthdate');
           var birthplaceEl = document.getElementById('birthplace');
@@ -2886,7 +2870,6 @@
           if (nameEl && p.name) nameEl.value = p.name;
           if (birthdateEl && p.birthdate) {
             birthdateEl.value = p.birthdate;
-            // Заполняем селекты дня/месяца/года
             var parts = p.birthdate.split('-');
             if (parts.length === 3) {
               var dayEl = document.getElementById('birthdateDay');
@@ -2902,37 +2885,6 @@
           if (birthplaceEl && p.birthplace) birthplaceEl.value = p.birthplace;
           if (birthtimeEl && p.birthtime) birthtimeEl.value = p.birthtime;
           if (unknownEl && p.birthtime_unknown) unknownEl.checked = true;
-
-          // Сводка: имя + дата рождения
-          var summaryNameEl = document.getElementById('formProfileSummaryName');
-          var summaryDateEl = document.getElementById('formProfileSummaryDate');
-          var dateStr = '';
-          if (p.birthdate) {
-            var d = new Date(p.birthdate + 'T00:00:00');
-            dateStr = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-          }
-
-          // Имя: из профиля ИЛИ из Telegram (first_name)
-          var tgUser2 = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
-          var summaryName = p.name || (tgUser2 && tgUser2.first_name) || '';
-
-          // Показываем карточку если есть хотя бы имя или дата
-          var sumSepEl = document.getElementById('formProfileSummarySep');
-          if (summary && (summaryName || dateStr)) {
-            if (summaryNameEl) summaryNameEl.textContent = summaryName || '';
-            if (summaryDateEl) summaryDateEl.textContent = dateStr;
-            if (sumSepEl) sumSepEl.style.display = (summaryName && dateStr) ? 'inline' : 'none';
-            summary.style.display = 'block';
-            if (stepPanel2) stepPanel2.style.display = 'none';
-          }
-
-          var editBtn = document.getElementById('formProfileEditBtn');
-          if (editBtn) {
-            editBtn.onclick = function() {
-              if (stepPanel2) stepPanel2.style.display = '';
-              if (summary) summary.style.display = 'none';
-            };
-          }
         } catch(e) {
           console.warn('[Form] Ошибка загрузки профиля:', e);
         }
