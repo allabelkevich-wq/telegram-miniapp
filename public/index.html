@@ -483,9 +483,13 @@
     .keys-composition-small{display:flex;align-items:center;justify-content:center;gap:12px;margin:15px 0}
     .keys-composition-small .key-music{width:36px;height:50px;transform:rotate(-8deg);opacity:.9}
     .keys-composition-small .key-door{width:34px;height:50px;transform:rotate(6deg);opacity:.9}
-    .app-logo{display:block;margin:12px auto 4px;max-width:150px;width:100%;height:auto;border-radius:0;box-shadow:none;opacity:0.92}
-    /* Зона логотипа: плавный фон, контент по центру экрана */
-    #homePage > div:first-child{background:linear-gradient(180deg,rgba(1,6,26,0.55) 0%,transparent 100%);min-height:min(100vh,600px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:max(52px,calc(env(safe-area-inset-top)+36px)) !important;padding-bottom:40px !important}
+    .app-logo{display:block;margin:0 auto;max-width:140px;width:100%;height:auto;border-radius:0;box-shadow:none;opacity:0.94}
+    /* Главная — минимализм: контент по центру, забота о взгляде */
+    #homeHero{position:relative;text-align:center;background:linear-gradient(180deg,rgba(1,6,26,0.4) 0%,transparent 100%);min-height:min(100vh,620px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:max(48px,calc(env(safe-area-inset-top)+32px)) var(--spacing-lg) calc(var(--spacing-xl)*2);gap:0;box-sizing:border-box}
+    #homeHero .home-tagline{font-size:0.72rem;font-weight:400;letter-spacing:0.14em;color:rgba(212,175,55,0.45);margin-top:var(--spacing-md);text-transform:uppercase}
+    #homeHero .home-greeting{font-size:0.95rem;color:rgba(255,255,255,0.6);line-height:1.6;max-width:240px;margin:var(--spacing-lg) auto var(--spacing-xl);letter-spacing:0.01em}
+    #homeHero #startBtn{margin-top:0;min-width:180px;padding:14px 28px;font-weight:600;letter-spacing:0.02em;border-radius:var(--radius-lg)}
+    #homeHero .lang-switcher-compact{position:absolute;top:max(16px,calc(env(safe-area-inset-top)+8px));right:var(--spacing-md)}
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* ── СТОРИС-ОНБОРДИНГ ── */
     #onboardingPage{
@@ -510,18 +514,18 @@
     .stories-tap-prev,.stories-tap-next{position:absolute;top:0;bottom:0;width:40%;z-index:5;cursor:pointer}
     .stories-tap-prev{left:0}
     .stories-tap-next{right:0}
-    /* Бренд-блок — верхняя часть, в потоке */
-    .ob-brand{position:relative;z-index:6;text-align:center;padding:clamp(52px,10vh,90px) 32px 0;pointer-events:none;flex-shrink:0}
-    .ob-brand-logo{width:76px;height:76px;margin:0 auto 8px;display:block;opacity:0.96;filter:drop-shadow(0 4px 16px rgba(212,175,55,0.3))}
-    .ob-brand-divider{width:36px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent);margin:8px auto}
-    .ob-brand-tag{font-size:0.75rem;color:rgba(212,175,55,0.5);line-height:1.55;max-width:240px;margin:0 auto;letter-spacing:0.02em}
+    /* Бренд-блок превью — воздух, без давления */
+    .ob-brand{position:relative;z-index:6;text-align:center;padding:clamp(56px,11vh,96px) 28px 0;pointer-events:none;flex-shrink:0}
+    .ob-brand-logo{width:72px;height:72px;margin:0 auto 10px;display:block;opacity:0.95;filter:drop-shadow(0 3px 12px rgba(212,175,55,0.2))}
+    .ob-brand-divider{width:28px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.35),transparent);margin:10px auto}
+    .ob-brand-tag{font-size:0.72rem;color:rgba(212,175,55,0.45);line-height:1.6;max-width:220px;margin:0 auto;letter-spacing:0.03em}
     /* Слайды — flex-grow, контент у верхнего края своей зоны */
     .onboarding-slide{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;justify-content:flex-start;flex:1;padding:clamp(20px,6vh,52px) 36px clamp(16px,4vh,32px);text-align:center}
     .onboarding-slide.active{display:flex}
-    .onboarding-icon{font-size:2.6rem !important;margin-bottom:12px;animation:iconBounce .4s ease-out}
+    .onboarding-icon{font-size:2.4rem !important;margin-bottom:14px;animation:iconBounce .4s ease-out}
     @keyframes iconBounce{0%{transform:scale(0.6);opacity:0}65%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
-    .onboarding-title{font-size:1.25rem !important;font-weight:700 !important;color:rgba(255,248,225,0.96);margin:0 0 10px 0;line-height:1.3;max-width:280px;letter-spacing:-0.1px}
-    .onboarding-text{font-size:0.82rem !important;line-height:1.6 !important;color:rgba(255,255,255,0.55);margin:0 0 20px 0;max-width:260px}
+    .onboarding-title{font-size:1.2rem !important;font-weight:600 !important;color:rgba(255,248,225,0.94);margin:0 0 12px 0;line-height:1.35;max-width:270px;letter-spacing:0}
+    .onboarding-text{font-size:0.81rem !important;line-height:1.65 !important;color:rgba(255,255,255,0.52);margin:0 0 22px 0;max-width:250px}
     .onboarding-btn{padding:12px 32px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:0.92rem !important;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(212,175,55,0.3);transition:transform .2s,box-shadow .2s;min-width:160px;width:auto;margin-top:0;min-height:unset;animation:none}
     .onboarding-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(212,175,55,0.4)}
     .onboarding-btn:active{transform:translateY(1px)}
@@ -538,7 +542,7 @@
     .song-preview{background:white;border-radius:16px;padding:20px;margin:20px 0;text-align:left;border:1px solid rgba(212,175,55,0.4)}
     .song-preview h3{color:#d4af37;font-size:1.4rem;margin-bottom:10px;text-align:center}
     .song-preview p{font-size:1.05rem;line-height:1.7;color:var(--tg-theme-text-color,#2d2d2d)}
-    footer{text-align:center;padding:28px 0 16px;color:rgba(107,114,128,0.5);font-size:.78rem;margin-top:auto}
+    footer{text-align:center;padding:20px 0 max(16px,env(safe-area-inset-bottom));color:rgba(255,255,255,0.22);font-size:0.72rem;margin-top:auto;letter-spacing:0.02em}
     .footer-help{display:inline-flex !important;align-items:center;justify-content:center;color:rgba(212,175,55,0.4) !important;font-size:.78rem !important;cursor:pointer;border:none !important;background:none !important;font-family:inherit;padding:8px 16px !important;margin:0 !important;border-radius:20px !important;box-shadow:none !important;animation:none !important;min-height:unset !important;width:auto !important;font-weight:400 !important;letter-spacing:0.04em !important;transition:color .2s,background .2s}
     .footer-help:hover,.footer-help:active{color:rgba(212,175,55,0.75) !important;background:rgba(212,175,55,0.06) !important}
     /* Карточки героев */
@@ -719,8 +723,8 @@
     <!-- Главная страница -->
     <div class="page" id="homePage">
 
-      <!-- Логотип и приветствие — по центру экрана -->
-      <div id="homeHero" style="position:relative;text-align:center;padding:max(52px,calc(env(safe-area-inset-top)+36px)) 20px 40px;min-height:min(100vh,600px);display:flex;flex-direction:column;align-items:center;justify-content:center">
+      <!-- Логотип и приветствие — по центру, без суеты -->
+      <div id="homeHero">
         <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
           <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
             <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
@@ -733,17 +737,17 @@
             <button type="button" class="lang-opt" data-lang="fr">FR</button>
           </div>
         </div>
-        <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="150" height="150">
-        <div style="font-size:0.78rem;font-weight:400;letter-spacing:0.12em;color:rgba(212,175,55,0.5);margin:4px 0 0;text-transform:uppercase">Музыка твоей души</div>
-        <p id="homeGreeting" style="font-size:0.95rem;color:rgba(255,255,255,0.5);text-align:center;margin:12px 0 24px;line-height:1.55;max-width:260px;margin-left:auto;margin-right:auto">Привет 👋</p>
-        <button id="startBtn" style="margin-top:0">Начать</button>
+        <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="140" height="140">
+        <div class="home-tagline">Музыка твоей души</div>
+        <p id="homeGreeting" class="home-greeting">Привет 👋</p>
+        <button id="startBtn">Начать</button>
       </div>
 
-      <!-- Обёртка нижней части с горизонтальным отступом -->
-      <div style="padding:24px 20px 32px">
+      <!-- Нижняя зона — тихо, когда пусто -->
+      <div class="home-lower" style="padding:var(--spacing-lg) var(--spacing-md) calc(var(--spacing-xl) + env(safe-area-inset-bottom))">
 
-      <!-- Баннер восстановления зависшей заявки -->
-      <div id="recoveryBanner" style="display:none;margin:0 0 16px 0;background:rgba(5,150,105,0.10);border:1px solid rgba(16,185,129,0.28);border-radius:14px;padding:14px 16px;position:relative;">
+      <!-- Баннер восстановления — мягко, без давления -->
+      <div id="recoveryBanner" style="display:none;margin:0 0 var(--spacing-md) 0;background:rgba(5,150,105,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius-md);padding:var(--spacing-md) var(--spacing-lg);position:relative;">
         <button id="recoveryDismissBtn" style="position:absolute;top:8px;right:10px;background:none;border:none;color:rgba(255,255,255,0.3);font-size:1rem;line-height:1;cursor:pointer;padding:2px 4px;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;font-weight:400;" title="Закрыть">✕</button>
         <div id="recoveryBannerText" style="font-size:0.88rem;color:rgba(209,250,229,0.85);line-height:1.5;margin-bottom:10px;padding-right:20px;">
           🎁 <strong style="color:#6ee7b7;">Твоя заявка ждёт!</strong> Получи первую песню бесплатно.
@@ -753,9 +757,9 @@
         </button>
       </div>
 
-      <!-- Админка — только для админов -->
-      <div id="adminLinkWrap" style="display:none; margin-top:20px; text-align:center">
-        <button type="button" id="adminLinkBtn" onclick="goToPage('adminPage')" style="background:none;border:none;color:rgba(212,175,55,0.4);font-size:0.78rem;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;padding:4px 8px;margin:0;font-weight:400;letter-spacing:0">👑 Админка</button>
+      <!-- Админка — только для админов, ненавязчиво -->
+      <div id="adminLinkWrap" style="display:none;margin-top:var(--spacing-lg);text-align:center">
+        <button type="button" id="adminLinkBtn" onclick="goToPage('adminPage')" style="background:none;border:none;color:rgba(212,175,55,0.35);font-size:0.72rem;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;padding:6px 12px;margin:0;font-weight:400;letter-spacing:0.03em">👑 Админка</button>
       </div>
 
       </div><!-- /нижняя обёртка -->
