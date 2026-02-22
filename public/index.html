@@ -744,6 +744,20 @@
   </div>
 
   <!-- Онбординг — формат сторис -->
+  <!-- ── Гейт-экран: пользователь ещё не нажал /start в боте ─────────────── -->
+  <div id="botGatePage" style="display:none;position:fixed;inset:0;z-index:9999;background:linear-gradient(165deg,#0a0818 0%,#130826 50%,#0d1525 100%);flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center;font-family:'Comfortaa',sans-serif;">
+    <img src="assets/logo-yupsoul.png" alt="YupSoul" style="width:80px;height:80px;object-fit:contain;border-radius:50%;border:2px solid rgba(212,175,55,0.25);margin-bottom:28px;">
+    <div style="font-size:1.4rem;font-weight:700;color:#d4af37;margin-bottom:12px;line-height:1.3;">Сначала открой бота</div>
+    <div style="font-size:0.92rem;color:rgba(255,255,255,0.6);line-height:1.7;max-width:280px;margin-bottom:32px;">Песня придёт в чат с ботом.<br>Нажми «Старт» — и вернись сюда.</div>
+    <button id="gateOpenBotBtn" type="button" style="width:100%;max-width:300px;padding:15px 24px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 6px 24px rgba(212,175,55,0.3);letter-spacing:0;margin-bottom:16px;">
+      Открыть бота
+    </button>
+    <button id="gateCheckBtn" type="button" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.82rem;cursor:pointer;font-family:inherit;padding:8px 0;min-height:unset;box-shadow:none;animation:none;text-decoration:underline;text-underline-offset:3px;">
+      Уже нажал Старт → войти
+    </button>
+  </div>
+  <!-- ──────────────────────────────────────────────────────────────────────── -->
+
   <div id="onboardingPage" style="display:none">
 
     <!-- Прогресс-бары сторис -->
@@ -1122,7 +1136,7 @@
       <!-- Paywall (показывается если нет доступа) -->
       <div id="masterPaywall" class="page-scroll" style="display:none; padding-top:28px;">
         <div style="text-align:center; margin-bottom:20px">
-          <div style="font-size:2.6rem;margin-bottom:12px">✨</div>
+          <div style="font-size:2rem;margin-bottom:12px;color:#d4af37;letter-spacing:0.1em">✦</div>
           <div style="font-size:1.2rem;font-weight:700;color:#d4af37;margin-bottom:8px">Личный кабинет для мастеров</div>
           <div style="font-size:0.85rem;color:rgba(255,255,255,0.5);line-height:1.6">Добавляй людей один раз — и генерируй для них<br>песни в один тап. Полная история с текстами.</div>
         </div>
@@ -1197,7 +1211,7 @@
             <span id="heroBirthplaceCheck" class="birthplace-check" aria-hidden="true">✓</span>
             <ul id="heroBirthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true"></ul>
           </div>
-          <div id="heroBirthplaceHint" class="birthplace-hint" style="display:block;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">💡 Начни вводить город и выбери из выпавшего списка.</div>
+          <div id="heroBirthplaceHint" class="birthplace-hint" style="display:block;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">Начни вводить город и выбери из выпавшего списка.</div>
         </div>
         <div class="field">
           <label data-icon="🕐">Время рождения</label>
@@ -1305,7 +1319,7 @@
               <span id="birthplaceCheck" class="birthplace-check" aria-hidden="true">✓</span>
             <ul id="birthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true"></ul>
           </div>
-          <div id="birthplaceHint" class="birthplace-hint" style="display:none;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">💡 Начни вводить город и выбери из выпавшего списка.</div>
+          <div id="birthplaceHint" class="birthplace-hint" style="display:none;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">Начни вводить город и выбери из выпавшего списка.</div>
         </div>
         
         <div class="field">
@@ -1364,7 +1378,7 @@
               <span id="birthplace2Check" class="birthplace-check" aria-hidden="true">✓</span>
               <ul id="birthplaceSuggestions2" class="birthplace-suggestions" aria-hidden="true"></ul>
             </div>
-            <div id="birthplace2Hint" class="birthplace-hint" style="display:none;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">💡 Начни вводить город и выбери из выпавшего списка.</div>
+            <div id="birthplace2Hint" class="birthplace-hint" style="display:none;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">Начни вводить город и выбери из выпавшего списка.</div>
           </div>
           <div class="field">
             <label data-icon="🕐">Время рождения второго</label>
@@ -1416,7 +1430,7 @@
           
           <div class="quick-picker">
             <button type="button" id="quickPickerBtn" class="quick-picker-btn">
-              <span>✨ Быстрые запросы</span><span class="qa">▾</span>
+              <span>Быстрые запросы</span><span class="qa">▾</span>
             </button>
             <div id="quickPickerSheet" class="quick-picker-sheet" style="display:none">
               <div class="quick-picker-scroll">
@@ -1465,7 +1479,7 @@
     <div class="page" id="loadingPage">
       <div class="loading">
         <div class="spinner"></div>
-        <div class="loading-text" id="loadingTitle">✨ Заявка принята!</div>
+        <div class="loading-text" id="loadingTitle">Заявка принята</div>
         <div id="loadingDesc" style="color:rgba(255,255,255,0.55);font-size:0.92rem;text-align:center;max-width:320px;line-height:1.7;margin-top:12px;">
           Песня создаётся. Придёт в чат с ботом — обычно несколько минут.<br>Можно закрыть окно.
         </div>
@@ -1601,7 +1615,7 @@
           modeCouple: 'Для двоих', modeCoupleDesc: 'Песня о двух людях — ваша связь, резонанс, то что вас объединяет. Нужны данные обоих.',
           modeTransit: 'Энергия дня', modeTransitDesc: 'Песня под сегодняшний день — его настроение, ритм и цвет. Без данных о рождении.',
           namePh: 'Как тебя зовут?', birthdateLabel: 'Дата рождения', birthplacePh: 'Город или страна — выбери из подсказок',
-          birthplaceHint: '💡 Начни вводить город и выбери из выпавшего списка.',
+          birthplaceHint: 'Начни вводить город и выбери из выпавшего списка.',
           unknownTimeShort: 'Не знаю', secondPersonTitle: 'Для двоих', name2Ph: 'Имя второго человека',
           birthplace2Ph: 'Место рождения второго', birthtime2Ph: 'Время рождения',
           transitTitle: 'Энергия момента', transitDatePh: 'Дата события', transitTimePh: 'Время события',
@@ -1719,7 +1733,7 @@
           modeCouple: 'For two', modeCoupleDesc: 'A song about two people — your bond, resonance, what connects you. Both dates needed.',
           modeTransit: 'Day energy', modeTransitDesc: "A song for today — its mood, rhythm and colour. No birth data required.",
           namePh: "What's your name?", birthdateLabel: 'Date of birth', birthplacePh: 'City or country — choose from suggestions',
-          birthplaceHint: '💡 Start typing your city and pick from the list.',
+          birthplaceHint: 'Start typing your city and pick from the list.',
           unknownTimeShort: "Don't know", secondPersonTitle: 'For two', name2Ph: "Second person's name",
           birthplace2Ph: "Second person's place of birth", birthtime2Ph: 'Time of birth',
           transitTitle: 'Energy of the moment', transitDatePh: 'Event date', transitTimePh: 'Event time',
@@ -1836,7 +1850,7 @@
           modeCouple: 'Zu zweit', modeCoupleDesc: 'Ein Lied für zwei Menschen — eure Verbindung und Resonanz. Daten beider nötig.',
           modeTransit: 'Tagesenergie', modeTransitDesc: 'Ein Lied für heute — seine Stimmung, Rhythmus und Farbe. Keine Geburtsdaten nötig.',
           namePh: 'Wie heißt du?', birthdateLabel: 'Geburtsdatum', birthplacePh: 'Stadt oder Land — wähle aus den Vorschlägen',
-          birthplaceHint: '💡 Stadt eintippen und aus der Liste auswählen.',
+          birthplaceHint: 'Stadt eintippen und aus der Liste auswählen.',
           unknownTimeShort: 'Unbekannt', secondPersonTitle: 'Zu zweit', name2Ph: 'Name der zweiten Person',
           birthplace2Ph: 'Geburtsort der zweiten Person', birthtime2Ph: 'Geburtszeit',
           transitTitle: 'Energie des Augenblicks', transitDatePh: 'Ereignisdatum', transitTimePh: 'Ereigniszeit',
@@ -1953,7 +1967,7 @@
           modeCouple: 'À deux', modeCoupleDesc: 'Une chanson pour deux — votre lien, résonance, ce qui vous unit. Les deux dates requises.',
           modeTransit: "Énergie du jour", modeTransitDesc: "Une chanson pour aujourd'hui — son humeur, son rythme, sa couleur. Sans données de naissance.",
           namePh: "Comment tu t'appelles ?", birthdateLabel: 'Date de naissance', birthplacePh: 'Ville ou pays — choisis parmi les suggestions',
-          birthplaceHint: '💡 Tape ta ville et choisis dans la liste.',
+          birthplaceHint: 'Tape ta ville et choisis dans la liste.',
           unknownTimeShort: 'Inconnu', secondPersonTitle: 'À deux', name2Ph: "Nom de la deuxième personne",
           birthplace2Ph: "Lieu de naissance de la deuxième personne", birthtime2Ph: 'Heure de naissance',
           transitTitle: "Énergie du moment", transitDatePh: 'Date de l\'événement', transitTimePh: "Heure de l'événement",
@@ -3290,13 +3304,96 @@
           }, { passive: true });
         }
 
-        // Показываем онбординг при каждом входе, но не при возврате с HOT Pay
+        // Показываем онбординг или гейт
         var _urlParams = typeof window.location !== 'undefined' ? (window.location.search || '') : '';
-        if (_urlParams.indexOf('payment=success') === -1) {
-          showOnboarding();
+        var _isPaymentReturn = _urlParams.indexOf('payment=success') !== -1;
+
+        window.startApp = function() {
+          if (_isPaymentReturn) {
+            if (homePage) homePage.classList.add('active');
+            try { localStorage.setItem(ONBOARDING_KEY, 'true'); } catch(_) {}
+          } else {
+            showOnboarding();
+          }
+        };
+        var startApp = window.startApp;
+
+        // Проверяем, нажал ли пользователь /start в боте
+        // Пропускаем проверку: без initData (браузер/превью) или возврат с оплаты
+        var _initDataForGate = getInitData ? getInitData() : '';
+        var _apiBaseForGate = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        if (_initDataForGate && _apiBaseForGate && !_isPaymentReturn) {
+          (function checkBotStarted() {
+            var gateEl = document.getElementById('botGatePage');
+            fetch(_apiBaseForGate + '/api/user/bot-status', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': _initDataForGate },
+              body: JSON.stringify({ initData: _initDataForGate })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              if (data && data.started === false) {
+                // Показываем гейт
+                if (gateEl) { gateEl.style.display = 'flex'; }
+              } else {
+                if (gateEl) gateEl.style.display = 'none';
+                startApp();
+              }
+            })
+            .catch(function() {
+              // Ошибка сети — не блокируем, пускаем в приложение
+              if (gateEl) gateEl.style.display = 'none';
+              startApp();
+            });
+          })();
         } else {
-          if (homePage) homePage.classList.add('active');
-          try { localStorage.setItem(ONBOARDING_KEY, 'true'); } catch(_) {}
+          startApp();
+        }
+      })();
+
+      // ── Логика гейт-экрана ─────────────────────────────────────────────────
+      (function initGateScreen() {
+        var gateOpenBtn = document.getElementById('gateOpenBotBtn');
+        var gateCheckBtn = document.getElementById('gateCheckBtn');
+        var BOT_UN = window.BOT_USERNAME || 'Yup_Soul_bot';
+        if (gateOpenBtn) {
+          gateOpenBtn.addEventListener('click', function() {
+            var botUrl = 'https://t.me/' + BOT_UN + '?start=mini_init';
+            if (tg && tg.openTelegramLink) {
+              tg.openTelegramLink(botUrl);
+            } else {
+              window.open(botUrl, '_blank');
+            }
+          });
+        }
+        if (gateCheckBtn) {
+          gateCheckBtn.addEventListener('click', function() {
+            gateCheckBtn.textContent = 'Проверяем…';
+            gateCheckBtn.disabled = true;
+            var initData = getInitData ? getInitData() : '';
+            var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+            if (!initData || !apiBase) { gateCheckBtn.textContent = 'Уже нажал Старт → войти'; gateCheckBtn.disabled = false; return; }
+            fetch(apiBase + '/api/user/bot-status', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+              body: JSON.stringify({ initData: initData })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              if (data && data.started) {
+                var gateEl = document.getElementById('botGatePage');
+                if (gateEl) gateEl.style.display = 'none';
+                if (window.startApp) window.startApp();
+              } else {
+                gateCheckBtn.textContent = 'Ещё не нажат Старт :(';
+                setTimeout(function() { gateCheckBtn.textContent = 'Уже нажал Старт → войти'; gateCheckBtn.disabled = false; }, 2000);
+              }
+            })
+            .catch(function() {
+              gateCheckBtn.textContent = 'Уже нажал Старт → войти';
+              gateCheckBtn.disabled = false;
+            });
+          });
         }
       })();
 

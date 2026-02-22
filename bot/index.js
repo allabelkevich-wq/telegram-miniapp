@@ -949,6 +949,14 @@ bot.command("start", async (ctx) => {
   }
   // -----------------------------------------
 
+  // Фиксируем факт старта бота — создаём/обновляем запись в user_profiles
+  if (supabase && telegramUserId) {
+    supabase.from("user_profiles").upsert(
+      { telegram_id: Number(telegramUserId), updated_at: new Date().toISOString() },
+      { onConflict: "telegram_id" }
+    ).then(() => null).catch((e) => console.warn("[start] upsert user_profiles:", e?.message));
+  }
+
   const name = ctx.from?.first_name || "друг";
   const isReturning = payload === "song_ready" || payload === "miniapp_start";
   const PLAN_PAYLOAD_MAP = { plan_basic: "soul_basic_sub", plan_plus: "soul_plus_sub", plan_master: "master_monthly" };
@@ -2274,6 +2282,23 @@ app.post("/api/user/profile", express.json(), asyncApi(async (req, res) => {
   if (error && /does not exist|relation/i.test(error.message)) return res.json({ profile: null });
   if (error) return res.status(500).json({ error: error.message });
   return res.json({ profile: data || null });
+}));
+
+// ── СТАТУС БОТА (запустил ли пользователь бота) ─────────────────────────────
+app.post("/api/user/bot-status", express.json(), asyncApi(async (req, res) => {
+  const initData = req.body?.initData ?? req.headers["x-telegram-init"];
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ error: "Unauthorized" });
+  if (!supabase) return res.json({ started: true }); // без базы не блокируем
+  const { data, error } = await supabase
+    .from("user_profiles")
+    .select("telegram_id")
+    .eq("telegram_id", Number(telegramUserId))
+    .maybeSingle();
+  if (error && /does not exist|relation/i.test(error?.message || "")) {
+    return res.json({ started: true }); // таблица не создана — не блокируем
+  }
+  return res.json({ started: !!data });
 }));
 
 // ── АВАТАР ПОЛЬЗОВАТЕЛЯ ──────────────────────────────────────────────────────
