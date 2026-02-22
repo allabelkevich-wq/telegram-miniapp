@@ -186,13 +186,13 @@
       border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.16);
       box-shadow: 0 4px 18px rgba(139, 92, 246, 0.06);
     }
-    .mode-selector h3 { font-size: 16px; color: var(--tg-theme-text-color, #fff); margin: 0 0 6px 0; font-weight: 500; text-align: center; }
-    .mode-subtitle { font-size: 12px; color: var(--tg-theme-hint-color, rgba(255,255,255,.65)); margin: 0 0 14px 0; text-align: center; }
-    .mode-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .mode-selector h3 { font-size: 0.95rem; color: var(--tg-theme-text-color, #fff); margin: 0 0 6px 0; font-weight: 600; text-align: center; }
+    .mode-subtitle { font-size: 0.75rem; color: var(--tg-theme-hint-color, rgba(255,255,255,.6)); margin: 0 0 12px 0; text-align: center; }
+    .mode-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
     .mode-btn {
-      background: rgba(255, 255, 255, 0.08); border: 2px solid rgba(255, 255, 255, 0.18);
-      color: var(--tg-theme-text-color, #fff); padding: 16px 12px; border-radius: 12px; cursor: pointer; transition: all 0.3s;
-      text-align: center; font-size: 14px; line-height: 1.4;
+      background: rgba(255, 255, 255, 0.08); border: 1.5px solid rgba(255, 255, 255, 0.18);
+      color: var(--tg-theme-text-color, #fff); padding: 12px 8px; border-radius: 10px; cursor: pointer; transition: all 0.25s;
+      text-align: center; font-size: 13px; line-height: 1.35;
     }
     .mode-btn:hover {
       background: rgba(212,175,55,0.12); border-color: rgba(212,175,55,0.4);
@@ -201,11 +201,11 @@
     .mode-btn.active {
       background: linear-gradient(135deg, #d4af37, #ec4899);
       border-color: #d4af37; color: var(--tg-theme-button-text-color, #fff);
-      box-shadow: 0 4px 20px rgba(212,175,55,0.35);
+      box-shadow: 0 4px 16px rgba(212,175,55,0.3);
     }
-    .mode-icon { font-size: 28px; display: block; margin: 0 auto 8px; }
-    .mode-label { font-weight: 600; font-size: 14px; display: block; margin: 0 0 4px; }
-    .mode-desc { font-size: 11px; opacity: 0.8; display: block; margin-top: 4px; }
+    .mode-icon { font-size: 24px; display: block; margin: 0 auto 6px; }
+    .mode-label { font-weight: 600; font-size: 0.9rem; display: block; margin: 0 0 2px; line-height: 1.25; }
+    .mode-desc { font-size: 0.72rem; opacity: 0.85; display: block; margin-top: 2px; line-height: 1.3; }
     .location-input-wrapper { position: relative; }
     .location-input {
       width: 100%; padding: 12px 16px; background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.05));
@@ -245,10 +245,14 @@
     .step-panel { margin-top: 20px; }
     .step-nav { display: flex; gap: 12px; margin-top: 16px; }
     .step-nav button { flex: 1; text-transform: none; letter-spacing: 0; }
+    .form-nav-links{display:flex;justify-content:center;gap:14px;margin-top:18px;padding:10px 0}
+    .form-nav-link{background:none;border:none;color:rgba(212,175,55,0.55);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;animation:none;font-weight:500}
+    .form-nav-link:hover{color:rgba(212,175,55,0.8)}
     @media (max-width: 480px) {
-      .mode-buttons { grid-template-columns: 1fr; }
+      .mode-buttons { grid-template-columns: 1fr; gap: 8px; }
       .examples-grid { grid-template-columns: 1fr; }
-      .mode-btn { padding: 14px 10px; }
+      .mode-btn { padding: 12px 14px; }
+      .mode-label { font-size: 0.9rem; }
       .mode-icon { font-size: 24px; }
       .content-wrapper { padding: 15px; }
       #payBtn { padding: 14px; font-size: 15px; }
@@ -287,7 +291,9 @@
     #paymentPage .section{background:rgba(20,18,45,0.98);min-height:300px;color:#fff}
     body.theme-light #paymentPage .section{background:rgba(250,248,255,0.98);color:#1f2937}
     .section::before{display:none}
-    .field{margin-bottom:var(--spacing-lg);text-align:left}
+    .field{margin-bottom:var(--spacing-md);text-align:left}
+    .field label{font-size:0.85rem;font-weight:500;color:rgba(255,255,255,0.85);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+    .field input:not([type="checkbox"]):not([type="radio"]),.field select,.field textarea{font-size:0.92rem;padding:10px 14px}
     label{display:block;margin-bottom:10px;color:var(--tg-theme-text-color,#2d2d2d);font-weight:500;font-size:1.05rem;display:flex;align-items:center;gap:10px}
     label::before{content:attr(data-icon);font-size:1.25rem}
     input,textarea,select{width:100%;padding:var(--spacing-md);border-radius:var(--radius-md);border:1px solid var(--tg-theme-border-color,#e5e7eb);background:var(--tg-theme-secondary-bg-color,#fff);color:var(--tg-theme-text-color,#2d2d2d);font-size:var(--fluid-base);transition:all .3s ease;font-family:'Comfortaa',sans-serif}
@@ -609,21 +615,21 @@
       .birthplace-suggestions{max-height:240px;border-width:2.5px}
       .birthplace-suggestions li{padding:16px 20px;font-size:1.2rem;font-weight:400;letter-spacing:0}
       .birthplace-suggestions .place-type{font-size:0.95rem;font-weight:400}
-      #birthplace,#birthplace2,#heroBirthplace{font-size:1.2rem;padding:16px 48px 16px 20px;font-weight:500;letter-spacing:0}
-      .birthplace-hint{font-size:1rem;padding:12px 16px}
+      #birthplace,#birthplace2,#heroBirthplace{font-size:1rem;padding:12px 48px 12px 16px;font-weight:500;letter-spacing:0}
+      .birthplace-hint{font-size:0.9rem;padding:10px 14px}
       .field input:not([type="checkbox"]):not([type="radio"]){
-        font-size:1.15rem;
-        padding:16px 20px;
-        font-weight:500;
+        font-size:0.95rem;
+        padding:12px 14px;
       }
       .field select{
-        font-size:1.15rem;
-        padding:16px 20px;
-        font-weight:500;
+        font-size:0.95rem;
+        padding:12px 14px;
       }
     }
     
-    #transitForm{display:none;margin-top:30px;padding:20px;background:var(--tg-theme-secondary-bg-color,rgba(255,255,255,0.05));border-radius:12px;border:1px solid var(--tg-theme-border-color,rgba(255,255,255,0.1))}
+    #formPage header h1{font-size:clamp(1.1rem,4vw,1.35rem)}
+    #formPage header .subtitle{font-size:0.72rem}
+    #transitForm{display:none;margin-top:24px;padding:16px;background:var(--tg-theme-secondary-bg-color,rgba(255,255,255,0.05));border-radius:12px;border:1px solid var(--tg-theme-border-color,rgba(255,255,255,0.1))}
     #transitForm h3{color:var(--tg-theme-text-color,#fff);margin:0 0 15px 0;font-size:18px}
     #secondPersonForm{display:none;margin-top:30px;padding:20px;background:var(--tg-theme-secondary-bg-color,rgba(255,255,255,0.05));border-radius:12px;border:1px solid var(--tg-theme-border-color,rgba(255,255,255,0.1))}
     #secondPersonForm h3{color:var(--tg-theme-text-color,#fff);margin:0 0 15px 0;font-size:18px}
@@ -762,6 +768,13 @@
         <button type="button" id="adminLinkBtn" onclick="goToPage('adminPage')" style="background:none;border:none;color:rgba(212,175,55,0.35);font-size:0.72rem;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;padding:6px 12px;margin:0;font-weight:400;letter-spacing:0.03em">👑 Админка</button>
       </div>
 
+      <!-- Профиль, Помощь, Мои герои — доступ с главной -->
+      <nav class="home-nav" style="display:flex;justify-content:center;gap:14px;margin-top:var(--spacing-lg);padding:8px 0;">
+        <button type="button" class="home-nav-link" onclick="goToProfileFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">Профиль</button>
+        <button type="button" class="home-nav-link" onclick="goToHelpFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">Помощь</button>
+        <button type="button" class="home-nav-link" onclick="goToHeroesFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">Мои герои</button>
+      </nav>
+
       </div><!-- /нижняя обёртка -->
 
       <footer>
@@ -773,7 +786,7 @@
     <div class="page" id="helpPage">
       <div class="help-header">
         <div class="help-back-row">
-          <button type="button" class="help-back-btn" onclick="goToPage('homePage')" aria-label="Назад">←</button>
+          <button type="button" class="help-back-btn" onclick="goBack()" aria-label="Назад">←</button>
         </div>
         <div class="help-title-wrap">
           <div class="help-title">Помощь и поддержка</div>
@@ -874,7 +887,7 @@
     <div class="page" id="profilePage">
       <div class="help-header">
         <div class="help-back-row">
-          <button type="button" class="help-back-btn" onclick="goToPage('homePage')" aria-label="Назад">←</button>
+          <button type="button" class="help-back-btn" onclick="goBack()" aria-label="Назад">←</button>
         </div>
         <div class="help-title-wrap">
           <div class="help-title" id="profilePageTitle">Профиль</div>
@@ -914,7 +927,7 @@
         <button type="button" id="profileCreateSongBtn" style="width:100%;padding:14px 24px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;">
           🎵 Создать песню
         </button>
-        <button type="button" class="secondary" onclick="goToPage('helpPage')" style="width:100%;">? Помощь и поддержка</button>
+        <button type="button" class="secondary" onclick="goToHelpFrom('profilePage')" style="width:100%;">? Помощь и поддержка</button>
       </div>
     </div>
 
@@ -1246,11 +1259,11 @@
         <div class="step-nav">
           <button id="stepNext">Отправить заявку</button>
         </div>
-        <!-- Навигация: Профиль, Помощь, Мои герои (на форме, не на главной) -->
-        <div style="display:flex;justify-content:center;gap:16px;margin-top:20px;padding:12px 0;">
-          <button type="button" class="form-nav-link" onclick="goToPage('profilePage')" style="background:none;border:none;color:rgba(212,175,55,0.6);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;animation:none;">Профиль</button>
-          <button type="button" class="form-nav-link" onclick="goToPage('helpPage')" style="background:none;border:none;color:rgba(212,175,55,0.6);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;animation:none;">Помощь</button>
-          <button type="button" class="form-nav-link" onclick="goToPage('heroesPage'); initHeroesPage();" style="background:none;border:none;color:rgba(212,175,55,0.6);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;animation:none;">Мои герои</button>
+        <!-- Навигация: Профиль, Помощь, Мои герои -->
+        <div class="form-nav-links">
+          <button type="button" class="form-nav-link" onclick="goToProfileFrom('formPage')">Профиль</button>
+          <button type="button" class="form-nav-link" onclick="goToHelpFrom('formPage')">Помощь</button>
+          <button type="button" class="form-nav-link" onclick="goToHeroesFrom('formPage')">Мои герои</button>
         </div>
       </div>
       
@@ -1356,10 +1369,10 @@
         <!-- ════════════════════════════════════════════════ -->
 
         <button class="secondary" id="newKeyBtn" style="margin-top:24px">Создать ещё одну песню</button>
-        <div style="display:flex;justify-content:center;gap:16px;margin-top:16px;padding:8px 0;">
-          <button type="button" class="form-nav-link" onclick="goToPage('profilePage')" style="background:none;border:none;color:rgba(212,175,55,0.6);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;animation:none;">Профиль</button>
-          <button type="button" class="form-nav-link" onclick="goToPage('helpPage')" style="background:none;border:none;color:rgba(212,175,55,0.6);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;animation:none;">Помощь</button>
-          <button type="button" class="form-nav-link" onclick="goToPage('heroesPage'); initHeroesPage();" style="background:none;border:none;color:rgba(212,175,55,0.6);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;animation:none;">Мои герои</button>
+        <div class="form-nav-links">
+          <button type="button" class="form-nav-link" onclick="goToProfileFrom('successPage')">Профиль</button>
+          <button type="button" class="form-nav-link" onclick="goToHelpFrom('successPage')">Помощь</button>
+          <button type="button" class="form-nav-link" onclick="goToHeroesFrom('successPage')">Мои герои</button>
         </div>
       </div>
 
@@ -3523,6 +3536,19 @@
       }
       // Делаем goToPage глобальной — нужно для onclick-атрибутов (кнопка Помощь, кнопки назад)
       window.goToPage = goToPage;
+      window.returnToPage = null;
+      function goBack() {
+        var target = window.returnToPage || 'homePage';
+        window.returnToPage = null;
+        goToPage(target);
+      }
+      window.goBack = goBack;
+      function goToProfileFrom(from) { window.returnToPage = from; goToPage('profilePage'); }
+      function goToHeroesFrom(from) { window.returnToPage = from; goToPage('heroesPage'); initHeroesPage(); }
+      function goToHelpFrom(from) { window.returnToPage = from; goToPage('helpPage'); }
+      window.goToProfileFrom = goToProfileFrom;
+      window.goToHeroesFrom = goToHeroesFrom;
+      window.goToHelpFrom = goToHelpFrom;
 
       // Сворачиваемый реферальный блок
       var referralToggleBtn = document.getElementById('referralToggleBtn');
@@ -4674,7 +4700,7 @@
       if (heroesBackBtn) heroesBackBtn.addEventListener('click', function() {
         var formWrap = document.getElementById('heroFormWrap');
         if (formWrap && formWrap.style.display !== 'none') { closeHeroForm(); return; }
-        goToPage('homePage');
+        goBack();
       });
       var todayHero = new Date();
       var heroBirthdateEl = document.getElementById('heroBirthdate');
