@@ -384,7 +384,7 @@ function parseResponse(text) {
   let lyrics = "";
   let style = "ambient cinematic";
   
-  // Анализ - всё до "ПЕСНЯ ДЛЯ" или "ЭТАП 3"
+  // Глубокий анализ из результата промта (Этап 1 + при необходимости Этап 2) — всё до «ПЕСНЯ ДЛЯ» / «ЭТАП 3» / «ЛИРИКА»; именно это уходит пользователю по запросу «расшифровка»
   const analysisEnd = text.search(/\n\s*ПЕСНЯ ДЛЯ\s|ЭТАП 3|ЛИРИКА\s*:\s*/i);
   if (analysisEnd > 0) {
     detailed_analysis = text.slice(0, analysisEnd).trim();

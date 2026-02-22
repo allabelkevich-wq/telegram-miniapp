@@ -486,8 +486,8 @@
     /* Зона логотипа: свой плавный фон без стопов, чтобы в превью Telegram не было полосы через лого */
     #homePage > div:first-child{background:linear-gradient(180deg,rgba(1,6,26,0.55) 0%,transparent 100%);min-height:120px}
     /* Жёсткий отступ от линии Telegram: и в CSS с !important, чтобы сработало после деплоя и без кэша */
-    #homePage > div:first-child{padding-top:max(220px,calc(env(safe-area-inset-top)+200px)) !important}
-    body.preview-mode #homePage > div:first-child{padding-top:max(220px,calc(env(safe-area-inset-top)+200px)) !important}
+    #homePage > div:first-child{padding-top:max(280px,calc(env(safe-area-inset-top)+260px)) !important}
+    body.preview-mode #homePage > div:first-child{padding-top:max(280px,calc(env(safe-area-inset-top)+260px)) !important}
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* ── СТОРИС-ОНБОРДИНГ ── */
     #onboardingPage{
@@ -722,7 +722,7 @@
     <div class="page" id="homePage">
 
       <!-- Логотип и приветствие — заметный отступ от линии под шапкой Telegram -->
-      <div style="position:relative;text-align:center;padding:max(220px,calc(env(safe-area-inset-top)+200px)) 20px 12px">
+      <div style="position:relative;text-align:center;padding:max(280px,calc(env(safe-area-inset-top)+260px)) 20px 12px">
         <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
           <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
             <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
@@ -1118,7 +1118,7 @@
         </div>
         
         <div class="field">
-            <select id="language" required aria-label="Язык песни и описания" title="Синхронизировано с языком интерфейса">
+            <select id="language" required aria-label="Язык песни и описания" title="На каком языке будет текст песни и расшифровка">
               <option value="">Язык песни</option>
             <option value="ru">Русский</option>
             <option value="en">English</option>
@@ -1230,6 +1230,7 @@
           </div>
         </div>
         
+        <p id="submitHint" style="font-size:0.8rem;color:rgba(255,255,255,0.5);margin-bottom:8px;line-height:1.4;">Песня придёт в этот чат с ботом. Если вы ещё не нажимали «Старт» в боте — нажмите его сейчас.</p>
         <div class="step-nav">
           <button id="stepNext">Отправить заявку</button>
         </div>
@@ -1396,6 +1397,7 @@
           loadingPricing: 'Загрузка тарифов...', currentItem: 'Текущий элемент',
           promoCode: 'Промокод', apply: 'Применить', backFromPayment: '← Назад',
           submitAndContinue: 'Оформить и продолжить', submitRequest: 'Отправить заявку',
+          submitHint: 'Песня придёт в этот чат с ботом. Если вы ещё не нажимали «Старт» в боте — нажмите его сейчас.',
           paymentPageIntroAfterSubmit: 'Заявка отправлена. Введите промокод или нажмите кнопку ниже для оплаты через HOT Pay.',
           paymentPageIntroOrPay: 'Или введите промокод, или оплатите через HOT Pay.',
           paymentPageTagline: 'Промокод или оплата',
@@ -1513,6 +1515,7 @@
           loadingPricing: 'Loading plans...', currentItem: 'Current item',
           promoCode: 'Promo code', apply: 'Apply', backFromPayment: '← Back',
           submitAndContinue: 'Checkout & continue', submitRequest: 'Submit request',
+          submitHint: 'The song will arrive in this chat with the bot. If you haven\'t pressed «Start» in the bot yet — do it now.',
           paymentPageIntroAfterSubmit: 'Request submitted. Enter a promo code or tap the button below to pay via HOT Pay.',
           paymentPageTagline: 'Promo code or payment',
           payWithHot: 'Pay via HOT Pay',
@@ -1629,6 +1632,7 @@
           loadingPricing: 'Tarife laden...', currentItem: 'Aktuelles Element',
           promoCode: 'Gutscheincode', apply: 'Anwenden', backFromPayment: '← Zurück',
           submitAndContinue: 'Zur Kasse & weiter', submitRequest: 'Anfrage senden',
+          submitHint: 'Das Lied kommt in diesen Chat mit dem Bot. Falls Sie im Bot noch nicht auf «Start» geklickt haben — tun Sie es jetzt.',
           paymentPageIntroAfterSubmit: 'Anfrage gesendet. Gutscheincode eingeben oder unten tippen für Zahlung via HOT Pay.',
           paymentPageTagline: 'Gutscheincode oder Zahlung',
           payWithHot: 'Zahlen via HOT Pay',
@@ -1745,6 +1749,7 @@
           loadingPricing: 'Chargement des tarifs...', currentItem: 'Élément actuel',
           promoCode: 'Code promo', apply: 'Appliquer', backFromPayment: '← Retour',
           submitAndContinue: 'Payer et continuer', submitRequest: 'Envoyer la demande',
+          submitHint: 'La chanson arrivera dans ce chat avec le bot. Si vous n\'avez pas encore appuyé sur «Démarrer» dans le bot — faites-le maintenant.',
           paymentPageIntroAfterSubmit: 'Demande envoyée. Entre le code promo ou appuie ci-dessous pour payer via HOT Pay.',
           paymentPageTagline: 'Code promo ou paiement',
           payWithHot: 'Payer via HOT Pay',
@@ -1880,7 +1885,7 @@
           ['modeCouple','.mode-btn[data-mode="couple"] .mode-label'], ['modeCoupleDesc','.mode-btn[data-mode="couple"] .mode-desc'],
           ['modeTransit','.mode-btn[data-mode="transit"] .mode-label'], ['modeTransitDesc','.mode-btn[data-mode="transit"] .mode-desc'],
           ['secondPersonTitle','#secondPersonForm h3'], ['transitTitle','#transitForm h3'],
-          ['quickRequests','#quickRequestsToggle'], ['sendRequest','.request-label'], ['submitRequest','#stepNext'],
+          ['quickRequests','#quickRequestsToggle'], ['sendRequest','.request-label'], ['submitRequest','#stepNext'], ['submitHint','#submitHint'],
           ['paymentSubtitle','#paymentPage .subtitle'], ['paymentPageTagline','#paymentPage .tagline'],
           ['promoCode','#promoCodeInput'], ['apply','#promoApplyBtn'], ['backFromPayment','#backFromPaymentBtn'],
           ['paymentPageIntroAfterSubmit','#paymentIntro'], ['loadingDesc','#loadingDesc'], ['priceSummaryLabel','#priceSummaryLabel'],
@@ -1940,9 +1945,7 @@
           if (lo[3]) lo[3].textContent = t('langDe');
           if (lo[4]) lo[4].textContent = t('langFr');
           if (lo[5]) lo[5].textContent = t('langUk');
-          var langMap = { ru: 'ru', en: 'en', de: 'de', fr: 'fr' };
-          var songLang = langMap[currentLang] || langSelect.value || 'ru';
-          if (langSelect.querySelector('option[value="' + songLang + '"]')) langSelect.value = songLang;
+          // Не меняем выбранное значение: язык песни не привязан к языку интерфейса
         }
         var heroOpt = document.querySelector('#heroGender option[value=""]'); if (heroOpt) heroOpt.textContent = t('genderSelect');
         var heroMale = document.querySelector('#heroGender option[value="male"]'); if (heroMale) heroMale.textContent = t('male');
@@ -1983,12 +1986,7 @@
         }
         currentLang = lang;
         try { localStorage.setItem(LANG_STORAGE_KEY, lang); } catch (_) {}
-        var langMap = { ru: 'ru', en: 'en', de: 'de', fr: 'fr' };
-        var songLang = langMap[lang] || 'ru';
-        var langSelect = document.getElementById('language');
-        if (langSelect && langSelect.querySelector('option[value="' + songLang + '"]')) {
-          langSelect.value = songLang;
-        }
+        // Язык песни не меняем при смене языка интерфейса — это независимый выбор пользователя
         applyTranslations();
         // Формат даты в Chromium/WebView зависит от lang самого input — обновляем
         document.querySelectorAll('input[type="date"]').forEach(function(el) { el.lang = lang; });
@@ -3679,11 +3677,13 @@
         if (!birthtimeUnknown1 && !birthtime1) { alert(t('alertBirthtime')); return; }
         if (!gender1) { alert(t('alertGender')); return; }
         if (requestText.length < 15) { alert(t('alertRequestLong')); return; }
+        var songLangEl = document.getElementById('language');
+        var songLanguage = (songLangEl && songLangEl.value) ? songLangEl.value : 'ru';
         var payload = {
           mode: mode,
           person1: { name: name1, birthdate: birthdate1, birthplace: birthplace1, birthtime: birthtimeUnknown1 ? null : birthtime1, birthtimeUnknown: birthtimeUnknown1, gender: gender1 },
           request: requestText,
-          language: currentLang || 'ru'
+          language: songLanguage
         };
         // Если есть активный промокод — передаём его серверу для проверки ДО 402
         if (activePromo && activePromo.code) {
@@ -3733,6 +3733,17 @@
         var initData = getInitData();
         if (!initData) { alert(t('alertOpenFromBot')); return; }
         payload.initData = initData;
+
+        try {
+          var checkRes = await fetch(apiBase + '/api/check-chat', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData }, body: JSON.stringify({ initData: initData }) });
+          var checkJson = await checkRes.json().catch(function() { return {}; });
+          if (checkJson.chat_available === false) {
+            alert(checkJson.error || 'Сначала нажмите «Старт» в боте (или отправьте боту любое сообщение), затем отправьте заявку снова.');
+            return;
+          }
+        } catch (checkErr) {
+          // если проверка недоступна — не блокируем отправку
+        }
 
         var stepNextOriginalText = stepNext.textContent;
         stepNext.disabled = true;

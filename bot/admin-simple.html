@@ -243,10 +243,11 @@
       <!-- Единая панель фильтров -->
       <div class="unified-filter">
         <div class="uf-row">
-          <span class="uf-label">Поиск по ID:</span>
+<span class="uf-label">Поиск по ID:</span>
           <input type="text" id="searchRequestId" placeholder="Например bb3688da" maxlength="36" style="width:180px;padding:8px 12px;border-radius:8px;border:1px solid #4a5568;background:#2d3748;color:#fff;font-size:14px;font-family:monospace;">
           <button type="button" class="uf-btn" id="searchRequestIdBtn" style="padding:8px 16px;">🔍 Найти</button>
           <button type="button" class="uf-btn" id="clearSearchIdBtn" style="padding:8px 12px;display:none;">✕ Сбросить</button>
+          <span id="searchByIdMsg" style="font-size:11px;color:#64748b;margin-left:4px;"></span>
         </div>
         <div class="uf-row">
           <span class="uf-label">Статус:</span>
@@ -610,6 +611,41 @@
           ${audioBlock}
           ${actionsBlock}
         </div>`;
+    }
+
+    async function searchByRequestId() {
+      const input = document.getElementById('searchRequestId');
+      const msgEl = document.getElementById('searchByIdMsg');
+      const id = (input && input.value ? input.value.trim() : '').replace(/\s/g, '');
+      if (!id) {
+        if (msgEl) { msgEl.textContent = 'Введите UUID заявки'; msgEl.style.color = '#94a3b8'; }
+        return;
+      }
+      if (msgEl) { msgEl.textContent = 'Поиск…'; msgEl.style.color = '#94a3b8'; }
+      const tabBtn = document.querySelector('.tab-btn[onclick*="requests"]');
+      if (tabBtn) switchTab('requests', tabBtn);
+      try {
+        const result = await fetchJson(API_BASE + '/api/admin/requests/' + encodeURIComponent(id) + authQueryFromPath(), { headers: authHeaders() }, 10000);
+        const json = result.json;
+        if ((result.res && result.res.status === 404) || !json || !json.success) {
+          if (msgEl) { msgEl.textContent = 'Заявка не найдена'; msgEl.style.color = '#fca5a5'; }
+          document.getElementById('requests').innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8">Заявка с ID ' + escapeHtml(id.slice(0, 8)) + '… не найдена. Проверьте полный UUID.</div>';
+          window._lastRequestsData = [];
+          return;
+        }
+        const row = json.data;
+        if (!row || !row.id) {
+          if (msgEl) { msgEl.textContent = 'Заявка не найдена'; msgEl.style.color = '#fca5a5'; }
+          return;
+        }
+        window._lastRequestsData = [row];
+        renderRequests([row]);
+        if (msgEl) { msgEl.textContent = 'Найдена 1 заявка'; msgEl.style.color = '#86efac'; }
+        setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 3000);
+      } catch (e) {
+        if (msgEl) { msgEl.textContent = 'Ошибка: ' + (e && e.message ? e.message : String(e)).slice(0, 40); msgEl.style.color = '#fca5a5'; }
+        document.getElementById('requests').innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c">Ошибка загрузки заявки. Проверьте UUID и токен.</div>';
+      }
     }
 
     function filterByCard(card) {
@@ -1675,6 +1711,11 @@
     window.filterByCard = filterByCard;
     window.setSort = setSort;
     window.setPayFilter = setPayFilter;
+    window.searchByRequestId = searchByRequestId;
+
+    document.getElementById('searchRequestId')?.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); searchByRequestId(); }
+    });
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', function() {

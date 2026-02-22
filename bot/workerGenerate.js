@@ -21,13 +21,14 @@ const supabase =
 
 /**
  * Достаём из ответа LLM четыре части (алгоритм: docs/ALGORITHM.md):
- * 1) detailed_analysis — подробный анализ карты (выдаётся только после оплаты)
+ * 1) detailed_analysis — глубокий анализ из результата промта (Этап 1 + при необходимости Этап 2); именно он уходит пользователю в чат по запросу «расшифровка» / get_analysis
  * 2) style — один или два стиля для Suno
  * 3) lyrics — текст песни
  * 4) title — название песни
  */
 function parseSongFromResponse(text) {
   if (!text || typeof text !== "string") return null;
+  // Глубокий анализ = всё до ЭТАП 3 / ПЕСНЯ ДЛЯ / ЛИРИКА / «название»
   let detailed_analysis = "";
   let title = "";
   let lyrics = "";
@@ -74,7 +75,7 @@ function parseSongFromResponse(text) {
   };
 }
 
-/** Отправка аудио пользователю в Telegram по URL */
+/** Отправка аудио пользователю в Telegram по URL. При «chat not found» — одна повторная попытка через 2 сек. */
 async function sendAudioToUser(telegramUserId, audioUrl, caption) {
   if (!BOT_TOKEN || !telegramUserId) return { ok: false, error: "Нет BOT_TOKEN или chat_id" };
   const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`;
@@ -83,14 +84,20 @@ async function sendAudioToUser(telegramUserId, audioUrl, caption) {
     audio: audioUrl,
     caption: caption || "Твой персональный звуковой ключ готов.",
   });
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body.toString(),
-  });
+  const opts = { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: body.toString() };
+  const res = await fetch(url, opts);
   const data = await res.json().catch(() => ({}));
-  if (!data.ok) return { ok: false, error: data.description || "Telegram API error" };
-  return { ok: true };
+  if (data.ok) return { ok: true };
+  const errMsg = data.description || "Telegram API error";
+  const retryable = /chat not found|user not found|EAI_AGAIN|ECONNRESET|timeout/i.test(errMsg);
+  if (retryable) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const res2 = await fetch(url, opts);
+    const data2 = await res2.json().catch(() => ({}));
+    if (data2.ok) return { ok: true };
+    return { ok: false, error: data2.description || errMsg };
+  }
+  return { ok: false, error: errMsg };
 }
 
 /** Обработка одной заявки: LLM → Suno → отправка */

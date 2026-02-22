@@ -1130,7 +1130,7 @@ bot.on("message:web_app_data", async (ctx) => {
   }
 });
 
-// Расшифровка: первая бесплатно по желанию, далее — этичное предложение заказать новую песню
+// Расшифровка: в чат пользователю отправляется глубокий анализ из результата промта (detailed_analysis = Этап 1 + при необходимости Этап 2). Первая бесплатно, далее — этичное предложение заказать новую песню.
 async function sendAnalysisIfPaid(ctx) {
   const telegramUserId = ctx.from?.id;
   if (!telegramUserId) {
@@ -1194,6 +1194,7 @@ async function sendAnalysisIfPaid(ctx) {
   }
 
   const TELEGRAM_MAX = 4096;
+  // detailed_analysis = глубокий анализ из ответа LLM на промт (Этап 1 + при необходимости Этап 2)
   const text = String(row.detailed_analysis || "").trim();
   if (!text) {
     await ctx.reply("Текст расшифровки пуст. Обратись в поддержку.");
@@ -1290,16 +1291,26 @@ bot.hears(/^(песня не пришла|не пришла песня|не по
     let sent = 0;
     for (const row of rows) {
       try {
-        const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`, {
+        const payload = {
+          chat_id: String(telegramUserId),
+          audio: row.audio_url,
+          caption: `🎵 ${row.name || "Друг"}, твоя персональная песня!\n\n— YupSoul`,
+        };
+        let res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`, {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            chat_id: String(telegramUserId),
-            audio: row.audio_url,
-            caption: `🎵 ${row.name || "Друг"}, твоя персональная песня!\n\n— YupSoul`,
-          }).toString(),
+          body: new URLSearchParams(payload).toString(),
         });
-        const data = await res.json().catch(() => ({}));
+        let data = await res.json().catch(() => ({}));
+        if (!data.ok && /chat not found|user not found|EAI_AGAIN|ECONNRESET/i.test(data.description || "")) {
+          await new Promise((r) => setTimeout(r, 2000));
+          res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams(payload).toString(),
+          });
+          data = await res.json().catch(() => ({}));
+        }
         if (data.ok) {
           sent++;
           const now = new Date().toISOString();
@@ -2030,6 +2041,39 @@ app.get("/api/me", (_req, res) => {
   res.json({ ok: true, user: null, authenticated: false });
 });
 
+// Проверка, может ли бот писать в чат пользователю (чтобы избежать «Чат не найден» при доставке песни)
+app.post("/api/check-chat", express.json(), asyncApi(async (req, res) => {
+  const initData = req.body?.initData ?? req.headers["x-telegram-init"];
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) {
+    return res.status(401).json({ ok: false, chat_available: false, error: "Неверные данные. Открой приложение из чата с ботом." });
+  }
+  if (!BOT_TOKEN) return res.status(503).json({ ok: false, chat_available: false, error: "Бот не настроен" });
+  const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendChatAction`;
+  const body = new URLSearchParams({ chat_id: String(telegramUserId), action: "typing" });
+  const apiRes = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: body.toString(),
+  });
+  const data = await apiRes.json().catch(() => ({}));
+  const desc = (data.description || "").toLowerCase();
+  const chatUnavailable = !data.ok && (
+    /chat not found/i.test(desc) ||
+    /user not found/i.test(desc) ||
+    /bot was blocked/i.test(desc) ||
+    /have no rights to send/i.test(desc)
+  );
+  if (chatUnavailable) {
+    return res.json({
+      ok: false,
+      chat_available: false,
+      error: "Чат с ботом недоступен. Нажмите «Старт» в боте (или отправьте любое сообщение), затем вернитесь сюда и отправьте заявку снова.",
+    });
+  }
+  return res.json({ ok: true, chat_available: true });
+}));
+
 // Профиль пользователя — автовход, предзаполнение формы
 app.post("/api/user/profile", express.json(), asyncApi(async (req, res) => {
   const initData = req.body?.initData ?? req.headers["x-telegram-init"];
@@ -2305,20 +2349,30 @@ app.post("/api/admin/requests/:id/deliver", asyncApi(async (req, res) => {
         }).toString(),
       });
     }
-    const audioRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`, {
+    const sendPayload = {
+      chat_id: String(telegram_user_id),
+      audio: audio_url,
+      caption,
+    };
+    let audioRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        chat_id: String(telegram_user_id),
-        audio: audio_url,
-        caption,
-      }).toString(),
+      body: new URLSearchParams(sendPayload).toString(),
     });
-    const audioData = await audioRes.json().catch(() => ({}));
+    let audioData = await audioRes.json().catch(() => ({}));
+    if (!audioData.ok && /chat not found|user not found|EAI_AGAIN|ECONNRESET/i.test(audioData.description || "")) {
+      await new Promise((r) => setTimeout(r, 2000));
+      audioRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(sendPayload).toString(),
+      });
+      audioData = await audioRes.json().catch(() => ({}));
+    }
     if (!audioData.ok) {
       const rawError = audioData.description || "Ошибка Telegram API";
       const friendlyError = /chat not found/i.test(rawError)
-        ? "Чат не найден. Пользователь мог заблокировать бота, не нажать «Старт» или удалить переписку. Попросите снова открыть бота и нажать «Старт»."
+        ? "Чат не найден. Попросите пользователя нажать «Старт» в боте (или отправить любое сообщение), затем повторить доставку из админки или пусть напишет боту «песня не пришла»."
         : rawError;
       await supabase
         .from("track_requests")
