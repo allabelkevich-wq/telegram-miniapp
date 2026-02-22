@@ -906,8 +906,18 @@ ${extBlock ? "\n" + extBlock : ""}
     if (!llm.ok) {
       throw new Error(`DeepSeek ошибка: ${llm.error}`);
     }
-    
-    const fullResponse = llm.text;
+
+    const fullResponse = (llm.text != null ? String(llm.text) : "").trim();
+    if (fullResponse.length === 0) {
+      console.error(`[Воркер] ❌ Ответ DeepSeek пуст (0 символов). Проверьте язык запроса, лимиты API, логи.`);
+      await supabase.from("track_requests").update({
+        generation_status: "failed",
+        error_message: "Ответ LLM пуст (0 символов). Возможные причины: сбой API, неверный язык/запрос, лимит токенов. Проверьте логи воркера и настройки DeepSeek.",
+        updated_at: new Date().toISOString(),
+      }).eq("id", requestId);
+      throw new Error("Ответ LLM пуст (0 символов). Проверьте язык запроса и логи DeepSeek.");
+    }
+
     const finishReason = llm.finish_reason || null;
     const llmTruncated = finishReason === "length";
     console.log(`[Воркер] 💾 СЫРОЙ ОТВЕТ DEEPSEEK (первые 500 символов):`);
@@ -968,9 +978,10 @@ ${extBlock ? "\n" + extBlock : ""}
     const parsed = parseResponse(fullResponse);
     if (!parsed || !parsed.lyrics) {
       const snippet = fullResponse.slice(0, 800).replace(/\n/g, " ");
-      console.error(`[Воркер] Парсинг лирики: не найден блок [Verse 1] / [Chorus] / ЛИРИКА:. Начало ответа: ${snippet}...`);
-      await supabase.from("track_requests").update({ deepseek_response: fullResponse, generation_status: "failed", error_message: "Не удалось извлечь лирику из ответа LLM", updated_at: new Date().toISOString() }).eq("id", requestId);
-      throw new Error('Не удалось извлечь лирику из ответа LLM. Ответ сохранён в заявке — открой «Подробнее» в админке и проверь формат.');
+      const errMsg = `Не удалось извлечь лирику из ответа LLM (ответ: ${fullResponse.length} символов). Ответ сохранён в заявке — открой «Подробнее» в админке и проверь формат.`;
+      console.error(`[Воркер] Парсинг лирики: не найден блок [Verse 1] / [Chorus] / ЛИРИКА:. Длина ответа: ${fullResponse.length}. Начало: ${snippet}...`);
+      await supabase.from("track_requests").update({ deepseek_response: fullResponse, generation_status: "failed", error_message: errMsg, updated_at: new Date().toISOString() }).eq("id", requestId);
+      throw new Error(errMsg);
     }
     const lyricsClean = sanitizeSongText(parsed.lyrics);
     // В базу — оригинальный регистр (читаемо в админке)
