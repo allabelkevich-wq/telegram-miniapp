@@ -1081,7 +1081,7 @@
               <select id="birthdateMonth" class="date-group-month" aria-label="Месяц"><option value="">Месяц</option></select>
               <select id="birthdateYear" class="date-group-year" aria-label="Год"><option value="">Год</option></select>
             </div>
-            <input type="date" id="birthdate" required aria-label="Дата рождения" max="2010-12-31" tabindex="-1">
+            <input type="date" id="birthdate" required aria-label="Дата рождения" tabindex="-1">
             <span id="birthdateCheck" class="birthdate-check" aria-hidden="true">✓</span>
           </div>
         </div>
@@ -1142,7 +1142,7 @@
                 <select id="birthdate2Month" class="date-group-month" aria-label="Месяц"><option value="">Месяц</option></select>
                 <select id="birthdate2Year" class="date-group-year" aria-label="Год"><option value="">Год</option></select>
               </div>
-              <input type="date" id="birthdate2" max="2010-12-31" tabindex="-1">
+              <input type="date" id="birthdate2" tabindex="-1">
             </div>
           </div>
           <div class="field">
@@ -2913,13 +2913,19 @@
           if (p) p.classList.add('show');
           document.body.classList.add('preview-mode');
         }
+        var todayStr = new Date().toISOString().split('T')[0];
+        var minDate = new Date();
+        minDate.setFullYear(minDate.getFullYear() - 100);
+        var minDateStr = minDate.toISOString().split('T')[0];
         var birthdateEl = document.getElementById('birthdate');
         if (birthdateEl) {
-          var today = new Date();
-          birthdateEl.max = today.toISOString().split('T')[0];
-          var minDate = new Date();
-          minDate.setFullYear(minDate.getFullYear() - 100);
-          birthdateEl.min = minDate.toISOString().split('T')[0];
+          birthdateEl.max = todayStr;
+          birthdateEl.min = minDateStr;
+        }
+        var birthdate2El = document.getElementById('birthdate2');
+        if (birthdate2El) {
+          birthdate2El.max = todayStr;
+          birthdate2El.min = minDateStr;
         }
         var unknown = document.getElementById('unknown');
         var birthtime = document.getElementById('birthtime');
@@ -2984,8 +2990,9 @@
             if (wrap) wrap.classList.add('has-date');
             if (chk) chk.setAttribute('aria-hidden', 'false');
           }
-          fillOneDateGroup('birthdateDay', 'birthdateMonth', 'birthdateYear', 2010);
-          fillOneDateGroup('birthdate2Day', 'birthdate2Month', 'birthdate2Year', 2010);
+          // yearEnd = текущий год: можно вводить даты рождения вплоть до сегодня (в т.ч. детей)
+          fillOneDateGroup('birthdateDay', 'birthdateMonth', 'birthdateYear', yearEnd);
+          fillOneDateGroup('birthdate2Day', 'birthdate2Month', 'birthdate2Year', yearEnd);
           fillOneDateGroup('heroBirthdateDay', 'heroBirthdateMonth', 'heroBirthdateYear', yearEnd);
           [['birthdateDay','birthdateMonth','birthdateYear','birthdate','birthdateWrap','birthdateCheck'],
            ['birthdate2Day','birthdate2Month','birthdate2Year','birthdate2','birthdate2Wrap',null],
