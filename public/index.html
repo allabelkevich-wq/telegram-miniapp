@@ -197,9 +197,12 @@
     }
     .mode-btn:active { transform: scale(0.98); }
     .mode-btn.active {
-      background: linear-gradient(135deg, rgba(212,175,55,0.22), rgba(236,72,153,0.18));
-      border-color: rgba(212,175,55,0.55); color: #fff;
-      box-shadow: 0 3px 14px rgba(212,175,55,0.2);
+      background: linear-gradient(135deg, #d4af37 0%, #ec4899 100%);
+      border-color: transparent; color: #fff;
+      box-shadow: 0 4px 18px rgba(212,175,55,0.35);
+    }
+    .mode-btn.active .mode-info {
+      border-color: rgba(255,255,255,0.5); color: rgba(255,255,255,0.75);
     }
     .mode-icon { display: none; }
     .mode-label { font-weight: 600; font-size: 0.95rem; flex: 1; }
@@ -1591,9 +1594,9 @@
           unknownTime: 'Не знаю точное время', cancel: 'Отмена', save: 'Сохранить', back: '← Назад',
           gender: 'Пол', genderSelect: 'Выбери', male: 'Мужской', female: 'Женский', other: 'Другой',
           modeType: 'Формат песни', modeSubtitle: 'Для кого создаём?',
-          modeSingle: 'Для себя', modeSingleDesc: 'Глубокий анализ',
-          modeCouple: 'Для двоих', modeCoupleDesc: 'Дуэт/пара',
-          modeTransit: 'Энергия дня', modeTransitDesc: 'Энергия момента',
+          modeSingle: 'Для себя', modeSingleDesc: 'Песня о тебе — твой характер, сильные стороны, внутренний мир. Только твои данные.',
+          modeCouple: 'Для двоих', modeCoupleDesc: 'Песня о двух людях — ваша связь, резонанс, то что вас объединяет. Нужны данные обоих.',
+          modeTransit: 'Энергия дня', modeTransitDesc: 'Песня под сегодняшний день — его настроение, ритм и цвет. Без данных о рождении.',
           namePh: 'Как тебя зовут?', birthdateLabel: 'Дата рождения', birthplacePh: 'Город или страна — выбери из подсказок',
           birthplaceHint: '💡 Начни вводить город и выбери из выпавшего списка.',
           unknownTimeShort: 'Не знаю', secondPersonTitle: 'Для двоих', name2Ph: 'Имя второго человека',
@@ -1709,9 +1712,9 @@
           unknownTime: "I don't know exact time", cancel: 'Cancel', save: 'Save', back: '← Back',
           gender: 'Gender', genderSelect: 'Choose', male: 'Male', female: 'Female', other: 'Other',
           modeType: 'Song format', modeSubtitle: 'Who is it for?',
-          modeSingle: 'For myself', modeSingleDesc: 'Deep analysis',
-          modeCouple: 'For two', modeCoupleDesc: 'Duet / couple',
-          modeTransit: 'Day energy', modeTransitDesc: 'Energy of the moment',
+          modeSingle: 'For myself', modeSingleDesc: 'A song about you — your character, strengths, inner world. Only your data needed.',
+          modeCouple: 'For two', modeCoupleDesc: 'A song about two people — your bond, resonance, what connects you. Both dates needed.',
+          modeTransit: 'Day energy', modeTransitDesc: "A song for today — its mood, rhythm and colour. No birth data required.",
           namePh: "What's your name?", birthdateLabel: 'Date of birth', birthplacePh: 'City or country — choose from suggestions',
           birthplaceHint: '💡 Start typing your city and pick from the list.',
           unknownTimeShort: "Don't know", secondPersonTitle: 'For two', name2Ph: "Second person's name",
@@ -1826,9 +1829,9 @@
           unknownTime: 'Exakte Zeit unbekannt', cancel: 'Abbrechen', save: 'Speichern', back: '← Zurück',
           gender: 'Geschlecht', genderSelect: 'Wählen', male: 'Männlich', female: 'Weiblich', other: 'Divers',
           modeType: 'Song-Format', modeSubtitle: 'Für wen erstellen wir?',
-          modeSingle: 'Für mich', modeSingleDesc: 'Tiefenanalyse',
-          modeCouple: 'Zu zweit', modeCoupleDesc: 'Duett / Paar',
-          modeTransit: 'Tagesenergie', modeTransitDesc: 'Energie des Augenblicks',
+          modeSingle: 'Für mich', modeSingleDesc: 'Ein Lied über dich — dein Charakter, Stärken, innere Welt. Nur deine Daten.',
+          modeCouple: 'Zu zweit', modeCoupleDesc: 'Ein Lied für zwei Menschen — eure Verbindung und Resonanz. Daten beider nötig.',
+          modeTransit: 'Tagesenergie', modeTransitDesc: 'Ein Lied für heute — seine Stimmung, Rhythmus und Farbe. Keine Geburtsdaten nötig.',
           namePh: 'Wie heißt du?', birthdateLabel: 'Geburtsdatum', birthplacePh: 'Stadt oder Land — wähle aus den Vorschlägen',
           birthplaceHint: '💡 Stadt eintippen und aus der Liste auswählen.',
           unknownTimeShort: 'Unbekannt', secondPersonTitle: 'Zu zweit', name2Ph: 'Name der zweiten Person',
@@ -1943,9 +1946,9 @@
           unknownTime: "Heure exacte inconnue", cancel: 'Annuler', save: 'Enregistrer', back: '← Retour',
           gender: 'Genre', genderSelect: 'Choisir', male: 'Homme', female: 'Femme', other: 'Autre',
           modeType: "Format de chanson", modeSubtitle: 'Pour qui créons-nous ?',
-          modeSingle: 'Pour moi', modeSingleDesc: 'Analyse approfondie',
-          modeCouple: 'À deux', modeCoupleDesc: 'Duo / couple',
-          modeTransit: "Énergie du jour", modeTransitDesc: "Énergie du moment",
+          modeSingle: 'Pour moi', modeSingleDesc: 'Une chanson sur toi — ton caractère, tes forces, ton monde intérieur. Seules tes données.',
+          modeCouple: 'À deux', modeCoupleDesc: 'Une chanson pour deux — votre lien, résonance, ce qui vous unit. Les deux dates requises.',
+          modeTransit: "Énergie du jour", modeTransitDesc: "Une chanson pour aujourd'hui — son humeur, son rythme, sa couleur. Sans données de naissance.",
           namePh: "Comment tu t'appelles ?", birthdateLabel: 'Date de naissance', birthplacePh: 'Ville ou pays — choisis parmi les suggestions',
           birthplaceHint: '💡 Tape ta ville et choisis dans la liste.',
           unknownTimeShort: 'Inconnu', secondPersonTitle: 'À deux', name2Ph: "Nom de la deuxième personne",
