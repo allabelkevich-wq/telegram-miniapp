@@ -4680,16 +4680,29 @@
       if (goHeroesBtn) goHeroesBtn.addEventListener('click', function() { goToPage('heroesPage'); initHeroesPage(); });
       var profileCreateSongBtn = document.getElementById('profileCreateSongBtn');
       if (profileCreateSongBtn) profileCreateSongBtn.addEventListener('click', function() { goToPage('formPage'); });
-      // Кнопки оформления планов — временно открывают поддержку
+      // Попап подтверждения перед переходом в бота для оформления подписки
+      function showPlanConfirm(planKey, planName) {
+        var overlay = document.getElementById('planConfirmOverlay');
+        var title = document.getElementById('planConfirmTitle');
+        var desc = document.getElementById('planConfirmDesc');
+        var btn = document.getElementById('planConfirmBtn');
+        if (!overlay) return;
+        if (title) title.textContent = 'Оформить ' + planName;
+        if (desc) desc.textContent = 'Для оформления подписки мы откроем чат с ботом — там завершите оплату. Мини-приложение закроется.';
+        if (btn) btn.onclick = function() {
+          overlay.style.display = 'none';
+          if (tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/' + BOT_USERNAME + '?start=' + planKey);
+        };
+        overlay.style.display = 'flex';
+      }
+
       var planBtnBasic = document.getElementById('planBtnBasic');
       if (planBtnBasic) planBtnBasic.addEventListener('click', function() {
-        if (tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/' + BOT_USERNAME + '?start=plan_basic');
-        else goToHelpFrom('profilePage');
+        showPlanConfirm('plan_basic', 'Basic');
       });
       var planBtnPlus = document.getElementById('planBtnPlus');
       if (planBtnPlus) planBtnPlus.addEventListener('click', function() {
-        if (tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/' + BOT_USERNAME + '?start=plan_plus');
-        else goToHelpFrom('profilePage');
+        showPlanConfirm('plan_plus', 'Plus');
       });
       var planBtnMaster = document.getElementById('planBtnMaster');
       if (planBtnMaster) planBtnMaster.addEventListener('click', function() {
@@ -5664,6 +5677,40 @@
       </button>
     </div>
   </div>
+  <!-- Попап подтверждения перед оформлением подписки -->
+  <div id="planConfirmOverlay" style="
+    display:none;position:fixed;inset:0;z-index:10000;
+    background:rgba(0,0,0,0.72);backdrop-filter:blur(4px);
+    align-items:flex-end;justify-content:center;padding:0 0 env(safe-area-inset-bottom,0) 0;
+  " onclick="if(event.target===this)this.style.display='none'">
+    <div style="
+      background:linear-gradient(160deg,#1a1030 0%,#0d1830 100%);
+      border:1px solid rgba(212,175,55,0.25);
+      border-radius:20px 20px 0 0;
+      padding:28px 24px 32px;
+      max-width:480px;width:100%;
+      text-align:center;
+    ">
+      <div style="width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,0.15);margin:0 auto 20px;"></div>
+      <div id="planConfirmTitle" style="font-size:1.15rem;font-weight:700;color:#d4af37;margin-bottom:10px;"></div>
+      <div id="planConfirmDesc" style="font-size:0.88rem;color:rgba(255,255,255,0.65);line-height:1.5;margin-bottom:24px;"></div>
+      <button id="planConfirmBtn" type="button" style="
+        width:100%;padding:14px;border-radius:14px;
+        background:linear-gradient(135deg,#d4af37,#ec4899);
+        border:none;color:#fff;font-size:1rem;font-weight:700;
+        cursor:pointer;font-family:inherit;
+        box-shadow:0 6px 20px rgba(212,175,55,0.3);
+        margin-bottom:10px;
+      ">Перейти в бот →</button>
+      <button type="button" onclick="document.getElementById('planConfirmOverlay').style.display='none'" style="
+        width:100%;padding:12px;border-radius:14px;
+        background:transparent;border:1px solid rgba(255,255,255,0.15);
+        color:rgba(255,255,255,0.5);font-size:0.9rem;
+        cursor:pointer;font-family:inherit;
+      ">Отмена</button>
+    </div>
+  </div>
+
   <style>
     @keyframes confirmSpin { to { transform: rotate(360deg); } }
   </style>
