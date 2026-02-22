@@ -97,8 +97,9 @@ const DEFAULT_PRICING_CATALOG = [
   { sku: "couple_song", title: "Couple song", description: "Песня совместимости пары", price: "8.99", currency: "USDT", active: true, limits_json: { requests: 1 } },
   { sku: "deep_analysis_addon", title: "Deep analysis", description: "Дополнительный детальный разбор", price: "3.99", currency: "USDT", active: true, limits_json: { requests: 1 } },
   { sku: "extra_regeneration", title: "Extra regeneration", description: "Повторная генерация трека", price: "2.49", currency: "USDT", active: true, limits_json: { requests: 1 } },
-  { sku: "soul_basic_sub", title: "Soul Basic", description: "3 трека/месяц + 10 soulchat", price: "14.99", currency: "USDT", active: true, limits_json: { monthly_tracks: 3, monthly_soulchat: 10, kind: "subscription" } },
-  { sku: "soul_plus_sub", title: "Soul Plus", description: "7 треков/месяц + 30 soulchat + приоритет", price: "24.99", currency: "USDT", active: true, limits_json: { monthly_tracks: 7, monthly_soulchat: 30, priority: true, kind: "subscription" } },
+  { sku: "soul_basic_sub", title: "Soul Basic", description: "5 треков/месяц + Soul Chat", price: "14.99", currency: "USDT", active: true, limits_json: { monthly_tracks: 5, monthly_soulchat: 50, kind: "subscription" } },
+  { sku: "soul_plus_sub", title: "Soul Plus", description: "10 треков/месяц + Soul Chat без лимита + приоритет", price: "24.99", currency: "USDT", active: true, limits_json: { monthly_tracks: 10, monthly_soulchat: -1, priority: true, kind: "subscription" } },
+  { sku: "master_monthly", title: "Лаборатория", description: "30 треков/месяц + Картотека + История генераций", price: "39.99", currency: "USDT", active: true, limits_json: { monthly_tracks: 30, monthly_soulchat: -1, priority: true, lab_access: true, kind: "subscription" } },
 ];
 
 function resolveSkuByMode(mode) {
@@ -467,6 +468,45 @@ async function hasMasterAccess(telegramUserId) {
     .maybeSingle();
   if (error) return false;
   return !!data;
+}
+
+// Карта SKU → название плана и лимиты треков
+const PLAN_META = {
+  soul_basic_sub:  { name: "Basic",       tracks: 5,  soulchat: 50 },
+  soul_plus_sub:   { name: "Plus",        tracks: 10, soulchat: -1 },
+  master_monthly:  { name: "Лаборатория", tracks: 30, soulchat: -1 },
+};
+
+async function getActiveSubscriptionFull(telegramUserId) {
+  if (!supabase) return null;
+  const nowIso = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select("id,plan_sku,status,renew_at,created_at")
+    .eq("telegram_user_id", Number(telegramUserId))
+    .eq("status", "active")
+    .gte("renew_at", nowIso)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error && /does not exist|relation/i.test(error.message)) return null;
+  if (error || !data) return null;
+  return data;
+}
+
+async function countTracksUsedThisMonth(telegramUserId) {
+  if (!supabase) return 0;
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const { count, error } = await supabase
+    .from("track_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("telegram_user_id", Number(telegramUserId))
+    .gte("created_at", monthStart)
+    .not("generation_status", "in", '("failed","cancelled","rejected")');
+  if (error && /does not exist|column/i.test(error.message)) return 0;
+  if (error) return 0;
+  return Number(count || 0);
 }
 
 async function grantPurchaseBySku({ telegramUserId, sku, source = "hot_payment", orderId = null }) {
@@ -911,16 +951,108 @@ bot.command("start", async (ctx) => {
 
   const name = ctx.from?.first_name || "друг";
   const isReturning = payload === "song_ready" || payload === "miniapp_start";
-  const isPlanInquiry = payload === "plan_basic" || payload === "plan_plus";
+  const PLAN_PAYLOAD_MAP = { plan_basic: "soul_basic_sub", plan_plus: "soul_plus_sub", plan_master: "master_monthly" };
+  const isPlanInquiry = Object.prototype.hasOwnProperty.call(PLAN_PAYLOAD_MAP, payload || "");
 
+  // Обновляем Menu Button при каждом /start
+  try {
+    await bot.api.setChatMenuButton({
+      chat_id: ctx.chat?.id,
+      menu_button: { type: "web_app", text: "🎵 YupSoul", web_app: { url: MINI_APP_URL } },
+    });
+  } catch (menuErr) {
+    console.warn("[start] Не удалось обновить Menu Button:", menuErr?.message);
+  }
+
+  // --- Автоматическое оформление подписки ---
+  if (isPlanInquiry && telegramUserId) {
+    const planSku = PLAN_PAYLOAD_MAP[payload];
+    const planInfo = PLAN_META[planSku] || { name: planSku, tracks: 0 };
+
+    try {
+      // Проверяем, не активна ли уже такая подписка
+      const existingSub = await getActiveSubscriptionFull(telegramUserId);
+      if (existingSub) {
+        const existingPlanInfo = PLAN_META[existingSub.plan_sku] || { name: existingSub.plan_sku };
+        const renewDate = new Date(existingSub.renew_at).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+        if (existingSub.plan_sku === planSku) {
+          await ctx.reply(
+            `${name}, у тебя уже активна подписка *${existingPlanInfo.name}*.\n\nОна действует до ${renewDate}.\n\nОткрой YupSoul и создавай песни ↓`,
+            { parse_mode: "Markdown", reply_markup: { inline_keyboard: [[{ text: "🎵 Открыть YupSoul", web_app: { url: MINI_APP_STABLE_URL } }]] } }
+          );
+          return;
+        }
+      }
+
+      // Пробуем создать HOT Pay checkout
+      const priceData = await getSkuPrice(planSku);
+      const itemId = pickHotItemId(planSku);
+
+      if (itemId && priceData) {
+        const orderId = crypto.randomUUID();
+        const requestId = crypto.randomUUID();
+
+        if (supabase) {
+          await supabase.from("track_requests").insert({
+            id: requestId,
+            telegram_user_id: Number(telegramUserId),
+            name: name,
+            mode: `sub_${planSku}`,
+            payment_status: "pending",
+            payment_provider: "hot",
+            payment_order_id: orderId,
+            payment_amount: Number(priceData.price),
+            payment_currency: priceData.currency || "USDT",
+            payment_raw: JSON.stringify({ provider: "hot", sku: planSku, plan: payload, amount_before: Number(priceData.price) }),
+            generation_status: "pending_payment",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }).select().maybeSingle();
+        }
+
+        const checkoutUrl = buildHotCheckoutUrl({
+          itemId,
+          orderId,
+          amount: Number(priceData.price),
+          currency: priceData.currency || "USDT",
+          requestId,
+          sku: planSku,
+        });
+
+        console.log(`[start] Сформирована ссылка подписки: sku=${planSku}, orderId=${orderId.slice(0, 8)}`);
+        await ctx.reply(
+          `${name}, оформляем *${planInfo.name}* — ${planInfo.tracks} треков в месяц.\n\n💳 Стоимость: *${priceData.price} USDT/мес*\n\nНажми кнопку ниже для оплаты. После оплаты я пришлю подтверждение и подписка активируется автоматически.`,
+          {
+            parse_mode: "Markdown",
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: `💳 Оплатить — ${priceData.price} USDT`, url: checkoutUrl }],
+                [{ text: "🎵 Открыть YupSoul", web_app: { url: MINI_APP_STABLE_URL } }],
+              ],
+            },
+          }
+        );
+      } else {
+        // HOT Pay item_id не настроен — дружелюбный фолбэк
+        console.warn(`[start] HOT_ITEM_ID не настроен для sku=${planSku}`);
+        await ctx.reply(
+          `${name}, отлично — ты хочешь оформить *${planInfo.name}* (${planInfo.tracks} треков/мес).\n\n✉️ Напиши нам, и мы вышлем ссылку на оплату в течение нескольких минут.`,
+          {
+            parse_mode: "Markdown",
+            reply_markup: { inline_keyboard: [[{ text: "🎵 Открыть YupSoul", web_app: { url: MINI_APP_STABLE_URL } }]] },
+          }
+        );
+      }
+    } catch (planErr) {
+      console.error("[start] Ошибка при обработке plan inquiry:", planErr?.message || planErr);
+      await ctx.reply(`${name}, произошла ошибка. Попробуй ещё раз или напиши нам.`).catch(() => {});
+    }
+    return;
+  }
+
+  // --- Обычный /start ---
   let text;
-  if (isPlanInquiry) {
-    const planName = payload === "plan_plus" ? "Soul Plus" : "Soul Basic";
-    text =
-      `${name}, отлично — ты хочешь оформить **${planName}**.\n\n` +
-      `Напиши нам «хочу ${planName}» — и мы пришлём инструкцию по оплате.\n\n` +
-      `Или напиши в любое время — мы на связи 👋`;
-  } else if (isReturning) {
+  if (isReturning) {
     text = `${name}, ты вернулся — хорошо.\n\nПесня уже ждёт тебя здесь, в этом чате. Если ещё не пришла — подожди пару минут.\n\nГотов создать ещё одну?`;
   } else {
     text =
@@ -930,26 +1062,11 @@ bot.command("start", async (ctx) => {
       `Нажми кнопку ниже, чтобы начать ↓`;
   }
 
-  // Обновляем Menu Button при каждом /start
   try {
-    await bot.api.setChatMenuButton({
-      chat_id: ctx.chat?.id,
-      menu_button: { type: "web_app", text: "🎵 YupSoul", web_app: { url: MINI_APP_URL } },
+    await ctx.reply(text, {
+      parse_mode: "Markdown",
+      reply_markup: { inline_keyboard: [[{ text: "🎵 Создать свою песню", web_app: { url: MINI_APP_STABLE_URL } }]] },
     });
-    console.log("[start] Menu Button обновлён для chat", ctx.chat?.id, "→", MINI_APP_URL);
-  } catch (menuErr) {
-    console.warn("[start] Не удалось обновить Menu Button:", menuErr?.message);
-  }
-
-  const replyMarkup = {
-    reply_markup: {
-      inline_keyboard: [[
-        { text: "🎵 Создать свою песню", web_app: { url: MINI_APP_STABLE_URL } }
-      ]]
-    }
-  };
-  try {
-    await ctx.reply(text, replyMarkup);
   } catch (e) {
     console.error("[start] Ошибка ответа:", e?.message || e);
     try {
@@ -1969,6 +2086,33 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
           bot.api.sendMessage(
             adminId,
             `💰 *Soul Chat куплен*\nЗаявка: \`${shortId}\`\nСумма: ${body.amount || "?"} ${body.currency || "USDT"}`
+          , { parse_mode: "Markdown" }).catch(() => {});
+        }
+      } else if (["soul_basic_sub", "soul_plus_sub", "master_monthly"].includes(purchasedSku)) {
+        // Активирована подписка
+        const subPlanInfo = PLAN_META[purchasedSku] || { name: purchasedSku, tracks: 0 };
+        const renewAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        const renewStr = renewAt.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+        const shortId = String(row.id || "").slice(0, 8);
+
+        bot.api.sendMessage(
+          row.telegram_user_id,
+          `✨ *Подписка ${subPlanInfo.name} активирована!*\n\n` +
+          `Твои *${subPlanInfo.tracks} треков в месяц* ждут тебя.\n` +
+          `Подписка действует до: *${renewStr}*\n\n` +
+          `Открой YupSoul и создай свою первую песню этого месяца ↓`,
+          {
+            parse_mode: "Markdown",
+            reply_markup: {
+              inline_keyboard: [[{ text: "🎵 Открыть YupSoul", web_app: { url: MINI_APP_STABLE_URL } }]],
+            },
+          }
+        ).catch((e) => console.warn("[webhook] notify subscription user:", e?.message));
+
+        for (const adminId of ADMIN_IDS) {
+          bot.api.sendMessage(
+            adminId,
+            `💎 *Подписка оформлена*\nПлан: ${subPlanInfo.name}\nПользователь: ${row.telegram_user_id}\nЗаявка: \`${shortId}\`\nСумма: ${body.amount || "?"} ${body.currency || "USDT"}`
           , { parse_mode: "Markdown" }).catch(() => {});
         }
       } else {
@@ -3077,6 +3221,41 @@ app.post("/api/payments/hot/confirm", express.json(), asyncApi(async (req, res) 
     generateSoundKey(requestId).catch((err) => console.error("[payments/hot/confirm] generate:", err?.message || err));
   }).catch((err) => console.error("[payments/hot/confirm] import worker:", err?.message || err));
   return res.json({ success: true, started: true, status: "pending" });
+}));
+
+app.get("/api/subscription/status", asyncApi(async (req, res) => {
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const initData = req.headers["x-telegram-init"] || req.query?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, error: "Unauthorized" });
+
+  const sub = await getActiveSubscriptionFull(telegramUserId);
+  const planSku = sub?.plan_sku || null;
+  const planMeta = planSku ? PLAN_META[planSku] : null;
+  const tracksLimit = planMeta?.tracks ?? 0;
+  const tracksUsed = planSku ? await countTracksUsedThisMonth(telegramUserId) : 0;
+  const tracksRemaining = planSku ? Math.max(0, tracksLimit - tracksUsed) : 0;
+
+  // Доступ к Soul Chat: Plus и Мастер — безлимитно (-1), Basic — по лимиту
+  const soulchatLimit = planMeta?.soulchat ?? 0;
+  const soulChatAccess = planSku ? (soulchatLimit === -1 || soulchatLimit > 0) : false;
+
+  // Дата обновления (начало следующего месяца)
+  const now = new Date();
+  const renewalDate = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
+
+  return res.json({
+    success: true,
+    subscription_active: !!sub,
+    plan_sku: planSku,
+    plan_name: planMeta?.name ?? "Free",
+    renew_at: sub?.renew_at ?? null,
+    subscription_renewal_date: renewalDate,
+    tracks_limit: tracksLimit,
+    tracks_used_this_month: tracksUsed,
+    tracks_remaining: tracksRemaining,
+    soul_chat_access: soulChatAccess,
+  });
 }));
 
 app.get("/api/admin/pricing", asyncApi(async (req, res) => {

@@ -983,9 +983,10 @@
         <!-- Баланс генераций -->
         <div class="profile-balance-card">
           <div class="profile-balance-left">
-            <div class="profile-balance-label">Бесплатных генераций</div>
+            <div id="profileBalanceLabel" class="profile-balance-label">Бесплатных генераций</div>
             <div id="profileCreditsCount" class="profile-balance-value">—</div>
-            <div class="profile-balance-hint">За каждого приглашённого друга — +1 трек</div>
+            <div id="profileBalanceHint" class="profile-balance-hint">За каждого приглашённого друга — +1 трек</div>
+            <div id="profileRenewalDate" class="profile-balance-hint" style="display:none;color:rgba(212,175,55,0.65);margin-top:2px;"></div>
           </div>
           <div class="profile-balance-icon">🎵</div>
         </div>
@@ -1045,7 +1046,7 @@
               <div class="ppc-feature">✦ Soul Chat без лимита <i class="ppc-info" data-tip="Неограниченный доступ к Soul Chat — разговаривай с душой столько, сколько нужно.">i</i></div>
             </div>
             <div class="ppc-price-wrap">
-              <div class="ppc-price" id="masterPriceEl">299 ₽/мес</div>
+              <div class="ppc-price" id="masterPriceEl">$39.99/мес</div>
               <div class="ppc-save">−83% vs разовых</div>
             </div>
             <button class="ppc-btn master-btn" id="planBtnMaster">Открыть Лабораторию</button>
@@ -2753,31 +2754,98 @@
           var profileIconInitial = document.getElementById('profileIconInitial');
           if (profileIconInitial) profileIconInitial.textContent = displayName.charAt(0).toUpperCase();
 
-          // Баланс и план
-          var credits = (refData && typeof refData.credits === 'number') ? refData.credits : 0;
-          if (creditsEl) creditsEl.textContent = credits;
-          var hasSubscription = pricingData && pricingData.subscription_active;
-          var trialUsed = pricingData && pricingData.free_trial && !pricingData.free_trial.available;
-          if (planBadgeEl) {
-            if (hasSubscription) {
-              planBadgeEl.textContent = '✦ Soul Plus';
-              planBadgeEl.style.background = 'rgba(236,72,153,0.12)';
-              planBadgeEl.style.borderColor = 'rgba(236,72,153,0.38)';
-              planBadgeEl.style.color = '#ec4899';
-              // Подсвечиваем карточку Plus как текущую
-              var cardFree = document.getElementById('planCardFree');
-              var cardPlus = document.getElementById('planCardPlus');
-              if (cardFree) cardFree.classList.remove('current');
-              if (cardPlus) { cardPlus.classList.add('current'); cardPlus.style.borderColor = 'rgba(236,72,153,0.45)'; }
-              var btnPlus = document.getElementById('planBtnPlus');
-              if (btnPlus) { btnPlus.textContent = '✓ Активен'; btnPlus.disabled = true; btnPlus.style.opacity = '0.5'; }
-            } else {
-              planBadgeEl.textContent = '✦ YupSoul Free';
-            }
-          }
+          // Реферальные ссылки
           if (refLinkEl) refLinkEl.value = (refData && refData.link) ? refData.link : '';
           if (refInvEl) refInvEl.textContent = (refData && typeof refData.invited_count === 'number') ? refData.invited_count : 0;
           if (refRewEl) refRewEl.textContent = (refData && typeof refData.rewarded_count === 'number') ? refData.rewarded_count : 0;
+
+          // --- Статус подписки (новый API) ---
+          var subData = null;
+          try {
+            var subResp = await fetch(apiBase + '/api/subscription/status', { headers: { 'X-Telegram-Init': initData } });
+            subData = await subResp.json().catch(function(){ return null; });
+          } catch (subErr) {
+            console.warn('[Profile] Не удалось загрузить статус подписки:', subErr);
+          }
+
+          var balanceLabelEl = document.getElementById('profileBalanceLabel');
+          var balanceHintEl = document.getElementById('profileBalanceHint');
+          var renewalDateEl = document.getElementById('profileRenewalDate');
+
+          // Сбрасываем все карточки тарифов в исходное состояние
+          var allPlanCards = ['planCardFree','planCardBasic','planCardPlus','planCardMaster'];
+          var allPlanBtns = {
+            planCardBasic: { btnId: 'planBtnBasic', origText: 'Оформить' },
+            planCardPlus:  { btnId: 'planBtnPlus',  origText: 'Оформить' },
+            planCardMaster:{ btnId: 'planBtnMaster', origText: 'Открыть Лабораторию' },
+          };
+          allPlanCards.forEach(function(id) {
+            var card = document.getElementById(id);
+            if (card) card.classList.remove('current');
+          });
+          Object.values(allPlanBtns).forEach(function(b) {
+            var btn = document.getElementById(b.btnId);
+            if (btn) { btn.textContent = b.origText; btn.disabled = false; btn.style.opacity = ''; }
+          });
+
+          var subActive = subData && subData.subscription_active;
+          var planSku = subData && subData.plan_sku;
+          var planName = (subData && subData.plan_name) || 'Free';
+
+          // Карта SKU → ID карточки и цвет
+          var planCardMap = {
+            soul_basic_sub: { cardId: 'planCardBasic', btnId: 'planBtnBasic', color: '#d4af37', bg: 'rgba(212,175,55,0.12)', border: 'rgba(212,175,55,0.45)' },
+            soul_plus_sub:  { cardId: 'planCardPlus',  btnId: 'planBtnPlus',  color: '#ec4899', bg: 'rgba(236,72,153,0.12)', border: 'rgba(236,72,153,0.45)' },
+            master_monthly: { cardId: 'planCardMaster', btnId: 'planBtnMaster', color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.45)' },
+          };
+
+          if (subActive && planSku && planCardMap[planSku]) {
+            var pm = planCardMap[planSku];
+            var tracksUsed = subData.tracks_used_this_month || 0;
+            var tracksLimit = subData.tracks_limit || 0;
+            var tracksRemaining = subData.tracks_remaining || 0;
+            var renewAt = subData.renew_at;
+            var renewDateStr = renewAt
+              ? new Date(renewAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+              : null;
+
+            // Бейдж плана
+            if (planBadgeEl) {
+              planBadgeEl.textContent = '✦ ' + planName;
+              planBadgeEl.style.background = pm.bg;
+              planBadgeEl.style.borderColor = pm.border;
+              planBadgeEl.style.color = pm.color;
+            }
+
+            // Баланс-карточка: счётчик треков
+            if (balanceLabelEl) balanceLabelEl.textContent = 'Треков в этом месяце';
+            if (creditsEl) creditsEl.textContent = tracksUsed + ' / ' + tracksLimit;
+            if (balanceHintEl) balanceHintEl.textContent = tracksRemaining + ' треков ещё доступно';
+            if (renewalDateEl && renewDateStr) {
+              renewalDateEl.textContent = 'Обновляется ' + renewDateStr;
+              renewalDateEl.style.display = '';
+            }
+
+            // Выделяем активную карточку
+            var cardFree = document.getElementById('planCardFree');
+            if (cardFree) cardFree.classList.remove('current');
+            var activeCard = document.getElementById(pm.cardId);
+            if (activeCard) { activeCard.classList.add('current'); activeCard.style.borderColor = pm.border; }
+            var activeBtn = document.getElementById(pm.btnId);
+            if (activeBtn) { activeBtn.textContent = '✓ Активен'; activeBtn.disabled = true; activeBtn.style.opacity = '0.5'; }
+
+          } else {
+            // Free план
+            if (planBadgeEl) { planBadgeEl.textContent = '✦ YupSoul Free'; planBadgeEl.style.background = ''; planBadgeEl.style.borderColor = ''; planBadgeEl.style.color = ''; }
+            var credits = (refData && typeof refData.credits === 'number') ? refData.credits : 0;
+            if (creditsEl) creditsEl.textContent = credits;
+            if (balanceLabelEl) balanceLabelEl.textContent = 'Бесплатных генераций';
+            if (balanceHintEl) balanceHintEl.textContent = 'За каждого приглашённого друга — +1 трек';
+            if (renewalDateEl) renewalDateEl.style.display = 'none';
+            // Бесплатная карточка — текущая
+            var cardFree2 = document.getElementById('planCardFree');
+            if (cardFree2) cardFree2.classList.add('current');
+          }
         } catch (e) {
           console.warn('[Profile] Ошибка загрузки:', e);
           if (nameEl) nameEl.textContent = displayName;
@@ -4680,19 +4748,26 @@
       if (goHeroesBtn) goHeroesBtn.addEventListener('click', function() { goToPage('heroesPage'); initHeroesPage(); });
       var profileCreateSongBtn = document.getElementById('profileCreateSongBtn');
       if (profileCreateSongBtn) profileCreateSongBtn.addEventListener('click', function() { goToPage('formPage'); });
-      // Попап подтверждения перед переходом в бота для оформления подписки
+      var PLAN_PRICES = { plan_basic: '$14.99', plan_plus: '$24.99', plan_master: '$39.99' };
+      var PLAN_TRACKS = { plan_basic: '5', plan_plus: '10', plan_master: '30' };
+
       function showPlanConfirm(planKey, planName) {
         var overlay = document.getElementById('planConfirmOverlay');
         var title = document.getElementById('planConfirmTitle');
         var desc = document.getElementById('planConfirmDesc');
         var btn = document.getElementById('planConfirmBtn');
         if (!overlay) return;
-        if (title) title.textContent = 'Оформить ' + planName;
-        if (desc) desc.textContent = 'Для оформления подписки мы откроем чат с ботом — там завершите оплату. Мини-приложение закроется.';
-        if (btn) btn.onclick = function() {
-          overlay.style.display = 'none';
-          if (tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/' + BOT_USERNAME + '?start=' + planKey);
-        };
+        var price = PLAN_PRICES[planKey] || '';
+        var tracks = PLAN_TRACKS[planKey] || '';
+        if (title) title.textContent = planName + (price ? ' — ' + price + '/мес' : '');
+        if (desc) desc.textContent = (tracks ? tracks + ' персональных треков в месяц. ' : '') + 'Для оформления мы откроем бот — там завершите оплату. После оплаты подписка активируется автоматически.';
+        if (btn) {
+          btn.textContent = 'Перейти к оплате →';
+          btn.onclick = function() {
+            overlay.style.display = 'none';
+            if (tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/' + BOT_USERNAME + '?start=' + planKey);
+          };
+        }
         overlay.style.display = 'flex';
       }
 
@@ -4706,7 +4781,7 @@
       });
       var planBtnMaster = document.getElementById('planBtnMaster');
       if (planBtnMaster) planBtnMaster.addEventListener('click', function() {
-        goToHeroesFrom('profilePage');
+        showPlanConfirm('plan_master', 'Лаборатория');
       });
 
       // Тултипы для фич тарифов (.ppc-info)
