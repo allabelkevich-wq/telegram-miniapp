@@ -257,6 +257,7 @@
     .step-panel { margin-top: 20px; }
     .step-nav { display: flex; gap: 12px; margin-top: 16px; }
     .step-nav button { flex: 1; text-transform: none; letter-spacing: 0; }
+    .form-submit-sticky { position: sticky; bottom: 0; background: linear-gradient(to top, #08071a 85%, transparent); padding: 16px 0 8px; margin: 0 -2px; z-index: 5; }
     .form-nav-links{display:flex;justify-content:center;gap:14px;margin-top:18px;padding:10px 0}
     .form-nav-link{background:none;border:none;color:rgba(212,175,55,0.55);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;animation:none;font-weight:500}
     .form-nav-link:hover{color:rgba(212,175,55,0.8)}
@@ -672,8 +673,9 @@
     .profile-balance-label{font-size:0.78rem;color:rgba(255,255,255,0.5);margin-bottom:4px;letter-spacing:0.02em}
     .profile-balance-value{font-size:2.2rem;font-weight:800;color:#d4af37;line-height:1}
     .profile-balance-hint{font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:6px;line-height:1.4}
-    .profile-balance-icon{font-size:2rem;opacity:0.5}
-    .profile-section-title{font-size:0.7rem;font-weight:700;letter-spacing:0.12em;color:rgba(255,255,255,0.35);text-transform:uppercase;margin-bottom:14px}
+    .profile-balance-icon{font-size:1.8rem;color:rgba(212,175,55,0.3);line-height:1;font-family:Georgia,serif;font-style:italic}
+    .profile-section-title{font-size:0.68rem;font-weight:700;letter-spacing:0.14em;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+    .profile-section-title::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.06)}
     /* Сетка планов */
     .profile-plans-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
     .profile-plan-card{background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px 14px;position:relative;display:flex;flex-direction:column;gap:4px;transition:border-color .2s,background .2s}
@@ -695,20 +697,25 @@
     .ppc-btn:active{background:rgba(212,175,55,0.25)}
     .ppc-btn.popular-btn{background:linear-gradient(135deg,rgba(236,72,153,0.25),rgba(212,175,55,0.18));border-color:rgba(236,72,153,0.45);color:#ec4899}
     /* Разовые треки */
-    .profile-track-list{display:flex;flex-direction:column;gap:8px;margin-bottom:28px}
-    .profile-track-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between}
-    .pti-name{font-size:0.85rem;color:rgba(255,255,255,0.65)}
-    .pti-desc{font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:2px}
-    .pti-price{font-size:0.9rem;font-weight:700;color:rgba(212,175,55,0.8)}
+    .profile-track-list{display:flex;flex-direction:column;gap:6px;margin-bottom:28px}
+    .profile-track-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:13px;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .15s,border-color .15s}
+    .profile-track-item:active{background:rgba(255,255,255,0.06);border-color:rgba(212,175,55,0.25)}
+    .pti-name{font-size:0.88rem;font-weight:600;color:rgba(255,255,255,0.75)}
+    .pti-desc{font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:3px}
+    .pti-right{display:flex;align-items:center;gap:8px}
+    .pti-price{font-size:0.88rem;font-weight:700;color:rgba(212,175,55,0.85)}
+    .pti-arrow{font-size:0.8rem;color:rgba(255,255,255,0.2);line-height:1}
     /* Реферал */
-    .profile-referral-section{margin-bottom:24px}
-    .profile-referral-section .profile-section-title{margin-bottom:10px}
-    .profile-ref-tagline{font-size:0.82rem;color:rgba(255,255,255,0.5);margin-bottom:12px;line-height:1.4}
-    .profile-ref-link-row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
-    .profile-ref-link-row input{flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#fff;font-size:0.78rem;font-family:inherit;outline:none}
-    .profile-ref-share-btn{padding:10px 14px;border-radius:10px;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.35);color:#d4af37;font-weight:600;font-size:0.82rem;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;margin:0;white-space:nowrap}
-    .profile-ref-stats{display:flex;gap:16px;font-size:0.78rem;color:rgba(255,255,255,0.45)}
-    .profile-ref-stats strong{color:rgba(255,255,255,0.8)}
+    .profile-referral-section{margin-bottom:28px;background:linear-gradient(135deg,rgba(212,175,55,0.06),rgba(212,175,55,0.02));border:1px solid rgba(212,175,55,0.15);border-radius:18px;padding:18px 16px}
+    .profile-referral-section .profile-section-title{margin-bottom:8px}
+    .profile-ref-tagline{font-size:0.82rem;color:rgba(255,255,255,0.5);margin-bottom:16px;line-height:1.5}
+    .profile-ref-link-row{display:none}
+    .profile-ref-share-btn{width:100%;padding:13px 20px;border-radius:13px;background:rgba(212,175,55,0.14);border:1.5px solid rgba(212,175,55,0.38);color:#d4af37;font-weight:700;font-size:0.92rem;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;margin:0 0 14px;letter-spacing:0.02em;transition:background .2s}
+    .profile-ref-share-btn:active{background:rgba(212,175,55,0.25)}
+    .profile-ref-stats{display:flex;gap:10px}
+    .profile-ref-stats span{flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;align-items:center;gap:2px}
+    .profile-ref-stats strong{font-size:1.4rem;font-weight:800;color:#d4af37;line-height:1}
+    .profile-ref-stats-label{font-size:0.68rem;color:rgba(255,255,255,0.38);margin-top:2px;text-align:center}
     .profile-create-btn{width:100%;padding:15px 24px;border-radius:16px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;letter-spacing:0.02em;box-shadow:0 4px 20px rgba(212,175,55,0.2);transition:transform .15s,box-shadow .15s}
     .profile-create-btn:active{transform:scale(0.98)}
     /* ── ФОРМА: СВОДКА ПРОФИЛЯ ── */
@@ -763,22 +770,22 @@
     <!-- Слайд 1 — Открытие -->
     <div class="onboarding-slide active" data-step="1">
       <div class="ob-slide-accent"></div>
-      <h2 class="onboarding-title" id="obTitle1">У каждого есть своя музыка</h2>
-      <p class="onboarding-text" id="obText1">Та, что написана только для тебя. По дате рождения — твоему личному коду.</p>
+      <h2 class="onboarding-title" id="obTitle1">Есть песня — о тебе</h2>
+      <p class="onboarding-text" id="obText1">Написанная по дате рождения. Не шаблон — живой текст о твоём характере, силе и пути.</p>
     </div>
 
     <!-- Слайд 2 — Ценность -->
     <div class="onboarding-slide" data-step="2">
       <div class="ob-slide-accent"></div>
-      <h2 class="onboarding-title" id="obTitle2">Мы её слышим</h2>
-      <p class="onboarding-text" id="obText2">Умный анализ твоей личности превращается в живую песню — уникальную, только твою.</p>
+      <h2 class="onboarding-title" id="obTitle2">Только о тебе</h2>
+      <p class="onboarding-text" id="obText2">Каждая — уникальна. Её больше нет ни у кого. Ни одна не повторяется.</p>
     </div>
 
     <!-- Слайд 3 — Подарок + CTA -->
     <div class="onboarding-slide" data-step="3">
       <div class="ob-slide-accent"></div>
       <h2 class="onboarding-title" id="obTitle3">Первая — в подарок</h2>
-      <p class="onboarding-text" id="obText3">Введи дату рождения. Через несколько минут твоя песня придёт сюда в чат.</p>
+      <p class="onboarding-text" id="obText3">Введи дату рождения. Через несколько минут песня придёт в чат с ботом.</p>
       <button class="onboarding-btn" id="onboardingStartBtn">Получить свою песню</button>
     </div>
 
@@ -922,8 +929,8 @@
           </button>
           <div class="help-section-body">
             <p><strong>Первая генерация — бесплатно.</strong></p>
-            <p>Получить ещё бесплатные можно через реферальную программу: поделись своей ссылкой с другом. Когда он сделает первую генерацию — ты получишь бонус автоматически.</p>
-            <p>Реферальная ссылка — на главном экране в блоке «Пригласи друга».</p>
+            <p>Получить ещё бесплатные можно через реферальную программу: поделись своей ссылкой с другом. Когда он создаст первую песню — тебе придёт бесплатный трек автоматически.</p>
+            <p>Реферальная ссылка — в разделе «Профиль», блок «Пригласи друга».</p>
           </div>
         </div>
 
@@ -988,7 +995,7 @@
             <div id="profileBalanceHint" class="profile-balance-hint">За каждого приглашённого друга — +1 трек</div>
             <div id="profileRenewalDate" class="profile-balance-hint" style="display:none;color:rgba(212,175,55,0.65);margin-top:2px;"></div>
           </div>
-          <div class="profile-balance-icon">🎵</div>
+          <div class="profile-balance-icon">♪</div>
         </div>
 
         <!-- Тарифы — Suno-style -->
@@ -1056,48 +1063,48 @@
         <!-- Разовые треки -->
         <div class="profile-section-title" style="margin-top:24px">Разовые треки</div>
         <div class="profile-track-list">
-          <div class="profile-track-item">
+          <div class="profile-track-item" onclick="goToPage('formPage');setTimeout(function(){var b=document.querySelector('.mode-btn[data-mode=\'single\']');if(b){b.click();}},100)">
             <div>
               <div class="pti-name">Для себя</div>
               <div class="pti-desc">Твоя личность в звуке</div>
             </div>
-            <div class="pti-price">$5.99</div>
+            <div class="pti-right"><div class="pti-price">$5.99</div><div class="pti-arrow">›</div></div>
           </div>
-          <div class="profile-track-item">
+          <div class="profile-track-item" onclick="goToPage('formPage');setTimeout(function(){var b=document.querySelector('.mode-btn[data-mode=\'couple\']');if(b){b.click();}},100)">
             <div>
               <div class="pti-name">Для двоих</div>
               <div class="pti-desc">Ваша связь и резонанс</div>
             </div>
-            <div class="pti-price">$8.99</div>
+            <div class="pti-right"><div class="pti-price">$8.99</div><div class="pti-arrow">›</div></div>
           </div>
-          <div class="profile-track-item">
+          <div class="profile-track-item" onclick="goToPage('formPage');setTimeout(function(){var b=document.querySelector('.mode-btn[data-mode=\'transit\']');if(b){b.click();}},100)">
             <div>
               <div class="pti-name">Энергия дня</div>
               <div class="pti-desc">Песня под сегодняшний день</div>
             </div>
-            <div class="pti-price">$6.99</div>
+            <div class="pti-right"><div class="pti-price">$6.99</div><div class="pti-arrow">›</div></div>
           </div>
         </div>
 
         <!-- Реферальная программа -->
         <div class="profile-referral-section">
           <div class="profile-section-title">Пригласи друга</div>
-          <div class="profile-ref-tagline">За каждого друга, который создаст первую песню — тебе бесплатный трек 🎁</div>
+          <div class="profile-ref-tagline">За каждого друга, который создаст первую песню — тебе бесплатный трек</div>
           <div class="profile-ref-link-row">
             <input id="profileRefLinkInput" readonly placeholder="Загрузка…">
-            <button type="button" id="profileRefShareBtn" class="profile-ref-share-btn">Поделиться</button>
           </div>
+          <button type="button" id="profileRefShareBtn" class="profile-ref-share-btn">Поделиться ссылкой</button>
           <div class="profile-ref-stats">
-            <span>Приглашено: <strong id="profileRefInvited">0</strong></span>
-            <span>Активировано: <strong id="profileRefRewarded">0</strong></span>
+            <span><strong id="profileRefInvited">0</strong><span class="profile-ref-stats-label">Приглашено</span></span>
+            <span><strong id="profileRefRewarded">0</strong><span class="profile-ref-stats-label">Активировано</span></span>
           </div>
         </div>
 
         <!-- Действия -->
         <button type="button" id="profileCreateSongBtn" class="profile-create-btn">
-          🎵 Создать свою песню
+          Создать свою песню
         </button>
-        <button type="button" class="secondary" onclick="goToHelpFrom('profilePage')" style="width:100%;margin-bottom:8px;">? Помощь и поддержка</button>
+        <button type="button" class="secondary" onclick="goToHelpFrom('profilePage')" style="width:100%;margin-bottom:16px;background:transparent;border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);font-size:0.82rem;">Помощь и поддержка</button>
       </div>
     </div>
 
@@ -1127,13 +1134,9 @@
           <div>✦ Полная история генераций с текстами и анализом</div>
           <div>✦ Аудио прямо из карточки героя</div>
         </div>
-        <button type="button" id="masterTrialBtn" style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.08));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">🎁 1 день бесплатно — попробовать</button>
-        <button type="button" id="masterSubBtn" style="width:100%;padding:13px 24px;border-radius:14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.65);font-size:0.9rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">💳 Подписка — 299 руб/мес</button>
-        <div style="font-size:0.7rem;color:rgba(255,255,255,0.25);text-align:center;margin-top:12px">Без автопродления • Оплата через HOT Pay</div>
-        <div style="margin-top:16px;padding:12px 14px;border-radius:12px;background:rgba(212,175,55,0.05);border:1px dashed rgba(212,175,55,0.2);display:flex;align-items:center;gap:10px">
-          <div style="font-size:1.1rem">🚀</div>
-          <div style="font-size:0.78rem;color:rgba(212,175,55,0.6);line-height:1.5"><span style="color:rgba(212,175,55,0.85);font-weight:600">Мастер Про</span> — скоро<br><span style="color:rgba(255,255,255,0.35)">Приоритетная очередь, брендинг, аналитика для профессионалов</span></div>
-        </div>
+        <button type="button" id="masterTrialBtn" style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.08));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">1 день бесплатно — попробовать</button>
+        <button type="button" id="masterSubBtn" onclick="showPlanConfirm('plan_master','Лаборатория')" style="width:100%;padding:14px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(167,139,250,0.15),rgba(167,139,250,0.06));border:1.5px solid rgba(167,139,250,0.35);color:rgba(167,139,250,0.9);font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">Оформить Лабораторию — $39.99/мес</button>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.22);text-align:center;margin-top:12px">30 треков в месяц · Оплата через HOT Pay</div>
       </div>
 
       <!-- Кабинет героев (показывается если есть доступ) -->
@@ -1225,7 +1228,7 @@
     <!-- Страница формы -->
     <div class="page" id="formPage">
       <header class="page-header">
-        <button type="button" onclick="window.goToPage('homePage')" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.55);font-size:1.5rem;cursor:pointer;padding:4px 8px;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;line-height:1" aria-label="Назад">‹</button>
+        <button type="button" onclick="goBack()" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.55);font-size:1.5rem;cursor:pointer;padding:4px 8px;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;line-height:1" aria-label="Назад">‹</button>
         <h1>YupSoul</h1>
         <div style="font-size:0.78rem;font-weight:400;letter-spacing:0.12em;color:rgba(212,175,55,0.5);margin:2px 0 0;text-transform:uppercase">Музыка твоей души</div>
       </header>
@@ -1439,27 +1442,17 @@
           </div>
         </div>
 
-        <!-- Кнопка отправки -->
-        <div class="step-nav">
-          <button id="stepNext">Отправить заявку</button>
-        </div>
-
-        <!-- Активация бота — тихо, под кнопкой -->
-        <div id="botActivateBlock" style="margin-top:12px;text-align:center;">
-          <div style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-bottom:8px;line-height:1.5;">
-            Песня придёт в чат с ботом. Ещё не открывал бота?
-          </div>
-          <button type="button" id="openBotBeforeSubmitBtn" style="background:none;border:none;color:rgba(212,175,55,0.6);font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;margin:0;padding:4px 0;text-decoration:underline;text-underline-offset:3px;letter-spacing:0.01em;">
-            Открыть бота
-          </button>
-        </div>
-
         <p id="submitHint" style="display:none"></p>
-        <!-- Навигация: Профиль, Помощь, Мои герои -->
-        <div class="form-nav-links">
-          <button type="button" class="form-nav-link" onclick="goToProfileFrom('formPage')">Профиль</button>
-          <button type="button" class="form-nav-link" onclick="goToHelpFrom('formPage')">Помощь</button>
-          <button type="button" class="form-nav-link" onclick="goToHeroesFrom('formPage')">Лаборатория</button>
+
+        <!-- Кнопка отправки — sticky внизу, всегда доступна -->
+        <div class="step-nav form-submit-sticky">
+          <button id="stepNext">Отправить заявку</button>
+          <!-- Активация бота — тихо, под кнопкой -->
+          <div id="botActivateBlock" style="margin-top:8px;text-align:center;">
+            <button type="button" id="openBotBeforeSubmitBtn" style="background:none;border:none;color:rgba(212,175,55,0.45);font-size:0.75rem;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;margin:0;padding:4px 0;text-decoration:underline;text-underline-offset:3px;">
+              Ещё не открывал бота? Открыть
+            </button>
+          </div>
         </div>
       </div>
       
@@ -1473,9 +1466,8 @@
       <div class="loading">
         <div class="spinner"></div>
         <div class="loading-text" id="loadingTitle">✨ Заявка принята!</div>
-        <div id="loadingDesc" style="color:rgba(255,255,255,0.75);font-size:1rem;text-align:center;max-width:380px;line-height:1.7;margin-top:12px;">
-          Песня генерируется на нашем сервере. Когда будет готова — придёт сюда в чат с ботом. Обычно это несколько минут (иногда до 5–10).<br><br>
-          Можно закрыть окно — песня всё равно придёт в этот чат. Спасибо, что остаёшься с нами ❤️
+        <div id="loadingDesc" style="color:rgba(255,255,255,0.55);font-size:0.92rem;text-align:center;max-width:320px;line-height:1.7;margin-top:12px;">
+          Песня создаётся. Придёт в чат с ботом — обычно несколько минут.<br>Можно закрыть окно.
         </div>
         <div id="loadingCountdown" style="margin-top:20px;color:rgba(212,175,55,0.65);font-size:0.9rem;"></div>
       </div>
@@ -1562,17 +1554,9 @@
         </div>
         <!-- ════════════════════════════════════════════════ -->
 
-        <button class="secondary" id="newKeyBtn" style="margin-top:24px">Создать ещё одну песню</button>
-        <div class="form-nav-links">
-          <button type="button" class="form-nav-link" onclick="goToProfileFrom('successPage')">Профиль</button>
-          <button type="button" class="form-nav-link" onclick="goToHelpFrom('successPage')">Помощь</button>
-          <button type="button" class="form-nav-link" onclick="goToHeroesFrom('successPage')">Лаборатория</button>
-        </div>
+        <button class="secondary" id="newKeyBtn" style="margin-top:24px;margin-bottom:4px">Создать ещё одну песню</button>
+        <button type="button" class="form-nav-link" onclick="goToProfileFrom('successPage')" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:0.78rem;cursor:pointer;font-family:inherit;padding:8px 0;width:100%;text-align:center;min-height:unset;box-shadow:none;">Перейти в профиль</button>
       </div>
-
-      <footer>
-        <p>YupSoul • 2026 • v1.2.37</p>
-      </footer>
     </div>
 
     <!-- Страница «Спасибо за оплату» (редирект с HOT) -->
@@ -1583,15 +1567,14 @@
         <div class="subtitle">заявка принята</div>
       </header>
       <div class="section page-scroll" style="text-align:center; padding-top:40px">
-        <div class="success-icon" style="font-size:4rem; margin-bottom:20px">✓</div>
-        <h2 class="success-title" style="font-size:1.6rem; margin:0 0 16px 0">Спасибо за оплату</h2>
-        <p class="success-text" id="paymentThanksMessage" style="margin:0 0 16px 0; font-size:1rem">
-          Заявка принята. Песня генерируется на нашем сервере — когда будет готова, придёт сюда в чат с ботом. Обычно несколько минут (иногда до 5–10). Можно закрыть окно — ничего не пропадёт. Спасибо, что остаёшься с нами ❤️
+        <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.06));border:1.5px solid rgba(212,175,55,0.35);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.8rem;color:#d4af37;font-weight:300">✓</div>
+        <h2 class="success-title" style="font-size:1.5rem; margin:0 0 12px 0">Оплата прошла</h2>
+        <p class="success-text" id="paymentThanksMessage" style="margin:0 0 24px 0; font-size:0.92rem; color:rgba(255,255,255,0.6); line-height:1.65">
+          Песня создаётся. Придёт в чат с ботом — обычно несколько минут. Можно закрыть окно.
         </p>
-        <p style="font-size:0.82rem;color:rgba(255,255,255,0.5);line-height:1.5;margin:0 0 24px 0;">Не пришла за 20 минут? Напиши боту «песня не пришла» — он отправит повторно (раз в 10 мин, в течение 30 дней).</p>
-        <button id="paymentThanksBackBtn" class="primary">Готово</button>
+        <button id="paymentThanksBackBtn" class="primary" style="margin-bottom:12px">Создать свою песню</button>
+        <p style="font-size:0.72rem;color:rgba(255,255,255,0.3);line-height:1.5;margin:0;">Не пришла за 20 минут? Напиши боту «песня не пришла»</p>
       </div>
-      <footer><p>YupSoul • 2026</p></footer>
   </div>
 
   <script>
@@ -1663,12 +1646,12 @@
           soulChatNoApi: 'Soul Chat — диалоги с душой по заявке. Доступ по подписке Soul Basic или Soul Plus. Оформи в приложении: «К оплате».',
           greeting: 'Привет, {name}! 👋',
           greetingDefault: 'Музыка твоей души',
-          onboardingSlide1Title: 'У каждого есть своя музыка',
-          onboardingSlide1Text: 'Та, что написана только для тебя. По дате рождения — твоему личному коду.',
-          onboardingSlide2Title: 'Мы её слышим',
-          onboardingSlide2Text: 'Умный анализ твоей личности превращается в живую песню — уникальную, только твою.',
+          onboardingSlide1Title: 'Есть песня — о тебе',
+          onboardingSlide1Text: 'Написанная по дате рождения. Не шаблон — живой текст о твоём характере, силе и пути.',
+          onboardingSlide2Title: 'Только о тебе',
+          onboardingSlide2Text: 'Каждая — уникальна. Её больше нет ни у кого. Ни одна не повторяется.',
           onboardingSlide3Title: 'Первая — в подарок',
-          onboardingSlide3Text: 'Введи дату рождения. Через несколько минут твоя песня придёт сюда в чат.',
+          onboardingSlide3Text: 'Введи дату рождения. Через несколько минут песня придёт в чат с ботом.',
           onboardingBtnStart: 'Получить свою песню',
           alertNameShort: 'Имя должно содержать минимум 2 символа', alertBirthdate: 'Выбери дату рождения',
           alertBirthplace: 'Место рождения должно содержать минимум 3 символа', alertBirthplaceHint: 'Выбери локацию из списка подсказок',
@@ -1780,9 +1763,9 @@
           soulChatNoApi: 'Soul Chat — dialogues with your soul. Available with Soul Basic or Soul Plus subscription. Go to «To payment» in the app.',
           greeting: "Hi, {name}! Come back whenever you want to remember who you are.",
           greetingDefault: "Come back whenever you want to remember who you are.",
-          onboardingSlide1Title: 'Everyone has their own music',
-          onboardingSlide1Text: 'The kind written only for you — by your date of birth, your personal code.',
-          onboardingSlide2Title: 'We can hear it',
+          onboardingSlide1Title: 'There is a song — about you',
+          onboardingSlide1Text: 'Written from your date of birth. Not a template — a real text about your character, strength and path.',
+          onboardingSlide2Title: 'Only about you',
           onboardingSlide2Text: 'A smart analysis of your personality becomes a living song — unique, only yours.',
           onboardingSlide3Title: 'First one — as a gift',
           onboardingSlide3Text: 'Enter your date of birth. In a few minutes your song will arrive right here in chat.',
@@ -1897,9 +1880,9 @@
           soulChatNoApi: 'Soul Chat — Dialoge mit deiner Seele. Mit Soul Basic oder Soul Plus Abo. Gehe zu «Zur Kasse» in der App.',
           greeting: 'Hallo, {name}! Komm zurück, wann immer du dich erinnern willst, wer du bist.',
           greetingDefault: 'Komm zurück, wann immer du dich erinnern willst, wer du bist.',
-          onboardingSlide1Title: 'Jeder hat seine eigene Musik',
-          onboardingSlide1Text: 'Die, die nur für dich geschrieben wurde — durch dein Geburtsdatum, deinen persönlichen Code.',
-          onboardingSlide2Title: 'Wir hören sie',
+          onboardingSlide1Title: 'Es gibt ein Lied — über dich',
+          onboardingSlide1Text: 'Geschrieben nach deinem Geburtsdatum. Kein Template — ein echter Text über deinen Charakter und Weg.',
+          onboardingSlide2Title: 'Nur über dich',
           onboardingSlide2Text: 'Eine smarte Analyse deiner Persönlichkeit wird zu einem lebendigen Lied — einzigartig, nur deins.',
           onboardingSlide3Title: 'Das erste — als Geschenk',
           onboardingSlide3Text: 'Gib dein Geburtsdatum ein. In wenigen Minuten kommt dein Lied in diesen Chat.',
@@ -2014,9 +1997,9 @@
           soulChatNoApi: 'Soul Chat — dialogues avec ton âme. Avec abonnement Soul Basic ou Soul Plus. Va dans «Paiement» dans l\'app.',
           greeting: 'Salut, {name} ! Reviens quand tu veux te souvenir de qui tu es.',
           greetingDefault: 'Reviens quand tu veux te souvenir de qui tu es.',
-          onboardingSlide1Title: 'Chacun a sa propre musique',
-          onboardingSlide1Text: 'Celle écrite uniquement pour toi — par ta date de naissance, ton code personnel.',
-          onboardingSlide2Title: 'Nous l\'entendons',
+          onboardingSlide1Title: 'Il y a une chanson — sur toi',
+          onboardingSlide1Text: 'Écrite selon ta date de naissance. Pas un modèle — un vrai texte sur ton caractère et ton chemin.',
+          onboardingSlide2Title: 'Seulement sur toi',
           onboardingSlide2Text: 'Une analyse intelligente de ta personnalité devient une chanson vivante — unique, rien qu\'à toi.',
           onboardingSlide3Title: 'La première — en cadeau',
           onboardingSlide3Text: 'Saisis ta date de naissance. En quelques minutes ta chanson arrive dans ce chat.',
@@ -3970,9 +3953,7 @@
       }
       var paymentThanksBackBtn = document.getElementById('paymentThanksBackBtn');
       if (paymentThanksBackBtn) paymentThanksBackBtn.addEventListener('click', function() {
-        var sp = document.getElementById('songPreviewText');
-        if (sp) sp.textContent = t('songFormingText');
-        goToPage('successPage');
+        goToPage('formPage');
       });
 
       // Кнопки навигации
