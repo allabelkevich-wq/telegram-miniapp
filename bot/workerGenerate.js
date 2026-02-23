@@ -350,8 +350,8 @@ async function processOneRequest(row) {
       updated_at: now,
     }).eq("id", id);
 
-    // Отправляем сопроводительное письмо отдельным сообщением после песни
-    if (parsed.companion_letter) {
+    // Отправляем запрос пользователя + сопроводительное письмо отдельными сообщениями после песни
+    const sendMsg = async (text, mode) => {
       try {
         const msgUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
         await fetch(msgUrl, {
@@ -359,13 +359,32 @@ async function processOneRequest(row) {
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: new URLSearchParams({
             chat_id: String(telegramUserId),
-            text: parsed.companion_letter,
-            parse_mode: "Markdown",
+            text,
+            ...(mode ? { parse_mode: mode } : {}),
           }).toString(),
         });
       } catch (e) {
-        console.warn("[Worker] Сопроводительное письмо не отправлено:", e?.message);
+        console.warn("[Worker] Сообщение не отправлено:", e?.message);
       }
+    };
+
+    // Запрос пользователя — напоминание "что ты просил"
+    const requestLabels = {
+      ru: "📝 *Твой запрос:*",
+      uk: "📝 *Твій запит:*",
+      en: "📝 *Your request:*",
+      de: "📝 *Deine Anfrage:*",
+      fr: "📝 *Ta demande:*",
+    };
+    const userRequest = (row.request || "").trim();
+    if (userRequest) {
+      const label = requestLabels[language] || requestLabels.ru;
+      await sendMsg(`${label}\n_${userRequest.replace(/[_*[\]()~`>#+=|{}.!-]/g, "\\$&").slice(0, 800)}_`, "MarkdownV2");
+    }
+
+    // Сопроводительное письмо
+    if (parsed.companion_letter) {
+      await sendMsg(parsed.companion_letter, "Markdown");
     }
   }
 }

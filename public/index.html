@@ -530,12 +530,19 @@
     .onboarding-slide.active{display:flex}
     /* Акцентный декор вместо иконки */
     .ob-slide-accent{width:32px;height:2px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.7),transparent);border-radius:2px;margin:0 auto 28px;animation:accentFade .5s ease-out}
+    .ob-icon-wrap{width:72px;height:72px;border-radius:20px;overflow:hidden;margin:0 auto 22px;box-shadow:0 4px 20px rgba(0,0,0,0.35),0 0 0 1px rgba(212,175,55,0.18);flex-shrink:0;}
+    .ob-icon-wrap img{width:100%;height:100%;object-fit:contain;display:block;}
+    .ob-icon-sm{width:36px;height:36px;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.3),0 0 0 1px rgba(212,175,55,0.15);flex-shrink:0;}
+    .ob-icon-sm img{width:100%;height:100%;object-fit:contain;display:block;}
     @keyframes accentFade{from{opacity:0;transform:scaleX(0.4)}to{opacity:1;transform:scaleX(1)}}
     .onboarding-title{font-size:1.25rem !important;font-weight:600 !important;color:rgba(255,248,225,0.96);margin:0 0 16px 0;line-height:1.35;max-width:260px;letter-spacing:-0.01em}
     .onboarding-text{font-size:0.85rem !important;line-height:1.7 !important;color:rgba(255,255,255,0.5);margin:0 0 28px 0;max-width:240px}
     .onboarding-btn{padding:14px 32px;border-radius:var(--radius-lg);background:linear-gradient(135deg,#d4af37,#c9922e);border:none;color:#0a0810;font-size:0.9rem !important;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(212,175,55,0.3);transition:transform .2s,box-shadow .2s;min-width:180px;width:auto;margin-top:0;min-height:unset;animation:none;letter-spacing:0.03em;text-transform:none}
     .onboarding-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(212,175,55,0.4)}
     .onboarding-btn:active{transform:translateY(1px)}
+    .ob-gift-block{margin-top:clamp(18px,4vh,32px);display:flex;flex-direction:column;align-items:center;gap:10px;}
+    .ob-gift-line1{font-family:'Comfortaa',sans-serif;font-size:1.05rem;font-weight:700;color:#d4af37;letter-spacing:0.02em;text-align:center;}
+    .ob-gift-line2{font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.5;text-align:center;max-width:260px;}
     .onboarding-dots{display:none}
     .onboarding-progress{display:none}
     .onboarding-progress-bar{display:none}
@@ -680,6 +687,9 @@
     .profile-plans-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
     .profile-plan-card{background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px 14px;position:relative;display:flex;flex-direction:column;gap:4px;transition:border-color .2s,background .2s}
     .profile-plan-card.current{background:rgba(212,175,55,0.07);border-color:rgba(212,175,55,0.38)}
+    .ppc-status{display:inline-block;padding:3px 14px;border-radius:50px;font-size:0.72rem;font-weight:700;font-family:'Comfortaa',sans-serif;letter-spacing:0.03em;margin-top:6px;align-self:flex-start;}
+    .ppc-status.active{background:#0a0810;border:1.5px solid #d4af37;color:#d4af37;}
+    .ppc-status.inactive{background:rgba(255,255,255,0.92);border:1.5px solid #c9922e;color:#c9922e;}
     .profile-plan-card.popular{background:linear-gradient(135deg,rgba(236,72,153,0.08),rgba(212,175,55,0.06));border-color:rgba(236,72,153,0.35);grid-column:1 / -1}
     .ppc-badge{font-size:0.62rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(212,175,55,0.7);margin-bottom:4px}
     .ppc-badge.hot{color:#ec4899}
@@ -722,6 +732,7 @@
     .pfa-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.2);border-radius:14px;cursor:pointer;font-family:'Comfortaa',sans-serif;transition:background .2s,border-color .2s;user-select:none;-webkit-user-select:none;box-sizing:border-box;}
     .pfa-header:active{background:rgba(212,175,55,0.12);border-color:rgba(212,175,55,0.38);}
     .pfa-info{display:flex;align-items:center;gap:8px;min-width:0;flex:1;overflow:hidden;}
+    .pfa-icon{color:rgba(212,175,55,0.7);flex-shrink:0;}
     .pfa-name{font-size:0.95rem;font-weight:700;color:rgba(255,255,255,0.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Comfortaa',sans-serif;}
     .pfa-sep{color:rgba(212,175,55,0.4);font-size:0.85rem;flex-shrink:0;}
     .pfa-date{font-size:0.85rem;color:rgba(212,175,55,0.82);white-space:nowrap;flex-shrink:0;font-family:'Comfortaa',sans-serif;}
@@ -787,24 +798,33 @@
 
     <!-- Слайд 1 — Открытие -->
     <div class="onboarding-slide active" data-step="1">
-      <div class="ob-slide-accent"></div>
+      <div class="ob-icon-wrap"><img src="assets/icons/music.png" alt=""></div>
       <h2 class="onboarding-title" id="obTitle1">Есть песня — о тебе</h2>
       <p class="onboarding-text" id="obText1">Написанная по дате рождения. Не шаблон — живой текст о твоём характере, силе и пути.</p>
     </div>
 
     <!-- Слайд 2 — Ценность -->
     <div class="onboarding-slide" data-step="2">
-      <div class="ob-slide-accent"></div>
+      <div class="ob-icon-wrap"><img src="assets/icons/profile.png" alt=""></div>
       <h2 class="onboarding-title" id="obTitle2">Только о тебе</h2>
       <p class="onboarding-text" id="obText2">Каждая — уникальна. Её больше нет ни у кого. Ни одна не повторяется.</p>
     </div>
 
-    <!-- Слайд 3 — Подарок + CTA -->
+    <!-- Слайд 3 — Подарок + реферальный хук -->
     <div class="onboarding-slide" data-step="3">
-      <div class="ob-slide-accent"></div>
+      <div class="ob-icon-wrap"><img src="assets/icons/lightning.png" alt=""></div>
       <h2 class="onboarding-title" id="obTitle3">Первая — в подарок</h2>
       <p class="onboarding-text" id="obText3">Введи дату рождения. Через несколько минут песня придёт в чат с ботом.</p>
-      <button class="onboarding-btn" id="onboardingStartBtn">Получить свою песню</button>
+      <div class="ob-gift-block">
+        <div style="display:flex;align-items:center;gap:10px;justify-content:center;">
+          <div class="ob-icon-sm"><img src="assets/icons/friends.png" alt=""></div>
+          <div style="text-align:left;">
+            <div class="ob-gift-line1" id="obGiftLine1">🎁 Первая песня — бесплатно</div>
+            <div class="ob-gift-line2" id="obGiftLine2">Получай песни в подарок за каждого приглашённого друга</div>
+          </div>
+        </div>
+      </div>
+      <button class="onboarding-btn" id="onboardingStartBtn" style="display:none"></button>
     </div>
 
     <!-- Скрытые элементы для совместимости со старым JS -->
@@ -849,6 +869,24 @@
         <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="140" height="140">
         <div class="home-tagline">Музыка твоей души</div>
         <p id="homeGreeting" class="home-greeting">Привет 👋</p>
+        <div style="display:flex;gap:16px;justify-content:center;margin-bottom:20px;">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+            <div style="width:40px;height:40px;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.3),0 0 0 1px rgba(212,175,55,0.15);"><img src="assets/icons/music.png" alt="" style="width:100%;height:100%;object-fit:contain;display:block;"></div>
+            <span style="font-size:0.65rem;color:rgba(212,175,55,0.55);letter-spacing:0.04em;text-align:center;max-width:56px;line-height:1.3;">Живая музыка</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+            <div style="width:40px;height:40px;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.3),0 0 0 1px rgba(212,175,55,0.15);"><img src="assets/icons/writing.png" alt="" style="width:100%;height:100%;object-fit:contain;display:block;"></div>
+            <span style="font-size:0.65rem;color:rgba(212,175,55,0.55);letter-spacing:0.04em;text-align:center;max-width:56px;line-height:1.3;">Только о тебе</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+            <div style="width:40px;height:40px;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.3),0 0 0 1px rgba(212,175,55,0.15);"><img src="assets/icons/lightning.png" alt="" style="width:100%;height:100%;object-fit:contain;display:block;"></div>
+            <span style="font-size:0.65rem;color:rgba(212,175,55,0.55);letter-spacing:0.04em;text-align:center;max-width:56px;line-height:1.3;">За минуты</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+            <div style="width:40px;height:40px;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.3),0 0 0 1px rgba(212,175,55,0.15);"><img src="assets/icons/friends.png" alt="" style="width:100%;height:100%;object-fit:contain;display:block;"></div>
+            <span style="font-size:0.65rem;color:rgba(212,175,55,0.55);letter-spacing:0.04em;text-align:center;max-width:56px;line-height:1.3;">Друзьям в подарок</span>
+          </div>
+        </div>
         <button id="startBtn">Создать свою песню</button>
       </div>
 
@@ -1047,6 +1085,7 @@
               <div class="ppc-price">$14.99/мес</div>
               <div class="ppc-save">−50% vs разовых</div>
             </div>
+            <div class="ppc-status inactive" id="statusBasic">Не активен</div>
             <button class="ppc-btn" id="planBtnBasic">Оформить</button>
           </div>
           <!-- Soul Plus -->
@@ -1063,6 +1102,7 @@
               <div class="ppc-price">$24.99/мес</div>
               <div class="ppc-save">−58% vs разовых</div>
             </div>
+            <div class="ppc-status inactive" id="statusPlus">Не активен</div>
             <button class="ppc-btn popular-btn" id="planBtnPlus">Оформить</button>
           </div>
           <!-- Мастер — Лаборатория -->
@@ -1079,6 +1119,7 @@
               <div class="ppc-price" id="masterPriceEl">$39.99/мес</div>
               <div class="ppc-save">−83% vs разовых</div>
             </div>
+            <div class="ppc-status inactive" id="statusMaster">Не активен</div>
             <button class="ppc-btn master-btn" id="planBtnMaster">Открыть Лабораторию</button>
           </div>
         </div>
@@ -1270,7 +1311,10 @@
       <div class="section">
         <div class="step-panel" data-step="1">
           <div class="mode-selector">
-            <h3>Формат песни</h3>
+            <h3 style="display:flex;align-items:center;gap:10px;justify-content:center;">
+              <div style="width:28px;height:28px;border-radius:8px;overflow:hidden;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,0.25);"><img src="assets/icons/writing.png" alt="" style="width:100%;height:100%;object-fit:contain;display:block;"></div>
+              Формат песни
+            </h3>
             <p class="mode-subtitle">Для кого создаём?</p>
             <div class="mode-buttons">
               <button type="button" class="mode-btn active" data-mode="single">
@@ -1293,6 +1337,7 @@
         <div id="profileAccordion" style="display:none;margin-bottom:12px;">
           <div class="pfa-header" onclick="toggleProfileAccordion()">
             <div class="pfa-info">
+              <svg class="pfa-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
               <span id="pfaName" class="pfa-name"></span>
               <span class="pfa-sep" id="pfaSep" style="display:none">·</span>
               <span id="pfaDate" class="pfa-date"></span>
@@ -1679,6 +1724,10 @@
           onboardingSlide3Title: 'Первая — в подарок',
           onboardingSlide3Text: 'Введи дату рождения. Через несколько минут песня придёт в чат с ботом.',
           onboardingBtnStart: 'Получить свою песню',
+          obGiftLine1: '🎁 Первая песня — бесплатно',
+          obGiftLine2: 'Получай песни в подарок за каждого приглашённого друга',
+          obGiftLine1: '🎁 Первая песня — бесплатно',
+          obGiftLine2: 'Получай песни в подарок за каждого приглашённого друга',
           alertNameShort: 'Имя должно содержать минимум 2 символа', alertBirthdate: 'Выбери дату рождения',
           alertBirthplace: 'Место рождения должно содержать минимум 3 символа', alertBirthplaceHint: 'Выбери локацию из списка подсказок',
           alertBirthtime: 'Укажи время рождения или отметь "Не знаю"', alertGender: 'Укажи пол', alertLanguage: 'Выбери язык',
@@ -1796,6 +1845,10 @@
           onboardingSlide3Title: 'First one — as a gift',
           onboardingSlide3Text: 'Enter your date of birth. In a few minutes your song will arrive right here in chat.',
           onboardingBtnStart: 'Get my song',
+          obGiftLine1: '🎁 First song — free',
+          obGiftLine2: 'Get free songs for every friend you invite',
+          obGiftLine1: '🎁 First song — free',
+          obGiftLine2: 'Invite friends and earn free songs for each one who joins',
           alertNameShort: 'Name must be at least 2 characters', alertBirthdate: 'Choose date of birth',
           alertBirthplace: 'Place of birth must be at least 3 characters', alertBirthplaceHint: 'Pick a location from the suggestions',
           alertBirthtime: 'Enter time of birth or check "Don\'t know"', alertGender: 'Select gender', alertLanguage: 'Choose language',
@@ -1913,6 +1966,12 @@
           onboardingSlide3Title: 'Das erste — als Geschenk',
           onboardingSlide3Text: 'Gib dein Geburtsdatum ein. In wenigen Minuten kommt dein Lied in diesen Chat.',
           onboardingBtnStart: 'Mein Lied hören',
+          obGiftLine1: '🎁 Erstes Lied — kostenlos',
+          obGiftLine2: 'Erhalte Lieder als Geschenk für jeden eingeladenen Freund',
+          obGiftLine1: '🎁 Erstes Lied — kostenlos',
+          obGiftLine2: 'Erhalte Songs als Geschenk für jeden eingeladenen Freund',
+          obGiftLine1: '🎁 Erstes Lied — kostenlos',
+          obGiftLine2: 'Erhalte Lieder als Geschenk für jeden eingeladenen Freund',
           alertNameShort: 'Name muss mindestens 2 Zeichen haben', alertBirthdate: 'Wähle Geburtsdatum',
           alertBirthplace: 'Geburtsort muss mindestens 3 Zeichen haben', alertBirthplaceHint: 'Wähle einen Ort aus den Vorschlägen',
           alertBirthtime: 'Geburtszeit eingeben oder "Unbekannt" wählen', alertGender: 'Geschlecht wählen', alertLanguage: 'Sprache wählen',
@@ -2030,6 +2089,10 @@
           onboardingSlide3Title: 'La première — en cadeau',
           onboardingSlide3Text: 'Saisis ta date de naissance. En quelques minutes ta chanson arrive dans ce chat.',
           onboardingBtnStart: 'Recevoir ma chanson',
+          obGiftLine1: '🎁 Première chanson — gratuite',
+          obGiftLine2: 'Reçois des chansons en cadeau pour chaque ami invité',
+          obGiftLine1: '🎁 Première chanson — gratuite',
+          obGiftLine2: 'Reçois des chansons en cadeau pour chaque ami invité',
           alertNameShort: 'Le nom doit contenir au moins 2 caractères', alertBirthdate: 'Choisis la date de naissance',
           alertBirthplace: 'Le lieu de naissance doit contenir au moins 3 caractères', alertBirthplaceHint: 'Choisis un lieu dans les suggestions',
           alertBirthtime: 'Entre l\'heure de naissance ou coche "Inconnu"', alertGender: 'Choisis le genre', alertLanguage: 'Choisis la langue',
@@ -2214,6 +2277,8 @@
         if (obTitle3) obTitle3.textContent = t('onboardingSlide3Title');
         if (obText3)  obText3.textContent  = t('onboardingSlide3Text');
         var startBtn = document.getElementById('onboardingStartBtn'); if (startBtn) startBtn.textContent = t('onboardingBtnStart');
+        var giftLine1 = document.getElementById('obGiftLine1'); if (giftLine1) giftLine1.textContent = t('obGiftLine1') || giftLine1.textContent;
+        var giftLine2 = document.getElementById('obGiftLine2'); if (giftLine2) giftLine2.textContent = t('obGiftLine2') || giftLine2.textContent;
         // Убеждаемся, что кнопка оплаты имеет правильный текст после применения переводов
         ensurePayButtonText();
       }
@@ -2840,6 +2905,14 @@
             var activeBtn = document.getElementById(pm.btnId);
             if (activeBtn) { activeBtn.textContent = '✓ Активен'; activeBtn.disabled = true; activeBtn.style.opacity = '0.5'; }
 
+            // Значки статуса на карточках
+            ['statusBasic','statusPlus','statusMaster'].forEach(function(sid) {
+              var sb = document.getElementById(sid); if (!sb) return;
+              var isThisActive = sid === 'status' + pm.cardId.replace('planCard','');
+              sb.className = 'ppc-status ' + (isThisActive ? 'active' : 'inactive');
+              sb.textContent = isThisActive ? 'Активен' : 'Не активен';
+            });
+
           } else {
             // Free план
             if (planBadgeEl) { planBadgeEl.textContent = '✦ YupSoul Free'; planBadgeEl.style.background = ''; planBadgeEl.style.borderColor = ''; planBadgeEl.style.color = ''; }
@@ -2851,6 +2924,11 @@
             // Бесплатная карточка — текущая
             var cardFree2 = document.getElementById('planCardFree');
             if (cardFree2) cardFree2.classList.add('current');
+            // Все платные карточки — не активны
+            ['statusBasic','statusPlus','statusMaster'].forEach(function(sid) {
+              var sb = document.getElementById(sid); if (!sb) return;
+              sb.className = 'ppc-status inactive'; sb.textContent = 'Не активен';
+            });
           }
         } catch (e) {
           console.warn('[Profile] Ошибка загрузки:', e);
