@@ -104,11 +104,26 @@ function parseSongFromResponse(text) {
 
   if (!title && lyrics) title = "Sound Key";
 
+  // Сопроводительное письмо — текст после --- в блоке лирики (между --- и MUSIC PROMPT / концом)
+  let companion_letter = null;
+  const lyricsBlockStart = text.search(/\b(ЛИРИКА|LYRICS)\s*:\s*/i);
+  if (lyricsBlockStart >= 0) {
+    const afterLyrics = text.slice(lyricsBlockStart);
+    const dashPos = afterLyrics.search(/\n\s*---/);
+    if (dashPos >= 0) {
+      const afterDash = afterLyrics.slice(dashPos).replace(/^\s*---\s*\n?/, "");
+      const letterEnd = afterDash.search(/\n\s*(?:MUSIC PROMPT|КЛЮЧЕВЫЕ ПРИНЦИПЫ|\[style:)/i);
+      const raw = (letterEnd >= 0 ? afterDash.slice(0, letterEnd) : afterDash).trim();
+      if (raw.length > 20) companion_letter = raw.slice(0, 3800);
+    }
+  }
+
   return {
     detailed_analysis: detailed_analysis || null,
     title,
     lyrics: lyrics.slice(0, 5000),
     style,
+    companion_letter,
   };
 }
 
@@ -298,6 +313,24 @@ async function processOneRequest(row) {
       error_message: null,
       updated_at: now,
     }).eq("id", id);
+
+    // Отправляем сопроводительное письмо отдельным сообщением после песни
+    if (parsed.companion_letter) {
+      try {
+        const msgUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+        await fetch(msgUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            chat_id: String(telegramUserId),
+            text: parsed.companion_letter,
+            parse_mode: "Markdown",
+          }).toString(),
+        });
+      } catch (e) {
+        console.warn("[Worker] Сопроводительное письмо не отправлено:", e?.message);
+      }
+    }
   }
 }
 
