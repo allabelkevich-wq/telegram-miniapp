@@ -1089,7 +1089,9 @@
             <svg class="pfa-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             <span id="profileDataName" class="pfa-name">—</span>
             <span id="profileDataSep" class="pfa-sep" style="display:none;">·</span>
-            <span id="profileDataDate" class="pfa-date">Дата не указана</span>
+            <span id="profileDataDate" class="pfa-date"></span>
+            <span id="profileDataCitySep" class="pfa-sep" style="display:none;">·</span>
+            <span id="profileDataCity" class="pfa-date" style="color:rgba(255,255,255,0.35);"></span>
           </div>
           <button type="button" onclick="goToPage('formPage')" style="background:none;border:none;color:rgba(212,175,55,0.65);font-size:0.78rem;font-weight:600;font-family:inherit;padding:0;cursor:pointer;min-height:unset;box-shadow:none;animation:none;white-space:nowrap;flex-shrink:0;letter-spacing:0.02em;">Изменить →</button>
         </div>
@@ -2993,9 +2995,11 @@
           if (avatarInitialEl) avatarInitialEl.textContent = displayName.charAt(0).toUpperCase();
 
           // Карточка «Мои данные»
-          var pdName = document.getElementById('profileDataName');
-          var pdDate = document.getElementById('profileDataDate');
-          var pdSep  = document.getElementById('profileDataSep');
+          var pdName     = document.getElementById('profileDataName');
+          var pdDate     = document.getElementById('profileDataDate');
+          var pdSep      = document.getElementById('profileDataSep');
+          var pdCity     = document.getElementById('profileDataCity');
+          var pdCitySep  = document.getElementById('profileDataCitySep');
           if (pdName) pdName.textContent = displayName || '—';
           if (pdDate && profileJson.profile && profileJson.profile.birthdate) {
             var bd = new Date(profileJson.profile.birthdate + 'T00:00:00');
@@ -3004,6 +3008,14 @@
           } else if (pdDate) {
             pdDate.textContent = '';
             if (pdSep) pdSep.style.display = 'none';
+          }
+          var cityVal = profileJson.profile && (profileJson.profile.birthplace || profileJson.profile.birth_city || '');
+          if (pdCity && cityVal) {
+            pdCity.textContent = cityVal;
+            if (pdCitySep) pdCitySep.style.display = '';
+          } else if (pdCity) {
+            pdCity.textContent = '';
+            if (pdCitySep) pdCitySep.style.display = 'none';
           }
 
           // Фото из профиля (приоритет выше Telegram photo_url)
