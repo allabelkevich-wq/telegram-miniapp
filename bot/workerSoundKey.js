@@ -454,6 +454,15 @@ function parseResponse(text) {
   const tempoMatch = text.match(/\[tempo:\s*([^\]]+)\]/i);
   const tempo = tempoMatch ? tempoMatch[1].trim() : "";
   const styleFull = [style, vocal, mood, instruments, tempo].filter(Boolean).join(" | ");
+  console.log(`[Парсинг] Извлечено из LLM: style="${style}", vocal="${vocal}", mood="${mood}", instruments="${instruments}", tempo="${tempo}" → styleFull="${styleFull}"`);
+  // Блок тегов для вставки ПЕРЕД лирикой в Suno prompt (custom mode требует теги до текста)
+  const sunoMusicPrompt = [
+    style       ? `[style: ${style}]`       : null,
+    vocal       ? `[vocal: ${vocal}]`       : null,
+    mood        ? `[mood: ${mood}]`         : null,
+    instruments ? `[instruments: ${instruments}]` : null,
+    tempo       ? `[tempo: ${tempo}]`       : null,
+  ].filter(Boolean).join("\n");
   
   // Универсальный ограничитель конца лирики: MUSIC PROMPT / [style:] / СОПРОВОДИТЕЛЬНОЕ ПИСЬМО
   // ВАЖНО: [vocal: ...] НЕ является концом лирики — LLM вставляет его как Suno-тег внутри куплетов
@@ -577,7 +586,7 @@ function parseResponse(text) {
     cover_letter = (endMark >= 0 ? afterHeader.slice(0, endMark) : afterHeader).trim();
   }
 
-  if (!title && lyrics) title = "Sound Key";
+  // Если заголовок не найден, оставляем пустым — воркер подставит персональный дефолт с именем
   title = sanitizeTitle(title);
 
   if (!lyrics) return null;
@@ -587,6 +596,7 @@ function parseResponse(text) {
     title: title || "",
     lyrics: lyrics,
     style: styleFull,
+    suno_music_prompt: sunoMusicPrompt || "",
     cover_letter: cover_letter || null,
   };
 }
@@ -1046,7 +1056,9 @@ ${extBlock ? "\n" + extBlock : ""}
     if (lineCount < 24) {
       console.warn(`[Воркер] ⚠️ Лирика короче обычного (${lineCount} строк) — отправляем в Suno`);
     }
-    await setStepCompat('3', `Лирика: ${lineCount} строк, «${(parsed.title || "Sound Key").slice(0, 30)}»`, 'lyrics_ready');
+    const defaultTitle = request.name ? `Звуковой ключ · ${request.name}` : "Звуковой ключ";
+    const songTitle = parsed.title || defaultTitle;
+    await setStepCompat('3', `Лирика: ${lineCount} строк, «${songTitle.slice(0, 30)}»`, 'lyrics_ready');
     
     // Сохраняем сырой ответ DeepSeek и аудит (контроль этапа 1)
     await supabase
@@ -1064,12 +1076,15 @@ ${extBlock ? "\n" + extBlock : ""}
 
     // ========== ЭТАП 3: SUNO ==========
     const styleSentToSuno = parsed.style || "";
-    console.log(`[Воркер] ЭТАП 3 — Suno: отправляю лирику ${lyricsForSuno.length} символов, title="${parsed.title}", style (первые 120 символов): ${styleSentToSuno.slice(0, 120)}${styleSentToSuno.length > 120 ? "…" : ""}`);
+    if (!styleSentToSuno || styleSentToSuno.trim().length === 0) {
+      console.warn(`[Воркер] ⚠️ Стиль от DeepSeek пуст! Используется дефолт "Ambient, Cinematic, Soul"`);
+    }
+    console.log(`[Воркер] ЭТАП 3 — Suno: отправляю лирику ${lyricsForSuno.length} символов, title="${parsed.title}", ПОЛНЫЙ СТИЛЬ (${styleSentToSuno.length} символов): ${styleSentToSuno}`);
 
     const sunoParams = {
       prompt: lyricsForSuno,
       title: parsed.title,
-      style: styleSentToSuno,
+      style: styleSentToSuno || "Ambient, Cinematic, Soul",
     };
     if (process.env.SUNO_MODEL) sunoParams.model = process.env.SUNO_MODEL;
     if (process.env.SUNO_VOCAL_GENDER === "m" || process.env.SUNO_VOCAL_GENDER === "f") sunoParams.vocalGender = process.env.SUNO_VOCAL_GENDER;
