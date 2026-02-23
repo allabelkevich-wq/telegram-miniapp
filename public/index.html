@@ -4664,6 +4664,14 @@
           btn.classList.toggle('active', btn.getAttribute('data-mode') === selectedMode);
         });
         toggleFormsByMode(selectedMode);
+        // Если пользователь выбирает режим — показываем поля формы, чтобы можно было сразу заполнить/редактировать
+        try {
+          var formWrap = document.getElementById('formFieldsWrap');
+          if (formWrap && formWrap.classList.contains('pfw-collapsed')) {
+            formWrap.classList.remove('pfw-collapsed');
+            formWrap.classList.remove('no-anim');
+          }
+        } catch (e) { /* безопасно */ }
         updatePaymentUiFromCatalog();
       }
 
