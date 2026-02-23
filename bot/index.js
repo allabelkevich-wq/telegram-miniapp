@@ -1505,11 +1505,22 @@ bot.hears(/^(песня не пришла|не пришла песня|не по
     let sent = 0;
     for (const row of rows) {
       try {
+        const rowLang = row.language || "ru";
+        const rowName = row.name || "Друг";
+        const resendCaptions = {
+          ru: `${rowName}, твоя персональная песня готова. Слушай в тишине — это твоя музыка. ✨`,
+          uk: `${rowName}, твоя персональна пісня готова. Слухай у тиші — це твоя музика. ✨`,
+          en: `${rowName}, your personal song is ready. Listen in silence — this is your music. ✨`,
+          de: `${rowName}, dein persönliches Lied ist fertig. Höre es in Stille — das ist deine Musik. ✨`,
+          fr: `${rowName}, ta chanson personnelle est prête. Écoute-la en silence — c'est ta musique. ✨`,
+        };
         const payload = {
           chat_id: String(telegramUserId),
           audio: row.audio_url,
-          caption: `🎵 ${row.name || "Друг"}, твоя персональная песня!\n\n— YupSoul`,
+          caption: resendCaptions[rowLang] || resendCaptions.ru,
         };
+        if (row.title) payload.title = String(row.title).slice(0, 64);
+        if (rowName) payload.performer = String(rowName).slice(0, 64);
         let res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`, {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },

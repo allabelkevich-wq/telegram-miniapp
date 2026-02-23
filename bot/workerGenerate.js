@@ -76,14 +76,17 @@ function parseSongFromResponse(text) {
 }
 
 /** Отправка аудио пользователю в Telegram по URL. При «chat not found» — одна повторная попытка через 2 сек. */
-async function sendAudioToUser(telegramUserId, audioUrl, caption) {
+async function sendAudioToUser(telegramUserId, audioUrl, caption, title, performer) {
   if (!BOT_TOKEN || !telegramUserId) return { ok: false, error: "Нет BOT_TOKEN или chat_id" };
   const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`;
-  const body = new URLSearchParams({
+  const params = {
     chat_id: String(telegramUserId),
     audio: audioUrl,
-    caption: caption || "Твой персональный звуковой ключ готов.",
-  });
+    caption: caption || "Твоя персональная песня готова. ✨",
+  };
+  if (title) params.title = String(title).slice(0, 64);
+  if (performer) params.performer = String(performer).slice(0, 64);
+  const body = new URLSearchParams(params);
   const opts = { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: body.toString() };
   const res = await fetch(url, opts);
   const data = await res.json().catch(() => ({}));
@@ -239,7 +242,7 @@ async function processOneRequest(row) {
   }).eq("id", id);
 
   const caption = getSongCaption(name, language);
-  const send = await sendAudioToUser(telegramUserId, sunoResult.audioUrl, caption);
+  const send = await sendAudioToUser(telegramUserId, sunoResult.audioUrl, caption, parsed.title, name);
   const now = new Date().toISOString();
   if (!send.ok) {
     console.warn("[Worker] Telegram send:", send.error);
