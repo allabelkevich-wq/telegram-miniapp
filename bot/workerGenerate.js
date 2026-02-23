@@ -80,11 +80,14 @@ function parseSongFromResponse(text) {
     .replace(/\[Хор\]/gi, "[Chorus]")
     .replace(/\[Заключение\]/gi, "[Outro]");
 
+  // Убираем «псевдо-теги» LLM с описанием/историей вида [Предыстория: ...], [Описание: ...] — Suno их поёт
+  lyrics = lyrics.replace(/\[[^\]]{0,30}(?:история|предыстори|описани|контекст|посвящени|backstory|description|story)[^\]]*\]/gi, "");
+
   // Убираем любой текст, который идёт ДО первого структурного тега — Suno пел бы его как слова
   const firstTag = lyrics.search(/\[(?:Verse|Chorus|Bridge|Intro|Outro|verse|chorus|bridge|intro|outro)/i);
   if (firstTag > 10) {
     const prefix = lyrics.slice(0, firstTag).trim();
-    if (prefix.length > 30) lyrics = lyrics.slice(firstTag);
+    if (prefix.length > 5) lyrics = lyrics.slice(firstTag);
   }
 
   if (!title && lyrics) title = "Sound Key";
