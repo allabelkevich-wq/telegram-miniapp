@@ -687,9 +687,7 @@
     .profile-plans-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
     .profile-plan-card{background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px 14px;position:relative;display:flex;flex-direction:column;gap:4px;transition:border-color .2s,background .2s}
     .profile-plan-card.current{background:rgba(212,175,55,0.07);border-color:rgba(212,175,55,0.38)}
-    .ppc-status{display:inline-block;padding:3px 14px;border-radius:50px;font-size:0.72rem;font-weight:700;font-family:'Comfortaa',sans-serif;letter-spacing:0.03em;margin-top:6px;align-self:flex-start;}
-    .ppc-status.active{background:#0a0810;border:1.5px solid #d4af37;color:#d4af37;}
-    .ppc-status.inactive{background:rgba(255,255,255,0.92);border:1.5px solid #c9922e;color:#c9922e;}
+    .ppc-status-img{height:30px;width:auto;margin-top:8px;align-self:flex-start;display:block;}
     .profile-plan-card.popular{background:linear-gradient(135deg,rgba(236,72,153,0.08),rgba(212,175,55,0.06));border-color:rgba(236,72,153,0.35);grid-column:1 / -1}
     .ppc-badge{font-size:0.62rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(212,175,55,0.7);margin-bottom:4px}
     .ppc-badge.hot{color:#ec4899}
@@ -1085,7 +1083,7 @@
               <div class="ppc-price">$14.99/мес</div>
               <div class="ppc-save">−50% vs разовых</div>
             </div>
-            <div class="ppc-status inactive" id="statusBasic">Не активен</div>
+            <img src="assets/icons/status-inactive.png" id="statusBasic" class="ppc-status-img" alt="Не активен">
             <button class="ppc-btn" id="planBtnBasic">Оформить</button>
           </div>
           <!-- Soul Plus -->
@@ -1102,7 +1100,7 @@
               <div class="ppc-price">$24.99/мес</div>
               <div class="ppc-save">−58% vs разовых</div>
             </div>
-            <div class="ppc-status inactive" id="statusPlus">Не активен</div>
+            <img src="assets/icons/status-inactive.png" id="statusPlus" class="ppc-status-img" alt="Не активен">
             <button class="ppc-btn popular-btn" id="planBtnPlus">Оформить</button>
           </div>
           <!-- Мастер — Лаборатория -->
@@ -1119,7 +1117,7 @@
               <div class="ppc-price" id="masterPriceEl">$39.99/мес</div>
               <div class="ppc-save">−83% vs разовых</div>
             </div>
-            <div class="ppc-status inactive" id="statusMaster">Не активен</div>
+            <img src="assets/icons/status-inactive.png" id="statusMaster" class="ppc-status-img" alt="Не активен">
             <button class="ppc-btn master-btn" id="planBtnMaster">Открыть Лабораторию</button>
           </div>
         </div>
@@ -2905,12 +2903,12 @@
             var activeBtn = document.getElementById(pm.btnId);
             if (activeBtn) { activeBtn.textContent = '✓ Активен'; activeBtn.disabled = true; activeBtn.style.opacity = '0.5'; }
 
-            // Значки статуса на карточках
+            // Значки статуса на карточках (PNG-изображения)
             ['statusBasic','statusPlus','statusMaster'].forEach(function(sid) {
               var sb = document.getElementById(sid); if (!sb) return;
               var isThisActive = sid === 'status' + pm.cardId.replace('planCard','');
-              sb.className = 'ppc-status ' + (isThisActive ? 'active' : 'inactive');
-              sb.textContent = isThisActive ? 'Активен' : 'Не активен';
+              sb.src = isThisActive ? 'assets/icons/status-active.png' : 'assets/icons/status-inactive.png';
+              sb.alt = isThisActive ? 'Активен' : 'Не активен';
             });
 
           } else {
@@ -2927,7 +2925,7 @@
             // Все платные карточки — не активны
             ['statusBasic','statusPlus','statusMaster'].forEach(function(sid) {
               var sb = document.getElementById(sid); if (!sb) return;
-              sb.className = 'ppc-status inactive'; sb.textContent = 'Не активен';
+              sb.src = 'assets/icons/status-inactive.png'; sb.alt = 'Не активен';
             });
           }
         } catch (e) {
