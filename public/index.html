@@ -1709,53 +1709,51 @@
       </div>
       <div class="page-scroll" style="padding:16px 20px calc(env(safe-area-inset-bottom)+40px);">
 
+        <!-- Мини-инструкция — всегда видима -->
+        <div style="background:linear-gradient(135deg,rgba(212,175,55,0.07),rgba(236,72,153,0.04));border:1px solid rgba(212,175,55,0.18);border-radius:16px;padding:18px 18px 16px;margin-bottom:20px;">
+          <div style="font-size:1.5rem;margin-bottom:8px;">🌌</div>
+          <div style="font-size:1rem;font-weight:700;color:#d4af37;margin-bottom:8px;line-height:1.35;">Разговор по душам</div>
+          <div style="font-size:0.88rem;color:rgba(255,255,255,0.65);line-height:1.65;">
+            Soul Chat — твой ИИ-ассистент, который понимает тебя словно лучший друг или Высшее Я. На основе даты рождения, нумерологии и твоих личных данных он отвечает на вопросы о характере, предназначении, отношениях и пути.
+          </div>
+        </div>
+
         <!-- Загрузка -->
-        <div id="scPageLoading" style="text-align:center;padding:60px 0;color:rgba(255,255,255,0.4);font-size:0.9rem;">
-          <div style="font-size:2rem;margin-bottom:12px;">✨</div>
+        <div id="scPageLoading" style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.4);font-size:0.9rem;">
+          <div style="font-size:2rem;margin-bottom:12px;animation:pulse 1.5s ease-in-out infinite;">✨</div>
           Загружаю…
         </div>
 
         <!-- Блок: нет доступа — промо -->
         <div id="scPagePromo" style="display:none;">
-          <div style="text-align:center;padding:20px 0 28px;">
-            <div style="font-size:3.5rem;margin-bottom:12px;">🌌</div>
-            <div style="font-size:1.3rem;font-weight:700;color:#d4af37;margin-bottom:10px;line-height:1.3;">Разговор с душой</div>
-            <div style="font-size:0.9rem;color:rgba(255,255,255,0.6);line-height:1.7;max-width:300px;margin:0 auto 24px;">
-              Soul Chat — ИИ, который говорит от лица твоей души. На основе твоей нумерологии, даты рождения и личных данных — он отвечает на вопросы о тебе: характере, предназначении, отношениях и пути.
-            </div>
-          </div>
 
           <!-- Карточки с примерами вопросов -->
-          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;">
-            <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.15);border-radius:14px;padding:14px 16px;">
-              <div style="font-size:0.78rem;color:rgba(212,175,55,0.6);margin-bottom:4px;letter-spacing:0.05em;text-transform:uppercase;">Пример</div>
-              <div style="font-size:0.88rem;color:rgba(255,255,255,0.8);line-height:1.5;">«Почему мне так сложно говорить о своих чувствах?»</div>
-            </div>
-            <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.15);border-radius:14px;padding:14px 16px;">
-              <div style="font-size:0.78rem;color:rgba(212,175,55,0.6);margin-bottom:4px;letter-spacing:0.05em;text-transform:uppercase;">Пример</div>
-              <div style="font-size:0.88rem;color:rgba(255,255,255,0.8);line-height:1.5;">«Какой мой главный страх и как с ним работать?»</div>
-            </div>
-            <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.15);border-radius:14px;padding:14px 16px;">
-              <div style="font-size:0.78rem;color:rgba(212,175,55,0.6);margin-bottom:4px;letter-spacing:0.05em;text-transform:uppercase;">Пример</div>
-              <div style="font-size:0.88rem;color:rgba(255,255,255,0.8);line-height:1.5;">«В чём моё предназначение и как к нему прийти?»</div>
-            </div>
+          <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:10px;">Примеры вопросов</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
+            <div style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.13);border-radius:12px;padding:12px 14px;font-size:0.88rem;color:rgba(255,255,255,0.75);line-height:1.5;">«Почему мне так сложно говорить о своих чувствах?»</div>
+            <div style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.13);border-radius:12px;padding:12px 14px;font-size:0.88rem;color:rgba(255,255,255,0.75);line-height:1.5;">«Какой мой главный страх и как с ним работать?»</div>
+            <div style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.13);border-radius:12px;padding:12px 14px;font-size:0.88rem;color:rgba(255,255,255,0.75);line-height:1.5;">«В чём моё предназначение и как к нему прийти?»</div>
           </div>
 
           <!-- Тарифы с доступом -->
-          <div style="background:rgba(15,12,40,0.8);border:1px solid rgba(212,175,55,0.2);border-radius:18px;padding:20px;margin-bottom:16px;">
-            <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:14px;">Доступ включён в подписку</div>
-            <div style="display:flex;flex-direction:column;gap:10px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:11px;">
-                <div><div style="font-size:0.88rem;font-weight:600;color:#fff;">Soul Basic</div><div style="font-size:0.75rem;color:rgba(255,255,255,0.4);">50 диалогов/месяц</div></div>
-                <div style="font-size:0.9rem;font-weight:700;color:#d4af37;">$14.99/мес</div>
+          <div style="background:rgba(15,12,40,0.8);border:1px solid rgba(212,175,55,0.2);border-radius:18px;padding:18px;margin-bottom:14px;">
+            <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:12px;">Soul Chat включён в подписку</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 13px;background:rgba(255,255,255,0.04);border-radius:11px;">
+                <div><div style="font-size:0.88rem;font-weight:600;color:#fff;">Basic</div><div style="font-size:0.73rem;color:rgba(255,255,255,0.38);">5 треков/мес + Soul Chat</div></div>
+                <div style="font-size:0.88rem;font-weight:700;color:#d4af37;">$14.99/мес</div>
               </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:linear-gradient(135deg,rgba(236,72,153,0.08),rgba(212,175,55,0.05));border:1px solid rgba(236,72,153,0.2);border-radius:11px;">
-                <div><div style="font-size:0.88rem;font-weight:600;color:#fff;">Soul Plus</div><div style="font-size:0.75rem;color:rgba(255,255,255,0.4);">Без лимита</div></div>
-                <div style="font-size:0.9rem;font-weight:700;color:#ec4899;">$24.99/мес</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 13px;background:linear-gradient(135deg,rgba(236,72,153,0.07),rgba(212,175,55,0.04));border:1px solid rgba(236,72,153,0.18);border-radius:11px;">
+                <div><div style="font-size:0.88rem;font-weight:600;color:#fff;">Plus <span style="font-size:0.7rem;color:rgba(212,175,55,0.6);font-weight:400;">✦ Популярный</span></div><div style="font-size:0.73rem;color:rgba(255,255,255,0.38);">10 треков/мес + Chat без лимита</div></div>
+                <div style="font-size:0.88rem;font-weight:700;color:#ec4899;">$24.99/мес</div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 13px;background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.12);border-radius:11px;">
+                <div><div style="font-size:0.88rem;font-weight:600;color:#fff;">Лаборатория</div><div style="font-size:0.73rem;color:rgba(255,255,255,0.38);">30 треков/мес + Chat без лимита</div></div>
+                <div style="font-size:0.88rem;font-weight:700;color:#d4af37;">$39.99/мес</div>
               </div>
             </div>
-            <button onclick="goToProfileFrom('soulChatPage')" style="width:100%;margin-top:16px;padding:13px;border-radius:14px;background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(236,72,153,0.2));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:none;animation:none;">
-              Оформить подписку →
+            <button onclick="goToProfileFrom('soulChatPage')" style="width:100%;margin-top:14px;padding:13px;border-radius:14px;background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(236,72,153,0.2));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:none;animation:none;">
+              Выбрать тариф →
             </button>
           </div>
 
@@ -1772,10 +1770,7 @@
 
         <!-- Блок: есть доступ — чат -->
         <div id="scPageChat" style="display:none;">
-          <div style="text-align:center;margin-bottom:20px;">
-            <div style="font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:0.05em;">Задай вопрос — душа ответит</div>
-            <div id="scPageTimer" style="display:none;font-size:0.75rem;color:rgba(212,175,55,0.5);background:rgba(212,175,55,0.08);padding:3px 10px;border-radius:20px;margin-top:6px;"></div>
-          </div>
+          <div id="scPageTimer" style="display:none;text-align:center;font-size:0.75rem;color:rgba(212,175,55,0.6);background:rgba(212,175,55,0.08);padding:5px 14px;border-radius:20px;margin-bottom:16px;"></div>
           <!-- История сообщений -->
           <div id="scPageHistory" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;min-height:60px;"></div>
           <!-- Поле ввода -->
@@ -4325,8 +4320,9 @@
               })
             });
             var json = await resp.json().catch(function(){ return {}; });
-            if (json && json.answer) {
-              addMsg('soul', json.answer);
+            var answer = (json && json.data && json.data.answer) || (json && json.answer) || null;
+            if (answer) {
+              addMsg('soul', answer);
             } else if (json && json.error) {
               addMsg('soul', '❌ ' + json.error);
               if (!json.success) setTimeout(function(){ initSoulChatPage(); }, 1200);
