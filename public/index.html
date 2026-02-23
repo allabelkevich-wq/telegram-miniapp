@@ -13,14 +13,16 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.51';
+        var APP_VERSION = '1.2.52';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
-        // Если версия изменилась — принудительно перезагрузить без кэша
+        // Если версия изменилась — навигируем на новый URL с timestamp
+        // (window.location.reload(true) не сбрасывает кэш в Telegram iOS WebView)
         if (cached && cached !== APP_VERSION) {
           localStorage.setItem(CACHE_KEY, APP_VERSION);
-          window.location.reload(true);
+          var base = window.location.href.split('?')[0];
+          window.location.replace(base + '?v=' + Date.now());
           return;
         }
         localStorage.setItem(CACHE_KEY, APP_VERSION);

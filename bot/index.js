@@ -4022,12 +4022,17 @@ async function onBotStart(info) {
     else console.log("Supabase: в таблице track_requests записей:", count ?? 0);
   } else console.log("Supabase: не подключен (заявки только в памяти).");
 
-  // Уведомление админам о перезапуске/обновлении бота
+  // Уведомление админам о перезапуске — с кнопкой на новый URL (сбрасывает кэш в Telegram)
   if (ADMIN_IDS.length) {
     const time = new Date().toLocaleString("ru-RU", { timeZone: "Europe/Moscow" });
-    const text = "🔄 Бот обновлён и запущен.\n\n" + time;
+    const text = `🔄 Бот обновлён и запущен.\n${time}\n\nНовый URL Mini App: \`${MINI_APP_URL}\`\n\nНажми кнопку чтобы открыть свежую версию:`;
     for (const adminId of ADMIN_IDS) {
-      bot.api.sendMessage(adminId, text).catch((e) => console.warn("[onStart] Уведомление админу", adminId, e?.message));
+      bot.api.sendMessage(adminId, text, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [[{ text: "🚀 Открыть обновлённый YupSoul", web_app: { url: MINI_APP_URL } }]]
+        }
+      }).catch((e) => console.warn("[onStart] Уведомление админу", adminId, e?.message));
     }
   }
 }
