@@ -3189,20 +3189,27 @@
       function updateTransitAccordionSummary() {
         var transitDate = (document.getElementById('transitDate') || {}).value || '';
         var transitLocation = (document.getElementById('transitLocation') || {}).value || '';
+        var nameEl = document.getElementById('transitAccName');
         var dateEl = document.getElementById('transitAccDate');
         var sepEl  = document.getElementById('transitAccSep');
-        if (!dateEl) return;
-        var parts = [];
-        if (transitDate) {
-          var d = transitDate.split('-');
-          if (d.length === 3) parts.push(d[2] + '.' + d[1] + '.' + d[0]);
-        }
-        if (transitLocation) parts.push(transitLocation);
-        if (parts.length > 0) {
-          dateEl.textContent = parts.join(' · ');
-          if (sepEl) sepEl.style.display = '';
+        if (!nameEl) return;
+        if (transitDate || transitLocation) {
+          if (transitDate && dateEl) {
+            var parts = transitDate.split('-');
+            dateEl.textContent = parts.length === 3 ? parts[2] + '.' + parts[1] + '.' + parts[0] : transitDate;
+            if (sepEl) sepEl.style.display = '';
+          } else {
+            if (dateEl) dateEl.textContent = '';
+            if (sepEl) sepEl.style.display = 'none';
+          }
+          if (transitLocation && dateEl && transitDate) {
+            dateEl.textContent = dateEl.textContent + (transitLocation ? ' · ' + transitLocation : '');
+          } else if (transitLocation && !transitDate && dateEl) {
+            dateEl.textContent = transitLocation;
+            if (sepEl) sepEl.style.display = '';
+          }
         } else {
-          dateEl.textContent = '';
+          if (dateEl) dateEl.textContent = '';
           if (sepEl) sepEl.style.display = 'none';
         }
       }
