@@ -417,7 +417,8 @@
     .time-group .checkbox input{opacity:.45}
     .checkbox label{margin-bottom:0;font-weight:500;color:var(--tg-theme-text-color,#fff);font-size:1rem;display:flex;align-items:center;gap:6px;opacity:.88}
     select{appearance:none;background:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23d4af37' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 16px center;background-size:20px;padding-right:48px}
-    textarea{min-height:140px;line-height:1.6;resize:vertical}
+    textarea:not(.request-textarea){min-height:140px;line-height:1.6;resize:vertical}
+    textarea.request-textarea{line-height:1.6;}
     .request-label{font-size:var(--fluid-md);text-align:center;margin-bottom:var(--spacing-sm);color:#d4af37;font-weight:700;letter-spacing:-0.5px}
     .request-help-row{display:flex;align-items:center;justify-content:space-between;gap:var(--spacing-sm);margin-bottom:var(--spacing-sm)}
     .request-help-row .request-label{margin-bottom:0;text-align:left;font-size:var(--fluid-base);letter-spacing:-0.2px;line-height:1.2;flex:1;min-width:0}
@@ -444,6 +445,21 @@
     .quick-picker-scroll::-webkit-scrollbar-track{background:transparent}
     .quick-picker-scroll::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.3);border-radius:2px}
     .quick-cat{display:none}
+    /* Новый блок ввода запроса */
+    .request-input-box{border:1px solid rgba(255,255,255,0.1);border-radius:14px;overflow:visible;background:rgba(255,255,255,0.04);position:relative;}
+    .request-textarea{width:100%;background:transparent;border:none;border-radius:14px 14px 0 0;padding:14px 14px 10px;resize:none;min-height:90px;font-size:0.95rem;color:inherit;font-family:inherit;box-sizing:border-box;outline:none;}
+    .request-textarea:focus{outline:none;box-shadow:none;border:none;}
+    .request-quick-bar{border-top:1px solid rgba(255,255,255,0.07);position:relative;}
+    .request-quick-toggle{width:100%;background:none;border:none;color:rgba(212,175,55,0.55);font-size:0.72rem;font-weight:600;font-family:inherit;padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:0.03em;transition:color .2s;min-height:unset;box-shadow:none;animation:none;margin:0;border-radius:0 0 14px 14px;justify-content:space-between;}
+    .request-quick-toggle:hover{color:rgba(212,175,55,0.85);}
+    .request-quick-toggle.open{color:rgba(212,175,55,0.9);}
+    .request-quick-dropdown{position:absolute;left:0;right:0;bottom:calc(100% + 4px);z-index:200;background:#1c1930;border:1px solid rgba(212,175,55,0.2);border-radius:14px;box-shadow:0 -8px 32px rgba(0,0,0,.75);max-height:240px;overflow-y:auto;}
+    .request-quick-dropdown::-webkit-scrollbar{width:3px}
+    .request-quick-dropdown::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.25);border-radius:2px}
+    .request-quick-dropdown .quick-item{display:block;width:100%;padding:10px 14px;background:none;border:none;color:rgba(255,255,255,0.8);font-size:0.82rem;font-weight:500;cursor:pointer;font-family:inherit;text-align:left;border-bottom:1px solid rgba(255,255,255,0.04);transition:background .15s;min-height:unset;box-shadow:none;animation:none;margin:0;border-radius:0;}
+    .request-quick-dropdown .quick-item:last-child{border-bottom:none;border-radius:0 0 14px 14px;}
+    .request-quick-dropdown .quick-item:first-child{border-radius:14px 14px 0 0;}
+    .request-quick-dropdown .quick-item:hover,.request-quick-dropdown .quick-item:active{background:rgba(212,175,55,0.09);color:#fff;}
     .quick-item{display:block;width:100%;padding:11px 16px;background:none;border:none;color:rgba(255,255,255,0.85);font-size:0.9rem;font-weight:500;cursor:pointer;font-family:inherit;text-align:left;transition:background .15s;border-bottom:1px solid rgba(255,255,255,0.04)}
     .quick-item:last-child{border-bottom:none}
     .quick-item:hover,.quick-item:active{background:rgba(212,175,55,0.1);color:#d4af37}
@@ -1496,12 +1512,15 @@
           <div class="request-label">Отправь запрос</div>
           <div style="font-size:0.78rem;color:rgba(255,255,255,0.4);line-height:1.5;margin:-4px 0 12px;">Какую грань будем исследовать сегодня?<br>Ты можешь написать сюда любой свой запрос</div>
 
-          <div class="quick-picker">
-            <button type="button" id="quickPickerBtn" class="quick-picker-btn">
-              <span>Быстрые запросы</span><span class="qa">▾</span>
-            </button>
-            <div id="quickPickerSheet" class="quick-picker-sheet" style="display:none">
-              <div class="quick-picker-scroll">
+          <!-- Блок ввода: textarea + нижняя полоска с быстрыми запросами -->
+          <div class="request-input-box">
+            <textarea id="request" class="request-textarea" placeholder="Напиши свой запрос…" aria-label="Запрос" rows="4"></textarea>
+            <div class="request-quick-bar">
+              <button type="button" class="request-quick-toggle" id="quickPickerBtn" onclick="toggleQuickPicker(event)">
+                <span>✦ Быстрые запросы</span>
+                <svg id="quickPickerArrow" width="12" height="12" viewBox="0 0 24 24" fill="none" style="transition:transform .2s;flex-shrink:0;"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div id="quickPickerSheet" class="request-quick-dropdown" style="display:none;">
                 <button type="button" class="quick-item example-btn" data-text="Весёлая песня с самоиронией про мои слабости и привычки">😄 Весёлая про слабости</button>
                 <button type="button" class="quick-item example-btn" data-text="Юмор и лёгкость — добрый взгляд на себя">😊 Юмор и лёгкость</button>
                 <button type="button" class="quick-item example-btn" data-text="Режим юмор 100% — весёлая песня с максимальным юмором и лёгкостью">😂 Режим: юмор 100%</button>
@@ -1516,11 +1535,6 @@
                 <button type="button" class="quick-item example-btn" data-text="Медитативная песня для практики и тишины">🧘 Тишина и медитация</button>
               </div>
             </div>
-          </div>
-          
-          <textarea id="request" placeholder="Какую грань будем исследовать сегодня?" aria-label="Запрос" rows="4"></textarea>
-          <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-top:8px;line-height:1.5;">
-            Опиши, что хочешь исследовать, или выбери готовый запрос выше
           </div>
         </div>
 
@@ -4377,41 +4391,55 @@
         document.addEventListener('click', hideTooltip);
       })();
 
+      function toggleQuickPicker(e) {
+        if (e) e.stopPropagation();
+        var btn = document.getElementById('quickPickerBtn');
+        var sheet = document.getElementById('quickPickerSheet');
+        var arrow = document.getElementById('quickPickerArrow');
+        if (!btn || !sheet) return;
+        var isOpen = sheet.style.display !== 'none';
+        if (isOpen) {
+          sheet.style.display = 'none';
+          btn.classList.remove('open');
+          if (arrow) arrow.style.transform = '';
+        } else {
+          sheet.style.display = 'block';
+          btn.classList.add('open');
+          if (arrow) arrow.style.transform = 'rotate(180deg)';
+        }
+      }
+
       (function() {
-        var pickerBtn = document.getElementById('quickPickerBtn');
-        var pickerSheet = document.getElementById('quickPickerSheet');
-        if (!pickerBtn || !pickerSheet) return;
-
-        function closeSheet() {
-          pickerSheet.style.display = 'none';
-          pickerBtn.classList.remove('open');
-        }
-        function openSheet() {
-          pickerSheet.style.display = 'block';
-          pickerBtn.classList.add('open');
-        }
-
-        pickerBtn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          if (pickerSheet.style.display === 'none') openSheet();
-          else closeSheet();
-        });
-
         document.addEventListener('click', function(e) {
-          if (pickerSheet.style.display === 'none') return;
-          if (!pickerBtn.closest('.quick-picker').contains(e.target)) closeSheet();
+          var sheet = document.getElementById('quickPickerSheet');
+          var btn = document.getElementById('quickPickerBtn');
+          if (!sheet || sheet.style.display === 'none') return;
+          var box = document.querySelector('.request-input-box');
+          if (box && box.contains(e.target)) return;
+          sheet.style.display = 'none';
+          if (btn) btn.classList.remove('open');
+          var arrow = document.getElementById('quickPickerArrow');
+          if (arrow) arrow.style.transform = '';
         });
 
-        pickerSheet.querySelectorAll('.quick-item').forEach(function(item) {
-          item.addEventListener('click', function() {
-            var requestField = document.getElementById('request');
-            if (requestField) {
-              requestField.value = this.getAttribute('data-text') || '';
-              requestField.focus();
-            }
-            closeSheet();
+        setTimeout(function() {
+          var sheet = document.getElementById('quickPickerSheet');
+          if (!sheet) return;
+          sheet.querySelectorAll('.quick-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+              var requestField = document.getElementById('request');
+              if (requestField) {
+                requestField.value = this.getAttribute('data-text') || '';
+                requestField.focus();
+              }
+              sheet.style.display = 'none';
+              var btn = document.getElementById('quickPickerBtn');
+              if (btn) btn.classList.remove('open');
+              var arrow = document.getElementById('quickPickerArrow');
+              if (arrow) arrow.style.transform = '';
+            });
           });
-        });
+        }, 300);
       })();
 
       if (stepNext) stepNext.addEventListener('click', async function() {
