@@ -452,6 +452,15 @@
     .request-textarea:focus{outline:none;box-shadow:none;border:none;}
     .request-quick-bar{border-top:1px solid rgba(255,255,255,0.07);position:relative;}
     .request-quick-toggle{width:100%;background:none;border:none;color:rgba(212,175,55,0.55);font-size:0.72rem;font-weight:600;font-family:inherit;padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:0.03em;transition:color .2s;min-height:unset;box-shadow:none;animation:none;margin:0;border-radius:0 0 14px 14px;justify-content:space-between;}
+    /* Soul Chat page */
+    .sc-msg-user{display:flex;justify-content:flex-end;}
+    .sc-msg-soul{display:flex;justify-content:flex-start;}
+    .sc-bubble-user{max-width:82%;padding:11px 14px;border-radius:14px 14px 4px 14px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.22);font-size:0.88rem;line-height:1.6;color:rgba(255,255,255,0.9);white-space:pre-wrap;}
+    .sc-bubble-soul{max-width:88%;padding:11px 14px;border-radius:14px 14px 14px 4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:0.88rem;line-height:1.6;color:rgba(255,255,255,0.82);white-space:pre-wrap;}
+    .sc-send-bar{border-top:1px solid rgba(255,255,255,0.07);padding:8px 10px;display:flex;justify-content:flex-end;align-items:center;gap:8px;}
+    .sc-char-hint{font-size:0.7rem;color:rgba(255,255,255,0.25);flex:1;}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(0.88);}}
+    @keyframes sc-spin{to{transform:rotate(360deg);}}
     .request-quick-toggle:hover{color:rgba(212,175,55,0.85);}
     .request-quick-toggle.open{color:rgba(212,175,55,0.9);}
     .request-quick-dropdown{position:absolute;left:0;right:0;bottom:calc(100% + 4px);z-index:200;background:#1c1930;border:1px solid rgba(212,175,55,0.2);border-radius:14px;box-shadow:0 -8px 32px rgba(0,0,0,.75);max-height:240px;overflow-y:auto;}
@@ -1801,16 +1810,16 @@
         <div id="scPageChat" style="display:none;">
           <div id="scPageTimer" style="display:none;text-align:center;font-size:0.75rem;color:rgba(212,175,55,0.6);background:rgba(212,175,55,0.08);padding:5px 14px;border-radius:20px;margin-bottom:16px;"></div>
           <!-- История сообщений -->
-          <div id="scPageHistory" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;min-height:60px;"></div>
-          <!-- Поле ввода -->
-          <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:14px;overflow:hidden;">
-            <textarea id="scPageQuestion" rows="3" placeholder="Задай вопрос своей душе…"
-              style="width:100%;box-sizing:border-box;padding:14px 14px 10px;background:transparent;border:none;color:#fff;font-size:0.92rem;font-family:inherit;resize:none;outline:none;line-height:1.5;"></textarea>
-            <div style="border-top:1px solid rgba(255,255,255,0.07);padding:8px 10px;">
-              <button id="scPageSendBtn" type="button" style="padding:10px 20px;border-radius:10px;background:linear-gradient(135deg,rgba(212,175,55,0.3),rgba(236,72,153,0.2));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:none;animation:none;float:right;">
+          <div id="scPageHistory" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;min-height:40px;"></div>
+          <!-- Поле ввода — стиль как на форме заявки -->
+          <div class="request-input-box">
+            <textarea id="scPageQuestion" class="request-textarea" rows="3"
+              placeholder="Задай вопрос своей душе…" aria-label="Вопрос"></textarea>
+            <div class="sc-send-bar">
+              <span class="sc-char-hint" id="scPageCharHint"></span>
+              <button id="scPageSendBtn" type="button" style="padding:9px 18px;border-radius:10px;background:linear-gradient(135deg,rgba(212,175,55,0.28),rgba(236,72,153,0.18));border:1px solid rgba(212,175,55,0.38);color:#d4af37;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:none;animation:none;min-height:unset;white-space:nowrap;">
                 Спросить ✨
               </button>
-              <div style="clear:both;"></div>
             </div>
           </div>
           <div id="scPageStatus" style="display:none;text-align:center;font-size:0.82rem;color:rgba(255,255,255,0.45);padding:10px 0;"></div>
@@ -4245,11 +4254,15 @@
           return;
         }
 
+        // Фолбек: если API не ответил за 8 секунд — показываем промо
+        var timeoutId = setTimeout(function() { scpShow('scPagePromo'); }, 8000);
+
         try {
           var resp = await fetch(apiBase + '/api/soul-chat/access', {
             method: 'GET',
             headers: { 'X-Telegram-Init': initData }
           });
+          clearTimeout(timeoutId);
           var json = await resp.json().catch(function(){ return {}; });
 
           // Сохраняем last_request_id для запросов к /api/soul-chat
@@ -4284,6 +4297,7 @@
             }
           }
         } catch(e) {
+          clearTimeout(timeoutId);
           scpShow('scPagePromo');
         }
       }
@@ -4353,9 +4367,9 @@
           if (!historyEl) return;
           var isUser = (role === 'user');
           var wrap = document.createElement('div');
-          wrap.style.cssText = 'display:flex;justify-content:' + (isUser ? 'flex-end' : 'flex-start') + ';';
+          wrap.className = isUser ? 'sc-msg-user' : 'sc-msg-soul';
           var bubble = document.createElement('div');
-          bubble.style.cssText = 'max-width:82%;padding:12px 14px;border-radius:' + (isUser ? '14px 14px 4px 14px' : '14px 14px 14px 4px') + ';background:' + (isUser ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.06)') + ';border:1px solid ' + (isUser ? 'rgba(212,175,55,0.25)' : 'rgba(255,255,255,0.08)') + ';font-size:0.88rem;line-height:1.6;color:' + (isUser ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.8)') + ';white-space:pre-wrap;';
+          bubble.className = isUser ? 'sc-bubble-user' : 'sc-bubble-soul';
           bubble.textContent = text;
           wrap.appendChild(bubble);
           historyEl.appendChild(wrap);
@@ -4400,6 +4414,13 @@
             sendBtn.disabled = false;
             if (statusEl) statusEl.style.display = 'none';
           }
+        });
+
+        // Счётчик символов
+        var charHintEl = document.getElementById('scPageCharHint');
+        questionEl.addEventListener('input', function() {
+          var len = questionEl.value.length;
+          if (charHintEl) charHintEl.textContent = len > 10 ? len + ' симв.' : '';
         });
 
         // Ctrl+Enter/Cmd+Enter для отправки
