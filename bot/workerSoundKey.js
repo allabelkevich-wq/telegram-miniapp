@@ -588,6 +588,23 @@ function parseResponse(text) {
 
   // Если заголовок не найден, оставляем пустым — воркер подставит персональный дефолт с именем
   title = sanitizeTitle(title);
+  // Фолбек: если заголовок не найден, попытаться вывести короткий образ из припева или первой строки лирики
+  if ((!title || title.length === 0) && lyrics) {
+    try {
+      const chorusMatch = lyrics.match(/\\[chorus\\]\\s*([\\s\\S]{1,200})/i) || lyrics.match(/Припев\\s*[:\\-]?\\s*([\\s\\S]{1,200})/i);
+      let candidate = "";
+      if (chorusMatch && chorusMatch[1]) candidate = String(chorusMatch[1]).split(/\\n/)[0].trim();
+      if (!candidate) {
+        const firstLine = lyrics.split(/\\n/).find((l) => l && l.trim());
+        if (firstLine) candidate = firstLine.trim();
+      }
+      if (candidate) {
+        // Оставляем первые 4-6 слов как короткий заголовок
+        const words = candidate.split(/\\s+/).filter(Boolean).slice(0, 6);
+        title = sanitizeTitle(words.join(' '));
+      }
+    } catch (_) { /* ничего */ }
+  }
 
   if (!lyrics) return null;
 
