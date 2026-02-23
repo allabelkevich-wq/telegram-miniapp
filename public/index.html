@@ -899,7 +899,7 @@
       <div id="homeHero">
         <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="140" height="140">
         <div class="home-tagline">Музыка твоей души</div>
-        <p id="homeGreeting" class="home-greeting">Привет 👋</p>
+        <p id="homeGreeting" class="home-greeting">Привет</p>
         <button id="startBtn">Создать свою песню</button>
       </div>
 
@@ -923,11 +923,11 @@
       </div>
 
       <!-- Профиль, Помощь, Мои герои — доступ с главной -->
-      <nav class="home-nav" style="display:flex;justify-content:space-around;align-items:center;gap:4px;margin-top:var(--spacing-lg);padding:8px 4px;flex-wrap:nowrap;">
-        <button type="button" class="home-nav-link" onclick="goToProfileFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.7rem;cursor:pointer;font-family:inherit;padding:4px 2px;min-height:unset;box-shadow:none;white-space:nowrap;flex:1;text-align:center;">Профиль</button>
-        <button type="button" class="home-nav-link" onclick="goToSoulChat()" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.7rem;cursor:pointer;font-family:inherit;padding:4px 2px;min-height:unset;box-shadow:none;white-space:nowrap;flex:1;text-align:center;">Soul Chat</button>
-        <button type="button" class="home-nav-link" onclick="goToHelpFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.7rem;cursor:pointer;font-family:inherit;padding:4px 2px;min-height:unset;box-shadow:none;white-space:nowrap;flex:1;text-align:center;">Помощь</button>
-        <button type="button" class="home-nav-link" onclick="goToHeroesFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.7rem;cursor:pointer;font-family:inherit;padding:4px 2px;min-height:unset;box-shadow:none;white-space:nowrap;flex:1;text-align:center;">Лаборатория</button>
+      <nav class="home-nav" style="display:flex;justify-content:space-around;align-items:stretch;gap:2px;margin-top:var(--spacing-lg);padding:8px 2px;flex-wrap:nowrap;">
+        <button type="button" class="home-nav-link" onclick="goToProfileFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:clamp(0.58rem,2vw,0.7rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:4px 2px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;">Профиль</button>
+        <button type="button" class="home-nav-link" onclick="goToSoulChat()" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:clamp(0.58rem,2vw,0.7rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:4px 2px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;">Soul Chat</button>
+        <button type="button" class="home-nav-link" onclick="goToHelpFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:clamp(0.58rem,2vw,0.7rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:4px 2px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;">Помощь</button>
+        <button type="button" class="home-nav-link" onclick="goToHeroesFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:clamp(0.58rem,2vw,0.7rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:4px 2px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;">Лаборатория</button>
       </nav>
 
       </div><!-- /нижняя обёртка -->
@@ -1558,12 +1558,13 @@
 
         <div class="step-panel" data-step="3">
         <div class="field">
-          <div class="request-label">Отправь запрос</div>
-          <div style="font-size:0.78rem;color:rgba(255,255,255,0.4);line-height:1.5;margin:-4px 0 12px;">Какую грань будем исследовать сегодня?<br>Ты можешь написать сюда любой свой запрос</div>
+          <div class="request-label">Что будешь исследовать сегодня?</div>
+          <div id="requestDesc" style="font-size:0.78rem;color:rgba(255,255,255,0.4);line-height:1.5;margin:-4px 0 12px;">О чём песня? Любой запрос — от юмора до глубокой темы</div>
 
           <!-- Блок ввода: textarea + нижняя полоска с быстрыми запросами -->
           <div class="request-input-box">
-            <textarea id="request" class="request-textarea" placeholder="Напиши свой запрос…" aria-label="Запрос" rows="4"></textarea>
+            <textarea id="request" class="request-textarea" placeholder="Напиши запрос…" aria-label="Запрос" rows="4"></textarea>
+            <div id="requestQuickHint" style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-bottom:6px;">Выбери готовый запрос или напиши свой</div>
             <div class="request-quick-bar">
               <button type="button" class="request-quick-toggle" id="quickPickerBtn" onclick="toggleQuickPicker(event)">
                 <span>✦ Быстрые запросы</span>
@@ -1592,12 +1593,6 @@
         <!-- Кнопка отправки — sticky внизу, всегда доступна -->
         <div class="step-nav form-submit-sticky">
           <button id="stepNext">Отправить заявку</button>
-          <!-- Активация бота — тихо, под кнопкой -->
-          <div id="botActivateBlock" style="margin-top:8px;text-align:center;">
-            <button type="button" id="openBotBeforeSubmitBtn" style="background:none;border:none;color:rgba(212,175,55,0.45);font-size:0.75rem;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;margin:0;padding:4px 0;text-decoration:underline;text-underline-offset:3px;">
-              Ещё не открывал бота? Открыть
-            </button>
-          </div>
         </div>
       </div>
       
@@ -1847,8 +1842,10 @@
           transitTitle: 'Энергия момента', transitDatePh: 'Дата события', transitTimePh: 'Время события',
           transitLocationPh: 'Город для энергии момента', transitLocationOk: 'Локация указана верно',
           transitIntentPh: 'Намерение момента (опционально)',
-          sendRequest: 'Отправь запрос', quickRequests: 'Быстрые запросы', hide: 'Скрыть',
-          requestPh: 'Какую грань будем исследовать сегодня?', toPayment: 'К оплате',
+          sendRequest: 'Что будешь исследовать сегодня?', quickRequests: 'Быстрые запросы', hide: 'Скрыть',
+          requestDesc: 'О чём песня? Любой запрос — от юмора до глубокой темы',
+          requestQuickHint: 'Выбери готовый запрос или напиши свой',
+          requestPh: 'Напиши запрос…', toPayment: 'К оплате',
           paymentSubtitle: 'Твоя песня', paymentAndAccess: 'Оплата и доступ',
           paymentIntro: 'Первая песня — в подарок. Дальше можно оплатить отдельный элемент или оформить подписку на полный доступ.',
           loadingPricing: 'Загрузка тарифов...', currentItem: 'Текущий элемент',
@@ -1884,7 +1881,7 @@
           soulChatNoAccess: 'Soul Chat — диалоги с душой. Доступ по подписке Soul Basic (10 диалогов/мес) или Soul Plus (30 диалогов/мес).',
           soulChatDefault: 'Soul Chat — диалоги с душой по заявке. Доступ по подписке.',
           soulChatNoApi: 'Soul Chat — диалоги с душой по заявке. Доступ по подписке Soul Basic или Soul Plus. Оформи в приложении: «К оплате».',
-          greeting: 'Привет, {name}! 👋',
+          greeting: 'Привет, {name}!',
           greetingDefault: 'Музыка твоей души',
           onboardingSlide1Title: 'Есть песня — о тебе',
           onboardingSlide1Text: 'Написанная по дате рождения. Не шаблон — живой текст о твоём характере, силе и пути.',
@@ -1965,8 +1962,10 @@
           transitTitle: 'Energy of the moment', transitDatePh: 'Event date', transitTimePh: 'Event time',
           transitLocationPh: 'City for the moment energy', transitLocationOk: 'Location is correct',
           transitIntentPh: 'Intention for this moment (optional)',
-          sendRequest: 'Send request', quickRequests: 'Quick requests', hide: 'Hide',
-          requestPh: 'What would you like to explore today?', toPayment: 'To payment',
+          sendRequest: 'What will you explore today?', quickRequests: 'Quick requests', hide: 'Hide',
+          requestDesc: 'What\'s the song about? Any request — from humor to deep themes.',
+          requestQuickHint: 'Pick a ready-made request or write your own',
+          requestPh: 'Write your request…', toPayment: 'To payment',
           paymentSubtitle: 'Your sound key', paymentAndAccess: 'Payment & access',
           paymentIntro: 'First song is free. You can pay for individual items or subscribe for full access.',
           loadingPricing: 'Loading plans...', currentItem: 'Current item',
@@ -2082,8 +2081,10 @@
           transitTitle: 'Energie des Augenblicks', transitDatePh: 'Ereignisdatum', transitTimePh: 'Ereigniszeit',
           transitLocationPh: 'Stadt für die Momentenergie', transitLocationOk: 'Ort ist korrekt',
           transitIntentPh: 'Absicht für diesen Moment (optional)',
-          sendRequest: 'Anfrage senden', quickRequests: 'Schnellanfragen', hide: 'Ausblenden',
-          requestPh: 'Was möchtest du heute erkunden?', toPayment: 'Zur Kasse',
+          sendRequest: 'Was wirst du heute erkunden?', quickRequests: 'Schnellanfragen', hide: 'Ausblenden',
+          requestDesc: 'Worum geht das Lied? Jede Anfrage — von Humor bis tiefe Themen.',
+          requestQuickHint: 'Wähle eine Vorlage oder schreib deine eigene',
+          requestPh: 'Schreib deine Anfrage…', toPayment: 'Zur Kasse',
           paymentSubtitle: 'Dein Klangschlüssel', paymentAndAccess: 'Zahlung & Zugang',
           paymentIntro: 'Das erste Lied ist gratis. Du kannst Einzelelemente kaufen oder ein Abo für vollen Zugang abschließen.',
           loadingPricing: 'Tarife laden...', currentItem: 'Aktuelles Element',
@@ -2199,8 +2200,10 @@
           transitTitle: "Énergie du moment", transitDatePh: 'Date de l\'événement', transitTimePh: "Heure de l'événement",
           transitLocationPh: 'Ville pour l\'énergie du moment', transitLocationOk: 'Le lieu est correct',
           transitIntentPh: 'Intention pour ce moment (optionnel)',
-          sendRequest: 'Envoyer la demande', quickRequests: 'Demandes rapides', hide: 'Masquer',
-          requestPh: 'Que souhaites-tu explorer aujourd\'hui ?', toPayment: 'Paiement',
+          sendRequest: 'Que vas-tu explorer aujourd\'hui ?', quickRequests: 'Demandes rapides', hide: 'Masquer',
+          requestDesc: 'De quoi parle la chanson ? Toute demande — de l\'humour aux thèmes profonds.',
+          requestQuickHint: 'Choisis une demande prête ou écris la tienne',
+          requestPh: 'Écris ta demande…', toPayment: 'Paiement',
           paymentSubtitle: 'Ta clé sonore', paymentAndAccess: 'Paiement et accès',
           paymentIntro: 'La première chanson est offerte. Tu peux payer des éléments individuels ou t\'abonner pour un accès complet.',
           loadingPricing: 'Chargement des tarifs...', currentItem: 'Élément actuel',
@@ -2340,7 +2343,7 @@
           ['modeCouple','.mode-btn[data-mode="couple"] .mode-label'], ['modeCoupleDesc','.mode-btn[data-mode="couple"] .mode-desc'],
           ['modeTransit','.mode-btn[data-mode="transit"] .mode-label'], ['modeTransitDesc','.mode-btn[data-mode="transit"] .mode-desc'],
           ['secondPersonTitle','#secondPersonForm h3'], ['transitTitle','#transitForm h3'],
-          ['quickRequests','#quickRequestsToggle'], ['sendRequest','.request-label'], ['submitRequest','#stepNext'], ['submitHint','#submitHint'],
+          ['quickRequests','#quickRequestsToggle'], ['sendRequest','.request-label'], ['requestDesc','#requestDesc'], ['requestQuickHint','#requestQuickHint'], ['submitRequest','#stepNext'], ['submitHint','#submitHint'],
           ['paymentSubtitle','#paymentPage .subtitle'], ['paymentPageTagline','#paymentPage .tagline'],
           ['promoCode','#promoCodeInput'], ['apply','#promoApplyBtn'], ['backFromPayment','#backFromPaymentBtn'],
           ['paymentPageIntroAfterSubmit','#paymentIntro'], ['loadingDesc','#loadingDesc'], ['priceSummaryLabel','#priceSummaryLabel'],
@@ -2737,7 +2740,7 @@
         // Только ручной клик — без авто-скрытия
         var btn = document.getElementById('confirmContinueBtn');
         if (btn) {
-          btn.onclick = function() { hideConfirmOverlay(); if (onDone) onDone(); };
+          btn.onclick = function() { if (onDone) onDone(); hideConfirmOverlay(); };
         }
       }
       function hideConfirmOverlay() {
