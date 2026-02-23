@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.50';
+        var APP_VERSION = '1.2.51';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -4188,6 +4188,9 @@
       // ── Soul Chat ──────────────────────────────────────────────────────────
       var scCurrentRequestId = null;
       var scTimerInterval = null;
+      // Глобальные переменные для soulChatPage (новая полная страница)
+      window._scLastRequestId = null;
+      window._scHasProfile    = false;
 
       function scShow(state) {
         ['scLoading','scGiftState','scActiveState','scPayState'].forEach(function(id) {

@@ -717,18 +717,7 @@ async function runSoulChat({ requestId, question, telegramUserId, isAdminCaller 
       { model: process.env.DEEPSEEK_MODEL || "deepseek-reasoner", max_tokens: 1200, temperature: 1.1 }
     );
     if (!llm.ok) return { ok: false, error: llm.error || "Ошибка генерации soul-chat" };
-    const answer = String(llm.text || "").trim();
-    if (supabase) {
-      const access = isAdminCaller ? null : await getSoulChatAccess(telegramUserId);
-      supabase.from("soul_chat_sessions").insert({
-        telegram_user_id: Number(telegramUserId),
-        track_request_id: rid,
-        question: q,
-        answer,
-        source: access?.source || "admin",
-      }).then(() => {}).catch(() => {});
-    }
-    return { ok: true, answer, request: row };
+    return { ok: true, answer: String(llm.text || "").trim(), request: row, source: "request" };
   }
 
   // Нет заявки — пробуем профиль пользователя
@@ -742,18 +731,7 @@ async function runSoulChat({ requestId, question, telegramUserId, isAdminCaller 
         { model: process.env.DEEPSEEK_MODEL || "deepseek-reasoner", max_tokens: 1200, temperature: 1.1 }
       );
       if (!llm.ok) return { ok: false, error: llm.error || "Ошибка генерации soul-chat" };
-      const answer = String(llm.text || "").trim();
-      if (supabase) {
-        const access = await getSoulChatAccess(telegramUserId);
-        supabase.from("soul_chat_sessions").insert({
-          telegram_user_id: Number(telegramUserId),
-          track_request_id: null,
-          question: q,
-          answer,
-          source: access?.source || "profile",
-        }).then(() => {}).catch(() => {});
-      }
-      return { ok: true, answer, request: { name: profile.name } };
+      return { ok: true, answer: String(llm.text || "").trim(), request: { name: profile.name }, source: "profile" };
     }
   }
 
@@ -3089,14 +3067,15 @@ app.post("/api/soul-chat", express.json(), asyncApi(async (req, res) => {
       track_request_id: result.request?.id || null,
       question,
       answer: result.answer,
+      source: result.source || access.source || null,
     }).then(() => {}).catch((e) => console.warn("[soul-chat] save session:", e?.message));
   }
 
   return res.json({
     success: true,
     data: {
-      request_id: result.request.id,
-      name: result.request.name,
+      request_id: result.request?.id || null,
+      name: result.request?.name || null,
       answer: result.answer,
       expires_at: access.expires_at || null,
       source: access.source || null,
