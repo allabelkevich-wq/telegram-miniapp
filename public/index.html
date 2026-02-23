@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.53';
+        var APP_VERSION = '1.2.54';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -525,8 +525,8 @@
     #homeHero .home-tagline{font-size:0.72rem;font-weight:400;letter-spacing:0.14em;color:rgba(212,175,55,0.45);margin-top:var(--spacing-md);text-transform:uppercase}
     #homeHero .home-greeting{font-size:0.95rem;color:rgba(255,255,255,0.6);line-height:1.6;max-width:240px;margin:var(--spacing-lg) auto var(--spacing-xl);letter-spacing:0.01em}
     #homeHero #startBtn{margin-top:0;width:auto;max-width:280px;padding:14px 36px;font-weight:600;letter-spacing:0.02em;border-radius:50px;align-self:center}
-    #homeTopBar .lang-switcher-compact{position:static}
-    .lang-switcher-compact{position:static}
+    #homeTopBar .lang-switcher-compact{position:relative}
+    .lang-switcher-compact{position:relative}
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* ── СТОРИС-ОНБОРДИНГ ── */
     #onboardingPage{
@@ -581,9 +581,9 @@
     .spinner{width:60px;height:60px;border:4px solid rgba(212,175,55,.15);border-top-color:#d4af37;border-radius:50%;margin:0 auto 25px;animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
     .loading-text{font-size:1.5rem;color:#d4af37;font-weight:600;margin-bottom:15px}
-    .song-preview{background:white;border-radius:16px;padding:20px;margin:20px 0;text-align:left;border:1px solid rgba(212,175,55,0.4)}
-    .song-preview h3{color:#d4af37;font-size:1.4rem;margin-bottom:10px;text-align:center}
-    .song-preview p{font-size:1.05rem;line-height:1.7;color:var(--tg-theme-text-color,#2d2d2d)}
+    .song-preview{background:rgba(212,175,55,0.06);border-radius:16px;padding:20px;margin:20px 0;text-align:left;border:1px solid rgba(212,175,55,0.25)}
+    .song-preview h3{color:#d4af37;font-size:1.1rem;margin-bottom:8px;text-align:center}
+    .song-preview p{font-size:0.9rem;line-height:1.65;color:rgba(255,255,255,0.6)}
     footer{text-align:center;padding:20px 0 max(16px,env(safe-area-inset-bottom));color:rgba(255,255,255,0.22);font-size:0.72rem;margin-top:auto;letter-spacing:0.02em}
     .footer-help{display:inline-flex !important;align-items:center;justify-content:center;color:rgba(212,175,55,0.4) !important;font-size:.78rem !important;cursor:pointer;border:none !important;background:none !important;font-family:inherit;padding:8px 16px !important;margin:0 !important;border-radius:20px !important;box-shadow:none !important;animation:none !important;min-height:unset !important;width:auto !important;font-weight:400 !important;letter-spacing:0.04em !important;transition:color .2s,background .2s}
     .footer-help:hover,.footer-help:active{color:rgba(212,175,55,0.75) !important;background:rgba(212,175,55,0.06) !important}
@@ -886,7 +886,7 @@
 
       <!-- Шапка: язык слева, профиль справа -->
       <div id="homeTopBar" style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:max(10px,env(safe-area-inset-top)) 12px 0;min-height:48px;">
-        <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса" style="position:static;">
+        <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
           <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
             <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
             <span id="langSwitcherCurrent">RU</span>
@@ -1333,7 +1333,6 @@
             <option value="">Выбери</option>
             <option value="female">Женский</option>
             <option value="male">Мужской</option>
-            <option value="other">Другой</option>
           </select>
         </div>
         <div class="field"><label for="heroStyle">Любимые стили музыки</label><input type="text" id="heroStyle" placeholder="поп, джаз, электронная…"></div>
@@ -1450,7 +1449,6 @@
               <option value="">Выбери</option>
             <option value="male">Мужской</option>
             <option value="female">Женский</option>
-            <option value="other">Другой</option>
           </select>
         </div>
         
@@ -1523,7 +1521,6 @@
                   <option value="">Выбери</option>
                   <option value="female">Женский</option>
                   <option value="male">Мужской</option>
-                  <option value="other">Другой</option>
                 </select>
               </div>
               <input type="hidden" id="person2Relationship">
@@ -1642,17 +1639,15 @@
           Твоя персональная песня создана! Уникальный трек по твоим данным — слушай когда захочешь.
         </p>
         
-        <div class="song-preview">
-          <h3>🎵 Твоя песня</h3>
-          <p id="songPreviewText">
-            Твоя уникальная аудиокомпозиция уже ждёт тебя в боте. Слушай её каждое утро, чтобы настроиться на волну успеха.
-          </p>
+        <div style="background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.2);border-radius:14px;padding:16px;margin:8px 0 16px;text-align:center;">
+          <div style="font-size:1.5rem;margin-bottom:6px;">🎵</div>
+          <div style="font-size:0.9rem;color:rgba(255,255,255,0.65);line-height:1.6;">Твоя песня отправляется в бот. Обычно это занимает 10–20 минут.</div>
         </div>
         
-        <button id="openBotBtn" type="button" style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin:16px 0;letter-spacing:0;">
-          💬 Открыть бота
+        <button id="openBotBtn" type="button" style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin:0 0 8px;letter-spacing:0;">
+          💬 Перейти в бот за песней
         </button>
-        <p style="font-size:0.82rem;color:rgba(255,255,255,0.5);line-height:1.5;margin:-8px 0 8px;">Если песня не пришла в течение 20 минут — напиши боту «песня не пришла». Повторная попытка раз в 10 минут, в течение 30 дней.</p>
+        <p style="font-size:0.82rem;color:rgba(255,255,255,0.5);line-height:1.5;margin:0 0 16px;">Если песня не пришла через 20 мин — напиши боту «песня не пришла». Повторная попытка раз в 10 минут, в течение 30 дней.</p>
         
         <!-- ════════════════ SOUL CHAT БЛОК ════════════════ -->
         <div id="soulChatBlock" style="margin-top:24px;">
@@ -1715,131 +1710,143 @@
 
     <!-- ══════════════ SOUL CHAT PAGE ══════════════ -->
     <div class="page" id="soulChatPage">
-      <div class="profile-header">
+
+      <!-- Шапка — показывается только в промо-режиме -->
+      <div id="scHeader" class="profile-header">
         <button type="button" class="profile-back-btn" onclick="goBack()" aria-label="Назад">←</button>
         <div class="profile-header-title">Soul Chat</div>
       </div>
-      <div class="page-scroll" style="padding:16px 20px calc(env(safe-area-inset-bottom)+40px);">
 
-        <!-- Мини-инструкция — всегда видима -->
-        <div style="background:linear-gradient(135deg,rgba(212,175,55,0.07),rgba(236,72,153,0.04));border:1px solid rgba(212,175,55,0.18);border-radius:16px;padding:18px 18px 16px;margin-bottom:20px;">
-          <div style="font-size:1.5rem;margin-bottom:8px;">🌌</div>
-          <div style="font-size:1rem;font-weight:700;color:#d4af37;margin-bottom:8px;line-height:1.35;">Разговор по душам</div>
-          <div style="font-size:0.88rem;color:rgba(255,255,255,0.65);line-height:1.65;">
-            Soul Chat — твой ИИ-ассистент, который понимает тебя словно лучший друг или Высшее Я. На основе даты рождения, нумерологии и твоих личных данных он отвечает на вопросы о характере, предназначении, отношениях и пути.
+      <!-- ПРОМО-ЗОНА: нет доступа — прокручивается целиком -->
+      <div id="scPromoArea" class="page-scroll" style="padding:16px 20px calc(env(safe-area-inset-bottom)+32px);">
+
+        <!-- Краткое описание + кнопка «Подробнее» -->
+        <div style="margin-bottom:18px;">
+          <div style="font-size:0.9rem;color:rgba(255,255,255,0.65);line-height:1.65;margin-bottom:10px;">
+            Soul Chat — твой ИИ-ассистент, который понимает тебя словно лучший друг или Высшее Я. Отвечает на вопросы о характере, предназначении и пути.
+          </div>
+          <button type="button" id="scMoreBtn" style="background:none;border:none;color:rgba(212,175,55,0.7);font-size:0.82rem;cursor:pointer;padding:0;font-family:inherit;box-shadow:none;animation:none;min-height:unset;">
+            Подробнее ↓
+          </button>
+        </div>
+
+        <!-- Расширенная инфо (статистика + примеры) — скрыта по умолчанию -->
+        <div id="scMoreContent" style="display:none;margin-bottom:18px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+            <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.14);border-radius:14px;padding:12px;text-align:center;">
+              <div style="font-size:1.4rem;font-weight:700;color:#d4af37;line-height:1;">78%</div>
+              <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">отмечают снижение тревоги</div>
+            </div>
+            <div style="background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.14);border-radius:14px;padding:12px;text-align:center;">
+              <div style="font-size:1.4rem;font-weight:700;color:#ec4899;line-height:1;">91%</div>
+              <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">чувствуют себя понятыми</div>
+            </div>
+            <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.14);border-radius:14px;padding:12px;text-align:center;">
+              <div style="font-size:1.4rem;font-weight:700;color:#d4af37;line-height:1;">3×</div>
+              <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">быстрее находят ответ</div>
+            </div>
+            <div style="background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.14);border-radius:14px;padding:12px;text-align:center;">
+              <div style="font-size:1.4rem;font-weight:700;color:#ec4899;line-height:1;">84%</div>
+              <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">возвращаются снова</div>
+            </div>
+          </div>
+          <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:8px;">Примеры вопросов</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.12);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;">«Почему мне так сложно говорить о своих чувствах?»</div>
+            <div style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.12);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;">«Какой мой главный страх и как с ним работать?»</div>
+            <div style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.12);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;">«В чём моё предназначение и как к нему прийти?»</div>
           </div>
         </div>
 
-        <!-- Загрузка — скрыта, промо показывается сразу -->
-        <div id="scPageLoading" style="display:none;"></div>
+        <!-- Загрузка -->
+        <div id="scPageLoading" style="display:none;text-align:center;padding:20px 0;color:rgba(255,255,255,0.4);font-size:0.9rem;">✨ Загружаю…</div>
 
-        <!-- Блок: нет доступа — промо (виден по умолчанию) -->
+        <!-- Тарифы -->
         <div id="scPagePromo">
-
-          <!-- Статистика -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;">
-            <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.14);border-radius:14px;padding:14px 12px;text-align:center;">
-              <div style="font-size:1.6rem;font-weight:700;color:#d4af37;line-height:1;">78%</div>
-              <div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:5px;line-height:1.4;">пользователей отмечают снижение тревоги после первого диалога</div>
-            </div>
-            <div style="background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.14);border-radius:14px;padding:14px 12px;text-align:center;">
-              <div style="font-size:1.6rem;font-weight:700;color:#ec4899;line-height:1;">91%</div>
-              <div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:5px;line-height:1.4;">чувствуют себя понятыми — словно поговорили с близким человеком</div>
-            </div>
-            <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.14);border-radius:14px;padding:14px 12px;text-align:center;">
-              <div style="font-size:1.6rem;font-weight:700;color:#d4af37;line-height:1;">3×</div>
-              <div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:5px;line-height:1.4;">быстрее находят ответ на вопрос, который давно не давал покоя</div>
-            </div>
-            <div style="background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.14);border-radius:14px;padding:14px 12px;text-align:center;">
-              <div style="font-size:1.6rem;font-weight:700;color:#ec4899;line-height:1;">84%</div>
-              <div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:5px;line-height:1.4;">возвращаются снова — разговор с душой становится привычкой</div>
-            </div>
-          </div>
-
-          <!-- Карточки с примерами вопросов -->
-          <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:10px;">Примеры вопросов</div>
-          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
-            <div style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.13);border-radius:12px;padding:12px 14px;font-size:0.88rem;color:rgba(255,255,255,0.75);line-height:1.5;">«Почему мне так сложно говорить о своих чувствах?»</div>
-            <div style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.13);border-radius:12px;padding:12px 14px;font-size:0.88rem;color:rgba(255,255,255,0.75);line-height:1.5;">«Какой мой главный страх и как с ним работать?»</div>
-            <div style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.13);border-radius:12px;padding:12px 14px;font-size:0.88rem;color:rgba(255,255,255,0.75);line-height:1.5;">«В чём моё предназначение и как к нему прийти?»</div>
-          </div>
-
-          <!-- Тарифы с доступом -->
-          <div style="background:rgba(15,12,40,0.8);border:1px solid rgba(212,175,55,0.2);border-radius:18px;padding:18px;margin-bottom:14px;">
-            <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:12px;">Soul Chat включён в подписку</div>
-            <div style="display:flex;flex-direction:column;gap:8px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 13px;background:rgba(255,255,255,0.04);border-radius:11px;">
-                <div><div style="font-size:0.88rem;font-weight:600;color:#fff;">Basic</div><div style="font-size:0.73rem;color:rgba(255,255,255,0.38);">5 треков/мес + Soul Chat</div></div>
-                <div style="font-size:0.88rem;font-weight:700;color:#d4af37;">$14.99/мес</div>
+          <div style="background:rgba(15,12,40,0.8);border:1px solid rgba(212,175,55,0.2);border-radius:18px;padding:16px;margin-bottom:12px;">
+            <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:10px;">Soul Chat включён в подписку</div>
+            <div style="display:flex;flex-direction:column;gap:7px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:rgba(255,255,255,0.04);border-radius:10px;">
+                <div><div style="font-size:0.85rem;font-weight:600;color:#fff;">Basic</div><div style="font-size:0.7rem;color:rgba(255,255,255,0.38);">5 треков/мес + Soul Chat</div></div>
+                <div style="font-size:0.85rem;font-weight:700;color:#d4af37;">$14.99/мес</div>
               </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 13px;background:linear-gradient(135deg,rgba(236,72,153,0.07),rgba(212,175,55,0.04));border:1px solid rgba(236,72,153,0.18);border-radius:11px;">
-                <div><div style="font-size:0.88rem;font-weight:600;color:#fff;">Plus <span style="font-size:0.7rem;color:rgba(212,175,55,0.6);font-weight:400;">✦ Популярный</span></div><div style="font-size:0.73rem;color:rgba(255,255,255,0.38);">10 треков/мес + Chat без лимита</div></div>
-                <div style="font-size:0.88rem;font-weight:700;color:#ec4899;">$24.99/мес</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:linear-gradient(135deg,rgba(236,72,153,0.07),rgba(212,175,55,0.04));border:1px solid rgba(236,72,153,0.18);border-radius:10px;">
+                <div><div style="font-size:0.85rem;font-weight:600;color:#fff;">Plus <span style="font-size:0.68rem;color:rgba(212,175,55,0.6);font-weight:400;">✦ Популярный</span></div><div style="font-size:0.7rem;color:rgba(255,255,255,0.38);">10 треков/мес + Chat без лимита</div></div>
+                <div style="font-size:0.85rem;font-weight:700;color:#ec4899;">$24.99/мес</div>
               </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 13px;background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.12);border-radius:11px;">
-                <div><div style="font-size:0.88rem;font-weight:600;color:#fff;">Лаборатория</div><div style="font-size:0.73rem;color:rgba(255,255,255,0.38);">30 треков/мес + Chat без лимита</div></div>
-                <div style="font-size:0.88rem;font-weight:700;color:#d4af37;">$39.99/мес</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.12);border-radius:10px;">
+                <div><div style="font-size:0.85rem;font-weight:600;color:#fff;">Лаборатория</div><div style="font-size:0.7rem;color:rgba(255,255,255,0.38);">30 треков/мес + Chat без лимита</div></div>
+                <div style="font-size:0.85rem;font-weight:700;color:#d4af37;">$39.99/мес</div>
               </div>
             </div>
-            <button onclick="goToProfileFrom('soulChatPage')" style="width:100%;margin-top:14px;padding:13px;border-radius:14px;background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(236,72,153,0.2));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:none;animation:none;">
+            <button onclick="goToProfileFrom('soulChatPage')" style="width:100%;margin-top:12px;padding:12px;border-radius:13px;background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(236,72,153,0.2));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:none;animation:none;">
               Выбрать тариф →
             </button>
           </div>
 
-          <!-- Подарочные 24ч — первый раз бесплатно -->
-          <div id="scPageGiftWrap" style="display:none;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(236,72,153,0.06));border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:18px;text-align:center;margin-bottom:12px;">
-            <div style="font-size:1.8rem;margin-bottom:8px;">🎁</div>
-            <div style="font-weight:700;color:#d4af37;margin-bottom:6px;">Попробуй бесплатно — 24 часа</div>
-            <div style="font-size:0.85rem;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:14px;">Один раз для каждого пользователя</div>
-            <button id="scPageGiftBtn" type="button" style="padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">
+          <!-- Подарочные 24ч -->
+          <div id="scPageGiftWrap" style="display:none;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(236,72,153,0.06));border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:16px;text-align:center;margin-bottom:10px;">
+            <div style="font-size:1.6rem;margin-bottom:6px;">🎁</div>
+            <div style="font-weight:700;color:#d4af37;margin-bottom:4px;">Попробуй бесплатно — 24 часа</div>
+            <div style="font-size:0.83rem;color:rgba(255,255,255,0.6);line-height:1.5;margin-bottom:12px;">Один раз для каждого пользователя</div>
+            <button id="scPageGiftBtn" type="button" style="padding:12px 24px;border-radius:13px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">
               🎁 Получить 24 часа бесплатно
             </button>
           </div>
 
-          <!-- Купить сутки (после исчерпания триала, без подписки) -->
-          <div id="scPageBuyDayWrap" style="display:none;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px;text-align:center;">
-            <div style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:10px;line-height:1.5;">Не готов к подписке? Попробуй разовый доступ</div>
-            <button id="scPageBuyDayBtn" type="button" style="width:100%;padding:12px;border-radius:13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:0.9rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
+          <!-- Купить сутки -->
+          <div id="scPageBuyDayWrap" style="display:none;border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-bottom:9px;line-height:1.5;">Не готов к подписке? Попробуй разовый доступ</div>
+            <button id="scPageBuyDayBtn" type="button" style="width:100%;padding:11px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
               ⚡ Открыть Soul Chat на 24ч — $2.99
             </button>
-            <div id="scPageBuyDayStatus" style="display:none;font-size:0.8rem;color:rgba(212,175,55,0.7);margin-top:8px;"></div>
+            <div id="scPageBuyDayStatus" style="display:none;font-size:0.78rem;color:rgba(212,175,55,0.7);margin-top:7px;"></div>
           </div>
         </div>
-
-        <!-- Блок: есть доступ — чат -->
-        <div id="scPageChat" style="display:none;">
-          <div id="scPageTimer" style="display:none;text-align:center;font-size:0.75rem;color:rgba(212,175,55,0.6);background:rgba(212,175,55,0.08);padding:5px 14px;border-radius:20px;margin-bottom:16px;"></div>
-          <!-- Если нет ни заявки, ни профиля — просим заполнить -->
-          <div id="scPageNoRequest" style="display:none;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(236,72,153,0.05));border:1px solid rgba(212,175,55,0.25);border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;">
-            <div style="font-size:1.6rem;margin-bottom:10px;">🎵</div>
-            <div style="font-weight:700;color:#d4af37;margin-bottom:8px;font-size:0.95rem;">Нужны твои данные</div>
-            <div style="font-size:0.84rem;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:16px;">Soul Chat строит персональный разговор на основе имени и даты рождения. Заполни профиль или создай первую заявку на песню.</div>
-            <div style="display:flex;flex-direction:column;gap:10px;">
-              <button type="button" onclick="goToPage('profilePage')" style="width:100%;padding:12px;border-radius:13px;background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(236,72,153,0.2));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
-                Заполнить профиль →
-              </button>
-              <button type="button" onclick="goToPage('formPage')" style="width:100%;padding:12px;border-radius:13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);font-size:0.88rem;font-weight:500;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
-                Создать заявку на песню →
-              </button>
-            </div>
-          </div>
-          <!-- История сообщений -->
-          <div id="scPageHistory" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;min-height:40px;"></div>
-          <!-- Поле ввода — стиль как на форме заявки -->
-          <div class="request-input-box">
-            <textarea id="scPageQuestion" class="request-textarea" rows="3"
-              placeholder="Задай вопрос своей душе…" aria-label="Вопрос"></textarea>
-            <div class="sc-send-bar">
-              <span class="sc-char-hint" id="scPageCharHint"></span>
-              <button id="scPageSendBtn" type="button" style="padding:9px 18px;border-radius:10px;background:linear-gradient(135deg,rgba(212,175,55,0.28),rgba(236,72,153,0.18));border:1px solid rgba(212,175,55,0.38);color:#d4af37;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:none;animation:none;min-height:unset;white-space:nowrap;">
-                Спросить ✨
-              </button>
-            </div>
-          </div>
-          <div id="scPageStatus" style="display:none;text-align:center;font-size:0.82rem;color:rgba(255,255,255,0.45);padding:10px 0;"></div>
-        </div>
-
       </div>
+
+      <!-- ЧАТ-ЗОНА: есть доступ — история прокручивается, ввод фиксирован внизу -->
+      <!-- Миниатюрная шапка чата (только кнопка назад + таймер) -->
+      <div id="scChatHeader" style="display:none;flex-shrink:0;display:none;align-items:center;padding:max(10px,env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid rgba(255,255,255,0.06);">
+        <button type="button" class="profile-back-btn" onclick="goBack()" aria-label="Назад" style="margin-right:auto;">←</button>
+        <div id="scPageTimer" style="display:none;font-size:0.72rem;color:rgba(212,175,55,0.6);background:rgba(212,175,55,0.08);padding:4px 11px;border-radius:16px;"></div>
+      </div>
+
+      <!-- Список сообщений — flex:1 + overflow-y:auto -->
+      <div id="scPageChat" style="display:none;flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
+        <!-- Если нет ни заявки, ни профиля -->
+        <div id="scPageNoRequest" style="display:none;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(236,72,153,0.05));border:1px solid rgba(212,175,55,0.25);border-radius:16px;padding:18px;text-align:center;">
+          <div style="font-size:1.4rem;margin-bottom:8px;">🎵</div>
+          <div style="font-weight:700;color:#d4af37;margin-bottom:6px;font-size:0.92rem;">Нужны твои данные</div>
+          <div style="font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:14px;">Soul Chat строит персональный разговор на основе имени и даты рождения. Заполни профиль или создай первую заявку на песню.</div>
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <button type="button" onclick="goToPage('profilePage')" style="width:100%;padding:11px;border-radius:12px;background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(236,72,153,0.2));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
+              Заполнить профиль →
+            </button>
+            <button type="button" onclick="goToPage('formPage')" style="width:100%;padding:11px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);font-size:0.86rem;font-weight:500;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
+              Создать заявку на песню →
+            </button>
+          </div>
+        </div>
+        <!-- История сообщений -->
+        <div id="scPageHistory"></div>
+        <div id="scPageStatus" style="display:none;text-align:center;font-size:0.8rem;color:rgba(255,255,255,0.45);padding:8px 0;"></div>
+      </div>
+
+      <!-- Поле ввода — прилипает к низу, вне зоны скролла -->
+      <div id="scInputArea" style="display:none;flex-shrink:0;padding:10px 14px calc(env(safe-area-inset-bottom)+10px);border-top:1px solid rgba(255,255,255,0.07);background:#08071a;">
+        <div class="request-input-box">
+          <textarea id="scPageQuestion" class="request-textarea" rows="2"
+            placeholder="Задай вопрос своей душе…" aria-label="Вопрос"></textarea>
+          <div class="sc-send-bar">
+            <span class="sc-char-hint" id="scPageCharHint"></span>
+            <button id="scPageSendBtn" type="button" style="padding:9px 18px;border-radius:10px;background:linear-gradient(135deg,rgba(212,175,55,0.28),rgba(236,72,153,0.18));border:1px solid rgba(212,175,55,0.38);color:#d4af37;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:none;animation:none;min-height:unset;white-space:nowrap;">
+              Спросить ✨
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
     <!-- ═══════════════════════════════════════════ -->
 
@@ -4270,22 +4277,35 @@
       window.goToSoulChat = goToSoulChat;
 
       async function initSoulChatPage() {
-        var loadEl   = document.getElementById('scPageLoading');
-        var promoEl  = document.getElementById('scPagePromo');
-        var chatEl   = document.getElementById('scPageChat');
-        var giftWrap = document.getElementById('scPageGiftWrap');
-        var buyDayWrap = document.getElementById('scPageBuyDayWrap');
+        var scHeader    = document.getElementById('scHeader');
+        var scChatHdr   = document.getElementById('scChatHeader');
+        var promoArea   = document.getElementById('scPromoArea');
+        var chatEl      = document.getElementById('scPageChat');
+        var inputArea   = document.getElementById('scInputArea');
+        var loadEl      = document.getElementById('scPageLoading');
+        var giftWrap    = document.getElementById('scPageGiftWrap');
+        var buyDayWrap  = document.getElementById('scPageBuyDayWrap');
 
-        function scpShow(id) {
-          [loadEl, promoEl, chatEl].forEach(function(el){ if(el) el.style.display='none'; });
-          var el = document.getElementById(id);
-          if (el) el.style.display = '';
+        // Переключение между промо-режимом и чат-режимом
+        function showPromo() {
+          if (scHeader)   scHeader.style.display   = '';
+          if (scChatHdr)  scChatHdr.style.display  = 'none';
+          if (promoArea)  promoArea.style.display   = '';
+          if (chatEl)     chatEl.style.display      = 'none';
+          if (inputArea)  inputArea.style.display   = 'none';
+        }
+        function showChat() {
+          if (scHeader)   scHeader.style.display   = 'none';
+          if (scChatHdr)  { scChatHdr.style.display = 'flex'; }
+          if (promoArea)  promoArea.style.display   = 'none';
+          if (chatEl)     { chatEl.style.display = 'flex'; }
+          if (inputArea)  inputArea.style.display   = '';
         }
 
-        // Показываем промо сразу — без ожидания API
-        scpShow('scPagePromo');
-        if (giftWrap) giftWrap.style.display = 'none';
-        if (buyDayWrap) buyDayWrap.style.display = 'none';
+        // По умолчанию показываем промо
+        showPromo();
+        if (giftWrap)   giftWrap.style.display   = 'none';
+        if (buyDayWrap) buyDayWrap.style.display  = 'none';
 
         var apiBase  = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         var initData = getInitData();
@@ -4302,18 +4322,17 @@
           window._scHasProfile   = !!(json && json.has_profile);
 
           if (json && json.allowed) {
-            scpShow('scPageChat');
-            // Если нет ни заявки, ни профиля — скрываем поле ввода, просим заполнить данные
-            var noReqEl = document.getElementById('scPageNoRequest');
-            var inputBox = document.querySelector('#scPageChat .request-input-box');
-            var hasData = window._scLastRequestId || window._scHasProfile;
+            showChat();
+            // Если нет данных — показываем блок-подсказку, скрываем поле ввода
+            var noReqEl  = document.getElementById('scPageNoRequest');
+            var hasData  = window._scLastRequestId || window._scHasProfile;
             if (!hasData) {
-              if (noReqEl) noReqEl.style.display = '';
-              if (inputBox) inputBox.style.display = 'none';
+              if (noReqEl)   noReqEl.style.display   = '';
+              if (inputArea) inputArea.style.display  = 'none';
             } else {
-              if (noReqEl) noReqEl.style.display = 'none';
-              if (inputBox) inputBox.style.display = '';
+              if (noReqEl)   noReqEl.style.display   = 'none';
             }
+            // Таймер доступа
             var timerEl = document.getElementById('scPageTimer');
             if (timerEl && json.expires_at) {
               timerEl.style.display = 'inline-block';
@@ -4327,19 +4346,35 @@
               updateTimer();
             }
           } else {
-            // Промо уже показан — только обновляем кнопки
+            // Промо: показываем кнопки
             if (json && json.trial_available) {
-              if (giftWrap) giftWrap.style.display = '';
-              if (buyDayWrap) buyDayWrap.style.display = 'none';
+              if (giftWrap)   giftWrap.style.display   = '';
+              if (buyDayWrap) buyDayWrap.style.display  = 'none';
             } else {
-              if (giftWrap) giftWrap.style.display = 'none';
-              if (buyDayWrap) buyDayWrap.style.display = '';
+              if (giftWrap)   giftWrap.style.display   = 'none';
+              if (buyDayWrap) buyDayWrap.style.display  = '';
             }
           }
         } catch(e) {
           // Промо уже показан — ничего не делаем
         }
       }
+
+      // Кнопка «Подробнее» в промо Soul Chat
+      (function() {
+        var btn = document.getElementById('scMoreBtn');
+        var content = document.getElementById('scMoreContent');
+        if (!btn || !content) return;
+        btn.addEventListener('click', function() {
+          if (content.style.display === 'none' || !content.style.display) {
+            content.style.display = '';
+            btn.textContent = 'Свернуть ↑';
+          } else {
+            content.style.display = 'none';
+            btn.textContent = 'Подробнее ↓';
+          }
+        });
+      })();
 
       // Кнопка «Купить 24ч доступ» на странице Soul Chat
       (function() {
@@ -6349,9 +6384,7 @@
 
       var soulChatBtn = document.getElementById('soulChatBtn');
       if (soulChatBtn) soulChatBtn.addEventListener('click', function() {
-        var botUrl = 'https://t.me/' + BOT_USERNAME;
-        if (tg && tg.openTelegramLink) tg.openTelegramLink(botUrl);
-        else window.open(botUrl, '_blank');
+        goToPage('soulChatPage');
       });
       var soulChatPayBtn = document.getElementById('soulChatPayBtn');
       if (soulChatPayBtn) soulChatPayBtn.addEventListener('click', function() { goToPage('formPage'); setTimeout(function() { var stepNext = document.getElementById('stepNext'); if (stepNext) stepNext.click(); }, 100); });
@@ -6362,15 +6395,18 @@
         else window.open(botUrl, '_blank');
       }
       var openBotBtn = document.getElementById('openBotBtn');
-      if (openBotBtn) openBotBtn.addEventListener('click', function() { openBotLink('song_ready'); });
+      if (openBotBtn) openBotBtn.addEventListener('click', function() {
+        openBotLink('song_ready');
+        setTimeout(function() { try { if (tg && tg.close) tg.close(); } catch(e){} }, 400);
+      });
       var openBotBeforeSubmitBtn = document.getElementById('openBotBeforeSubmitBtn');
       if (openBotBeforeSubmitBtn) openBotBeforeSubmitBtn.addEventListener('click', function() { openBotLink('miniapp_start'); });
       var helpSupportBtn = document.getElementById('helpSupportBtn');
       if (helpSupportBtn) helpSupportBtn.addEventListener('click', function() {
         var supportUrl = 'https://t.me/' + BOT_USERNAME;
         try {
-          if (tg && tg.openLink) { tg.openLink(supportUrl); return; }
           if (tg && tg.openTelegramLink) { tg.openTelegramLink(supportUrl); return; }
+          if (tg && tg.openLink) { tg.openLink(supportUrl); return; }
         } catch(e) {}
         window.open(supportUrl, '_blank');
       });
