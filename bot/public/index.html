@@ -1075,12 +1075,14 @@
 
         <!-- Мои данные -->
         <div class="profile-section-title">Мои данные</div>
-        <div id="profileDataCard" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-          <div>
-            <div id="profileDataName" style="font-size:0.9rem;font-weight:600;color:rgba(255,255,255,0.85);margin-bottom:3px;">—</div>
-            <div id="profileDataDate" style="font-size:0.75rem;color:rgba(255,255,255,0.4);">Дата рождения не указана</div>
+        <div id="profileDataCard" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.2);border-radius:14px;margin-bottom:20px;gap:12px;box-sizing:border-box;">
+          <div class="pfa-info" style="flex:1;min-width:0;">
+            <svg class="pfa-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <span id="profileDataName" class="pfa-name">—</span>
+            <span id="profileDataSep" class="pfa-sep" style="display:none;">·</span>
+            <span id="profileDataDate" class="pfa-date">Дата не указана</span>
           </div>
-          <button type="button" onclick="goToPage('formPage')" style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.25);border-radius:10px;color:rgba(212,175,55,0.8);font-size:0.75rem;font-weight:600;font-family:inherit;padding:7px 12px;cursor:pointer;min-height:unset;box-shadow:none;animation:none;white-space:nowrap;flex-shrink:0;">Изменить</button>
+          <button type="button" onclick="goToPage('formPage')" style="background:none;border:none;color:rgba(212,175,55,0.65);font-size:0.78rem;font-weight:600;font-family:inherit;padding:0;cursor:pointer;min-height:unset;box-shadow:none;animation:none;white-space:nowrap;flex-shrink:0;letter-spacing:0.02em;">Изменить →</button>
         </div>
 
         <!-- Тарифы — Suno-style -->
@@ -2962,12 +2964,15 @@
           // Карточка «Мои данные»
           var pdName = document.getElementById('profileDataName');
           var pdDate = document.getElementById('profileDataDate');
+          var pdSep  = document.getElementById('profileDataSep');
           if (pdName) pdName.textContent = displayName || '—';
           if (pdDate && profileJson.profile && profileJson.profile.birthdate) {
             var bd = new Date(profileJson.profile.birthdate + 'T00:00:00');
             pdDate.textContent = bd.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            if (pdSep) pdSep.style.display = '';
           } else if (pdDate) {
-            pdDate.textContent = 'Нажми «Изменить» чтобы заполнить данные';
+            pdDate.textContent = '';
+            if (pdSep) pdSep.style.display = 'none';
           }
 
           // Фото из профиля (приоритет выше Telegram photo_url)
