@@ -1405,69 +1405,6 @@
           </select>
         </div>
         
-          <!-- Аккордеон второго человека -->
-          <div id="secondPersonAccordion" style="display:none;margin:12px 0 4px;">
-            <div class="pfa-header" onclick="toggleSecondPersonAccordion()">
-              <div class="pfa-info">
-                <svg class="pfa-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                <span id="p2AccName" class="pfa-name">Данные второго человека</span>
-                <span class="pfa-sep" id="p2AccSep" style="display:none">·</span>
-                <span id="p2AccDate" class="pfa-date"></span>
-              </div>
-              <div class="pfa-chevron" id="p2AccChevron">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </div>
-            </div>
-            <div id="secondPersonFormWrap">
-              <div id="secondPersonForm" style="padding-top:8px;">
-                <div class="field">
-                  <label for="name2" data-icon="👤">Имя</label>
-                  <input type="text" id="name2" placeholder="Имя второго человека" maxlength="50">
-                </div>
-                <div class="field">
-                  <label for="birthdate2" data-icon="📅">Дата рождения</label>
-                  <div id="birthdate2Wrap" class="birthdate-wrap">
-                    <div class="date-group" role="group" aria-label="Дата рождения второго">
-                      <select id="birthdate2Day" class="date-group-day" aria-label="День"><option value="">День</option></select>
-                      <select id="birthdate2Month" class="date-group-month" aria-label="Месяц"><option value="">Месяц</option></select>
-                      <select id="birthdate2Year" class="date-group-year" aria-label="Год"><option value="">Год</option></select>
-                    </div>
-                    <input type="date" id="birthdate2" tabindex="-1">
-                  </div>
-                </div>
-                <div class="field">
-                  <label for="birthplace2" data-icon="📍">Место рождения</label>
-                  <div id="birthplace2Wrap" class="birthplace-wrap">
-                    <input type="text" id="birthplace2" placeholder="Москва, Лондон, Нью-Йорк..." maxlength="100" autocomplete="off" aria-label="Локация рождения второго">
-                    <span id="birthplace2Check" class="birthplace-check" aria-hidden="true">✓</span>
-                    <ul id="birthplaceSuggestions2" class="birthplace-suggestions" aria-hidden="true"></ul>
-                  </div>
-                  <div id="birthplace2Hint" class="birthplace-hint" style="display:none;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">Начни вводить город и выбери из выпавшего списка.</div>
-                </div>
-                <div class="field">
-                  <label data-icon="🕐">Время рождения</label>
-                  <div class="time-group" role="group">
-                    <input type="time" id="birthtime2" aria-label="Время" class="time-group-input">
-                    <div class="checkbox time-group-checkbox">
-                      <input type="checkbox" id="unknown2" aria-label="Не знаю точное время">
-                      <label for="unknown2">Не знаю точное время</label>
-                    </div>
-                  </div>
-                </div>
-                <div class="field">
-                  <label for="gender2" data-icon="⚧">Пол</label>
-                  <select id="gender2">
-                    <option value="">Выбери</option>
-                    <option value="female">Женский</option>
-                    <option value="male">Мужской</option>
-                    <option value="other">Другой</option>
-                  </select>
-                </div>
-                <input type="hidden" id="person2Relationship">
-              </div>
-            </div>
-          </div>
-        
           <div id="transitForm" style="display:none">
             <h3 style="margin-bottom:12px;">Энергия момента</h3>
           <div class="field">
@@ -1490,7 +1427,70 @@
           </div>
         </div>
         </div><!-- /formFieldsWrap -->
-        
+
+        <!-- Аккордеон второго человека — отдельно, рядом с первым -->
+        <div id="secondPersonAccordion" style="display:none;margin-top:8px;">
+          <div class="pfa-header" onclick="toggleSecondPersonAccordion()">
+            <div class="pfa-info">
+              <svg class="pfa-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <span id="p2AccName" class="pfa-name">Данные второго человека</span>
+              <span class="pfa-sep" id="p2AccSep" style="display:none">·</span>
+              <span id="p2AccDate" class="pfa-date"></span>
+            </div>
+            <div class="pfa-chevron" id="p2AccChevron">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div id="secondPersonFormWrap">
+            <div id="secondPersonForm" style="padding-top:8px;">
+              <div class="field">
+                <label for="name2" data-icon="👤">Имя</label>
+                <input type="text" id="name2" placeholder="Имя второго человека" maxlength="50">
+              </div>
+              <div class="field">
+                <label for="birthdate2" data-icon="📅">Дата рождения</label>
+                <div id="birthdate2Wrap" class="birthdate-wrap">
+                  <div class="date-group" role="group" aria-label="Дата рождения второго">
+                    <select id="birthdate2Day" class="date-group-day" aria-label="День"><option value="">День</option></select>
+                    <select id="birthdate2Month" class="date-group-month" aria-label="Месяц"><option value="">Месяц</option></select>
+                    <select id="birthdate2Year" class="date-group-year" aria-label="Год"><option value="">Год</option></select>
+                  </div>
+                  <input type="date" id="birthdate2" tabindex="-1">
+                </div>
+              </div>
+              <div class="field">
+                <label for="birthplace2" data-icon="📍">Место рождения</label>
+                <div id="birthplace2Wrap" class="birthplace-wrap">
+                  <input type="text" id="birthplace2" placeholder="Москва, Лондон, Нью-Йорк..." maxlength="100" autocomplete="off" aria-label="Локация рождения второго">
+                  <span id="birthplace2Check" class="birthplace-check" aria-hidden="true">✓</span>
+                  <ul id="birthplaceSuggestions2" class="birthplace-suggestions" aria-hidden="true"></ul>
+                </div>
+                <div id="birthplace2Hint" class="birthplace-hint" style="display:none;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">Начни вводить город и выбери из выпавшего списка.</div>
+              </div>
+              <div class="field">
+                <label data-icon="🕐">Время рождения</label>
+                <div class="time-group" role="group">
+                  <input type="time" id="birthtime2" aria-label="Время" class="time-group-input">
+                  <div class="checkbox time-group-checkbox">
+                    <input type="checkbox" id="unknown2" aria-label="Не знаю точное время">
+                    <label for="unknown2">Не знаю точное время</label>
+                  </div>
+                </div>
+              </div>
+              <div class="field">
+                <label for="gender2" data-icon="⚧">Пол</label>
+                <select id="gender2">
+                  <option value="">Выбери</option>
+                  <option value="female">Женский</option>
+                  <option value="male">Мужской</option>
+                  <option value="other">Другой</option>
+                </select>
+              </div>
+              <input type="hidden" id="person2Relationship">
+            </div>
+          </div>
+        </div>
+
         <div class="step-panel" data-step="3">
         <div class="field">
           <div class="request-label">Отправь запрос</div>
