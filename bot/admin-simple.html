@@ -1215,17 +1215,6 @@
       return String(s == null ? '' : s).replace(/"/g, '&quot;');
     }
 
-    function copyTgId(tgId) {
-      const text = String(tgId);
-      navigator.clipboard.writeText(text).then(() => {
-        const el = event.target.closest('.tg-id-badge') || event.target;
-        const orig = el.textContent;
-        el.textContent = '✓ Скопировано';
-        setTimeout(() => { el.textContent = orig; }, 1500);
-      }).catch(() => {
-        prompt('Telegram ID (скопируй вручную):', text);
-      });
-    }
 
     // Загружает незавершённые заявки (pending_payment) в отдельную секцию вверху
     async function loadUnpaidRequests(silent) {
