@@ -49,8 +49,8 @@ function parseSongFromResponse(text) {
   const styleMatch = text.match(/\[style:\s*([^\]]+)\]/i);
   if (styleMatch) style = styleMatch[1].trim().slice(0, 500);
 
-  // Конец лирики — разделитель или MUSIC PROMPT
-  const LYRICS_END_RE = /\n\s*(?:---|MUSIC PROMPT|КЛЮЧЕВЫЕ ПРИНЦИПЫ|\[style:)/i;
+  // ── Конец лирики: любой из этих маркеров ──────────────────────────────────
+  const LYRICS_END_RE = /\n\s*(?:---|MUSIC PROMPT|ПИСЬМО\s*:|КЛЮЧЕВЫЕ ПРИНЦИПЫ|\[style:)/i;
 
   const lyricsStart = text.search(/\b(ЛИРИКА|LYRICS)\s*:\s*/i);
   if (lyricsStart >= 0) {
@@ -69,7 +69,7 @@ function parseSongFromResponse(text) {
     }
   }
 
-  // Переводим русские структурные теги в английские (Suno не поёт их, а правильно интерпретирует)
+  // ── Переводим русские структурные теги → английские ──────────────────────
   lyrics = lyrics
     .replace(/\[Куплет\s*(\d+)\]/gi, "[Verse $1]")
     .replace(/\[Припев\]/gi, "[Chorus]")
@@ -83,38 +83,53 @@ function parseSongFromResponse(text) {
     .replace(/\[Хор\]/gi, "[Chorus]")
     .replace(/\[Заключение\]/gi, "[Outro]");
 
-  // Suno понимает только эти структурные теги — все остальные bracket-теги поёт как слова.
-  // Убираем режиссёрские пометки вида [петь тихо, ...], [голос становится ...], [музыка поднимается ...]
+  // ── ВАЙТЛИСТ-ФИЛЬТР: удаляем всё, что не является структурным тегом или строкой куплета ──
+  // Разрешённые структурные теги Suno (всё прочее в [] — режиссёрские пометки, инструкции, описания)
   const SUNO_STRUCTURAL = /^\[(?:verse|chorus|pre-?chorus|bridge|intro|outro|instrumental(?:\s+break)?|breakdown|build[\s-]?up|hook|refrain|spoken|whisper|rap|fade[\s-]?out|end|interlude|solo|tag)[\s\d]*\]$/i;
   lyrics = lyrics
     .split("\n")
     .filter((line) => {
       const t = line.trim();
+      // пустые строки оставляем (пробелы между секциями)
+      if (t === "") return true;
+      // bracket-строки: пропускаем только известные Suno-теги
       if (t.startsWith("[") && t.endsWith("]")) return SUNO_STRUCTURAL.test(t);
+      // убираем markdown-заголовки и жирные блоки (признак письма/анализа)
+      if (/^#{1,3}\s|^\*\*[^*]+\*\*\s*$/.test(t)) return false;
+      // убираем строки-разделители
+      if (/^[-=]{3,}$/.test(t)) return false;
+      // всё остальное — строки куплета, оставляем
       return true;
     })
     .join("\n");
 
-  // Убираем любой текст, который идёт ДО первого структурного тега — Suno пел бы его как слова
+  // ── Убираем текст ДО первого структурного тега (если LLM всё же вставил преамбулу) ──
   const firstTag = lyrics.search(/\[(?:Verse|Chorus|Bridge|Intro|Outro|verse|chorus|bridge|intro|outro)/i);
-  if (firstTag > 10) {
+  if (firstTag > 0) {
     const prefix = lyrics.slice(0, firstTag).trim();
-    if (prefix.length > 5) lyrics = lyrics.slice(firstTag);
+    if (prefix.length > 0) lyrics = lyrics.slice(firstTag);
   }
 
   if (!title && lyrics) title = "Sound Key";
 
-  // Сопроводительное письмо — текст после --- в блоке лирики (между --- и MUSIC PROMPT / концом)
+  // ── Сопроводительное письмо — ТОЛЬКО из раздела ПИСЬМО: (после MUSIC PROMPT) ───────────
   let companion_letter = null;
-  const lyricsBlockStart = text.search(/\b(ЛИРИКА|LYRICS)\s*:\s*/i);
-  if (lyricsBlockStart >= 0) {
-    const afterLyrics = text.slice(lyricsBlockStart);
-    const dashPos = afterLyrics.search(/\n\s*---/);
+  const letterMatch = text.match(/\bПИСЬМО\s*:\s*([\s\S]*?)(?:\n\s*(?:---|$))/i);
+  if (letterMatch) {
+    const raw = letterMatch[1].trim();
+    if (raw.length > 20) companion_letter = raw.slice(0, 3800);
+  }
+  // Запасной вариант: если LLM поставил письмо после --- (старый формат)
+  if (!companion_letter) {
+    const dashPos = text.search(/\n\s*---\s*\n/);
     if (dashPos >= 0) {
-      const afterDash = afterLyrics.slice(dashPos).replace(/^\s*---\s*\n?/, "");
+      const afterDash = text.slice(dashPos).replace(/^\s*---\s*\n/, "");
       const letterEnd = afterDash.search(/\n\s*(?:MUSIC PROMPT|КЛЮЧЕВЫЕ ПРИНЦИПЫ|\[style:)/i);
       const raw = (letterEnd >= 0 ? afterDash.slice(0, letterEnd) : afterDash).trim();
-      if (raw.length > 20) companion_letter = raw.slice(0, 3800);
+      // убеждаемся что это не lyrics и не MUSIC PROMPT
+      if (raw.length > 20 && !/^\[(?:verse|chorus|bridge)/i.test(raw)) {
+        companion_letter = raw.slice(0, 3800);
+      }
     }
   }
 
@@ -204,7 +219,28 @@ async function processOneRequest(row) {
     return;
   }
 
-  const userMessage = "По данным выше выполни полный алгоритм: Этап 1 (анализ), при необходимости Этап 2, затем Этап 3 (песня). КРИТИЧЕСКИ ВАЖНО: (1) строго соблюдай правильное склонение имени человека во всех падежах и во всей песне; (2) структурные метки пиши ТОЛЬКО на английском — [verse 1], [chorus], [bridge], [outro] и т.д. — НИКОГДА не используй русские теги вроде [Куплет], [Припев]; (3) блок ЛИРИКА должен начинаться сразу с первого [verse] без предисловий. В конце обязательно укажи название песни в кавычках «» и блок ЛИРИКА, затем MUSIC PROMPT для Suno со [style: ...] на английском.";
+  const userMessage = `По данным выше выполни полный алгоритм: Этап 1 (анализ), при необходимости Этап 2, затем Этап 3 (песня).
+
+СТРУКТУРА ОТВЕТА — строго в таком порядке:
+1. Анализ (Этапы 1–2)
+2. Название песни в кавычках «»
+3. ЛИРИКА:
+[verse 1]
+...текст куплета...
+[chorus]
+...текст припева...
+[outro]
+...
+4. MUSIC PROMPT
+[style: ...]
+5. ПИСЬМО:
+...персональное сопроводительное письмо пользователю...
+
+ЖЕЛЕЗНЫЕ ПРАВИЛА:
+- Блок ЛИРИКА содержит ТОЛЬКО структурные теги [verse 1], [chorus], [bridge], [outro] и т.д. (ТОЛЬКО английские) и строки текста песни. НИЧЕГО больше.
+- НИ ОДНОЙ строки с инструкциями певцу, описаниями, историями, предысториями, рекомендациями — ни внутри [], ни без скобок — внутри блока ЛИРИКА.
+- Сопроводительное письмо — ТОЛЬКО в разделе ПИСЬМО: после MUSIC PROMPT. Никогда не в ЛИРИКА.
+- Строго соблюдай правильное склонение имени во всех падежах.`;
 
   const llm = await chatCompletion(systemPrompt, userMessage, {});
   if (!llm.ok) {
