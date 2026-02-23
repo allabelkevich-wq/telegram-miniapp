@@ -1372,22 +1372,81 @@ async function sendAnalysisIfPaid(ctx) {
 bot.command("get_analysis", sendAnalysisIfPaid);
 bot.hears(/^(расшифровка|получить расшифровку|детальный анализ)$/i, sendAnalysisIfPaid);
 
+// Определяем язык пользователя по Telegram language_code
+function getUserLang(ctx) {
+  const lc = (ctx.from?.language_code || '').toLowerCase();
+  if (/^uk/.test(lc)) return 'uk';
+  if (/^en/.test(lc)) return 'en';
+  if (/^de/.test(lc)) return 'de';
+  if (/^fr/.test(lc)) return 'fr';
+  return 'ru';
+}
+
+// Мультиязычные сообщения для бота
+const BOT_MSGS = {
+  ru: {
+    noSongInQueue: "Проверил — у тебя нет песен в очереди на повторную отправку.\n\nЕсли песня не пришла:\n• Подожди 15–20 минут — песня может ещё генерироваться\n• Убедись, что не блокировал бота и нажал «Старт»\n• Напиши в поддержку — пришлём вручную",
+    pendingHint: "\n\n🎁 У тебя есть заявка, которая ждёт активации подарка. Открой приложение (кнопка в меню чата) и нажми «Получить бесплатно».",
+    cooldown: (m) => `Подожди ещё ${m} мин. — повторная попытка ограничена раз в 10 минут.`,
+    noUser: "Не удалось определить пользователя. Попробуй снова или напиши в поддержку.",
+    resendOk: (title) => `🎵 Пересылаю твою песню «${title}»...`,
+    resendErr: "Ошибка при повторной отправке. Напиши в поддержку.",
+  },
+  uk: {
+    noSongInQueue: "Перевірив — у тебе немає пісень у черзі на повторне надсилання.\n\nЯкщо пісня не прийшла:\n• Зачекай 15–20 хвилин — пісня може ще генеруватися\n• Переконайся, що не блокував бота та натиснув «Старт»\n• Напиши у підтримку — надішлемо вручну",
+    pendingHint: "\n\n🎁 У тебе є заявка, яка чекає активації подарунка. Відкрий додаток (кнопка в меню чату) та натисни «Отримати безкоштовно».",
+    cooldown: (m) => `Зачекай ще ${m} хв. — повторна спроба обмежена раз на 10 хвилин.`,
+    noUser: "Не вдалося визначити користувача. Спробуй ще раз або напиши у підтримку.",
+    resendOk: (title) => `🎵 Пересилаю твою пісню «${title}»...`,
+    resendErr: "Помилка при повторному надсиланні. Напиши у підтримку.",
+  },
+  en: {
+    noSongInQueue: "Checked — you have no songs waiting for resend.\n\nIf your song hasn't arrived:\n• Wait 15–20 minutes — it may still be generating\n• Make sure you haven't blocked the bot and pressed «Start»\n• Contact support — we'll send it manually",
+    pendingHint: "\n\n🎁 You have a request waiting for gift activation. Open the app (menu button in chat) and tap «Get for free».",
+    cooldown: (m) => `Please wait ${m} more min. — resend is limited to once every 10 minutes.`,
+    noUser: "Could not identify user. Try again or contact support.",
+    resendOk: (title) => `🎵 Resending your song «${title}»...`,
+    resendErr: "Error while resending. Please contact support.",
+  },
+  de: {
+    noSongInQueue: "Geprüft — du hast keine Lieder in der Warteschlange zum erneuten Senden.\n\nWenn dein Lied nicht angekommen ist:\n• Warte 15–20 Minuten — es könnte noch generiert werden\n• Stelle sicher, dass du den Bot nicht gesperrt hast und auf «Start» gedrückt hast\n• Kontaktiere den Support — wir senden es manuell",
+    pendingHint: "\n\n🎁 Du hast eine Anfrage, die auf die Geschenk-Aktivierung wartet. Öffne die App (Menü-Button im Chat) und tippe auf «Kostenlos erhalten».",
+    cooldown: (m) => `Bitte warte noch ${m} Min. — erneutes Senden ist auf einmal alle 10 Minuten begrenzt.`,
+    noUser: "Benutzer konnte nicht identifiziert werden. Versuche es erneut oder kontaktiere den Support.",
+    resendOk: (title) => `🎵 Sende dein Lied «${title}» erneut...`,
+    resendErr: "Fehler beim erneuten Senden. Bitte kontaktiere den Support.",
+  },
+  fr: {
+    noSongInQueue: "Vérifié — tu n'as pas de chansons en attente de renvoi.\n\nSi ta chanson n'est pas arrivée :\n• Attends 15–20 minutes — elle est peut-être encore en génération\n• Assure-toi de ne pas avoir bloqué le bot et d'avoir appuyé sur «Démarrer»\n• Contacte le support — on l'enverra manuellement",
+    pendingHint: "\n\n🎁 Tu as une demande en attente d'activation du cadeau. Ouvre l'app (bouton menu dans le chat) et appuie sur «Obtenir gratuitement».",
+    cooldown: (m) => `Attends encore ${m} min. — le renvoi est limité à une fois toutes les 10 minutes.`,
+    noUser: "Impossible d'identifier l'utilisateur. Réessaie ou contacte le support.",
+    resendOk: (title) => `🎵 Je renvoie ta chanson «${title}»...`,
+    resendErr: "Erreur lors du renvoi. Contacte le support.",
+  },
+};
+function bMsg(ctx, key, ...args) {
+  const lang = getUserLang(ctx);
+  const msg = BOT_MSGS[lang]?.[key] || BOT_MSGS.ru[key];
+  return typeof msg === 'function' ? msg(...args) : msg;
+}
+
 // Защита от злоупотреблений: кулдаун 10 мин между попытками повторной отправки
 const resendCooldownMs = 10 * 60 * 1000;
 const resendLastAttempt = new Map();
 
 // Пользователь пишет «песня не пришла» — пробуем повторно отправить не доставленные
-bot.hears(/^(песня не пришла|не пришла песня|не получил песню|не получила песню|повторно отправь|отправь снова|пісня не прийшла|не прийшла пісня|не отримав пісню|не отримала пісню|надішли ще раз|song not arrived|song didn.t arrive|resend song|send again)$/i, async (ctx) => {
+bot.hears(/^(песня не пришла|не пришла песня|не получил песню|не получила песню|повторно отправь|отправь снова|пісня не прийшла|не прийшла пісня|не отримав пісню|не отримала пісню|надішли ще раз|song not arrived|song didn.t arrive|resend song|send again|lied nicht angekommen|lied kam nicht an|sende nochmal|erneut senden|chanson pas arrivée|chanson n.est pas arrivée|renvoyer la chanson|renvoie la chanson)$/i, async (ctx) => {
   const telegramUserId = ctx.from?.id;
   if (!telegramUserId || !supabase || !BOT_TOKEN) {
-    await ctx.reply("Не удалось определить пользователя. Попробуй снова или напиши в поддержку.");
+    await ctx.reply(bMsg(ctx, 'noUser'));
     return;
   }
   const now = Date.now();
   const last = resendLastAttempt.get(telegramUserId) || 0;
   if (now - last < resendCooldownMs) {
     const minsLeft = Math.ceil((resendCooldownMs - (now - last)) / 60000);
-    await ctx.reply(`Подожди ещё ${minsLeft} мин. — повторная попытка ограничена раз в 10 минут, чтобы избежать перегрузки.`);
+    await ctx.reply(bMsg(ctx, 'cooldown', minsLeft));
     return;
   }
   resendLastAttempt.set(telegramUserId, now);
@@ -1411,17 +1470,8 @@ bot.hears(/^(песня не пришла|не пришла песня|не по
         .limit(1)
         .maybeSingle();
       const trialAvailable = await isTrialAvailable(telegramUserId, "first_song_gift");
-      const pendingHint = (pendingRow && trialAvailable)
-        ? "\n\n🎁 У тебя есть заявка, которая ждёт активации подарка. Открой приложение (кнопка в меню чата или «Оплатить сейчас» выше) и на главном экране нажми «Получить бесплатно» — так придёт первая песня."
-        : "";
-      await ctx.reply(
-        "Проверил — у тебя нет песен в очереди на повторную отправку.\n\n" +
-        "Если песня не пришла:\n" +
-        "• Подожди 15–20 минут — песня может ещё генерироваться\n" +
-        "• Убедись, что не блокировал бота и нажал «Старт»\n" +
-        "• Напиши в поддержку — пришлём вручную" +
-        pendingHint
-      );
+      const pendingHint = (pendingRow && trialAvailable) ? bMsg(ctx, 'pendingHint') : "";
+      await ctx.reply(bMsg(ctx, 'noSongInQueue') + pendingHint);
       return;
     }
     let sent = 0;
@@ -1460,15 +1510,27 @@ bot.hears(/^(песня не пришла|не пришла песня|не по
       }
     }
     if (sent > 0) {
-      await ctx.reply(`✅ Отправил тебе ${sent} песню(и). Проверь чат — они должны появиться.\n\nСледующая попытка повторной отправки — через 10 минут.`);
+      const sentMsgs = {
+        ru: `✅ Отправил тебе ${sent} песню(и). Проверь чат — они должны появиться.\n\nСледующая попытка — через 10 минут.`,
+        uk: `✅ Надіслав тобі ${sent} пісню(і). Перевір чат — вони мають з'явитися.\n\nНаступна спроба — через 10 хвилин.`,
+        en: `✅ Sent you ${sent} song(s). Check your chat — they should appear now.\n\nNext retry available in 10 minutes.`,
+        de: `✅ ${sent} Lied(er) wurde(n) gesendet. Prüfe deinen Chat — sie sollten jetzt erscheinen.\n\nNächster Versuch in 10 Minuten.`,
+        fr: `✅ J'ai envoyé ${sent} chanson(s). Vérifie ton chat — elles devraient apparaître.\n\nProchain essai dans 10 minutes.`,
+      };
+      await ctx.reply(sentMsgs[getUserLang(ctx)] || sentMsgs.ru);
     } else {
-      await ctx.reply(
-        "Не удалось отправить — возможно, чат с ботом был удалён. Напиши /start и попробуй снова, или обратись в поддержку."
-      );
+      const failMsgs = {
+        ru: "Не удалось отправить — возможно, чат был удалён. Напиши /start и попробуй снова, или обратись в поддержку.",
+        uk: "Не вдалося надіслати — можливо, чат було видалено. Напиши /start і спробуй знову, або звернись до підтримки.",
+        en: "Failed to send — the chat may have been deleted. Type /start and try again, or contact support.",
+        de: "Senden fehlgeschlagen — der Chat wurde möglicherweise gelöscht. Schreibe /start und versuche es erneut oder kontaktiere den Support.",
+        fr: "Envoi échoué — le chat a peut-être été supprimé. Tape /start et réessaie, ou contacte le support.",
+      };
+      await ctx.reply(failMsgs[getUserLang(ctx)] || failMsgs.ru);
     }
   } catch (e) {
     console.error("[resend] Ошибка:", e?.message);
-    await ctx.reply("Произошла ошибка. Напиши в поддержку.");
+    await ctx.reply(bMsg(ctx, 'resendErr'));
   }
 });
 
