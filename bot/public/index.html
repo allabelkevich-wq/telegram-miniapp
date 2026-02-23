@@ -182,24 +182,27 @@
     }
     .mode-selector h3 { font-size: 1rem; color: #fff; margin: 0 0 4px; font-weight: 700; text-align: center; letter-spacing: 0.01em; }
     .mode-subtitle { font-size: 0.78rem; color: rgba(255,255,255,0.4); margin: 0 0 16px; text-align: center; }
-    .mode-buttons { display: flex; flex-direction: column; gap: 10px; }
+    .mode-buttons { display: flex; flex-direction: row; gap: 8px; }
     .mode-btn {
       background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.1);
-      color: #fff; padding: 16px 18px; border-radius: 14px; cursor: pointer;
+      color: rgba(255,255,255,0.75); padding: 10px 6px; border-radius: 12px; cursor: pointer;
       transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
-      display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
-      text-align: left; width: 100%; box-sizing: border-box; animation: none; box-shadow: none; margin: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+      text-align: center; flex: 1; box-sizing: border-box; animation: none; box-shadow: none; margin: 0; min-height: 52px;
     }
-    .mode-btn:active { transform: scale(0.985); }
+    .mode-btn:active { transform: scale(0.97); }
     .mode-btn.active {
-      background: linear-gradient(135deg, #d4af37 0%, #ec4899 100%);
-      border-color: transparent; color: #fff;
-      box-shadow: 0 6px 22px rgba(212,175,55,0.3);
+      background: linear-gradient(135deg, rgba(212,175,55,0.22) 0%, rgba(236,72,153,0.18) 100%);
+      border-color: rgba(212,175,55,0.6); color: #f5e6a3;
+      box-shadow: 0 3px 14px rgba(212,175,55,0.2);
     }
     .mode-icon { display: none; }
-    .mode-label { font-weight: 700; font-size: 1rem; line-height: 1.2; }
-    .mode-desc { display: block; font-size: 0.78rem; font-weight: 400; opacity: 0.65; line-height: 1.4; }
-    .mode-btn.active .mode-desc { opacity: 0.85; }
+    .mode-label { font-weight: 700; font-size: 0.8rem; line-height: 1.25; }
+    .mode-desc { display: none; }
+    /* Аккордеон второго человека */
+    #secondPersonAccordion .pfa-header { background: rgba(212,175,55,0.06); border: 1px solid rgba(212,175,55,0.18); }
+    #secondPersonAccordion .pfa-header:hover { background: rgba(212,175,55,0.1); }
+    #secondPersonFormWrap { overflow: hidden; transition: max-height .38s cubic-bezier(.4,0,.2,1), opacity .3s ease; max-height: 0; opacity: 0; }
     .mode-info {
       width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(212,175,55,0.4);
       color: rgba(212,175,55,0.7); font-size: 0.7rem; font-weight: 700;
@@ -641,8 +644,7 @@
     #formPage header .subtitle{font-size:0.72rem}
     #transitForm{display:none;margin-top:24px;padding:16px;background:var(--tg-theme-secondary-bg-color,rgba(255,255,255,0.05));border-radius:12px;border:1px solid var(--tg-theme-border-color,rgba(255,255,255,0.1))}
     #transitForm h3{color:var(--tg-theme-text-color,#fff);margin:0 0 15px 0;font-size:18px}
-    #secondPersonForm{display:none;margin-top:30px;padding:20px;background:var(--tg-theme-secondary-bg-color,rgba(255,255,255,0.05));border-radius:12px;border:1px solid var(--tg-theme-border-color,rgba(255,255,255,0.1))}
-    #secondPersonForm h3{color:var(--tg-theme-text-color,#fff);margin:0 0 15px 0;font-size:18px}
+    #secondPersonForm{padding-top:8px;}
     
     /* Панель навигации для превью в браузере */
     .preview-nav{background:white;border-radius:16px;padding:12px;margin-bottom:25px;box-shadow:0 4px 20px rgba(212,175,55,.12);text-align:center;border:1px solid #e5e7eb;display:none}
@@ -1403,53 +1405,68 @@
           </select>
         </div>
         
-          <div id="secondPersonForm" style="display:none">
-            <h3 style="margin-bottom:12px;">Для двоих</h3>
-          <div class="field">
-            <label for="name2" data-icon="👤">Имя второго человека</label>
-            <input type="text" id="name2" placeholder="Имя" maxlength="50">
-          </div>
-          <div class="field">
-            <label for="birthdate2" data-icon="📅">Дата рождения второго</label>
-            <div id="birthdate2Wrap" class="birthdate-wrap">
-              <div class="date-group" role="group" aria-label="Дата рождения второго">
-                <select id="birthdate2Day" class="date-group-day" aria-label="День"><option value="">День</option></select>
-                <select id="birthdate2Month" class="date-group-month" aria-label="Месяц"><option value="">Месяц</option></select>
-                <select id="birthdate2Year" class="date-group-year" aria-label="Год"><option value="">Год</option></select>
+          <!-- Аккордеон второго человека -->
+          <div id="secondPersonAccordion" style="display:none;margin:12px 0 4px;">
+            <div class="pfa-header" onclick="toggleSecondPersonAccordion()">
+              <div class="pfa-info">
+                <svg class="pfa-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <span id="p2AccName" class="pfa-name">Данные второго человека</span>
+                <span class="pfa-sep" id="p2AccSep" style="display:none">·</span>
+                <span id="p2AccDate" class="pfa-date"></span>
               </div>
-              <input type="date" id="birthdate2" tabindex="-1">
-            </div>
-          </div>
-          <div class="field">
-            <label for="birthplace2" data-icon="📍">Место рождения второго</label>
-            <div id="birthplace2Wrap" class="birthplace-wrap">
-              <input type="text" id="birthplace2" placeholder="Москва, Лондон, Нью-Йорк..." maxlength="100" autocomplete="off" aria-label="Локация рождения второго">
-              <span id="birthplace2Check" class="birthplace-check" aria-hidden="true">✓</span>
-              <ul id="birthplaceSuggestions2" class="birthplace-suggestions" aria-hidden="true"></ul>
-            </div>
-            <div id="birthplace2Hint" class="birthplace-hint" style="display:none;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">Начни вводить город и выбери из выпавшего списка.</div>
-          </div>
-          <div class="field">
-            <label data-icon="🕐">Время рождения второго</label>
-            <div class="time-group" role="group">
-              <input type="time" id="birthtime2" aria-label="Время" class="time-group-input">
-              <div class="checkbox time-group-checkbox">
-                <input type="checkbox" id="unknown2" aria-label="Не знаю точное время">
-                <label for="unknown2">Не знаю точное время</label>
+              <div class="pfa-chevron" id="p2AccChevron">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </div>
             </div>
+            <div id="secondPersonFormWrap">
+              <div id="secondPersonForm" style="padding-top:8px;">
+                <div class="field">
+                  <label for="name2" data-icon="👤">Имя</label>
+                  <input type="text" id="name2" placeholder="Имя второго человека" maxlength="50">
+                </div>
+                <div class="field">
+                  <label for="birthdate2" data-icon="📅">Дата рождения</label>
+                  <div id="birthdate2Wrap" class="birthdate-wrap">
+                    <div class="date-group" role="group" aria-label="Дата рождения второго">
+                      <select id="birthdate2Day" class="date-group-day" aria-label="День"><option value="">День</option></select>
+                      <select id="birthdate2Month" class="date-group-month" aria-label="Месяц"><option value="">Месяц</option></select>
+                      <select id="birthdate2Year" class="date-group-year" aria-label="Год"><option value="">Год</option></select>
+                    </div>
+                    <input type="date" id="birthdate2" tabindex="-1">
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="birthplace2" data-icon="📍">Место рождения</label>
+                  <div id="birthplace2Wrap" class="birthplace-wrap">
+                    <input type="text" id="birthplace2" placeholder="Москва, Лондон, Нью-Йорк..." maxlength="100" autocomplete="off" aria-label="Локация рождения второго">
+                    <span id="birthplace2Check" class="birthplace-check" aria-hidden="true">✓</span>
+                    <ul id="birthplaceSuggestions2" class="birthplace-suggestions" aria-hidden="true"></ul>
+                  </div>
+                  <div id="birthplace2Hint" class="birthplace-hint" style="display:none;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">Начни вводить город и выбери из выпавшего списка.</div>
+                </div>
+                <div class="field">
+                  <label data-icon="🕐">Время рождения</label>
+                  <div class="time-group" role="group">
+                    <input type="time" id="birthtime2" aria-label="Время" class="time-group-input">
+                    <div class="checkbox time-group-checkbox">
+                      <input type="checkbox" id="unknown2" aria-label="Не знаю точное время">
+                      <label for="unknown2">Не знаю точное время</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="gender2" data-icon="⚧">Пол</label>
+                  <select id="gender2">
+                    <option value="">Выбери</option>
+                    <option value="female">Женский</option>
+                    <option value="male">Мужской</option>
+                    <option value="other">Другой</option>
+                  </select>
+                </div>
+                <input type="hidden" id="person2Relationship">
+              </div>
+            </div>
           </div>
-          <div class="field">
-            <label for="gender2" data-icon="⚧">Пол второго человека</label>
-            <select id="gender2">
-                <option value="">Выбери</option>
-              <option value="female">Женский</option>
-              <option value="male">Мужской</option>
-              <option value="other">Другой</option>
-            </select>
-          </div>
-          <input type="hidden" id="person2Relationship">
-        </div>
         
           <div id="transitForm" style="display:none">
             <h3 style="margin-bottom:12px;">Энергия момента</h3>
@@ -2940,6 +2957,63 @@
       }
       window.toggleProfileAccordion = toggleProfileAccordion;
 
+      // ── Аккордеон второго человека ──────────────────────────────────────────
+      var p2AccOpen = false;
+      function toggleSecondPersonAccordion() {
+        var wrap = document.getElementById('secondPersonFormWrap');
+        var chevron = document.getElementById('p2AccChevron');
+        if (!wrap) return;
+        p2AccOpen = !p2AccOpen;
+        if (p2AccOpen) {
+          wrap.style.maxHeight = '2000px';
+          wrap.style.opacity = '1';
+          if (chevron) chevron.style.transform = 'rotate(180deg)';
+        } else {
+          wrap.style.maxHeight = '0';
+          wrap.style.opacity = '0';
+          if (chevron) chevron.style.transform = '';
+        }
+      }
+      window.toggleSecondPersonAccordion = toggleSecondPersonAccordion;
+
+      function openSecondPersonAccordion() {
+        if (!p2AccOpen) toggleSecondPersonAccordion();
+      }
+
+      function updateP2AccordionSummary() {
+        var name2 = (document.getElementById('name2') || {}).value || '';
+        var bd2 = (document.getElementById('birthdate2') || {}).value || '';
+        var nameEl = document.getElementById('p2AccName');
+        var dateEl = document.getElementById('p2AccDate');
+        var sepEl  = document.getElementById('p2AccSep');
+        if (!nameEl) return;
+        if (name2) {
+          nameEl.textContent = name2;
+          if (bd2 && dateEl) {
+            var parts = bd2.split('-');
+            dateEl.textContent = parts.length === 3 ? parts[2] + '.' + parts[1] + '.' + parts[0] : bd2;
+            if (sepEl) sepEl.style.display = '';
+          } else {
+            if (dateEl) dateEl.textContent = '';
+            if (sepEl) sepEl.style.display = 'none';
+          }
+        } else {
+          nameEl.textContent = 'Данные второго человека';
+          if (dateEl) dateEl.textContent = '';
+          if (sepEl) sepEl.style.display = 'none';
+        }
+      }
+      window.updateP2AccordionSummary = updateP2AccordionSummary;
+
+      // Следим за полями второго человека для обновления сводки в шапке
+      document.addEventListener('DOMContentLoaded', function() {
+        ['name2', 'birthdate2'].forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el) el.addEventListener('change', updateP2AccordionSummary);
+          if (el && el.tagName === 'INPUT') el.addEventListener('input', updateP2AccordionSummary);
+        });
+      });
+
       // Автозаполнение формы из профиля + аккордеон для повторных визитов
       async function loadSavedProfileForForm() {
         var accordion = document.getElementById('profileAccordion');
@@ -4161,19 +4235,24 @@
       } catch (_) {}
 
       function toggleFormsByMode(mode) {
-        var secondForm = document.getElementById('secondPersonForm');
+        var p2Accordion = document.getElementById('secondPersonAccordion');
         var transitForm = document.getElementById('transitForm');
-        if (secondForm) secondForm.style.display = 'none';
+        if (p2Accordion) p2Accordion.style.display = 'none';
         if (transitForm) transitForm.style.display = 'none';
-        if (mode === 'couple' && secondForm) {
-          secondForm.style.display = 'block';
+        if (mode === 'couple') {
+          if (p2Accordion) {
+            p2Accordion.style.display = 'block';
+            // Авто-открыть если ещё закрыт
+            setTimeout(function() { openSecondPersonAccordion(); }, 80);
+          }
         } else if (mode === 'transit' && transitForm) {
           transitForm.style.display = 'block';
         }
-        // Сбрасываем relationship person2 при смене режима
         if (mode !== 'couple') {
           var p2r = document.getElementById('person2Relationship');
           if (p2r) p2r.value = '';
+          // Закрыть аккордеон при смене режима
+          if (p2AccOpen) toggleSecondPersonAccordion();
         }
       }
 
