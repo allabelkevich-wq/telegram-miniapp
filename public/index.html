@@ -1073,6 +1073,19 @@
           <div class="profile-balance-icon"><img src="assets/icons/music.png" style="width:32px;height:32px;object-fit:contain;display:block;opacity:0.85;" alt=""></div>
         </div>
 
+        <!-- Мои данные -->
+        <div class="profile-section-title">
+          <div style="width:18px;height:18px;border-radius:5px;overflow:hidden;background:#fdf8ec;box-shadow:0 1px 4px rgba(0,0,0,0.2);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;"><img src="assets/icons/profile.png" style="width:100%;height:100%;object-fit:contain;display:block;padding:2px;box-sizing:border-box;" alt=""></div>
+          Мои данные
+        </div>
+        <div id="profileDataCard" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div>
+            <div id="profileDataName" style="font-size:0.9rem;font-weight:600;color:rgba(255,255,255,0.85);margin-bottom:3px;">—</div>
+            <div id="profileDataDate" style="font-size:0.75rem;color:rgba(255,255,255,0.4);">Дата рождения не указана</div>
+          </div>
+          <button type="button" onclick="goToPage('formPage')" style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.25);border-radius:10px;color:rgba(212,175,55,0.8);font-size:0.75rem;font-weight:600;font-family:inherit;padding:7px 12px;cursor:pointer;min-height:unset;box-shadow:none;animation:none;white-space:nowrap;flex-shrink:0;">Изменить</button>
+        </div>
+
         <!-- Тарифы — Suno-style -->
         <div class="profile-section-title">
           <div style="width:18px;height:18px;border-radius:5px;overflow:hidden;background:#fdf8ec;box-shadow:0 1px 4px rgba(0,0,0,0.2);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;"><img src="assets/icons/security.png" style="width:100%;height:100%;object-fit:contain;display:block;padding:2px;box-sizing:border-box;" alt=""></div>
@@ -1749,7 +1762,7 @@
         <div id="scPageChat" style="display:none;">
           <div style="text-align:center;margin-bottom:20px;">
             <div style="font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:0.05em;">Задай вопрос — душа ответит</div>
-            <div id="scPageTimer" style="display:none;font-size:0.75rem;color:rgba(212,175,55,0.5);background:rgba(212,175,55,0.08);padding:3px 10px;border-radius:20px;margin-top:6px;display:inline-block;"></div>
+            <div id="scPageTimer" style="display:none;font-size:0.75rem;color:rgba(212,175,55,0.5);background:rgba(212,175,55,0.08);padding:3px 10px;border-radius:20px;margin-top:6px;"></div>
           </div>
           <!-- История сообщений -->
           <div id="scPageHistory" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;min-height:60px;"></div>
@@ -2931,6 +2944,17 @@
           if (nameEl) nameEl.textContent = displayName;
           if (avatarInitialEl) avatarInitialEl.textContent = displayName.charAt(0).toUpperCase();
 
+          // Карточка «Мои данные»
+          var pdName = document.getElementById('profileDataName');
+          var pdDate = document.getElementById('profileDataDate');
+          if (pdName) pdName.textContent = displayName || '—';
+          if (pdDate && profileJson.profile && profileJson.profile.birthdate) {
+            var bd = new Date(profileJson.profile.birthdate + 'T00:00:00');
+            pdDate.textContent = bd.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          } else if (pdDate) {
+            pdDate.textContent = 'Нажми «Изменить» чтобы заполнить данные';
+          }
+
           // Фото из профиля (приоритет выше Telegram photo_url)
           if (profileJson.profile && profileJson.profile.avatar_url) {
             setAvatarPhoto(profileJson.profile.avatar_url);
@@ -3144,7 +3168,11 @@
 
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         var initData = getInitData();
-        if (!apiBase || !initData) return;
+        if (!apiBase || !initData) {
+          // Нет бэкенда — показываем форму открытой сразу, без анимации
+          if (formWrap) { formWrap.classList.remove('pfw-collapsed'); formWrap.classList.remove('no-anim'); }
+          return;
+        }
         try {
           var resp = await fetch(apiBase + '/api/user/profile', {
             method: 'POST',
@@ -4095,7 +4123,6 @@
       function goToSoulChat() {
         window.returnToPage = 'homePage';
         goToPage('soulChatPage');
-        initSoulChatPage();
       }
       window.goToSoulChat = goToSoulChat;
 
@@ -4139,12 +4166,12 @@
             if (timerEl && json.expires_at) {
               timerEl.style.display = 'inline-block';
               var exp = new Date(json.expires_at);
-              function updateTimer() {
+              var updateTimer = function() {
                 var diff = Math.max(0, exp - Date.now());
                 var h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000);
                 timerEl.textContent = 'Доступ: ещё ' + h + 'ч ' + m + 'мин';
                 if (diff > 0) setTimeout(updateTimer, 60000);
-              }
+              };
               updateTimer();
             }
           } else {
@@ -4171,7 +4198,7 @@
               body: JSON.stringify({ initData: initData })
             });
             var j = await r.json().catch(function(){ return {}; });
-            if (j && j.ok) {
+            if (j && (j.ok || j.success)) {
               initSoulChatPage();
             } else {
               btn.disabled = false; btn.textContent = '🎁 Получить 24 часа бесплатно';
