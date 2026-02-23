@@ -627,11 +627,24 @@
         </div>
       </div>` : '';
 
-      // ── Баннер «Не доставлено» ──────────────────────────────────────────
+      // ── Баннер ошибки / не доставлено ───────────────────────────────────
       const isDeliveryFailed = (r.generation_status || '') === 'delivery_failed' || (r.delivery_status || '') === 'failed';
-      const deliveryBanner = isDeliveryFailed ? `<div style="margin-bottom:14px;padding:12px 16px;background:rgba(230,126,34,0.15);border:1px solid rgba(230,126,34,0.4);border-radius:8px;color:#fcd34d;">
-        <strong>📭 Песня готова, но не доставлена пользователю.</strong> ${r.error_message ? escapeHtml(String(r.error_message).slice(0, 120)) : ''} Нажми «📤 Отправить пользователю» для повторной доставки.
-      </div>` : '';
+      const isHardFailed = gs === 'failed';
+      const isPending = ['pending','astro_calculated','lyrics_generated','suno_processing','processing'].includes(gs);
+      let deliveryBanner = '';
+      if (isDeliveryFailed) {
+        deliveryBanner = `<div style="margin-bottom:14px;padding:12px 16px;background:rgba(230,126,34,0.15);border:1px solid rgba(230,126,34,0.4);border-radius:8px;color:#fcd34d;">
+          <strong>📭 Песня готова, но не доставлена пользователю.</strong>${r.error_message ? ' <span style="opacity:.8;">'+escapeHtml(String(r.error_message).slice(0,200))+'</span>' : ''} Нажми «📤 Отправить пользователю» для повторной доставки.
+        </div>`;
+      } else if (isHardFailed && r.error_message) {
+        deliveryBanner = `<div style="margin-bottom:14px;padding:12px 16px;background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.4);border-radius:8px;color:#fca5a5;">
+          <strong>❌ Ошибка генерации:</strong> ${escapeHtml(String(r.error_message).slice(0, 300))}
+        </div>`;
+      } else if (isPending && r.error_message) {
+        deliveryBanner = `<div style="margin-bottom:14px;padding:12px 16px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:8px;color:#fde68a;">
+          <strong>⚠️ Последняя ошибка (заявка ещё в работе):</strong> ${escapeHtml(String(r.error_message).slice(0, 300))}
+        </div>`;
+      }
 
       // ── Блок «ID заявки» ─────────────────────────────────────────────────
       const isDeliveredToChat = !!(r.delivered_at || r.delivery_status === 'sent');
@@ -710,6 +723,12 @@
       document.querySelectorAll('.filter-btn').forEach(b => {
         b.classList.toggle('active', b.getAttribute('data-filter') === filter);
       });
+      // Скрываем секцию незавершённых/отменённых при специфичных фильтрах
+      const showTopSections = filter === 'all' || filter === 'pending';
+      const unpaid = document.getElementById('unpaidSection');
+      const cancelled = document.getElementById('cancelledSection');
+      if (unpaid) unpaid.style.display = showTopSections ? '' : 'none';
+      if (cancelled) cancelled.style.display = showTopSections ? '' : 'none';
       // Переключаемся на вкладку Заявки
       const tabBtn = document.querySelector('.tab-btn[onclick*="requests"]');
       if (tabBtn) switchTab('requests', tabBtn);
@@ -1101,6 +1120,7 @@
             <div class="req-row-main">
               <span class="req-row-name">${escapeHtml(r.name || '—')}${r.person2_name ? ' & ' + escapeHtml(r.person2_name) : ''}</span>
               <span class="req-row-meta">${escapeHtml(r.mode || 'single')} · ${dateStr}</span>
+              ${r.error_message && gs !== 'completed' ? `<span style="font-size:10px;color:#fca5a5;display:block;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;" title="${escapeAttr(r.error_message)}">❌ ${escapeHtml(String(r.error_message).slice(0, 80))}</span>` : ''}
             </div>
             <span class="req-row-status ${statusClass(gs)}" style="font-size:10px;padding:2px 8px;">${statusLabel(gs)}</span>
             ${(r.delivered_at || r.delivery_status === 'sent') ? '<span style="font-size:10px;color:#86efac;margin-left:4px;white-space:nowrap;" title="' + (r.delivered_at ? 'Доставлено в чат ' + new Date(r.delivered_at).toLocaleString('ru-RU') : 'Доставлено в чат') + '">✓ В чат</span>' : ''}
@@ -2013,7 +2033,7 @@
       if (!ids || !ids.length) return;
       try {
         const result = await fetchJson(
-          API_BASE + '/api/admin/requests/bulk-delete' + authQueryFromPath(),
+          API_BASE + '/api/admin/requests/delete' + authQueryFromPath(),
           { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify({ ids }) },
           10000
         );
@@ -2042,27 +2062,27 @@
       statusEl.textContent = 'Ищу…';
       resultEl.style.display = 'none';
       try {
-        const r = await apiFetch('/api/admin/wrong-language?from_lang=' + fromLang + '&to_lang=uk');
-        const data = await r.json();
-        if (!data.success) { statusEl.textContent = 'Ошибка: ' + data.error; return; }
+        const result = await fetchJson(API_BASE + '/api/admin/wrong-language?from_lang=' + fromLang + '&to_lang=uk' + authQuery(), { headers: authHeaders() });
+        const data = result.json;
+        if (!data.success) { statusEl.textContent = 'Ошибка: ' + (data.error || 'unknown'); return; }
         wrongLangIds = (data.rows || []).map(row => row.id);
         if (!data.count) {
           statusEl.textContent = 'Заявок с неправильным языком не найдено.';
+          resultEl.style.display = 'none';
           return;
         }
-        statusEl.textContent = '';
         listEl.innerHTML = (data.rows || []).map(row =>
-          `<div style="padding:6px 10px;border-bottom:1px solid #2d3748;font-size:12px;display:flex;gap:10px;align-items:center;">
-            <span style="color:#94a3b8;font-family:monospace">${row.id.slice(0,8)}</span>
+          `<div style="padding:6px 10px;border-bottom:1px solid #2d3748;font-size:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <span style="color:#94a3b8;font-family:monospace">${escapeHtml(row.id.slice(0,8))}</span>
             <span style="color:#e2e8f0">${escapeHtml(row.name||'—')}</span>
-            <span style="background:#e67e22;color:#fff;border-radius:4px;padding:1px 6px;font-size:11px;">${row.language}</span>
-            <span style="color:#64748b;font-size:11px;">${row.generation_status}</span>
-            <span style="color:#64748b;font-size:11px;">${row.telegram_user_id}</span>
+            <span style="background:#e67e22;color:#fff;border-radius:4px;padding:1px 6px;font-size:11px;">${escapeHtml(row.language)}</span>
+            <span style="color:#64748b;font-size:11px;">${escapeHtml(row.generation_status)}</span>
+            <span style="color:#64748b;font-size:11px;">ID: ${escapeHtml(String(row.telegram_user_id))}</span>
           </div>`
         ).join('');
         resultEl.style.display = 'block';
         statusEl.textContent = `Найдено: ${data.count} заявок`;
-      } catch(e) { statusEl.textContent = 'Ошибка: ' + e.message; }
+      } catch(e) { statusEl.textContent = 'Ошибка: ' + (e.message || e); }
     }
 
     async function requeueWrongLang() {
@@ -2072,16 +2092,16 @@
       if (!confirm(`Поставить ${wrongLangIds.length} заявок в очередь с языком «${toLang}»? Это запустит повторную генерацию.`)) return;
       statusEl.textContent = 'Отправляю…';
       try {
-        const r = await apiFetch('/api/admin/requeue-wrong-language', {
-          method: 'POST', headers: {'Content-Type':'application/json'},
+        const result = await fetchJson(API_BASE + '/api/admin/requeue-wrong-language' + authQueryFromPath(), {
+          method: 'POST', headers: {'Content-Type':'application/json', ...authHeaders()},
           body: JSON.stringify({ ids: wrongLangIds, to_lang: toLang })
         });
-        const data = await r.json();
-        if (!data.success) { statusEl.textContent = 'Ошибка: ' + data.error; return; }
+        const data = result.json;
+        if (!data.success) { statusEl.textContent = 'Ошибка: ' + (data.error || 'unknown'); return; }
         statusEl.textContent = `✅ Поставлено в очередь: ${data.requeued} заявок с языком «${data.language}»`;
         wrongLangIds = [];
         document.getElementById('wrongLangResult').style.display = 'none';
-      } catch(e) { statusEl.textContent = 'Ошибка: ' + e.message; }
+      } catch(e) { statusEl.textContent = 'Ошибка: ' + (e.message || e); }
     }
 
     // ===== ЯЗЫКИ: уведомление delivery_failed пользователей =====
@@ -2090,11 +2110,14 @@
       if (!confirm('Отправить уведомление всем пользователям с delivery_failed? Каждый получит 1 сообщение на своём языке.')) return;
       statusEl.textContent = 'Отправляю…';
       try {
-        const r = await apiFetch('/api/admin/notify-delivery-failed', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({}) });
-        const data = await r.json();
-        if (!data.success) { statusEl.textContent = 'Ошибка: ' + data.error; return; }
+        const result = await fetchJson(API_BASE + '/api/admin/notify-delivery-failed' + authQueryFromPath(), {
+          method: 'POST', headers: {'Content-Type':'application/json', ...authHeaders()},
+          body: JSON.stringify({})
+        });
+        const data = result.json;
+        if (!data.success) { statusEl.textContent = 'Ошибка: ' + (data.error || 'unknown'); return; }
         statusEl.textContent = `✅ Пользователей: ${data.users} · Отправлено: ${data.sent} · Ошибок: ${data.failed}`;
-      } catch(e) { statusEl.textContent = 'Ошибка: ' + e.message; }
+      } catch(e) { statusEl.textContent = 'Ошибка: ' + (e.message || e); }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
