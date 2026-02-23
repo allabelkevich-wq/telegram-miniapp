@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.49';
+        var APP_VERSION = '1.2.50';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -1727,14 +1727,11 @@
           </div>
         </div>
 
-        <!-- Загрузка -->
-        <div id="scPageLoading" style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.4);font-size:0.9rem;">
-          <div style="font-size:2rem;margin-bottom:12px;animation:pulse 1.5s ease-in-out infinite;">✨</div>
-          Загружаю…
-        </div>
+        <!-- Загрузка — скрыта, промо показывается сразу -->
+        <div id="scPageLoading" style="display:none;"></div>
 
-        <!-- Блок: нет доступа — промо -->
-        <div id="scPagePromo" style="display:none;">
+        <!-- Блок: нет доступа — промо (виден по умолчанию) -->
+        <div id="scPagePromo">
 
           <!-- Статистика -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;">
