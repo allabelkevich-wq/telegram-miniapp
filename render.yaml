@@ -7,7 +7,7 @@ services:
     runtime: node
     plan: free
     # Без rootDir — сборка из корня репо, чтобы скопировать public/index.html в bot/public/
-    buildCommand: cp public/index.html bot/public/ && cd bot && npm install
+    buildCommand: cp public/index.html bot/public/ && cp -r public/assets/icons bot/public/assets/ && cd bot && npm install
     startCommand: cd bot && npm start
     healthCheckPath: /healthz
 
