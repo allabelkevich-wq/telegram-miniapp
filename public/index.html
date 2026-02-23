@@ -677,10 +677,10 @@
     #profileIconBtn:active{background:rgba(212,175,55,0.28)}
 
     /* ── ПРОФИЛЬ — НОВЫЙ ДИЗАЙН (Suno-style) ── */
-    .profile-header{display:flex;align-items:center;gap:12px;padding:max(20px,calc(env(safe-area-inset-top)+12px)) 18px 16px;flex-shrink:0;background:#08071a;z-index:10}
+    .profile-header{display:flex;align-items:center;gap:12px;padding:max(20px,calc(env(safe-area-inset-top)+12px)) 20px 16px;flex-shrink:0;background:#08071a;z-index:10}
     .profile-back-btn{background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.4rem;cursor:pointer;padding:4px 8px;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;line-height:1}
     .profile-header-title{font-size:1.05rem;font-weight:600;color:rgba(255,255,255,0.85);letter-spacing:0.02em}
-    .profile-scroll{padding:0 18px calc(env(safe-area-inset-bottom)+80px)}
+    .profile-scroll{padding:8px 20px calc(env(safe-area-inset-bottom)+80px)}
     .profile-identity{text-align:center;margin-bottom:28px;padding-top:8px}
     .profile-avatar-wrap{position:relative;width:72px;height:72px;margin:0 auto 14px;cursor:pointer}
     .profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#d4af37,#ec4899);display:flex;align-items:center;justify-content:center;font-size:2rem;color:#fff;font-weight:700;letter-spacing:0;box-shadow:0 0 0 4px rgba(212,175,55,0.12),0 4px 24px rgba(212,175,55,0.18);overflow:hidden;transition:filter .2s}
@@ -702,7 +702,6 @@
     .profile-plans-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
     .profile-plan-card{background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px 14px;position:relative;display:flex;flex-direction:column;gap:4px;transition:border-color .2s,background .2s}
     .profile-plan-card.current{background:rgba(212,175,55,0.07);border-color:rgba(212,175,55,0.38)}
-    .ppc-status-img{height:30px;width:auto;margin-top:8px;align-self:flex-start;display:block;}
     .profile-plan-card.popular{background:linear-gradient(135deg,rgba(236,72,153,0.08),rgba(212,175,55,0.06));border-color:rgba(236,72,153,0.35);grid-column:1 / -1}
     .ppc-badge{font-size:0.62rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(212,175,55,0.7);margin-bottom:4px}
     .ppc-badge.hot{color:#ec4899}
@@ -719,6 +718,26 @@
     .ppc-btn{padding:8px 14px;border-radius:10px;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.35);color:#d4af37;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;margin:0;letter-spacing:0.02em;width:100%}
     .ppc-btn:active{background:rgba(212,175,55,0.25)}
     .ppc-btn.popular-btn{background:linear-gradient(135deg,rgba(236,72,153,0.25),rgba(212,175,55,0.18));border-color:rgba(236,72,153,0.45);color:#ec4899}
+    /* Кнопка «Подробнее» под тарифной карточкой */
+    .ppc-details-btn{width:100%;background:none;border:none;color:rgba(255,255,255,0.28);font-size:0.7rem;font-weight:500;font-family:inherit;padding:5px 0 2px;cursor:pointer;text-align:center;letter-spacing:0.03em;min-height:unset;box-shadow:none;animation:none;margin:0;transition:color .2s;text-decoration:underline;text-underline-offset:3px;}
+    .ppc-details-btn:hover{color:rgba(255,255,255,0.55);}
+    /* Модал описания тарифа */
+    .plan-modal-overlay{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;}
+    .plan-modal-sheet{background:linear-gradient(165deg,#130826 0%,#0d1830 100%);border-radius:22px 22px 0 0;padding:28px 22px 36px;max-height:85vh;overflow-y:auto;width:100%;max-width:520px;box-sizing:border-box;}
+    .plan-modal-sheet::-webkit-scrollbar{width:3px}
+    .plan-modal-sheet::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.2);border-radius:2px}
+    .plan-modal-handle{width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,0.15);margin:0 auto 24px;}
+    .plan-modal-title{font-size:1.3rem;font-weight:700;color:#d4af37;margin-bottom:4px;}
+    .plan-modal-price{font-size:0.9rem;color:rgba(255,255,255,0.5);margin-bottom:20px;}
+    .plan-modal-section{font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(212,175,55,0.55);margin:18px 0 10px;}
+    .plan-modal-feature{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;}
+    .plan-modal-feature-icon{flex-shrink:0;width:28px;height:28px;border-radius:8px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.2);display:flex;align-items:center;justify-content:center;font-size:0.85rem;}
+    .plan-modal-feature-text{font-size:0.84rem;color:rgba(255,255,255,0.75);line-height:1.5;}
+    .plan-modal-feature-text strong{color:#fff;font-weight:600;}
+    .plan-modal-cta{width:100%;margin-top:24px;padding:14px;border-radius:14px;font-size:0.95rem;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:0.02em;box-shadow:none;animation:none;}
+    .plan-modal-cta.gold{background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(212,175,55,0.15));border:1px solid rgba(212,175,55,0.5);color:#d4af37;}
+    .plan-modal-cta.pink{background:linear-gradient(135deg,rgba(236,72,153,0.3),rgba(212,175,55,0.15));border:1px solid rgba(236,72,153,0.5);color:#ec4899;}
+    .plan-modal-close{width:100%;margin-top:10px;padding:12px;border-radius:14px;font-size:0.85rem;font-weight:500;font-family:inherit;cursor:pointer;background:none;border:none;color:rgba(255,255,255,0.3);min-height:unset;box-shadow:none;animation:none;}
     /* Разовые треки */
     .profile-track-list{display:flex;flex-direction:column;gap:6px;margin-bottom:28px}
     .profile-track-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:13px;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .15s,border-color .15s}
@@ -760,6 +779,7 @@
     .pfa-chevron.open{transform:rotate(180deg);}
     #formFieldsWrap{overflow:hidden;transition:max-height .38s cubic-bezier(.4,0,.2,1),opacity .3s ease;max-height:2400px;}
     #formFieldsWrap.pfw-collapsed{max-height:0!important;opacity:0;pointer-events:none;}
+    #formFieldsWrap.no-anim{transition:none!important;}
   </style>
 </head>
 <body>
@@ -905,6 +925,7 @@
       <!-- Профиль, Помощь, Мои герои — доступ с главной -->
       <nav class="home-nav" style="display:flex;justify-content:center;gap:14px;margin-top:var(--spacing-lg);padding:8px 0;">
         <button type="button" class="home-nav-link" onclick="goToProfileFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">Профиль</button>
+        <button type="button" class="home-nav-link" onclick="goToSoulChat()" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">💬 Soul Chat</button>
         <button type="button" class="home-nav-link" onclick="goToHelpFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">Помощь</button>
         <button type="button" class="home-nav-link" onclick="goToHeroesFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">Лаборатория</button>
       </nav>
@@ -1081,8 +1102,8 @@
               <div class="ppc-price">$14.99/мес</div>
               <div class="ppc-save">−50% vs разовых</div>
             </div>
-            <img src="assets/icons/status-inactive.png" id="statusBasic" class="ppc-status-img" alt="Не активен">
             <button class="ppc-btn" id="planBtnBasic">Оформить</button>
+            <button class="ppc-details-btn" onclick="openPlanDetails('basic')">Подробнее</button>
           </div>
           <!-- Soul Plus -->
           <div class="profile-plan-card popular" id="planCardPlus">
@@ -1098,8 +1119,8 @@
               <div class="ppc-price">$24.99/мес</div>
               <div class="ppc-save">−58% vs разовых</div>
             </div>
-            <img src="assets/icons/status-inactive.png" id="statusPlus" class="ppc-status-img" alt="Не активен">
             <button class="ppc-btn popular-btn" id="planBtnPlus">Оформить</button>
+            <button class="ppc-details-btn" onclick="openPlanDetails('plus')">Подробнее</button>
           </div>
           <!-- Мастер — Лаборатория -->
           <div class="profile-plan-card master" id="planCardMaster">
@@ -1115,8 +1136,8 @@
               <div class="ppc-price" id="masterPriceEl">$39.99/мес</div>
               <div class="ppc-save">−83% vs разовых</div>
             </div>
-            <img src="assets/icons/status-inactive.png" id="statusMaster" class="ppc-status-img" alt="Не активен">
             <button class="ppc-btn master-btn" id="planBtnMaster">Открыть Лабораторию</button>
+            <button class="ppc-details-btn" onclick="openPlanDetails('master')">Подробнее</button>
           </div>
         </div>
 
@@ -1654,6 +1675,101 @@
         <button type="button" class="form-nav-link" onclick="goToProfileFrom('successPage')" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:0.78rem;cursor:pointer;font-family:inherit;padding:8px 0;width:100%;text-align:center;min-height:unset;box-shadow:none;">Перейти в профиль</button>
       </div>
     </div>
+
+    <!-- ══════════════ SOUL CHAT PAGE ══════════════ -->
+    <div class="page" id="soulChatPage">
+      <div class="profile-header">
+        <button type="button" class="profile-back-btn" onclick="goBack()" aria-label="Назад">←</button>
+        <div class="profile-header-title">💬 Soul Chat</div>
+      </div>
+      <div class="page-scroll" style="padding:16px 20px calc(env(safe-area-inset-bottom)+40px);">
+
+        <!-- Загрузка -->
+        <div id="scPageLoading" style="text-align:center;padding:60px 0;color:rgba(255,255,255,0.4);font-size:0.9rem;">
+          <div style="font-size:2rem;margin-bottom:12px;">✨</div>
+          Загружаю…
+        </div>
+
+        <!-- Блок: нет доступа — промо -->
+        <div id="scPagePromo" style="display:none;">
+          <div style="text-align:center;padding:20px 0 28px;">
+            <div style="font-size:3.5rem;margin-bottom:12px;">🌌</div>
+            <div style="font-size:1.3rem;font-weight:700;color:#d4af37;margin-bottom:10px;line-height:1.3;">Разговор с душой</div>
+            <div style="font-size:0.9rem;color:rgba(255,255,255,0.6);line-height:1.7;max-width:300px;margin:0 auto 24px;">
+              Soul Chat — ИИ, который говорит от лица твоей души. На основе твоей нумерологии, даты рождения и личных данных — он отвечает на вопросы о тебе: характере, предназначении, отношениях и пути.
+            </div>
+          </div>
+
+          <!-- Карточки с примерами вопросов -->
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;">
+            <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.15);border-radius:14px;padding:14px 16px;">
+              <div style="font-size:0.78rem;color:rgba(212,175,55,0.6);margin-bottom:4px;letter-spacing:0.05em;text-transform:uppercase;">Пример</div>
+              <div style="font-size:0.88rem;color:rgba(255,255,255,0.8);line-height:1.5;">«Почему мне так сложно говорить о своих чувствах?»</div>
+            </div>
+            <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.15);border-radius:14px;padding:14px 16px;">
+              <div style="font-size:0.78rem;color:rgba(212,175,55,0.6);margin-bottom:4px;letter-spacing:0.05em;text-transform:uppercase;">Пример</div>
+              <div style="font-size:0.88rem;color:rgba(255,255,255,0.8);line-height:1.5;">«Какой мой главный страх и как с ним работать?»</div>
+            </div>
+            <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.15);border-radius:14px;padding:14px 16px;">
+              <div style="font-size:0.78rem;color:rgba(212,175,55,0.6);margin-bottom:4px;letter-spacing:0.05em;text-transform:uppercase;">Пример</div>
+              <div style="font-size:0.88rem;color:rgba(255,255,255,0.8);line-height:1.5;">«В чём моё предназначение и как к нему прийти?»</div>
+            </div>
+          </div>
+
+          <!-- Тарифы с доступом -->
+          <div style="background:rgba(15,12,40,0.8);border:1px solid rgba(212,175,55,0.2);border-radius:18px;padding:20px;margin-bottom:16px;">
+            <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:14px;">Доступ включён в подписку</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:11px;">
+                <div><div style="font-size:0.88rem;font-weight:600;color:#fff;">Soul Basic</div><div style="font-size:0.75rem;color:rgba(255,255,255,0.4);">50 диалогов/месяц</div></div>
+                <div style="font-size:0.9rem;font-weight:700;color:#d4af37;">$14.99/мес</div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:linear-gradient(135deg,rgba(236,72,153,0.08),rgba(212,175,55,0.05));border:1px solid rgba(236,72,153,0.2);border-radius:11px;">
+                <div><div style="font-size:0.88rem;font-weight:600;color:#fff;">Soul Plus</div><div style="font-size:0.75rem;color:rgba(255,255,255,0.4);">Без лимита</div></div>
+                <div style="font-size:0.9rem;font-weight:700;color:#ec4899;">$24.99/мес</div>
+              </div>
+            </div>
+            <button onclick="goToProfileFrom('soulChatPage')" style="width:100%;margin-top:16px;padding:13px;border-radius:14px;background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(236,72,153,0.2));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:none;animation:none;">
+              Оформить подписку →
+            </button>
+          </div>
+
+          <!-- Либо подарок на сутки -->
+          <div id="scPageGiftWrap" style="display:none;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(236,72,153,0.06));border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:18px;text-align:center;">
+            <div style="font-size:1.8rem;margin-bottom:8px;">🎁</div>
+            <div style="font-weight:700;color:#d4af37;margin-bottom:6px;">Попробуй бесплатно — 24 часа</div>
+            <div style="font-size:0.85rem;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:14px;">Один раз для каждого пользователя</div>
+            <button id="scPageGiftBtn" type="button" style="padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">
+              🎁 Получить 24 часа бесплатно
+            </button>
+          </div>
+        </div>
+
+        <!-- Блок: есть доступ — чат -->
+        <div id="scPageChat" style="display:none;">
+          <div style="text-align:center;margin-bottom:20px;">
+            <div style="font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:0.05em;">Задай вопрос — душа ответит</div>
+            <div id="scPageTimer" style="display:none;font-size:0.75rem;color:rgba(212,175,55,0.5);background:rgba(212,175,55,0.08);padding:3px 10px;border-radius:20px;margin-top:6px;display:inline-block;"></div>
+          </div>
+          <!-- История сообщений -->
+          <div id="scPageHistory" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;min-height:60px;"></div>
+          <!-- Поле ввода -->
+          <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:14px;overflow:hidden;">
+            <textarea id="scPageQuestion" rows="3" placeholder="Задай вопрос своей душе…"
+              style="width:100%;box-sizing:border-box;padding:14px 14px 10px;background:transparent;border:none;color:#fff;font-size:0.92rem;font-family:inherit;resize:none;outline:none;line-height:1.5;"></textarea>
+            <div style="border-top:1px solid rgba(255,255,255,0.07);padding:8px 10px;">
+              <button id="scPageSendBtn" type="button" style="padding:10px 20px;border-radius:10px;background:linear-gradient(135deg,rgba(212,175,55,0.3),rgba(236,72,153,0.2));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:none;animation:none;float:right;">
+                Спросить ✨
+              </button>
+              <div style="clear:both;"></div>
+            </div>
+          </div>
+          <div id="scPageStatus" style="display:none;text-align:center;font-size:0.82rem;color:rgba(255,255,255,0.45);padding:10px 0;"></div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════ -->
 
     <!-- Страница «Спасибо за оплату» (редирект с HOT) -->
     <div class="page" id="paymentThanksPage">
@@ -2924,13 +3040,6 @@
             var activeBtn = document.getElementById(pm.btnId);
             if (activeBtn) { activeBtn.textContent = '✓ Активен'; activeBtn.disabled = true; activeBtn.style.opacity = '0.5'; }
 
-            // Значки статуса на карточках (PNG-изображения)
-            ['statusBasic','statusPlus','statusMaster'].forEach(function(sid) {
-              var sb = document.getElementById(sid); if (!sb) return;
-              var isThisActive = sid === 'status' + pm.cardId.replace('planCard','');
-              sb.src = isThisActive ? 'assets/icons/status-active.png' : 'assets/icons/status-inactive.png';
-              sb.alt = isThisActive ? 'Активен' : 'Не активен';
-            });
 
           } else {
             // Free план
@@ -2943,11 +3052,6 @@
             // Бесплатная карточка — текущая
             var cardFree2 = document.getElementById('planCardFree');
             if (cardFree2) cardFree2.classList.add('current');
-            // Все платные карточки — не активны
-            ['statusBasic','statusPlus','statusMaster'].forEach(function(sid) {
-              var sb = document.getElementById(sid); if (!sb) return;
-              sb.src = 'assets/icons/status-inactive.png'; sb.alt = 'Не активен';
-            });
           }
         } catch (e) {
           console.warn('[Profile] Ошибка загрузки:', e);
@@ -3033,9 +3137,10 @@
       async function loadSavedProfileForForm() {
         var accordion = document.getElementById('profileAccordion');
         var formWrap = document.getElementById('formFieldsWrap');
-        // Сброс: скрываем аккордеон, показываем поля
+        // Сброс: скрываем аккордеон, форму держим свёрнутой до получения данных
         if (accordion) accordion.style.display = 'none';
-        if (formWrap) { formWrap.classList.remove('pfw-collapsed'); }
+        // Убираем transition на время инициализации — без видимого прыжка
+        if (formWrap) { formWrap.classList.add('no-anim'); formWrap.classList.add('pfw-collapsed'); }
 
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         var initData = getInitData();
@@ -3048,7 +3153,16 @@
           });
           var json = await resp.json().catch(function() { return {}; });
           var p = json && json.profile;
-          if (!p) return;
+          if (!p) {
+            // Профиля нет — показываем форму без анимации прыжка
+            if (formWrap) {
+              formWrap.classList.add('no-anim');
+              formWrap.classList.remove('pfw-collapsed');
+              // Включаем анимацию обратно после рендера
+              requestAnimationFrame(function() { requestAnimationFrame(function() { if (formWrap) formWrap.classList.remove('no-anim'); }); });
+            }
+            return;
+          }
 
           // Предзаполняем поля формы
           var nameEl = document.getElementById('name');
@@ -3105,6 +3219,8 @@
             // Сворачиваем поля — форма заполнена, пользователь может сразу отправить
             if (formWrap) formWrap.classList.add('pfw-collapsed');
             if (chevronEl) chevronEl.classList.add('open');
+            // Снимаем no-anim после первого рендера — дальше transitions работают нормально
+            requestAnimationFrame(function() { requestAnimationFrame(function() { if (formWrap) formWrap.classList.remove('no-anim'); }); });
           }
         } catch(e) {
           console.warn('[Form] Ошибка загрузки профиля:', e);
@@ -3975,6 +4091,163 @@
 
       function updateSoulChatHint() { initSoulChat(); }
 
+      // ══════════════ SOUL CHAT PAGE ══════════════
+      function goToSoulChat() {
+        window.returnToPage = 'homePage';
+        goToPage('soulChatPage');
+        initSoulChatPage();
+      }
+      window.goToSoulChat = goToSoulChat;
+
+      async function initSoulChatPage() {
+        var loadEl   = document.getElementById('scPageLoading');
+        var promoEl  = document.getElementById('scPagePromo');
+        var chatEl   = document.getElementById('scPageChat');
+        var giftWrap = document.getElementById('scPageGiftWrap');
+        if (!loadEl) return;
+
+        function scpShow(id) {
+          [loadEl, promoEl, chatEl].forEach(function(el){ if(el) el.style.display='none'; });
+          var el = document.getElementById(id);
+          if (el) el.style.display = '';
+        }
+
+        scpShow('scPageLoading');
+
+        var apiBase  = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        var initData = getInitData();
+        if (!apiBase || !initData) {
+          scpShow('scPagePromo');
+          return;
+        }
+
+        try {
+          var resp = await fetch(apiBase + '/api/soul-chat/access', {
+            method: 'GET',
+            headers: { 'X-Telegram-Init': initData }
+          });
+          var json = await resp.json().catch(function(){ return {}; });
+
+          // Сохраняем last_request_id для запросов к /api/soul-chat
+          if (json && json.last_request_id) {
+            window._scLastRequestId = json.last_request_id;
+          }
+
+          if (json && json.allowed) {
+            scpShow('scPageChat');
+            var timerEl = document.getElementById('scPageTimer');
+            if (timerEl && json.expires_at) {
+              timerEl.style.display = 'inline-block';
+              var exp = new Date(json.expires_at);
+              function updateTimer() {
+                var diff = Math.max(0, exp - Date.now());
+                var h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000);
+                timerEl.textContent = 'Доступ: ещё ' + h + 'ч ' + m + 'мин';
+                if (diff > 0) setTimeout(updateTimer, 60000);
+              }
+              updateTimer();
+            }
+          } else {
+            scpShow('scPagePromo');
+            if (json && json.trial_available && giftWrap) giftWrap.style.display = '';
+          }
+        } catch(e) {
+          scpShow('scPagePromo');
+        }
+      }
+
+      // Кнопка «Получить подарок» на странице Soul Chat
+      (function() {
+        var btn = document.getElementById('scPageGiftBtn');
+        if (!btn) return;
+        btn.addEventListener('click', async function() {
+          btn.disabled = true; btn.textContent = '⏳ Активирую…';
+          var apiBase  = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+          var initData = getInitData();
+          if (!apiBase || !initData) { btn.disabled = false; btn.textContent = '🎁 Попробовать'; return; }
+          try {
+            var r = await fetch(apiBase + '/api/soul-chat/activate-gift', {
+              method:'POST', headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({ initData: initData })
+            });
+            var j = await r.json().catch(function(){ return {}; });
+            if (j && j.ok) {
+              initSoulChatPage();
+            } else {
+              btn.disabled = false; btn.textContent = '🎁 Получить 24 часа бесплатно';
+              alert(j && j.error ? j.error : 'Ошибка активации');
+            }
+          } catch(e) { btn.disabled = false; btn.textContent = '🎁 Получить 24 часа бесплатно'; }
+        });
+      })();
+
+      // Кнопка «Спросить» на странице Soul Chat
+      (function() {
+        var sendBtn   = document.getElementById('scPageSendBtn');
+        var questionEl = document.getElementById('scPageQuestion');
+        var historyEl  = document.getElementById('scPageHistory');
+        var statusEl   = document.getElementById('scPageStatus');
+        if (!sendBtn || !questionEl) return;
+
+        function addMsg(role, text) {
+          if (!historyEl) return;
+          var isUser = (role === 'user');
+          var wrap = document.createElement('div');
+          wrap.style.cssText = 'display:flex;justify-content:' + (isUser ? 'flex-end' : 'flex-start') + ';';
+          var bubble = document.createElement('div');
+          bubble.style.cssText = 'max-width:82%;padding:12px 14px;border-radius:' + (isUser ? '14px 14px 4px 14px' : '14px 14px 14px 4px') + ';background:' + (isUser ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.06)') + ';border:1px solid ' + (isUser ? 'rgba(212,175,55,0.25)' : 'rgba(255,255,255,0.08)') + ';font-size:0.88rem;line-height:1.6;color:' + (isUser ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.8)') + ';white-space:pre-wrap;';
+          bubble.textContent = text;
+          wrap.appendChild(bubble);
+          historyEl.appendChild(wrap);
+          historyEl.scrollTop = historyEl.scrollHeight;
+        }
+
+        sendBtn.addEventListener('click', async function() {
+          var question = questionEl.value.trim();
+          if (!question) return;
+          var apiBase  = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+          var initData = getInitData();
+          if (!apiBase || !initData) return;
+
+          addMsg('user', question);
+          questionEl.value = '';
+          sendBtn.disabled = true;
+          if (statusEl) { statusEl.textContent = '🧘 Слушаю душу…'; statusEl.style.display = ''; }
+
+          try {
+            var resp = await fetch(apiBase + '/api/soul-chat', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+              body: JSON.stringify({
+                initData: initData,
+                question: question,
+                request_id: window._scLastRequestId || ''
+              })
+            });
+            var json = await resp.json().catch(function(){ return {}; });
+            if (json && json.answer) {
+              addMsg('soul', json.answer);
+            } else if (json && json.error) {
+              addMsg('soul', '❌ ' + json.error);
+              if (!json.success) setTimeout(function(){ initSoulChatPage(); }, 1200);
+            } else {
+              addMsg('soul', '❌ Ошибка. Попробуй ещё раз.');
+            }
+          } catch(e) {
+            addMsg('soul', '❌ Ошибка соединения.');
+          } finally {
+            sendBtn.disabled = false;
+            if (statusEl) statusEl.style.display = 'none';
+          }
+        });
+
+        // Ctrl+Enter/Cmd+Enter для отправки
+        questionEl.addEventListener('keydown', function(e) {
+          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') sendBtn.click();
+        });
+      })();
+      // ═══════════════════════════════════════════
+
       // Активировать подарочные сутки
       var scActivateGiftBtn = document.getElementById('scActivateGiftBtn');
       if (scActivateGiftBtn) scActivateGiftBtn.addEventListener('click', async function() {
@@ -4135,6 +4408,7 @@
         if (pageId === 'profilePage' && typeof loadProfilePage === 'function') loadProfilePage();
         // paymentPage теперь overlay — здесь ничего не делаем
         if (pageId === 'successPage') updateSoulChatHint();
+        if (pageId === 'soulChatPage') initSoulChatPage();
         if (document.getElementById('previewNav') && document.getElementById('previewNav').classList.contains('show')) {
           document.querySelectorAll('.preview-nav button').forEach(function(btn) {
             btn.classList.remove('active');
@@ -6091,6 +6365,85 @@
 
   <style>
     @keyframes confirmSpin { to { transform: rotate(360deg); } }
+    @keyframes planModalIn { from{opacity:0;transform:translateY(40px)} to{opacity:1;transform:translateY(0)} }
+    .plan-modal-sheet { animation: planModalIn .25s ease; }
   </style>
+
+  <!-- Модал описания тарифа -->
+  <div id="planModalOverlay" class="plan-modal-overlay" style="display:none;" onclick="closePlanModal(event)">
+    <div class="plan-modal-sheet" id="planModalSheet">
+      <div class="plan-modal-handle"></div>
+      <div id="planModalContent"></div>
+    </div>
+  </div>
+
+  <script>
+    var PLAN_DETAILS = {
+      basic: {
+        title: 'Soul Basic',
+        price: '$14.99 / месяц',
+        color: 'gold',
+        features: [
+          { icon: '🎵', name: '5 треков в месяц', desc: 'Каждый месяц — 5 новых персональных песен. Цена за трек по подписке: ~$3 вместо $5.99 в розницу. Экономия 50%.' },
+          { icon: '💬', name: 'Soul Chat', desc: 'ИИ-диалог с твоей душой на основе даты рождения, имени и личных данных. Задавай вопросы о себе, своём характере, пути и предназначении.' },
+          { icon: '📂', name: 'История заказов', desc: 'Все созданные треки сохраняются в твоём профиле. Можно вернуться, переслушать и поделиться в любое время.' },
+          { icon: '🌐', name: 'Все форматы', desc: 'Для себя, Для двоих и Энергия дня — доступны все три формата создания песни.' },
+        ]
+      },
+      plus: {
+        title: 'Soul Plus',
+        price: '$24.99 / месяц',
+        color: 'pink',
+        features: [
+          { icon: '🎵', name: '10 треков в месяц', desc: '10 персональных песен каждый месяц. Цена за трек ~$2.5 — экономия 58% по сравнению с разовой покупкой.' },
+          { icon: '💬', name: 'Soul Chat без лимита', desc: 'Неограниченное количество диалогов с Soul Chat. Общайся с ИИ-отражением своей души когда угодно и сколько угодно.' },
+          { icon: '⚡', name: 'Приоритет обработки', desc: 'Твои заявки обрабатываются в первую очередь — песня готова быстрее, чем у остальных пользователей.' },
+          { icon: '🎨', name: 'Эксклюзивные стили', desc: 'Доступ к редким музыкальным стилям и уникальным форматам, которых нет в бесплатном и Basic-тарифах.' },
+          { icon: '📂', name: 'Полная история', desc: 'Все треки сохраняются с текстами, аудио и датами создания.' },
+        ]
+      },
+      master: {
+        title: 'Лаборатория',
+        price: '$39.99 / месяц',
+        color: 'gold',
+        features: [
+          { icon: '🎵', name: '30 треков в месяц', desc: 'Максимальный объём — 30 персональных песен каждый месяц для себя и близких. Цена за трек ~$1.33 — экономия 83%.' },
+          { icon: '👥', name: 'Картотека людей', desc: 'Добавляй близких в Лабораторию и создавай для них песни в один тап. Имя, дата рождения и другие данные сохраняются — вводить повторно не нужно.' },
+          { icon: '📋', name: 'История всех генераций', desc: 'Полная история всех созданных треков с текстами, аудио и датами — для тебя и для каждого человека в Картотеке.' },
+          { icon: '💬', name: 'Soul Chat без лимита', desc: 'Неограниченный доступ к Soul Chat для тебя и всех людей из Картотеки.' },
+          { icon: '⚡', name: 'Максимальный приоритет', desc: 'Самый высокий приоритет в очереди — песни готовы быстрее всего.' },
+        ]
+      }
+    };
+
+    function openPlanDetails(plan) {
+      var data = PLAN_DETAILS[plan];
+      if (!data) return;
+      var content = document.getElementById('planModalContent');
+      if (!content) return;
+      var featuresHtml = data.features.map(function(f) {
+        return '<div class="plan-modal-feature">'
+          + '<div class="plan-modal-feature-icon">' + f.icon + '</div>'
+          + '<div class="plan-modal-feature-text"><strong>' + f.name + '</strong><br>' + f.desc + '</div>'
+          + '</div>';
+      }).join('');
+      content.innerHTML = ''
+        + '<div class="plan-modal-title">' + data.title + '</div>'
+        + '<div class="plan-modal-price">' + data.price + '</div>'
+        + '<div class="plan-modal-section">Что входит</div>'
+        + featuresHtml
+        + '<button class="plan-modal-cta ' + data.color + '" onclick="closePlanModal();document.getElementById(\'planBtn\' + \'' + (plan.charAt(0).toUpperCase()+plan.slice(1)) + '\') && document.getElementById(\'planBtn\' + \'' + (plan.charAt(0).toUpperCase()+plan.slice(1)) + '\').click()">Оформить ' + data.title + '</button>'
+        + '<button class="plan-modal-close" onclick="closePlanModal()">Закрыть</button>';
+      var overlay = document.getElementById('planModalOverlay');
+      if (overlay) { overlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+    }
+    function closePlanModal(e) {
+      if (e && e.target !== document.getElementById('planModalOverlay')) return;
+      var overlay = document.getElementById('planModalOverlay');
+      if (overlay) { overlay.style.display = 'none'; document.body.style.overflow = ''; }
+    }
+    window.openPlanDetails = openPlanDetails;
+    window.closePlanModal = closePlanModal;
+  </script>
 </body>
 </html>
