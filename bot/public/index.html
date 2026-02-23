@@ -3757,8 +3757,13 @@
         var _urlParams = typeof window.location !== 'undefined' ? (window.location.search || '') : '';
         var _isPaymentReturn = _urlParams.indexOf('payment=success') !== -1;
 
+        function _hasSeenOnboarding() {
+          try { return !!localStorage.getItem(ONBOARDING_KEY); } catch(_) { return false; }
+        }
+
         window.startApp = function() {
-          if (_isPaymentReturn) {
+          if (_isPaymentReturn || _hasSeenOnboarding()) {
+            // Повторный визит или возврат с оплаты — сразу на главную
             if (homePage) homePage.classList.add('active');
             try { localStorage.setItem(ONBOARDING_KEY, 'true'); } catch(_) {}
           } else {
