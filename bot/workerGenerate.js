@@ -65,6 +65,28 @@ function parseSongFromResponse(text) {
       lyrics = endMark >= 0 ? untilEnd.slice(0, endMark).trim() : untilEnd.trim();
     }
   }
+
+  // Переводим русские структурные теги в английские (Suno не поёт их, а правильно интерпретирует)
+  lyrics = lyrics
+    .replace(/\[Куплет\s*(\d+)\]/gi, "[Verse $1]")
+    .replace(/\[Припев\]/gi, "[Chorus]")
+    .replace(/\[Бридж\]/gi, "[Bridge]")
+    .replace(/\[Вступление\]/gi, "[Intro]")
+    .replace(/\[Вступ\]/gi, "[Intro]")
+    .replace(/\[Интро\]/gi, "[Intro]")
+    .replace(/\[Аутро\]/gi, "[Outro]")
+    .replace(/\[Концовка\]/gi, "[Outro]")
+    .replace(/\[Проигрыш\]/gi, "[Instrumental break]")
+    .replace(/\[Хор\]/gi, "[Chorus]")
+    .replace(/\[Заключение\]/gi, "[Outro]");
+
+  // Убираем любой текст, который идёт ДО первого структурного тега — Suno пел бы его как слова
+  const firstTag = lyrics.search(/\[(?:Verse|Chorus|Bridge|Intro|Outro|verse|chorus|bridge|intro|outro)/i);
+  if (firstTag > 10) {
+    const prefix = lyrics.slice(0, firstTag).trim();
+    if (prefix.length > 30) lyrics = lyrics.slice(firstTag);
+  }
+
   if (!title && lyrics) title = "Sound Key";
 
   return {
@@ -152,7 +174,7 @@ async function processOneRequest(row) {
     return;
   }
 
-  const userMessage = "По данным выше выполни полный алгоритм: Этап 1 (анализ), при необходимости Этап 2, затем Этап 3 (песня). В конце обязательно укажи название песни в кавычках «» и блок ЛИРИКА с текстом песни и разметкой [verse 1], [chorus] и т.д., затем MUSIC PROMPT для Suno со [style: ...] на английском.";
+  const userMessage = "По данным выше выполни полный алгоритм: Этап 1 (анализ), при необходимости Этап 2, затем Этап 3 (песня). КРИТИЧЕСКИ ВАЖНО: (1) строго соблюдай правильное склонение имени человека во всех падежах и во всей песне; (2) структурные метки пиши ТОЛЬКО на английском — [verse 1], [chorus], [bridge], [outro] и т.д. — НИКОГДА не используй русские теги вроде [Куплет], [Припев]; (3) блок ЛИРИКА должен начинаться сразу с первого [verse] без предисловий. В конце обязательно укажи название песни в кавычках «» и блок ЛИРИКА, затем MUSIC PROMPT для Suno со [style: ...] на английском.";
 
   const llm = await chatCompletion(systemPrompt, userMessage, {});
   if (!llm.ok) {
