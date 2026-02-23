@@ -718,15 +718,17 @@
     .profile-ref-stats-label{font-size:0.68rem;color:rgba(255,255,255,0.38);margin-top:2px;text-align:center}
     .profile-create-btn{width:100%;padding:15px 24px;border-radius:16px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;letter-spacing:0.02em;box-shadow:0 4px 20px rgba(212,175,55,0.2);transition:transform .15s,box-shadow .15s}
     .profile-create-btn:active{transform:scale(0.98)}
-    /* ── ФОРМА: СВОДКА ПРОФИЛЯ ── */
-
-    .fps-card{background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.2);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:10px;box-sizing:border-box;font-family:'Comfortaa',sans-serif;overflow:hidden}
-    .fps-info{flex:1 1 0;min-width:0;display:flex;align-items:center;overflow:hidden}
-    .fps-name{font-size:0.92rem;font-weight:700;color:rgba(255,255,255,0.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Comfortaa',sans-serif;min-width:0;flex-shrink:1}
-    .fps-sep{font-size:0.9rem;color:rgba(212,175,55,0.35);margin:0 6px;flex-shrink:0}
-    .fps-date{font-size:0.85rem;font-weight:400;color:rgba(212,175,55,0.75);white-space:nowrap;flex-shrink:0;font-family:'Comfortaa',sans-serif}
-    .fps-edit-btn{background:none;border:1px solid rgba(212,175,55,0.3);border-radius:8px;color:rgba(212,175,55,0.65);font-size:0.72rem;cursor:pointer;padding:5px 10px;min-height:unset;min-width:72px;box-shadow:none;animation:none;margin:0;font-weight:600;white-space:nowrap;flex-shrink:0;letter-spacing:0.04em;text-transform:uppercase;font-family:'Comfortaa',sans-serif;transition:border-color .2s,color .2s}
-    .fps-edit-btn:active{color:rgba(212,175,55,0.9);border-color:rgba(212,175,55,0.5)}
+    /* ── ФОРМА: АККОРДЕОН ПРОФИЛЯ ── */
+    .pfa-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.2);border-radius:14px;cursor:pointer;font-family:'Comfortaa',sans-serif;transition:background .2s,border-color .2s;user-select:none;-webkit-user-select:none;box-sizing:border-box;}
+    .pfa-header:active{background:rgba(212,175,55,0.12);border-color:rgba(212,175,55,0.38);}
+    .pfa-info{display:flex;align-items:center;gap:8px;min-width:0;flex:1;overflow:hidden;}
+    .pfa-name{font-size:0.95rem;font-weight:700;color:rgba(255,255,255,0.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Comfortaa',sans-serif;}
+    .pfa-sep{color:rgba(212,175,55,0.4);font-size:0.85rem;flex-shrink:0;}
+    .pfa-date{font-size:0.85rem;color:rgba(212,175,55,0.82);white-space:nowrap;flex-shrink:0;font-family:'Comfortaa',sans-serif;}
+    .pfa-chevron{color:rgba(212,175,55,0.65);flex-shrink:0;margin-left:12px;transition:transform .28s ease;display:flex;align-items:center;}
+    .pfa-chevron.open{transform:rotate(180deg);}
+    #formFieldsWrap{overflow:hidden;transition:max-height .35s cubic-bezier(.4,0,.2,1),opacity .3s ease;}
+    #formFieldsWrap.pfw-collapsed{max-height:0!important;opacity:0;pointer-events:none;}
   </style>
 </head>
 <body>
@@ -1287,16 +1289,21 @@
           </div>
         </div>
 
-        <!-- Сводка профиля для возвращающегося пользователя -->
-        <div id="formProfileSummary" style="display:none;margin-bottom:12px">
-          <div class="fps-card">
-            <div class="fps-info">
-              <span id="formProfileSummaryName" class="fps-name"></span><span id="formProfileSummarySep" class="fps-sep" style="display:none"> · </span><span id="formProfileSummaryDate" class="fps-date"></span>
+        <!-- Аккордеон профиля для возвращающегося пользователя -->
+        <div id="profileAccordion" style="display:none;margin-bottom:12px;">
+          <div class="pfa-header" onclick="toggleProfileAccordion()">
+            <div class="pfa-info">
+              <span id="pfaName" class="pfa-name"></span>
+              <span class="pfa-sep" id="pfaSep" style="display:none">·</span>
+              <span id="pfaDate" class="pfa-date"></span>
             </div>
-            <button type="button" id="formProfileEditBtn" class="fps-edit-btn">Изменить</button>
+            <div class="pfa-chevron" id="pfaChevron">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
           </div>
         </div>
 
+        <div id="formFieldsWrap">
         <div class="step-panel" data-step="2">
         <div class="field">
           <label for="name" data-icon="👤">Имя</label>
@@ -1427,6 +1434,7 @@
             </div>
           </div>
         </div>
+        </div><!-- /formFieldsWrap -->
         
         <div class="step-panel" data-step="3">
         <div class="field">
@@ -2851,13 +2859,29 @@
         }
       }
 
-      // Автозаполнение формы из профиля + компактная карточка для повторных визитов
+      // Аккордеон: открыть/закрыть поля формы
+      function toggleProfileAccordion() {
+        var wrap = document.getElementById('formFieldsWrap');
+        var chevron = document.getElementById('pfaChevron');
+        if (!wrap) return;
+        var isCollapsed = wrap.classList.contains('pfw-collapsed');
+        if (isCollapsed) {
+          wrap.classList.remove('pfw-collapsed');
+          if (chevron) chevron.classList.remove('open');
+        } else {
+          wrap.classList.add('pfw-collapsed');
+          if (chevron) chevron.classList.add('open');
+        }
+      }
+      window.toggleProfileAccordion = toggleProfileAccordion;
+
+      // Автозаполнение формы из профиля + аккордеон для повторных визитов
       async function loadSavedProfileForForm() {
-        var summary = document.getElementById('formProfileSummary');
-        var stepPanel2 = document.querySelector('.step-panel[data-step="2"]');
-        // Сброс: всегда показываем поля, прячем карточку
-        if (summary) summary.style.display = 'none';
-        if (stepPanel2) stepPanel2.style.display = '';
+        var accordion = document.getElementById('profileAccordion');
+        var formWrap = document.getElementById('formFieldsWrap');
+        // Сброс: скрываем аккордеон, показываем поля
+        if (accordion) accordion.style.display = 'none';
+        if (formWrap) { formWrap.classList.remove('pfw-collapsed'); }
 
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         var initData = getInitData();
@@ -2872,7 +2896,7 @@
           var p = json && json.profile;
           if (!p) return;
 
-          // Предзаполняем скрытые поля
+          // Предзаполняем поля формы
           var nameEl = document.getElementById('name');
           var birthdateEl = document.getElementById('birthdate');
           var birthplaceEl = document.getElementById('birthplace');
@@ -2897,13 +2921,11 @@
           if (birthtimeEl && p.birthtime) birthtimeEl.value = p.birthtime;
           if (unknownEl && p.birthtime_unknown) unknownEl.checked = true;
 
-          // Язык песни: используем сохранённый, но если это 'ru' — проверяем реальный язык Telegram
-          // Украинцы должны получать песню на украинском, а не на русском
+          // Язык песни
           var langEl = document.getElementById('language');
           if (langEl) {
             var tgLc = ((tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code) || '').toLowerCase();
             var telegramSongLang = /^uk/.test(tgLc) ? 'uk' : /^en/.test(tgLc) ? 'en' : /^de/.test(tgLc) ? 'de' : /^fr/.test(tgLc) ? 'fr' : 'ru';
-            // Если в профиле нет языка ИЛИ он 'ru' но Telegram говорит 'uk' — ставим язык Telegram
             var profileLang = p.language || '';
             if (profileLang && !(profileLang === 'ru' && telegramSongLang !== 'ru')) {
               langEl.value = profileLang;
@@ -2912,32 +2934,28 @@
             }
           }
 
-          // Показываем компактную карточку только если есть имя И дата
-          if (p.name && p.birthdate) {
-            var summaryNameEl = document.getElementById('formProfileSummaryName');
-            var summaryDateEl = document.getElementById('formProfileSummaryDate');
-            var sumSepEl = document.getElementById('formProfileSummarySep');
-            var d = new Date(p.birthdate + 'T00:00:00');
-            var dateStr = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            if (summaryNameEl) summaryNameEl.textContent = p.name;
-            if (summaryDateEl) summaryDateEl.textContent = dateStr;
-            if (sumSepEl) sumSepEl.style.display = 'inline';
-            if (summary) summary.style.display = 'block';
-            if (stepPanel2) stepPanel2.style.display = 'none';
-          }
-
-          // Кнопка «Изменить» — показывает поля и прячет карточку
-          var editBtn = document.getElementById('formProfileEditBtn');
-          if (editBtn) {
-            editBtn.onclick = function() {
-              if (stepPanel2) stepPanel2.style.display = '';
-              if (summary) summary.style.display = 'none';
-            };
+          // Показываем аккордеон если есть имя (минимум)
+          if (p.name) {
+            var pfaNameEl = document.getElementById('pfaName');
+            var pfaDateEl = document.getElementById('pfaDate');
+            var pfaSepEl  = document.getElementById('pfaSep');
+            var chevronEl = document.getElementById('pfaChevron');
+            if (pfaNameEl) pfaNameEl.textContent = p.name;
+            if (p.birthdate) {
+              var d = new Date(p.birthdate + 'T00:00:00');
+              var dateStr = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+              if (pfaDateEl) pfaDateEl.textContent = dateStr;
+              if (pfaSepEl) pfaSepEl.style.display = 'inline';
+            }
+            if (accordion) accordion.style.display = 'block';
+            // Сворачиваем поля — форма заполнена, пользователь может сразу отправить
+            if (formWrap) formWrap.classList.add('pfw-collapsed');
+            if (chevronEl) chevronEl.classList.add('open');
           }
         } catch(e) {
           console.warn('[Form] Ошибка загрузки профиля:', e);
         }
-        // Дефолтный язык песни по Telegram language_code (если select ещё пустой)
+        // Дефолтный язык по Telegram
         var langElFallback = document.getElementById('language');
         if (langElFallback && !langElFallback.value) {
           var tgLcFb = ((tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code) || '').toLowerCase();
