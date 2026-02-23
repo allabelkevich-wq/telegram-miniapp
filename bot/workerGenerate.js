@@ -49,10 +49,13 @@ function parseSongFromResponse(text) {
   const styleMatch = text.match(/\[style:\s*([^\]]+)\]/i);
   if (styleMatch) style = styleMatch[1].trim().slice(0, 500);
 
+  // Конец лирики — разделитель или MUSIC PROMPT
+  const LYRICS_END_RE = /\n\s*(?:---|MUSIC PROMPT|КЛЮЧЕВЫЕ ПРИНЦИПЫ|\[style:)/i;
+
   const lyricsStart = text.search(/\b(ЛИРИКА|LYRICS)\s*:\s*/i);
   if (lyricsStart >= 0) {
     const afterLabel = text.slice(lyricsStart);
-    const endMark = afterLabel.search(/\n\s*MUSIC PROMPT|КЛЮЧЕВЫЕ ПРИНЦИПЫ|\[style:/i);
+    const endMark = afterLabel.search(LYRICS_END_RE);
     lyrics = (endMark >= 0 ? afterLabel.slice(0, endMark) : afterLabel)
       .replace(/^(ЛИРИКА|LYRICS)\s*:\s*/i, "")
       .trim();
@@ -61,7 +64,7 @@ function parseSongFromResponse(text) {
     const verseStart = text.search(/\[(?:Verse|verse|Chorus|chorus)/i);
     if (verseStart >= 0) {
       const untilEnd = text.slice(verseStart);
-      const endMark = untilEnd.search(/\n\s*MUSIC PROMPT|КЛЮЧЕВЫЕ ПРИНЦИПЫ|\[style:/i);
+      const endMark = untilEnd.search(LYRICS_END_RE);
       lyrics = endMark >= 0 ? untilEnd.slice(0, endMark).trim() : untilEnd.trim();
     }
   }
@@ -80,8 +83,17 @@ function parseSongFromResponse(text) {
     .replace(/\[Хор\]/gi, "[Chorus]")
     .replace(/\[Заключение\]/gi, "[Outro]");
 
-  // Убираем «псевдо-теги» LLM с описанием/историей вида [Предыстория: ...], [Описание: ...] — Suno их поёт
-  lyrics = lyrics.replace(/\[[^\]]{0,30}(?:история|предыстори|описани|контекст|посвящени|backstory|description|story)[^\]]*\]/gi, "");
+  // Suno понимает только эти структурные теги — все остальные bracket-теги поёт как слова.
+  // Убираем режиссёрские пометки вида [петь тихо, ...], [голос становится ...], [музыка поднимается ...]
+  const SUNO_STRUCTURAL = /^\[(?:verse|chorus|pre-?chorus|bridge|intro|outro|instrumental(?:\s+break)?|breakdown|build[\s-]?up|hook|refrain|spoken|whisper|rap|fade[\s-]?out|end|interlude|solo|tag)[\s\d]*\]$/i;
+  lyrics = lyrics
+    .split("\n")
+    .filter((line) => {
+      const t = line.trim();
+      if (t.startsWith("[") && t.endsWith("]")) return SUNO_STRUCTURAL.test(t);
+      return true;
+    })
+    .join("\n");
 
   // Убираем любой текст, который идёт ДО первого структурного тега — Suno пел бы его как слова
   const firstTag = lyrics.search(/\[(?:Verse|Chorus|Bridge|Intro|Outro|verse|chorus|bridge|intro|outro)/i);
