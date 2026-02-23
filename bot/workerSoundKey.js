@@ -42,55 +42,83 @@ async function triggerReferralRewardIfEligible(refereeTelegramId) {
     .eq('id', referral.id).eq('reward_granted', false).select('id');
   if (!claimed?.length) return; // уже выдано другим воркером
 
-  // Начисляем кредит рефереру (создаём профиль, если реферер ещё не был в приложении)
+  const FRIENDS_PER_SONG = 5; // 5 приглашённых друзей = 1 бесплатная песня
   const referrerTgId = Number(referral.referrer_id);
-  const { data: rp, error: rpErr } = await supabase.from('user_profiles')
-    .select('referral_credits').eq('telegram_id', referrerTgId).maybeSingle();
-  if (rpErr) {
-    console.error('[Referral] Ошибка чтения профиля реферера:', rpErr.message);
-    return;
-  }
-  const newCredits = (rp?.referral_credits || 0) + 1;
-  let creditErr = null;
-  if (rp) {
-    const res = await supabase.from('user_profiles')
-      .update({ referral_credits: newCredits, updated_at: new Date().toISOString() })
-      .eq('telegram_id', referrerTgId);
-    creditErr = res.error;
-  } else {
-    const res = await supabase.from('user_profiles')
-      .insert({ telegram_id: referrerTgId, referral_credits: 1, updated_at: new Date().toISOString() });
-    creditErr = res.error;
-    if (creditErr && /duplicate|unique|already exists/i.test(creditErr.message)) {
-      const { data: rp2 } = await supabase.from('user_profiles').select('referral_credits').eq('telegram_id', referrerTgId).maybeSingle();
-      if (rp2) {
-        const res2 = await supabase.from('user_profiles')
-          .update({ referral_credits: (rp2.referral_credits || 0) + 1, updated_at: new Date().toISOString() })
-          .eq('telegram_id', referrerTgId);
-        creditErr = res2.error;
+
+  // Считаем общее количество активированных рефералов у этого реферера
+  const { count: totalGranted } = await supabase.from('referrals')
+    .select('*', { count: 'exact', head: true })
+    .eq('referrer_id', referrerTgId)
+    .eq('reward_granted', true);
+
+  const total = totalGranted || 0;
+  const earnedSong = total % FRIENDS_PER_SONG === 0; // каждые 5 — начисляем песню
+  const remaining = earnedSong ? 0 : FRIENDS_PER_SONG - (total % FRIENDS_PER_SONG);
+
+  if (earnedSong) {
+    // Начисляем кредит рефереру (создаём профиль, если реферер ещё не был в приложении)
+    const { data: rp, error: rpErr } = await supabase.from('user_profiles')
+      .select('referral_credits').eq('telegram_id', referrerTgId).maybeSingle();
+    if (rpErr) {
+      console.error('[Referral] Ошибка чтения профиля реферера:', rpErr.message);
+      return;
+    }
+    let creditErr = null;
+    if (rp) {
+      const res = await supabase.from('user_profiles')
+        .update({ referral_credits: (rp.referral_credits || 0) + 1, updated_at: new Date().toISOString() })
+        .eq('telegram_id', referrerTgId);
+      creditErr = res.error;
+    } else {
+      const res = await supabase.from('user_profiles')
+        .insert({ telegram_id: referrerTgId, referral_credits: 1, updated_at: new Date().toISOString() });
+      creditErr = res.error;
+      if (creditErr && /duplicate|unique|already exists/i.test(creditErr.message)) {
+        const { data: rp2 } = await supabase.from('user_profiles').select('referral_credits').eq('telegram_id', referrerTgId).maybeSingle();
+        if (rp2) {
+          const res2 = await supabase.from('user_profiles')
+            .update({ referral_credits: (rp2.referral_credits || 0) + 1, updated_at: new Date().toISOString() })
+            .eq('telegram_id', referrerTgId);
+          creditErr = res2.error;
+        }
       }
     }
+    if (creditErr) {
+      console.error('[Referral] Ошибка начисления кредита:', creditErr.message);
+      return;
+    }
+    // Уведомление: заработана бесплатная песня
+    try {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: referral.referrer_id,
+          text: `🎁 *${total} друзей приняли твоё приглашение!*\n\nТебе начислена 1 бесплатная генерация 🎵\nОткрой приложение, чтобы использовать её.`,
+          parse_mode: 'Markdown',
+        }),
+      });
+    } catch (e) {
+      console.error('[Referral] Не удалось отправить уведомление рефереру:', e?.message);
+    }
+    console.log(`[Referral] Вознаграждение начислено (${total} рефералов): referee=${refereeTelegramId} → referrer=${referral.referrer_id}`);
+  } else {
+    // Уведомление: друг активировался, но до песни ещё N друзей
+    try {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: referral.referrer_id,
+          text: `👥 Твой друг создал первую песню по твоей ссылке!\n\nВсего приглашено: ${total} из ${FRIENDS_PER_SONG}.\nЕщё ${remaining} — и ты получишь бесплатную песню 🎵`,
+          parse_mode: 'Markdown',
+        }),
+      });
+    } catch (e) {
+      console.error('[Referral] Не удалось отправить уведомление рефереру:', e?.message);
+    }
+    console.log(`[Referral] Реферал засчитан (${total}/${FRIENDS_PER_SONG}): referee=${refereeTelegramId} → referrer=${referral.referrer_id}`);
   }
-  if (creditErr) {
-    console.error('[Referral] Ошибка начисления кредита:', creditErr.message);
-    return;
-  }
-
-  // Уведомление рефереру в бот
-  try {
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: referral.referrer_id,
-        text: `🎁 *Твой друг получил первую песню по твоей ссылке!*\n\nТебе начислена 1 бесплатная генерация 🎵\nОткрой приложение, чтобы использовать её.`,
-        parse_mode: 'Markdown',
-      }),
-    });
-  } catch (e) {
-    console.error('[Referral] Не удалось отправить уведомление рефереру:', e?.message);
-  }
-  console.log(`[Referral] Вознаграждение начислено: referee=${refereeTelegramId} → referrer=${referral.referrer_id}`);
 }
 // ============================================================================
 

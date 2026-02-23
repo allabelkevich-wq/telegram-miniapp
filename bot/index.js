@@ -1374,10 +1374,10 @@ function getUserLang(ctx) {
 const BOT_MSGS = {
   ru: {
     startNew: (name) => `${name}, привет.\n\nУ каждого человека есть своя музыка — та, что написана по его дате рождения.\n\nYupSoul создаёт её. Первая песня — в подарок.\n\nНажми кнопку ниже, чтобы начать ↓`,
-    startReturning: (name) => `${name}, ты вернулся — хорошо.\n\nПесня уже ждёт тебя здесь, в этом чате. Если ещё не пришла — подожди пару минут.\n\nГотов создать ещё одну?`,
+    startReturning: (name) => `${name}, ты вернулся — хорошо.\n\nПесня уже ждёт тебя здесь, в этом чате. Если ещё не пришла — напиши «песня не пришла».\n\nГотов создать ещё одну?`,
     btnOpenApp: "🎵 Создать свою песню",
     requestReceived: "⏳ Получил заявку, сохраняю…",
-    requestSaved: (name) => `✅ Заявка принята, ${name}! Песня будет готова через несколько минут — придёт прямо сюда в чат.`,
+    requestSaved: (name) => `✅ Заявка принята, ${name}! Песня генерируется — придёт прямо сюда в чат, когда будет готова.`,
     requestError: "Произошла ошибка. Попробуй ещё раз или напиши в поддержку.",
     songCaption: (name) => `${name}, твоя персональная песня готова. Слушай в тишине — это твоя музыка. ✨`,
     notifyFixed: (name) => `${name}, мы исправили определение языка — теперь твоя песня будет на нужном языке.\n\nЕсли хочешь заказать новую версию — открой приложение и создай заявку заново. Первая после исправления — бесплатно.`,
@@ -1409,7 +1409,7 @@ const BOT_MSGS = {
     startReturning: (name) => `${name}, welcome back.\n\nYour song is waiting here in this chat. If it hasn't arrived yet — wait a few minutes.\n\nReady to create another one?`,
     btnOpenApp: "🎵 Create my song",
     requestReceived: "⏳ Got your request, saving…",
-    requestSaved: (name) => `✅ Request accepted, ${name}! Your song will be ready in a few minutes — it will arrive right here in chat.`,
+    requestSaved: (name) => `✅ Request accepted, ${name}! Your song is being created — it will arrive right here in chat when ready.`,
     requestError: "An error occurred. Please try again or contact support.",
     songCaption: (name) => `${name}, your personal song is ready. Listen in silence — this is your music. ✨`,
     notifyFixed: (name) => `${name}, we fixed language detection — your next song will be in the right language.\n\nIf you'd like a new version — open the app and create a new request. First one after the fix is free.`,
@@ -1441,7 +1441,7 @@ const BOT_MSGS = {
     startReturning: (name) => `${name}, content de te revoir.\n\nTa chanson t'attend ici dans ce chat. Si elle n'est pas encore arrivée — attends quelques minutes.\n\nPrêt à en créer une autre ?`,
     btnOpenApp: "🎵 Créer ma chanson",
     requestReceived: "⏳ Demande reçue, enregistrement…",
-    requestSaved: (name) => `✅ Demande acceptée, ${name} ! Ta chanson sera prête dans quelques minutes — elle arrivera directement ici dans le chat.`,
+    requestSaved: (name) => `✅ Demande acceptée, ${name} ! Ta chanson est en cours de création — elle arrivera directement ici dans le chat quand elle sera prête.`,
     requestError: "Une erreur s'est produite. Réessaie ou contacte le support.",
     songCaption: (name) => `${name}, ta chanson personnelle est prête. Écoute-la en silence — c'est ta musique. ✨`,
     notifyFixed: (name) => `${name}, nous avons corrigé la détection de langue — ta prochaine chanson sera dans la bonne langue.\n\nSi tu veux une nouvelle version — ouvre l'app et crée une nouvelle demande. La première après la correction est gratuite.`,
@@ -3969,7 +3969,7 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   return res.status(200).json({
     ok: true,
     requestId,
-    message: "✨ Твой звуковой ключ создаётся! Первый трек — в подарок 🎁\nПесня генерируется на сервере и придёт в этот чат. Обычно несколько минут (иногда до 5–10). Можно закрыть окно — ничего не пропадёт. Спасибо ❤️",
+    message: "✨ Твой звуковой ключ создаётся! Первый трек — в подарок 🎁\nПесня генерируется на сервере и придёт в этот чат. Можно закрыть окно — ничего не пропадёт. Спасибо ❤️",
   });
 });
 
