@@ -717,6 +717,13 @@
     .profile-ref-link-row{display:none}
     .profile-ref-share-btn{width:100%;padding:13px 20px;border-radius:13px;background:rgba(212,175,55,0.14);border:1.5px solid rgba(212,175,55,0.38);color:#d4af37;font-weight:700;font-size:0.92rem;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;margin:0 0 14px;letter-spacing:0.02em;transition:background .2s}
     .profile-ref-share-btn:active{background:rgba(212,175,55,0.25)}
+    .profile-ref-milestones{display:flex;align-items:center;justify-content:center;gap:4px;margin:10px 0 14px;flex-wrap:wrap}
+    .ref-milestone{display:flex;flex-direction:column;align-items:center;gap:1px;background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.15);border-radius:10px;padding:6px 8px;min-width:36px;transition:background .2s,border-color .2s}
+    .ref-milestone.reached{background:rgba(212,175,55,0.18);border-color:rgba(212,175,55,0.5)}
+    .ref-milestone.next{border-color:rgba(212,175,55,0.4);box-shadow:0 0 8px rgba(212,175,55,0.15)}
+    .ref-mi-num{font-size:0.9rem;font-weight:800;color:#d4af37;line-height:1}
+    .ref-mi-label{font-size:0.55rem;color:rgba(255,255,255,0.35);line-height:1}
+    .ref-milestone-arrow{font-size:0.65rem;color:rgba(212,175,55,0.3);flex-shrink:0}
     .profile-ref-stats{display:flex;gap:10px}
     .profile-ref-stats span{flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;align-items:center;gap:2px}
     .profile-ref-stats strong{font-size:1.4rem;font-weight:800;color:#d4af37;line-height:1}
@@ -1021,7 +1028,7 @@
           <div class="profile-balance-left">
             <div id="profileBalanceLabel" class="profile-balance-label">Бесплатных генераций</div>
             <div id="profileCreditsCount" class="profile-balance-value">—</div>
-            <div id="profileBalanceHint" class="profile-balance-hint">За каждых 5 приглашённых друзей — +1 трек</div>
+            <div id="profileBalanceHint" class="profile-balance-hint">Приглашай друзей — получай треки в подарок</div>
             <div id="profileRenewalDate" class="profile-balance-hint" style="display:none;color:rgba(212,175,55,0.65);margin-top:2px;"></div>
           </div>
           <div class="profile-balance-icon"><img src="assets/icons/music.png" style="width:32px;height:32px;object-fit:contain;display:block;opacity:0.85;" alt=""></div>
@@ -1127,7 +1134,18 @@
             <div style="width:18px;height:18px;border-radius:5px;overflow:hidden;background:#fdf8ec;box-shadow:0 1px 4px rgba(0,0,0,0.2);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;"><img src="assets/icons/forward.png" style="width:100%;height:100%;object-fit:contain;display:block;padding:2px;box-sizing:border-box;" alt=""></div>
             Пригласи друга
           </div>
-          <div class="profile-ref-tagline">За каждого друга, который создаст первую песню — тебе бесплатный трек</div>
+          <div class="profile-ref-tagline">Приглашай друзей — получай бесплатные песни по нарастающей</div>
+          <div class="profile-ref-milestones">
+            <div class="ref-milestone" data-n="1"><span class="ref-mi-num">1</span><span class="ref-mi-label">друг</span></div>
+            <div class="ref-milestone-arrow">→</div>
+            <div class="ref-milestone" data-n="3"><span class="ref-mi-num">3</span><span class="ref-mi-label">друга</span></div>
+            <div class="ref-milestone-arrow">→</div>
+            <div class="ref-milestone" data-n="5"><span class="ref-mi-num">5</span><span class="ref-mi-label">друзей</span></div>
+            <div class="ref-milestone-arrow">→</div>
+            <div class="ref-milestone" data-n="10"><span class="ref-mi-num">10</span><span class="ref-mi-label">друзей</span></div>
+            <div class="ref-milestone-arrow">→</div>
+            <div class="ref-milestone" data-n="15"><span class="ref-mi-num">15</span><span class="ref-mi-label">друзей</span></div>
+          </div>
           <div class="profile-ref-link-row">
             <input id="profileRefLinkInput" readonly placeholder="Загрузка…">
           </div>
@@ -1136,6 +1154,7 @@
             <span><strong id="profileRefInvited">0</strong><span class="profile-ref-stats-label">Приглашено</span></span>
             <span><strong id="profileRefRewarded">0</strong><span class="profile-ref-stats-label">Активировано</span></span>
           </div>
+          <div id="profileRefNextHint" style="font-size:0.72rem;color:rgba(212,175,55,0.6);text-align:center;margin-top:6px;"></div>
         </div>
 
         <!-- Действия -->
@@ -2780,8 +2799,31 @@
 
           // Реферальные ссылки
           if (refLinkEl) refLinkEl.value = (refData && refData.link) ? refData.link : '';
-          if (refInvEl) refInvEl.textContent = (refData && typeof refData.invited_count === 'number') ? refData.invited_count : 0;
+          var invCount = (refData && typeof refData.invited_count === 'number') ? refData.invited_count : 0;
+          if (refInvEl) refInvEl.textContent = invCount;
           if (refRewEl) refRewEl.textContent = (refData && typeof refData.rewarded_count === 'number') ? refData.rewarded_count : 0;
+
+          // Прогресс по milestone-порогам: 1→3→5→10→15
+          var refThresholds = [1, 3, 5, 10, 15];
+          function nextRefThreshold(n) {
+            for (var i = 0; i < refThresholds.length; i++) { if (refThresholds[i] > n) return refThresholds[i]; }
+            return 15 + Math.ceil((n - 14) / 5) * 5;
+          }
+          document.querySelectorAll('.ref-milestone').forEach(function(el) {
+            var n = parseInt(el.getAttribute('data-n'), 10);
+            el.classList.remove('reached', 'next');
+            if (invCount >= n) el.classList.add('reached');
+          });
+          var nextN = nextRefThreshold(invCount);
+          var nextEl = document.querySelector('.ref-milestone[data-n="' + nextN + '"]');
+          if (nextEl) nextEl.classList.add('next');
+          var hintEl = document.getElementById('profileRefNextHint');
+          if (hintEl) {
+            var rem = nextN - invCount;
+            hintEl.textContent = invCount === 0
+              ? 'Пригласи первого друга — получи бесплатную песню 🎁'
+              : 'До следующей бесплатной песни: ещё ' + rem + ' ' + (rem === 1 ? 'друг' : rem < 5 ? 'друга' : 'друзей');
+          }
 
           // --- Статус подписки (новый API) ---
           var subData = null;
@@ -2872,7 +2914,7 @@
             var credits = (refData && typeof refData.credits === 'number') ? refData.credits : 0;
             if (creditsEl) creditsEl.textContent = credits;
             if (balanceLabelEl) balanceLabelEl.textContent = 'Бесплатных генераций';
-            if (balanceHintEl) balanceHintEl.textContent = 'Приведи 5 друзей — получи трек в подарок';
+            if (balanceHintEl) balanceHintEl.textContent = 'Приглашай друзей — получай треки в подарок';
             if (renewalDateEl) renewalDateEl.style.display = 'none';
             // Бесплатная карточка — текущая
             var cardFree2 = document.getElementById('planCardFree');

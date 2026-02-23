@@ -30,33 +30,51 @@ const SERPER_API_KEY = process.env.SERPER_API_KEY;
 // ============================================================================
 // РЕФЕРАЛЬНАЯ НАГРАДА
 // ============================================================================
+// Прогрессивные пороги: на каком кол-ве активированных друзей выдаётся очередная бесплатная песня
+// 1 → 3 → 5 → 10 → 15 → 20 → 25 → ... (далее каждые 5)
+const REFERRAL_THRESHOLDS = [1, 3, 5, 10, 15];
+
+function isReferralRewardThreshold(total) {
+  if (REFERRAL_THRESHOLDS.includes(total)) return true;
+  if (total > 15 && (total - 15) % 5 === 0) return true;
+  return false;
+}
+
+function nextReferralThreshold(total) {
+  for (const t of REFERRAL_THRESHOLDS) {
+    if (t > total) return t;
+  }
+  // После 15 — следующий кратный 5 выше текущего
+  return 15 + Math.ceil((total - 14) / 5) * 5;
+}
+
 async function triggerReferralRewardIfEligible(refereeTelegramId) {
   if (!supabase || !BOT_TOKEN) return;
   const { data: referral } = await supabase.from('referrals')
     .select('*').eq('referee_id', Number(refereeTelegramId)).eq('reward_granted', false).maybeSingle();
   if (!referral || !referral.referrer_id) return;
 
-  // Атомарно помечаем reward_granted = true (защита от двойного начисления при параллельных воркерах)
+  // Атомарно помечаем reward_granted = true (защита от двойного начисления)
   const { data: claimed } = await supabase.from('referrals')
     .update({ reward_granted: true, reward_granted_at: new Date().toISOString(), activated_at: new Date().toISOString() })
     .eq('id', referral.id).eq('reward_granted', false).select('id');
-  if (!claimed?.length) return; // уже выдано другим воркером
+  if (!claimed?.length) return;
 
-  const FRIENDS_PER_SONG = 5; // 5 приглашённых друзей = 1 бесплатная песня
   const referrerTgId = Number(referral.referrer_id);
 
-  // Считаем общее количество активированных рефералов у этого реферера
+  // Общее количество активированных рефералов
   const { count: totalGranted } = await supabase.from('referrals')
     .select('*', { count: 'exact', head: true })
     .eq('referrer_id', referrerTgId)
     .eq('reward_granted', true);
 
   const total = totalGranted || 0;
-  const earnedSong = total % FRIENDS_PER_SONG === 0; // каждые 5 — начисляем песню
-  const remaining = earnedSong ? 0 : FRIENDS_PER_SONG - (total % FRIENDS_PER_SONG);
+  const earnedSong = isReferralRewardThreshold(total);
+  const next = nextReferralThreshold(total);
+  const remaining = next - total;
 
   if (earnedSong) {
-    // Начисляем кредит рефереру (создаём профиль, если реферер ещё не был в приложении)
+    // Начисляем кредит рефереру
     const { data: rp, error: rpErr } = await supabase.from('user_profiles')
       .select('referral_credits').eq('telegram_id', referrerTgId).maybeSingle();
     if (rpErr) {
@@ -87,37 +105,38 @@ async function triggerReferralRewardIfEligible(refereeTelegramId) {
       console.error('[Referral] Ошибка начисления кредита:', creditErr.message);
       return;
     }
-    // Уведомление: заработана бесплатная песня
+    const nextThresholdAfter = nextReferralThreshold(total);
+    const untilNext = nextThresholdAfter - total;
     try {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: referral.referrer_id,
-          text: `🎁 *${total} друзей приняли твоё приглашение!*\n\nТебе начислена 1 бесплатная генерация 🎵\nОткрой приложение, чтобы использовать её.`,
+          text: `🎁 *${total} ${total === 1 ? 'друг принял' : 'друга приняли'} твоё приглашение!*\n\nТебе начислена бесплатная песня 🎵\nОткрой приложение, чтобы использовать её.\n\nСледующая награда — за ${nextThresholdAfter} приглашённых (ещё ${untilNext}).`,
           parse_mode: 'Markdown',
         }),
       });
     } catch (e) {
       console.error('[Referral] Не удалось отправить уведомление рефереру:', e?.message);
     }
-    console.log(`[Referral] Вознаграждение начислено (${total} рефералов): referee=${refereeTelegramId} → referrer=${referral.referrer_id}`);
+    console.log(`[Referral] Вознаграждение начислено (порог ${total}): referee=${refereeTelegramId} → referrer=${referrerTgId}`);
   } else {
-    // Уведомление: друг активировался, но до песни ещё N друзей
+    // Прогресс до следующего порога
     try {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: referral.referrer_id,
-          text: `👥 Твой друг создал первую песню по твоей ссылке!\n\nВсего приглашено: ${total} из ${FRIENDS_PER_SONG}.\nЕщё ${remaining} — и ты получишь бесплатную песню 🎵`,
+          text: `👥 *Ещё один друг перешёл по твоей ссылке!*\n\nВсего активировано: ${total}\nДо бесплатной песни: ещё ${remaining} ${remaining === 1 ? 'друг' : remaining < 5 ? 'друга' : 'друзей'} 🎵`,
           parse_mode: 'Markdown',
         }),
       });
     } catch (e) {
       console.error('[Referral] Не удалось отправить уведомление рефереру:', e?.message);
     }
-    console.log(`[Referral] Реферал засчитан (${total}/${FRIENDS_PER_SONG}): referee=${refereeTelegramId} → referrer=${referral.referrer_id}`);
+    console.log(`[Referral] Прогресс (${total} → ${next}): referee=${refereeTelegramId} → referrer=${referrerTgId}`);
   }
 }
 // ============================================================================
