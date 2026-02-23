@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.37';
+        var APP_VERSION = '1.2.45';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -3350,25 +3350,30 @@
             }
           }
 
-          // Показываем аккордеон если есть имя (минимум)
-          if (p.name) {
+          // Показываем аккордеон если есть имя И дата рождения (минимум для отправки)
+          if (p.name && p.birthdate) {
             var pfaNameEl = document.getElementById('pfaName');
             var pfaDateEl = document.getElementById('pfaDate');
             var pfaSepEl  = document.getElementById('pfaSep');
             var chevronEl = document.getElementById('pfaChevron');
             if (pfaNameEl) pfaNameEl.textContent = p.name;
-            if (p.birthdate) {
-              var d = new Date(p.birthdate + 'T00:00:00');
-              var dateStr = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-              if (pfaDateEl) pfaDateEl.textContent = dateStr;
-              if (pfaSepEl) pfaSepEl.style.display = 'inline';
-            }
+            var d = new Date(p.birthdate + 'T00:00:00');
+            var dateStr = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            if (pfaDateEl) pfaDateEl.textContent = dateStr;
+            if (pfaSepEl) pfaSepEl.style.display = 'inline';
             if (accordion) accordion.style.display = 'block';
             // Сворачиваем поля — форма заполнена, пользователь может сразу отправить
             if (formWrap) formWrap.classList.add('pfw-collapsed');
             if (chevronEl) chevronEl.classList.add('open');
             // Снимаем no-anim после первого рендера — дальше transitions работают нормально
             requestAnimationFrame(function() { requestAnimationFrame(function() { if (formWrap) formWrap.classList.remove('no-anim'); }); });
+          } else {
+            // Профиль есть, но данные неполные — показываем форму открытой
+            if (formWrap) {
+              formWrap.classList.add('no-anim');
+              formWrap.classList.remove('pfw-collapsed');
+              requestAnimationFrame(function() { requestAnimationFrame(function() { if (formWrap) formWrap.classList.remove('no-anim'); }); });
+            }
           }
         } catch(e) {
           console.warn('[Form] Ошибка загрузки профиля:', e);

@@ -312,20 +312,16 @@ async function consumeReferralCreditIfAvailable(telegramUserId) {
 
 // ============================================================================
 
-async function hasActiveSubscription(telegramUserId, { includeMaster = false } = {}) {
+async function hasActiveSubscription(telegramUserId) {
   if (!supabase) return false;
   const nowIso = new Date().toISOString();
-  // master_monthly даёт доступ к Лаборатории и Soul Chat, но НЕ к бесплатной генерации песен
-  // (у него своя логика треков). Передавай includeMaster:true только для Soul Chat.
-  const plans = ["soul_basic_sub", "soul_plus_sub"];
-  if (includeMaster) plans.push("master_monthly");
   const { data, error } = await supabase
     .from("subscriptions")
     .select("id,plan_sku,status,renew_at")
     .eq("telegram_user_id", Number(telegramUserId))
     .eq("status", "active")
     .gte("renew_at", nowIso)
-    .in("plan_sku", plans)
+    .in("plan_sku", ["soul_basic_sub", "soul_plus_sub", "master_monthly"])
     .limit(1)
     .maybeSingle();
   if (error && /does not exist|relation/i.test(error.message)) return false;
@@ -558,7 +554,7 @@ async function getSoulChatAccess(telegramUserId) {
   if (!telegramUserId) return { allowed: false, reason: "Нужна авторизация Telegram." };
 
   // 1. Активная подписка Soul Basic / Soul Plus / Лаборатория (все дают Soul Chat)
-  const hasSub = await hasActiveSubscription(telegramUserId, { includeMaster: true });
+  const hasSub = await hasActiveSubscription(telegramUserId);
   if (hasSub) return { allowed: true, source: "subscription", expires_at: null };
 
   // 2. Активный суточный доступ (подарочный или купленный)
