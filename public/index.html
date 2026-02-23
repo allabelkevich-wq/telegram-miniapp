@@ -3247,6 +3247,8 @@
           }
         } catch(e) {
           console.warn('[Form] Ошибка загрузки профиля:', e);
+          // При ошибке — показываем форму открытой, иначе pointer-events:none заблокирует всё
+          if (formWrap) { formWrap.classList.remove('pfw-collapsed'); formWrap.classList.remove('no-anim'); }
         }
         // Дефолтный язык по Telegram
         var langElFallback = document.getElementById('language');
