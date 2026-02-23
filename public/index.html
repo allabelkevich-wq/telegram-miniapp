@@ -2325,9 +2325,6 @@
         return s;
       }
       function applyTranslations() {
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:1284',message:'applyTranslations START',data:{currentLang:currentLang,startBtnInLang:LANG[currentLang]&&LANG[currentLang].startBtn?LANG[currentLang].startBtn:'MISSING',previewSlide1Before:document.querySelectorAll('.preview-slide-title')[0]?document.querySelectorAll('.preview-slide-title')[0].textContent:'NULL'},timestamp:Date.now(),hypothesisId:'A,C,E'})}).catch(()=>{});
-        // #endregion
         document.documentElement.lang = currentLang || 'ru';
         var map = [
           ['tagline','#homeTagline'], ['startBtn','#startBtn'], ['myProfile','#goProfileBtn'], ['myHeroes','#goHeroesBtn'], ['admin','#adminLinkBtn'],
@@ -3591,13 +3588,7 @@
       }
       if (tg) loadMe();
       currentLang = detectLang();
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:1935',message:'Before applyTranslations',data:{previewCarouselExists:!!document.getElementById('previewCarousel'),startBtnExists:!!document.getElementById('startBtn'),startBtnText:document.getElementById('startBtn')?document.getElementById('startBtn').textContent:'NULL'},timestamp:Date.now(),hypothesisId:'A,B,C,D'})}).catch(()=>{});
-      // #endregion
       applyTranslations();
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:1939',message:'After applyTranslations END',data:{startBtnText:document.getElementById('startBtn')?document.getElementById('startBtn').textContent:'NULL',previewSlide1Title:document.querySelectorAll('.preview-slide-title')[0]?document.querySelectorAll('.preview-slide-title')[0].textContent:'NULL',previewSlide1Color:document.querySelectorAll('.preview-slide-title')[0]?window.getComputedStyle(document.querySelectorAll('.preview-slide-title')[0]).color:'NULL',previewSlide1FontSize:document.querySelectorAll('.preview-slide-title')[0]?window.getComputedStyle(document.querySelectorAll('.preview-slide-title')[0]).fontSize:'NULL'},timestamp:Date.now(),hypothesisId:'A,B,C'})}).catch(()=>{});
-      // #endregion
       
       // ═══════════════════════════════════════════════════════════════════
       // ═══════════════════════════════════════════════════════════════════
@@ -4479,9 +4470,6 @@
         var currentPage = document.querySelector('.page.active');
         
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
-        // #region agent log
-        if (pageId === 'homePage') fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:goToPage',message:'homePage activated',data:{startBtnText:document.getElementById('startBtn')?document.getElementById('startBtn').textContent:'NULL',previewCarouselVisible:document.getElementById('previewCarousel')?window.getComputedStyle(document.getElementById('previewCarousel')).display:'NULL'},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         // Всегда проверяем кнопку оплаты при переходах между страницами
         ensurePayButtonText();
         

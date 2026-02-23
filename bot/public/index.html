@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.19';
+        var APP_VERSION = '1.2.37';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -203,6 +203,7 @@
     #secondPersonAccordion .pfa-header { background: rgba(212,175,55,0.06); border: 1px solid rgba(212,175,55,0.18); }
     #secondPersonAccordion .pfa-header:hover { background: rgba(212,175,55,0.1); }
     #secondPersonFormWrap { overflow: hidden; transition: max-height .38s cubic-bezier(.4,0,.2,1), opacity .3s ease; max-height: 0; opacity: 0; }
+    #transitFormWrap { overflow: hidden; transition: max-height .38s cubic-bezier(.4,0,.2,1), opacity .3s ease; max-height: 0; opacity: 0; }
     .mode-info {
       width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(212,175,55,0.4);
       color: rgba(212,175,55,0.7); font-size: 0.7rem; font-weight: 700;
@@ -658,8 +659,7 @@
     
     #formPage header h1{font-size:clamp(1.1rem,4vw,1.35rem)}
     #formPage header .subtitle{font-size:0.72rem}
-    #transitForm{display:none;margin-top:24px;padding:16px;background:var(--tg-theme-secondary-bg-color,rgba(255,255,255,0.05));border-radius:12px;border:1px solid var(--tg-theme-border-color,rgba(255,255,255,0.1))}
-    #transitForm h3{color:var(--tg-theme-text-color,#fff);margin:0 0 15px 0;font-size:18px}
+    #transitFormWrap { overflow: hidden; transition: max-height .38s cubic-bezier(.4,0,.2,1), opacity .3s ease; max-height: 0; opacity: 0; }
     #secondPersonForm{padding-top:8px;}
     
     /* Панель навигации для превью в браузере */
@@ -899,7 +899,7 @@
       <div id="homeHero">
         <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="140" height="140">
         <div class="home-tagline">Музыка твоей души</div>
-        <p id="homeGreeting" class="home-greeting">Привет 👋</p>
+        <p id="homeGreeting" class="home-greeting">Привет</p>
         <button id="startBtn">Создать свою песню</button>
       </div>
 
@@ -923,11 +923,11 @@
       </div>
 
       <!-- Профиль, Помощь, Мои герои — доступ с главной -->
-      <nav class="home-nav" style="display:flex;justify-content:center;gap:14px;margin-top:var(--spacing-lg);padding:8px 0;">
-        <button type="button" class="home-nav-link" onclick="goToProfileFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">Профиль</button>
-        <button type="button" class="home-nav-link" onclick="goToSoulChat()" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">💬 Soul Chat</button>
-        <button type="button" class="home-nav-link" onclick="goToHelpFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">Помощь</button>
-        <button type="button" class="home-nav-link" onclick="goToHeroesFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">Лаборатория</button>
+      <nav class="home-nav" style="display:flex;justify-content:space-around;align-items:stretch;gap:2px;margin-top:var(--spacing-lg);padding:8px 2px;flex-wrap:nowrap;">
+        <button type="button" class="home-nav-link" onclick="goToProfileFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:clamp(0.58rem,2vw,0.7rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:4px 2px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;">Профиль</button>
+        <button type="button" class="home-nav-link" onclick="goToSoulChat()" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:clamp(0.58rem,2vw,0.7rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:4px 2px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;">Soul Chat</button>
+        <button type="button" class="home-nav-link" onclick="goToHelpFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:clamp(0.58rem,2vw,0.7rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:4px 2px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;">Помощь</button>
+        <button type="button" class="home-nav-link" onclick="goToHeroesFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:clamp(0.58rem,2vw,0.7rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:4px 2px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;">Лаборатория</button>
       </nav>
 
       </div><!-- /нижняя обёртка -->
@@ -1074,10 +1074,7 @@
         </div>
 
         <!-- Мои данные -->
-        <div class="profile-section-title">
-          <div style="width:18px;height:18px;border-radius:5px;overflow:hidden;background:#fdf8ec;box-shadow:0 1px 4px rgba(0,0,0,0.2);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;"><img src="assets/icons/profile.png" style="width:100%;height:100%;object-fit:contain;display:block;padding:2px;box-sizing:border-box;" alt=""></div>
-          Мои данные
-        </div>
+        <div class="profile-section-title">Мои данные</div>
         <div id="profileDataCard" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div>
             <div id="profileDataName" style="font-size:0.9rem;font-weight:600;color:rgba(255,255,255,0.85);margin-bottom:3px;">—</div>
@@ -1087,9 +1084,7 @@
         </div>
 
         <!-- Тарифы — Suno-style -->
-        <div class="profile-section-title">
-          <div style="width:18px;height:18px;border-radius:5px;overflow:hidden;background:#fdf8ec;box-shadow:0 1px 4px rgba(0,0,0,0.2);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;"><img src="assets/icons/security.png" style="width:100%;height:100%;object-fit:contain;display:block;padding:2px;box-sizing:border-box;" alt=""></div>
-          Тарифы
+        <div class="profile-section-title">Тарифы
         </div>
         <div class="profile-plans-grid">
           <!-- Free -->
@@ -1455,26 +1450,6 @@
           </select>
         </div>
         
-          <div id="transitForm" style="display:none">
-            <h3 style="margin-bottom:12px;">Энергия момента</h3>
-          <div class="field">
-              <input type="date" id="transitDate" min="2024-01-01" max="2030-12-31" placeholder="Дата события">
-          </div>
-          <div class="field">
-              <input type="time" id="transitTime" placeholder="Время события">
-          </div>
-          <div class="field form-group location-input-wrapper">
-              <input type="text" id="transitLocation" class="location-input" placeholder="Город для энергии момента" maxlength="100" autocomplete="off">
-            <div id="transitLocationSuggestions" class="location-suggestions"></div>
-            <div class="checkbox-group" style="margin-top: 10px;">
-              <input type="checkbox" id="transitLocationConfirmed">
-                <label for="transitLocationConfirmed">Локация указана верно</label>
-            </div>
-          </div>
-          <div class="field">
-              <textarea id="transitIntent" placeholder="Намерение момента (опционально)" rows="2" maxlength="200" style="min-height:60px"></textarea>
-            </div>
-          </div>
         </div>
         </div><!-- /formFieldsWrap -->
 
@@ -1537,6 +1512,46 @@
                 </select>
               </div>
               <input type="hidden" id="person2Relationship">
+            </div>
+          </div>
+        </div>
+
+        <!-- Аккордеон энергии момента — отдельно, как второй человек -->
+        <div id="transitAccordion" style="display:none;margin-top:8px;">
+          <div class="pfa-header" onclick="toggleTransitAccordion()">
+            <div class="pfa-info">
+              <svg class="pfa-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <span id="transitAccName" class="pfa-name">Энергия момента</span>
+              <span class="pfa-sep" id="transitAccSep" style="display:none">·</span>
+              <span id="transitAccDate" class="pfa-date"></span>
+            </div>
+            <div class="pfa-chevron" id="transitAccChevron">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div id="transitFormWrap">
+            <div id="transitForm" style="padding-top:8px;">
+              <div class="field">
+                <label for="transitDate" data-icon="📅">Дата события</label>
+                <input type="date" id="transitDate" min="2024-01-01" max="2030-12-31" placeholder="Дата события">
+              </div>
+              <div class="field">
+                <label for="transitTime" data-icon="🕐">Время события</label>
+                <input type="time" id="transitTime" placeholder="Время события">
+              </div>
+              <div class="field form-group location-input-wrapper">
+                <label for="transitLocation" data-icon="📍">Город для энергии момента</label>
+                <input type="text" id="transitLocation" class="location-input" placeholder="Москва, Лондон, Нью-Йорк..." maxlength="100" autocomplete="off">
+                <div id="transitLocationSuggestions" class="location-suggestions"></div>
+                <div class="checkbox-group" style="margin-top: 10px;">
+                  <input type="checkbox" id="transitLocationConfirmed">
+                  <label for="transitLocationConfirmed">Локация указана верно</label>
+                </div>
+              </div>
+              <div class="field">
+                <label for="transitIntent" data-icon="💭">Намерение момента (опционально)</label>
+                <textarea id="transitIntent" placeholder="Намерение момента (опционально)" rows="2" maxlength="200" style="min-height:60px"></textarea>
+              </div>
             </div>
           </div>
         </div>
@@ -1648,7 +1663,7 @@
           <!-- Состояние: активен (чат) -->
           <div id="scActiveState" style="display:none;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-              <div style="font-weight:700;color:#d4af37;font-size:1rem;">💬 Soul Chat</div>
+              <div style="font-weight:700;color:#d4af37;font-size:1rem;">Soul Chat</div>
               <div id="scTimer" style="font-size:0.8rem;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.07);padding:4px 10px;border-radius:20px;"></div>
             </div>
             <!-- История сообщений -->
@@ -1688,7 +1703,7 @@
     <div class="page" id="soulChatPage">
       <div class="profile-header">
         <button type="button" class="profile-back-btn" onclick="goBack()" aria-label="Назад">←</button>
-        <div class="profile-header-title">💬 Soul Chat</div>
+        <div class="profile-header-title">Soul Chat</div>
       </div>
       <div class="page-scroll" style="padding:16px 20px calc(env(safe-area-inset-bottom)+40px);">
 
@@ -1866,7 +1881,7 @@
           soulChatNoAccess: 'Soul Chat — диалоги с душой. Доступ по подписке Soul Basic (10 диалогов/мес) или Soul Plus (30 диалогов/мес).',
           soulChatDefault: 'Soul Chat — диалоги с душой по заявке. Доступ по подписке.',
           soulChatNoApi: 'Soul Chat — диалоги с душой по заявке. Доступ по подписке Soul Basic или Soul Plus. Оформи в приложении: «К оплате».',
-          greeting: 'Привет, {name}! 👋',
+          greeting: 'Привет, {name}!',
           greetingDefault: 'Музыка твоей души',
           onboardingSlide1Title: 'Есть песня — о тебе',
           onboardingSlide1Text: 'Написанная по дате рождения. Не шаблон — живой текст о твоём характере, силе и пути.',
@@ -2310,9 +2325,6 @@
         return s;
       }
       function applyTranslations() {
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:1284',message:'applyTranslations START',data:{currentLang:currentLang,startBtnInLang:LANG[currentLang]&&LANG[currentLang].startBtn?LANG[currentLang].startBtn:'MISSING',previewSlide1Before:document.querySelectorAll('.preview-slide-title')[0]?document.querySelectorAll('.preview-slide-title')[0].textContent:'NULL'},timestamp:Date.now(),hypothesisId:'A,C,E'})}).catch(()=>{});
-        // #endregion
         document.documentElement.lang = currentLang || 'ru';
         var map = [
           ['tagline','#homeTagline'], ['startBtn','#startBtn'], ['myProfile','#goProfileBtn'], ['myHeroes','#goHeroesBtn'], ['admin','#adminLinkBtn'],
@@ -3151,12 +3163,69 @@
       }
       window.updateP2AccordionSummary = updateP2AccordionSummary;
 
+      // ── Аккордеон энергии момента ──────────────────────────────────────────
+      var transitAccOpen = false;
+      function toggleTransitAccordion() {
+        var wrap = document.getElementById('transitFormWrap');
+        var chevron = document.getElementById('transitAccChevron');
+        if (!wrap) return;
+        transitAccOpen = !transitAccOpen;
+        if (transitAccOpen) {
+          wrap.style.maxHeight = '2000px';
+          wrap.style.opacity = '1';
+          if (chevron) chevron.style.transform = 'rotate(180deg)';
+        } else {
+          wrap.style.maxHeight = '0';
+          wrap.style.opacity = '0';
+          if (chevron) chevron.style.transform = '';
+        }
+      }
+      window.toggleTransitAccordion = toggleTransitAccordion;
+
+      function openTransitAccordion() {
+        if (!transitAccOpen) toggleTransitAccordion();
+      }
+
+      function updateTransitAccordionSummary() {
+        var transitDate = (document.getElementById('transitDate') || {}).value || '';
+        var transitLocation = (document.getElementById('transitLocation') || {}).value || '';
+        var dateEl = document.getElementById('transitAccDate');
+        var sepEl  = document.getElementById('transitAccSep');
+        if (!dateEl) return;
+        var parts = [];
+        if (transitDate) {
+          var dateParts = transitDate.split('-');
+          if (dateParts.length === 3) {
+            parts.push(dateParts[2] + '.' + dateParts[1] + '.' + dateParts[0]);
+          } else {
+            parts.push(transitDate);
+          }
+        }
+        if (transitLocation) {
+          parts.push(transitLocation);
+        }
+        if (parts.length > 0) {
+          dateEl.textContent = parts.join(' · ');
+          if (sepEl) sepEl.style.display = '';
+        } else {
+          dateEl.textContent = '';
+          if (sepEl) sepEl.style.display = 'none';
+        }
+      }
+      window.updateTransitAccordionSummary = updateTransitAccordionSummary;
+
       // Следим за полями второго человека для обновления сводки в шапке
       document.addEventListener('DOMContentLoaded', function() {
         ['name2', 'birthdate2'].forEach(function(id) {
           var el = document.getElementById(id);
           if (el) el.addEventListener('change', updateP2AccordionSummary);
           if (el && el.tagName === 'INPUT') el.addEventListener('input', updateP2AccordionSummary);
+        });
+        // Следим за полями энергии момента для обновления сводки в шапке
+        ['transitDate', 'transitLocation'].forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el) el.addEventListener('change', updateTransitAccordionSummary);
+          if (el && el.tagName === 'INPUT') el.addEventListener('input', updateTransitAccordionSummary);
         });
       });
 
@@ -3255,6 +3324,8 @@
           }
         } catch(e) {
           console.warn('[Form] Ошибка загрузки профиля:', e);
+          // При ошибке — показываем форму открытой, иначе pointer-events:none заблокирует всё
+          if (formWrap) { formWrap.classList.remove('pfw-collapsed'); formWrap.classList.remove('no-anim'); }
         }
         // Дефолтный язык по Telegram
         var langElFallback = document.getElementById('language');
@@ -3517,13 +3588,7 @@
       }
       if (tg) loadMe();
       currentLang = detectLang();
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:1935',message:'Before applyTranslations',data:{previewCarouselExists:!!document.getElementById('previewCarousel'),startBtnExists:!!document.getElementById('startBtn'),startBtnText:document.getElementById('startBtn')?document.getElementById('startBtn').textContent:'NULL'},timestamp:Date.now(),hypothesisId:'A,B,C,D'})}).catch(()=>{});
-      // #endregion
       applyTranslations();
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:1939',message:'After applyTranslations END',data:{startBtnText:document.getElementById('startBtn')?document.getElementById('startBtn').textContent:'NULL',previewSlide1Title:document.querySelectorAll('.preview-slide-title')[0]?document.querySelectorAll('.preview-slide-title')[0].textContent:'NULL',previewSlide1Color:document.querySelectorAll('.preview-slide-title')[0]?window.getComputedStyle(document.querySelectorAll('.preview-slide-title')[0]).color:'NULL',previewSlide1FontSize:document.querySelectorAll('.preview-slide-title')[0]?window.getComputedStyle(document.querySelectorAll('.preview-slide-title')[0]).fontSize:'NULL'},timestamp:Date.now(),hypothesisId:'A,B,C'})}).catch(()=>{});
-      // #endregion
       
       // ═══════════════════════════════════════════════════════════════════
       // ═══════════════════════════════════════════════════════════════════
@@ -4405,9 +4470,6 @@
         var currentPage = document.querySelector('.page.active');
         
         if (tg && tg.MainButton && tg.MainButton.hide) tg.MainButton.hide();
-        // #region agent log
-        if (pageId === 'homePage') fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'public/index.html:goToPage',message:'homePage activated',data:{startBtnText:document.getElementById('startBtn')?document.getElementById('startBtn').textContent:'NULL',previewCarouselVisible:document.getElementById('previewCarousel')?window.getComputedStyle(document.getElementById('previewCarousel')).display:'NULL'},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         // Всегда проверяем кнопку оплаты при переходах между страницами
         ensurePayButtonText();
         
@@ -4555,23 +4617,31 @@
 
       function toggleFormsByMode(mode) {
         var p2Accordion = document.getElementById('secondPersonAccordion');
-        var transitForm = document.getElementById('transitForm');
+        var transitAccordion = document.getElementById('transitAccordion');
         if (p2Accordion) p2Accordion.style.display = 'none';
-        if (transitForm) transitForm.style.display = 'none';
+        if (transitAccordion) transitAccordion.style.display = 'none';
         if (mode === 'couple') {
           if (p2Accordion) {
             p2Accordion.style.display = 'block';
             // Авто-открыть если ещё закрыт
             setTimeout(function() { openSecondPersonAccordion(); }, 80);
           }
-        } else if (mode === 'transit' && transitForm) {
-          transitForm.style.display = 'block';
+        } else if (mode === 'transit') {
+          if (transitAccordion) {
+            transitAccordion.style.display = 'block';
+            // Авто-открыть если ещё закрыт
+            setTimeout(function() { openTransitAccordion(); }, 80);
+          }
         }
         if (mode !== 'couple') {
           var p2r = document.getElementById('person2Relationship');
           if (p2r) p2r.value = '';
           // Закрыть аккордеон при смене режима
           if (p2AccOpen) toggleSecondPersonAccordion();
+        }
+        if (mode !== 'transit') {
+          // Закрыть аккордеон энергии момента при смене режима
+          if (transitAccOpen) toggleTransitAccordion();
         }
       }
 
@@ -4585,6 +4655,14 @@
           btn.classList.toggle('active', btn.getAttribute('data-mode') === selectedMode);
         });
         toggleFormsByMode(selectedMode);
+        // Если пользователь выбирает режим — показываем поля формы, чтобы можно было сразу заполнить/редактировать
+        try {
+          var formWrap = document.getElementById('formFieldsWrap');
+          if (formWrap && formWrap.classList.contains('pfw-collapsed')) {
+            formWrap.classList.remove('pfw-collapsed');
+            formWrap.classList.remove('no-anim');
+          }
+        } catch (e) { /* безопасно */ }
         updatePaymentUiFromCatalog();
       }
 
