@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.45';
+        var APP_VERSION = '1.2.46';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -259,7 +259,7 @@
     .step-panel { margin-top: 20px; }
     .step-nav { display: flex; gap: 12px; margin-top: 16px; }
     .step-nav button { flex: 1; text-transform: none; letter-spacing: 0; }
-    .form-submit-sticky { position: sticky; bottom: 0; background: linear-gradient(to top, #08071a 85%, transparent); padding: 16px 0 8px; margin: 0; z-index: 5; display: flex; flex-direction: column; align-items: stretch; gap: 0; }
+    .form-submit-sticky { position: sticky; bottom: 0; background: linear-gradient(to top, rgba(8,7,26,0.97) 55%, rgba(8,7,26,0.6) 80%, transparent); padding: 14px 0 6px; margin: 0; z-index: 5; display: flex; flex-direction: column; align-items: stretch; gap: 0; }
     .form-submit-sticky button#stepNext { flex: none; width: 100%; }
     .form-nav-links{display:flex;justify-content:center;gap:14px;margin-top:18px;padding:10px 0}
     .form-nav-link{background:none;border:none;color:rgba(212,175,55,0.55);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;animation:none;font-weight:500}
@@ -4257,7 +4257,7 @@
         var promoEl  = document.getElementById('scPagePromo');
         var chatEl   = document.getElementById('scPageChat');
         var giftWrap = document.getElementById('scPageGiftWrap');
-        if (!loadEl) return;
+        var buyDayWrap = document.getElementById('scPageBuyDayWrap');
 
         function scpShow(id) {
           [loadEl, promoEl, chatEl].forEach(function(el){ if(el) el.style.display='none'; });
@@ -4265,27 +4265,22 @@
           if (el) el.style.display = '';
         }
 
-        scpShow('scPageLoading');
+        // Показываем промо сразу — без ожидания API
+        scpShow('scPagePromo');
+        if (giftWrap) giftWrap.style.display = 'none';
+        if (buyDayWrap) buyDayWrap.style.display = 'none';
 
         var apiBase  = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         var initData = getInitData();
-        if (!apiBase || !initData) {
-          scpShow('scPagePromo');
-          return;
-        }
-
-        // Фолбек: если API не ответил за 8 секунд — показываем промо
-        var timeoutId = setTimeout(function() { scpShow('scPagePromo'); }, 8000);
+        if (!apiBase || !initData) return;
 
         try {
           var resp = await fetch(apiBase + '/api/soul-chat/access', {
             method: 'GET',
             headers: { 'X-Telegram-Init': initData }
           });
-          clearTimeout(timeoutId);
           var json = await resp.json().catch(function(){ return {}; });
 
-          // Сохраняем last_request_id для запросов к /api/soul-chat
           if (json && json.last_request_id) {
             window._scLastRequestId = json.last_request_id;
           }
@@ -4305,20 +4300,17 @@
               updateTimer();
             }
           } else {
-            scpShow('scPagePromo');
-            var buyDayWrap = document.getElementById('scPageBuyDayWrap');
+            // Промо уже показан — только обновляем кнопки
             if (json && json.trial_available) {
               if (giftWrap) giftWrap.style.display = '';
               if (buyDayWrap) buyDayWrap.style.display = 'none';
             } else {
-              // Триал уже использован — показываем кнопку покупки суток
               if (giftWrap) giftWrap.style.display = 'none';
               if (buyDayWrap) buyDayWrap.style.display = '';
             }
           }
         } catch(e) {
-          clearTimeout(timeoutId);
-          scpShow('scPagePromo');
+          // Промо уже показан — ничего не делаем
         }
       }
 
