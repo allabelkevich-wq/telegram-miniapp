@@ -315,14 +315,13 @@ async function consumeReferralCreditIfAvailable(telegramUserId) {
 async function hasActiveSubscription(telegramUserId) {
   if (!supabase) return false;
   const nowIso = new Date().toISOString();
-  // master_monthly даёт доступ только к модулю героев, не к генерации песен
   const { data, error } = await supabase
     .from("subscriptions")
     .select("id,plan_sku,status,renew_at")
     .eq("telegram_user_id", Number(telegramUserId))
     .eq("status", "active")
     .gte("renew_at", nowIso)
-    .in("plan_sku", ["soul_basic_sub", "soul_plus_sub"])
+    .in("plan_sku", ["soul_basic_sub", "soul_plus_sub", "master_monthly"])
     .limit(1)
     .maybeSingle();
   if (error && /does not exist|relation/i.test(error.message)) return false;

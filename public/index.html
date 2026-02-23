@@ -1777,14 +1777,23 @@
             </button>
           </div>
 
-          <!-- Либо подарок на сутки -->
-          <div id="scPageGiftWrap" style="display:none;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(236,72,153,0.06));border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:18px;text-align:center;">
+          <!-- Подарочные 24ч — первый раз бесплатно -->
+          <div id="scPageGiftWrap" style="display:none;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(236,72,153,0.06));border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:18px;text-align:center;margin-bottom:12px;">
             <div style="font-size:1.8rem;margin-bottom:8px;">🎁</div>
             <div style="font-weight:700;color:#d4af37;margin-bottom:6px;">Попробуй бесплатно — 24 часа</div>
             <div style="font-size:0.85rem;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:14px;">Один раз для каждого пользователя</div>
             <button id="scPageGiftBtn" type="button" style="padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">
               🎁 Получить 24 часа бесплатно
             </button>
+          </div>
+
+          <!-- Купить сутки (после исчерпания триала, без подписки) -->
+          <div id="scPageBuyDayWrap" style="display:none;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px;text-align:center;">
+            <div style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:10px;line-height:1.5;">Не готов к подписке? Попробуй разовый доступ</div>
+            <button id="scPageBuyDayBtn" type="button" style="width:100%;padding:12px;border-radius:13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:0.9rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
+              ⚡ Открыть Soul Chat на 24ч — $2.99
+            </button>
+            <div id="scPageBuyDayStatus" style="display:none;font-size:0.8rem;color:rgba(212,175,55,0.7);margin-top:8px;"></div>
           </div>
         </div>
 
@@ -4264,12 +4273,48 @@
             }
           } else {
             scpShow('scPagePromo');
-            if (json && json.trial_available && giftWrap) giftWrap.style.display = '';
+            var buyDayWrap = document.getElementById('scPageBuyDayWrap');
+            if (json && json.trial_available) {
+              if (giftWrap) giftWrap.style.display = '';
+              if (buyDayWrap) buyDayWrap.style.display = 'none';
+            } else {
+              // Триал уже использован — показываем кнопку покупки суток
+              if (giftWrap) giftWrap.style.display = 'none';
+              if (buyDayWrap) buyDayWrap.style.display = '';
+            }
           }
         } catch(e) {
           scpShow('scPagePromo');
         }
       }
+
+      // Кнопка «Купить 24ч доступ» на странице Soul Chat
+      (function() {
+        var btn = document.getElementById('scPageBuyDayBtn');
+        var statusEl = document.getElementById('scPageBuyDayStatus');
+        if (!btn) return;
+        btn.addEventListener('click', async function() {
+          btn.disabled = true; btn.textContent = '⏳ Создаю ссылку…';
+          var apiBase  = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+          var initData = getInitData();
+          if (!apiBase || !initData) { btn.disabled = false; btn.textContent = '⚡ Открыть Soul Chat на 24ч — $2.99'; return; }
+          try {
+            var r = await fetch(apiBase + '/api/soul-chat/buy-day', {
+              method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+              body: JSON.stringify({ initData: initData })
+            });
+            var j = await r.json().catch(function(){ return {}; });
+            if (j && j.checkout_url) {
+              window.open(j.checkout_url, '_blank');
+              if (statusEl) { statusEl.textContent = 'Ссылка открыта — после оплаты вернись сюда'; statusEl.style.display = ''; }
+              btn.disabled = false; btn.textContent = '⚡ Открыть Soul Chat на 24ч — $2.99';
+            } else {
+              btn.disabled = false; btn.textContent = '⚡ Открыть Soul Chat на 24ч — $2.99';
+              if (statusEl) { statusEl.textContent = j && j.error ? j.error : 'Ошибка. Попробуй ещё раз.'; statusEl.style.display = ''; }
+            }
+          } catch(e) { btn.disabled = false; btn.textContent = '⚡ Открыть Soul Chat на 24ч — $2.99'; }
+        });
+      })();
 
       // Кнопка «Получить подарок» на странице Soul Chat
       (function() {
