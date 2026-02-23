@@ -1059,26 +1059,19 @@ bot.command("start", async (ctx) => {
   }
 
   // --- Обычный /start ---
-  let text;
-  if (isReturning) {
-    text = `${name}, ты вернулся — хорошо.\n\nПесня уже ждёт тебя здесь, в этом чате. Если ещё не пришла — подожди пару минут.\n\nГотов создать ещё одну?`;
-  } else {
-    text =
-      `${name}, привет.\n\n` +
-      `У каждого человека есть своя музыка — та, что написана по его дате рождения.\n\n` +
-      `YupSoul создаёт её. Первая песня — в подарок.\n\n` +
-      `Нажми кнопку ниже, чтобы начать ↓`;
-  }
+  const startText = isReturning
+    ? bMsg(ctx, 'startReturning', name)
+    : bMsg(ctx, 'startNew', name);
 
   try {
-    await ctx.reply(text, {
+    await ctx.reply(startText, {
       parse_mode: "Markdown",
-      reply_markup: { inline_keyboard: [[{ text: "🎵 Создать свою песню", web_app: { url: MINI_APP_STABLE_URL } }]] },
+      reply_markup: { inline_keyboard: [[{ text: bMsg(ctx, 'btnOpenApp'), web_app: { url: MINI_APP_STABLE_URL } }]] },
     });
   } catch (e) {
     console.error("[start] Ошибка ответа:", e?.message || e);
     try {
-      await ctx.reply("Привет! Открой приложение по кнопке меню слева от поля ввода.");
+      await ctx.reply(bMsg(ctx, 'startNew', name));
     } catch (e2) {
       console.error("[start] Fallback reply failed:", e2?.message);
     }
@@ -1112,7 +1105,7 @@ bot.on("message:web_app_data", async (ctx) => {
   console.log("[Заявка] Обработка web_app_data, длина:", raw?.length || 0, "тип:", typeof raw);
   if (!raw) {
     console.error("[Заявка] ⚠️ КРИТИЧНО: Пустые web_app_data! ctx.message:", JSON.stringify(ctx.message, null, 2));
-    await ctx.reply("Не получил данные заявки. Нажми в приложении кнопку «Отправить заявку во Вселенную» внизу экрана.");
+    await ctx.reply(bMsg(ctx, 'requestError'));
     return;
   }
 
@@ -1122,18 +1115,18 @@ bot.on("message:web_app_data", async (ctx) => {
     console.log("[Заявка] JSON распарсен, поля:", Object.keys(payload));
   } catch (e) {
     console.error("[Заявка] Ошибка парсинга JSON:", e.message, "Сырые данные (первые 200 символов):", raw?.slice(0, 200));
-    await ctx.reply("Не удалось прочитать данные заявки. Попробуй ещё раз из приложения.");
+    await ctx.reply(bMsg(ctx, 'requestError'));
     return;
   }
   const telegramUserId = ctx.from?.id;
   if (!telegramUserId) {
     console.error("[Заявка] Нет ctx.from.id, ctx.from:", ctx.from);
-    await ctx.reply("Ошибка: не удалось определить пользователя. Закрой приложение и открой снова из чата с ботом.");
+    await ctx.reply(bMsg(ctx, 'requestError'));
     return;
   }
 
   console.log("[Заявка] Пользователь:", telegramUserId, "Имя:", payload.name, "Место:", payload.birthplace, "Координаты:", payload.birthplaceLat ? `${payload.birthplaceLat}, ${payload.birthplaceLon}` : "нет");
-  await ctx.reply("⏳ Получил заявку, сохраняю…");
+  await ctx.reply(bMsg(ctx, 'requestReceived'));
 
   try {
   const {
@@ -1166,12 +1159,12 @@ bot.on("message:web_app_data", async (ctx) => {
   });
   } catch (err) {
     console.error("[Заявка] Ошибка saveRequest:", err?.message || err, err?.stack);
-    await ctx.reply("Произошла ошибка при сохранении. Попробуй ещё раз или напиши в поддержку.");
+    await ctx.reply(bMsg(ctx, 'requestError'));
     return;
   }
 
   if (!requestId) {
-    await ctx.reply("Не удалось сохранить заявку. Попробуй позже или напиши в поддержку.");
+    await ctx.reply(bMsg(ctx, 'requestError'));
     console.error("[Заявка] Ошибка сохранения (saveRequest вернул null)", { name, birthdate, birthplace, telegramUserId });
     return;
   }
@@ -1234,12 +1227,7 @@ bot.on("message:web_app_data", async (ctx) => {
     })();
   }
 
-  await ctx.reply(
-    "✅ Заявка принята!\n\n" +
-    "Песня генерируется на нашем сервере. Когда будет готова — придёт сюда в этот чат. Обычно это несколько минут (иногда до 5–10).\n\n" +
-    "Можешь закрыть приложение — ничего не пропадёт. Спасибо, что остаёшься с нами ❤️\n\n" +
-    "Детальную расшифровку натальной карты можно запросить командой /get_analysis после оплаты."
-  );
+  await ctx.reply(bMsg(ctx, 'requestSaved', name || ctx.from?.first_name || ''));
 
   // Уведомление админам в личку о новой заявке (приходит в чат с ботом)
   if (ADMIN_IDS.length) {
@@ -1262,7 +1250,7 @@ bot.on("message:web_app_data", async (ctx) => {
   }
   } catch (err) {
     console.error("[Заявка] Необработанная ошибка в обработчике web_app_data:", err?.message || err);
-    await ctx.reply("Произошла ошибка. Попробуй ещё раз или напиши в поддержку.").catch(() => {});
+    await ctx.reply(bMsg(ctx, 'requestError')).catch(() => {});
   }
 });
 
@@ -1385,6 +1373,14 @@ function getUserLang(ctx) {
 // Мультиязычные сообщения для бота
 const BOT_MSGS = {
   ru: {
+    startNew: (name) => `${name}, привет.\n\nУ каждого человека есть своя музыка — та, что написана по его дате рождения.\n\nYupSoul создаёт её. Первая песня — в подарок.\n\nНажми кнопку ниже, чтобы начать ↓`,
+    startReturning: (name) => `${name}, ты вернулся — хорошо.\n\nПесня уже ждёт тебя здесь, в этом чате. Если ещё не пришла — подожди пару минут.\n\nГотов создать ещё одну?`,
+    btnOpenApp: "🎵 Создать свою песню",
+    requestReceived: "⏳ Получил заявку, сохраняю…",
+    requestSaved: (name) => `✅ Заявка принята, ${name}! Песня будет готова через несколько минут — придёт прямо сюда в чат.`,
+    requestError: "Произошла ошибка. Попробуй ещё раз или напиши в поддержку.",
+    songCaption: (name) => `${name}, твоя персональная песня готова. Слушай в тишине — это твоя музыка. ✨`,
+    notifyFixed: (name) => `${name}, мы исправили определение языка — теперь твоя песня будет на нужном языке.\n\nЕсли хочешь заказать новую версию — открой приложение и создай заявку заново. Первая после исправления — бесплатно.`,
     noSongInQueue: "Проверил — у тебя нет песен в очереди на повторную отправку.\n\nЕсли песня не пришла:\n• Подожди 15–20 минут — песня может ещё генерироваться\n• Убедись, что не блокировал бота и нажал «Старт»\n• Напиши в поддержку — пришлём вручную",
     pendingHint: "\n\n🎁 У тебя есть заявка, которая ждёт активации подарка. Открой приложение (кнопка в меню чата) и нажми «Получить бесплатно».",
     cooldown: (m) => `Подожди ещё ${m} мин. — повторная попытка ограничена раз в 10 минут.`,
@@ -1393,6 +1389,14 @@ const BOT_MSGS = {
     resendErr: "Ошибка при повторной отправке. Напиши в поддержку.",
   },
   uk: {
+    startNew: (name) => `${name}, привіт.\n\nУ кожної людини є своя музика — та, що написана за датою народження.\n\nYupSoul створює її. Перша пісня — в подарунок.\n\nНатисни кнопку нижче, щоб почати ↓`,
+    startReturning: (name) => `${name}, ти повернувся — добре.\n\nПісня вже чекає тебе тут, у цьому чаті. Якщо ще не прийшла — зачекай кілька хвилин.\n\nГотовий створити ще одну?`,
+    btnOpenApp: "🎵 Створити свою пісню",
+    requestReceived: "⏳ Отримав заявку, зберігаю…",
+    requestSaved: (name) => `✅ Заявку прийнято, ${name}! Пісня буде готова за кілька хвилин — надійде прямо сюди в чат.`,
+    requestError: "Сталася помилка. Спробуй ще раз або напиши у підтримку.",
+    songCaption: (name) => `${name}, твоя персональна пісня готова. Слухай у тиші — це твоя музика. ✨`,
+    notifyFixed: (name) => `${name}, ми виправили визначення мови — тепер твоя пісня буде потрібною мовою.\n\nЯкщо хочеш замовити нову версію — відкрий додаток і створи заявку знову. Перша після виправлення — безкоштовно.`,
     noSongInQueue: "Перевірив — у тебе немає пісень у черзі на повторне надсилання.\n\nЯкщо пісня не прийшла:\n• Зачекай 15–20 хвилин — пісня може ще генеруватися\n• Переконайся, що не блокував бота та натиснув «Старт»\n• Напиши у підтримку — надішлемо вручну",
     pendingHint: "\n\n🎁 У тебе є заявка, яка чекає активації подарунка. Відкрий додаток (кнопка в меню чату) та натисни «Отримати безкоштовно».",
     cooldown: (m) => `Зачекай ще ${m} хв. — повторна спроба обмежена раз на 10 хвилин.`,
@@ -1401,6 +1405,14 @@ const BOT_MSGS = {
     resendErr: "Помилка при повторному надсиланні. Напиши у підтримку.",
   },
   en: {
+    startNew: (name) => `${name}, hi.\n\nEvery person has their own music — written from their date of birth.\n\nYupSoul creates it. Your first song is a gift.\n\nTap the button below to start ↓`,
+    startReturning: (name) => `${name}, welcome back.\n\nYour song is waiting here in this chat. If it hasn't arrived yet — wait a few minutes.\n\nReady to create another one?`,
+    btnOpenApp: "🎵 Create my song",
+    requestReceived: "⏳ Got your request, saving…",
+    requestSaved: (name) => `✅ Request accepted, ${name}! Your song will be ready in a few minutes — it will arrive right here in chat.`,
+    requestError: "An error occurred. Please try again or contact support.",
+    songCaption: (name) => `${name}, your personal song is ready. Listen in silence — this is your music. ✨`,
+    notifyFixed: (name) => `${name}, we fixed language detection — your next song will be in the right language.\n\nIf you'd like a new version — open the app and create a new request. First one after the fix is free.`,
     noSongInQueue: "Checked — you have no songs waiting for resend.\n\nIf your song hasn't arrived:\n• Wait 15–20 minutes — it may still be generating\n• Make sure you haven't blocked the bot and pressed «Start»\n• Contact support — we'll send it manually",
     pendingHint: "\n\n🎁 You have a request waiting for gift activation. Open the app (menu button in chat) and tap «Get for free».",
     cooldown: (m) => `Please wait ${m} more min. — resend is limited to once every 10 minutes.`,
@@ -1409,6 +1421,14 @@ const BOT_MSGS = {
     resendErr: "Error while resending. Please contact support.",
   },
   de: {
+    startNew: (name) => `${name}, hallo.\n\nJeder Mensch hat seine eigene Musik — geschrieben nach seinem Geburtsdatum.\n\nYupSoul erschafft sie. Das erste Lied ist ein Geschenk.\n\nTippe auf den Button unten, um zu beginnen ↓`,
+    startReturning: (name) => `${name}, willkommen zurück.\n\nDein Lied wartet bereits hier in diesem Chat. Falls es noch nicht angekommen ist — warte noch ein paar Minuten.\n\nBereit, ein weiteres zu erstellen?`,
+    btnOpenApp: "🎵 Mein Lied erstellen",
+    requestReceived: "⏳ Anfrage erhalten, speichere…",
+    requestSaved: (name) => `✅ Anfrage angenommen, ${name}! Dein Lied wird in wenigen Minuten fertig sein — es kommt direkt hier in den Chat.`,
+    requestError: "Ein Fehler ist aufgetreten. Versuche es erneut oder kontaktiere den Support.",
+    songCaption: (name) => `${name}, dein persönliches Lied ist fertig. Höre es in Stille — das ist deine Musik. ✨`,
+    notifyFixed: (name) => `${name}, wir haben die Spracherkennung verbessert — dein nächstes Lied wird in der richtigen Sprache sein.\n\nWenn du eine neue Version möchtest — öffne die App und erstelle eine neue Anfrage. Die erste nach dem Fix ist kostenlos.`,
     noSongInQueue: "Geprüft — du hast keine Lieder in der Warteschlange zum erneuten Senden.\n\nWenn dein Lied nicht angekommen ist:\n• Warte 15–20 Minuten — es könnte noch generiert werden\n• Stelle sicher, dass du den Bot nicht gesperrt hast und auf «Start» gedrückt hast\n• Kontaktiere den Support — wir senden es manuell",
     pendingHint: "\n\n🎁 Du hast eine Anfrage, die auf die Geschenk-Aktivierung wartet. Öffne die App (Menü-Button im Chat) und tippe auf «Kostenlos erhalten».",
     cooldown: (m) => `Bitte warte noch ${m} Min. — erneutes Senden ist auf einmal alle 10 Minuten begrenzt.`,
@@ -1417,6 +1437,14 @@ const BOT_MSGS = {
     resendErr: "Fehler beim erneuten Senden. Bitte kontaktiere den Support.",
   },
   fr: {
+    startNew: (name) => `${name}, bonjour.\n\nChaque personne a sa propre musique — écrite selon sa date de naissance.\n\nYupSoul la crée. La première chanson est un cadeau.\n\nAppuie sur le bouton ci-dessous pour commencer ↓`,
+    startReturning: (name) => `${name}, content de te revoir.\n\nTa chanson t'attend ici dans ce chat. Si elle n'est pas encore arrivée — attends quelques minutes.\n\nPrêt à en créer une autre ?`,
+    btnOpenApp: "🎵 Créer ma chanson",
+    requestReceived: "⏳ Demande reçue, enregistrement…",
+    requestSaved: (name) => `✅ Demande acceptée, ${name} ! Ta chanson sera prête dans quelques minutes — elle arrivera directement ici dans le chat.`,
+    requestError: "Une erreur s'est produite. Réessaie ou contacte le support.",
+    songCaption: (name) => `${name}, ta chanson personnelle est prête. Écoute-la en silence — c'est ta musique. ✨`,
+    notifyFixed: (name) => `${name}, nous avons corrigé la détection de langue — ta prochaine chanson sera dans la bonne langue.\n\nSi tu veux une nouvelle version — ouvre l'app et crée une nouvelle demande. La première après la correction est gratuite.`,
     noSongInQueue: "Vérifié — tu n'as pas de chansons en attente de renvoi.\n\nSi ta chanson n'est pas arrivée :\n• Attends 15–20 minutes — elle est peut-être encore en génération\n• Assure-toi de ne pas avoir bloqué le bot et d'avoir appuyé sur «Démarrer»\n• Contacte le support — on l'enverra manuellement",
     pendingHint: "\n\n🎁 Tu as une demande en attente d'activation du cadeau. Ouvre l'app (bouton menu dans le chat) et appuie sur «Obtenir gratuitement».",
     cooldown: (m) => `Attends encore ${m} min. — le renvoi est limité à une fois toutes les 10 minutes.`,
@@ -2735,6 +2763,116 @@ app.post("/api/admin/requests/delete", express.json(), asyncApi(async (req, res)
   const { error } = await supabase.from("track_requests").delete().in("id", ids);
   if (error) return res.status(500).json({ success: false, error: error.message });
   return res.json({ success: true, deleted: ids.length });
+}));
+
+// ===== ВАРИАНТ 1: поиск заявок с неверным языком =====
+app.get("/api/admin/wrong-language", asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+
+  const fromLang = req.query.from_lang || "ru";
+  const toLang = req.query.to_lang || "uk";
+
+  // Находим пользователей, у которых в user_profiles сохранён нужный язык
+  const { data: profiles } = await supabase
+    .from("user_profiles")
+    .select("telegram_id, name, language")
+    .eq("language", toLang);
+
+  const targetUserIds = (profiles || []).map(p => Number(p.telegram_id));
+
+  // Находим их заявки с fromLang
+  let query = supabase
+    .from("track_requests")
+    .select("id, telegram_user_id, name, language, generation_status, created_at")
+    .eq("language", fromLang)
+    .in("generation_status", ["completed", "delivery_failed"]);
+
+  if (targetUserIds.length > 0) {
+    query = query.in("telegram_user_id", targetUserIds);
+  }
+
+  const { data: rows, error } = await query.order("created_at", { ascending: false }).limit(100);
+  if (error) return res.status(500).json({ success: false, error: error.message });
+
+  return res.json({ success: true, count: rows?.length || 0, rows: rows || [] });
+}));
+
+// ===== ВАРИАНТ 1: перевести заявки на новый язык и поставить в очередь =====
+app.post("/api/admin/requeue-wrong-language", express.json(), asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+
+  const { ids, to_lang } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ success: false, error: "Укажите массив ids" });
+  if (!to_lang) return res.status(400).json({ success: false, error: "Укажите to_lang" });
+
+  const { error } = await supabase
+    .from("track_requests")
+    .update({
+      language: to_lang,
+      generation_status: "pending",
+      status: "pending",
+      audio_url: null,
+      suno_task_id: null,
+      error_message: null,
+      updated_at: new Date().toISOString(),
+    })
+    .in("id", ids);
+
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  return res.json({ success: true, requeued: ids.length, language: to_lang });
+}));
+
+// ===== ВАРИАНТ 2: рассылка уведомлений пользователям с delivery_failed =====
+app.post("/api/admin/notify-delivery-failed", express.json(), asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  if (!BOT_TOKEN) return res.status(503).json({ success: false, error: "BOT_TOKEN не задан" });
+
+  // Находим уникальных пользователей с delivery_failed заявками
+  const { data: rows, error } = await supabase
+    .from("track_requests")
+    .select("telegram_user_id, name, language")
+    .eq("generation_status", "delivery_failed")
+    .order("created_at", { ascending: false });
+
+  if (error) return res.status(500).json({ success: false, error: error.message });
+
+  // Дедупликация по telegram_user_id
+  const seen = new Set();
+  const users = (rows || []).filter(r => {
+    if (seen.has(r.telegram_user_id)) return false;
+    seen.add(r.telegram_user_id);
+    return true;
+  });
+
+  const results = { sent: 0, failed: 0, users: users.length };
+
+  for (const user of users) {
+    const lang = user.language || "ru";
+    const name = user.name || "друг";
+    const msgs = BOT_MSGS[lang] || BOT_MSGS.ru;
+    const text = typeof msgs.notifyFixed === 'function' ? msgs.notifyFixed(name) : BOT_MSGS.ru.notifyFixed(name);
+    const btnTexts = { ru: "🎵 Открыть YupSoul", uk: "🎵 Відкрити YupSoul", en: "🎵 Open YupSoul", de: "🎵 YupSoul öffnen", fr: "🎵 Ouvrir YupSoul" };
+    const btnText = btnTexts[lang] || btnTexts.ru;
+
+    try {
+      await bot.api.sendMessage(user.telegram_user_id, text, {
+        reply_markup: { inline_keyboard: [[{ text: btnText, web_app: { url: MINI_APP_STABLE_URL } }]] }
+      });
+      results.sent++;
+    } catch (e) {
+      console.warn("[notify-delivery-failed] Не удалось отправить пользователю", user.telegram_user_id, e?.message);
+      results.failed++;
+    }
+    await new Promise(r => setTimeout(r, 100)); // задержка чтобы не спамить Telegram API
+  }
+
+  return res.json({ success: true, ...results });
 }));
 
 app.get("/api/admin/settings", asyncApi(async (req, res) => {

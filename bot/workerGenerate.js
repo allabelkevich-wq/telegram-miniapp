@@ -101,6 +101,17 @@ async function sendAudioToUser(telegramUserId, audioUrl, caption) {
 }
 
 /** Обработка одной заявки: LLM → Suno → отправка */
+function getSongCaption(name, language) {
+  const captions = {
+    ru: `${name}, твоя персональная песня готова. Слушай в тишине — это твоя музыка. ✨`,
+    uk: `${name}, твоя персональна пісня готова. Слухай у тиші — це твоя музика. ✨`,
+    en: `${name}, your personal song is ready. Listen in silence — this is your music. ✨`,
+    de: `${name}, dein persönliches Lied ist fertig. Höre es in Stille — das ist deine Musik. ✨`,
+    fr: `${name}, ta chanson personnelle est prête. Écoute-la en silence — c'est ta musique. ✨`,
+  };
+  return captions[language] || captions.ru;
+}
+
 async function processOneRequest(row) {
   const id = row.id;
   const telegramUserId = row.telegram_user_id;
@@ -227,7 +238,7 @@ async function processOneRequest(row) {
     updated_at: new Date().toISOString(),
   }).eq("id", id);
 
-  const caption = `${name}, твой персональный звуковой ключ готов. Слушай в тишине — это твой артефакт силы для игры жизни. ✨`;
+  const caption = getSongCaption(name, language);
   const send = await sendAudioToUser(telegramUserId, sunoResult.audioUrl, caption);
   const now = new Date().toISOString();
   if (!send.ok) {

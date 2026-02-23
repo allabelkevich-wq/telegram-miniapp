@@ -205,6 +205,7 @@
     <div class="admin-tabs">
       <button class="tab-btn active" onclick="switchTab('requests', this)">📋 Заявки</button>
       <button class="tab-btn" onclick="switchTab('monetization', this)">💳 Монетизация</button>
+      <button class="tab-btn" onclick="switchTab('languages', this)">🌍 Языки</button>
       <button class="tab-btn" onclick="switchTab('settings', this)">⚙️ Настройки</button>
       <button class="tab-btn" onclick="switchTab('referrals', this)">🔗 Рефералы</button>
     </div>
@@ -351,6 +352,58 @@
       </div>
     </div>
 
+    <!-- Tab: Языки -->
+    <div class="tab-pane" id="tab-languages">
+
+      <!-- Вариант 1: перегенерация с правильным языком -->
+      <div class="details-section" style="margin-bottom:20px;">
+        <div class="section-title">🔄 Перегенерация с правильным языком</div>
+        <p style="font-size:13px;color:#94a3b8;margin-bottom:14px;">
+          Найти заявки где язык <b>ru</b>, но пользователь хочет другой язык — и поставить в очередь заново.
+        </p>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
+          <label style="font-size:13px;color:#94a3b8;">Найти заявки с языком:</label>
+          <select id="wlFromLang" style="padding:8px 12px;border-radius:8px;border:1px solid #4a5568;background:#2d3748;color:#fff;font-size:13px;">
+            <option value="ru">ru → ищем пользователей с uk</option>
+          </select>
+          <button class="btn btn-primary" style="padding:8px 16px;font-size:13px;" onclick="findWrongLang()">🔍 Найти</button>
+        </div>
+        <div id="wrongLangResult" style="display:none;">
+          <div id="wrongLangList" style="margin-bottom:12px;max-height:300px;overflow-y:auto;"></div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <label style="font-size:13px;color:#94a3b8;">Изменить язык на:</label>
+            <select id="wlToLang" style="padding:8px 12px;border-radius:8px;border:1px solid #4a5568;background:#2d3748;color:#fff;font-size:13px;">
+              <option value="uk">uk (Украинский)</option>
+              <option value="en">en (English)</option>
+              <option value="de">de (Deutsch)</option>
+              <option value="fr">fr (Français)</option>
+            </select>
+            <button class="btn" style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:8px 16px;font-size:13px;" onclick="requeueWrongLang()">
+              🔄 Поставить в очередь
+            </button>
+          </div>
+          <p id="wlStatus" style="font-size:12px;color:#64748b;margin-top:8px;"></p>
+        </div>
+      </div>
+
+      <!-- Вариант 2: рассылка пользователям с delivery_failed -->
+      <div class="details-section" style="margin-bottom:20px;">
+        <div class="section-title">📨 Уведомить пользователей с недоставленными песнями</div>
+        <p style="font-size:13px;color:#94a3b8;margin-bottom:14px;">
+          Найти всех пользователей у кого статус <b>delivery_failed</b> и отправить им сообщение в бот — на их языке — что проблема исправлена.
+        </p>
+        <div style="background:#1a2332;border:1px solid #2d4a6e;border-radius:10px;padding:14px;margin-bottom:14px;">
+          <div style="font-size:12px;color:#94a3b8;margin-bottom:6px;">Сообщение которое получат пользователи (на их языке):</div>
+          <div style="font-size:12px;color:#e2e8f0;white-space:pre-wrap;font-style:italic;">"Имя, мы исправили определение языка — теперь твоя песня будет на нужном языке. Если хочешь заказать новую версию — открой приложение. Первая после исправления — бесплатно."</div>
+        </div>
+        <button class="btn btn-primary" style="padding:10px 20px;font-size:13px;" onclick="notifyDeliveryFailed()">
+          📨 Отправить уведомления
+        </button>
+        <p id="notifyStatus" style="font-size:12px;color:#64748b;margin-top:10px;"></p>
+      </div>
+
+    </div>
+
     <!-- Tab: Настройки -->
     <div class="tab-pane" id="tab-settings">
       <div class="details-section" style="margin-bottom:20px;">
@@ -416,6 +469,7 @@
     let currentSort = 'date_desc';
     let currentPayFilter = 'all';
     let currentSearchRequestId = '';
+    let currentSearchUserId = '';
 
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
@@ -869,7 +923,7 @@
         loadUnpaidRequests();
         loadCancelledRequests();
         setLoadingStatus(true, 'Загрузка заявок…');
-        const listUrl = API_BASE + '/api/admin/requests?limit=' + (currentSearchRequestId ? '200' : '50') + '&status=' + currentFilter + (currentSearchRequestId ? '&request_id=' + encodeURIComponent(currentSearchRequestId) : '') + authQuery();
+        const listUrl = API_BASE + '/api/admin/requests?limit=' + (currentSearchRequestId || currentSearchUserId ? '200' : '50') + '&status=' + currentFilter + (currentSearchRequestId ? '&request_id=' + encodeURIComponent(currentSearchRequestId) : '') + (currentSearchUserId ? '&user_id=' + encodeURIComponent(currentSearchUserId) : '') + authQuery();
         const listResult = await fetchJson(listUrl, { headers: authHeaders() });
         const listJson = listResult.json;
         const listRes = listResult.res;
@@ -1977,6 +2031,71 @@
         alert('Ошибка: ' + (e?.message || e));
       }
     };
+
+    // ===== ЯЗЫКИ: поиск неправильных языков =====
+    let wrongLangIds = [];
+    async function findWrongLang() {
+      const fromLang = document.getElementById('wlFromLang').value;
+      const statusEl = document.getElementById('wlStatus');
+      const resultEl = document.getElementById('wrongLangResult');
+      const listEl = document.getElementById('wrongLangList');
+      statusEl.textContent = 'Ищу…';
+      resultEl.style.display = 'none';
+      try {
+        const r = await apiFetch('/api/admin/wrong-language?from_lang=' + fromLang + '&to_lang=uk');
+        const data = await r.json();
+        if (!data.success) { statusEl.textContent = 'Ошибка: ' + data.error; return; }
+        wrongLangIds = (data.rows || []).map(row => row.id);
+        if (!data.count) {
+          statusEl.textContent = 'Заявок с неправильным языком не найдено.';
+          return;
+        }
+        statusEl.textContent = '';
+        listEl.innerHTML = (data.rows || []).map(row =>
+          `<div style="padding:6px 10px;border-bottom:1px solid #2d3748;font-size:12px;display:flex;gap:10px;align-items:center;">
+            <span style="color:#94a3b8;font-family:monospace">${row.id.slice(0,8)}</span>
+            <span style="color:#e2e8f0">${escapeHtml(row.name||'—')}</span>
+            <span style="background:#e67e22;color:#fff;border-radius:4px;padding:1px 6px;font-size:11px;">${row.language}</span>
+            <span style="color:#64748b;font-size:11px;">${row.generation_status}</span>
+            <span style="color:#64748b;font-size:11px;">${row.telegram_user_id}</span>
+          </div>`
+        ).join('');
+        resultEl.style.display = 'block';
+        statusEl.textContent = `Найдено: ${data.count} заявок`;
+      } catch(e) { statusEl.textContent = 'Ошибка: ' + e.message; }
+    }
+
+    async function requeueWrongLang() {
+      if (!wrongLangIds.length) { alert('Сначала нажмите «Найти»'); return; }
+      const toLang = document.getElementById('wlToLang').value;
+      const statusEl = document.getElementById('wlStatus');
+      if (!confirm(`Поставить ${wrongLangIds.length} заявок в очередь с языком «${toLang}»? Это запустит повторную генерацию.`)) return;
+      statusEl.textContent = 'Отправляю…';
+      try {
+        const r = await apiFetch('/api/admin/requeue-wrong-language', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ ids: wrongLangIds, to_lang: toLang })
+        });
+        const data = await r.json();
+        if (!data.success) { statusEl.textContent = 'Ошибка: ' + data.error; return; }
+        statusEl.textContent = `✅ Поставлено в очередь: ${data.requeued} заявок с языком «${data.language}»`;
+        wrongLangIds = [];
+        document.getElementById('wrongLangResult').style.display = 'none';
+      } catch(e) { statusEl.textContent = 'Ошибка: ' + e.message; }
+    }
+
+    // ===== ЯЗЫКИ: уведомление delivery_failed пользователей =====
+    async function notifyDeliveryFailed() {
+      const statusEl = document.getElementById('notifyStatus');
+      if (!confirm('Отправить уведомление всем пользователям с delivery_failed? Каждый получит 1 сообщение на своём языке.')) return;
+      statusEl.textContent = 'Отправляю…';
+      try {
+        const r = await apiFetch('/api/admin/notify-delivery-failed', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({}) });
+        const data = await r.json();
+        if (!data.success) { statusEl.textContent = 'Ошибка: ' + data.error; return; }
+        statusEl.textContent = `✅ Пользователей: ${data.users} · Отправлено: ${data.sent} · Ошибок: ${data.failed}`;
+      } catch(e) { statusEl.textContent = 'Ошибка: ' + e.message; }
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
       loadAdminData().catch(function(e) {
