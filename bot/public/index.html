@@ -4709,6 +4709,8 @@
           if (arrow) arrow.style.transform = 'rotate(180deg)';
         }
       }
+      // Экспортируем в глобальный scope — onclick-атрибут требует window.*
+      window.toggleQuickPicker = toggleQuickPicker;
 
       (function() {
         document.addEventListener('click', function(e) {
@@ -5323,7 +5325,7 @@
       var PLAN_PRICES = { plan_basic: '$14.99', plan_plus: '$24.99', plan_master: '$39.99' };
       var PLAN_TRACKS = { plan_basic: '5', plan_plus: '10', plan_master: '30' };
 
-      function showPlanConfirm(planKey, planName) {
+      window.showPlanConfirm = function showPlanConfirm(planKey, planName) {
         var overlay = document.getElementById('planConfirmOverlay');
         var title = document.getElementById('planConfirmTitle');
         var desc = document.getElementById('planConfirmDesc');
