@@ -670,6 +670,29 @@ function buildSoulChatPrompt(row, astro, question) {
   ].filter(Boolean).join("\n");
 }
 
+function buildSoulChatPromptFromProfile(profile, question) {
+  return [
+    `Ты — голос души ${profile.name || "человека"}.`,
+    "Отвечай коротко и тепло как внутренний друг.",
+    "Без инструкций, без морализаторства.",
+    "Никаких общих фраз. Только персональный ответ по данным ниже.",
+    "",
+    `Профиль: ${profile.name || "—"} (${profile.gender || "—"}), дата рождения: ${profile.birthdate || "—"}.`,
+    "",
+    `Вопрос: "${question}"`,
+  ].filter(Boolean).join("\n");
+}
+
+async function getUserProfileForSoulChat(telegramUserId) {
+  if (!supabase || !telegramUserId) return null;
+  const { data } = await supabase
+    .from("user_profiles")
+    .select("name,birthdate,gender")
+    .eq("telegram_id", Number(telegramUserId))
+    .maybeSingle();
+  return data || null;
+}
+
 async function runSoulChat({ requestId, question, telegramUserId, isAdminCaller = false }) {
   let rid = String(requestId || "").trim();
   const q = String(question || "").trim();
@@ -678,40 +701,63 @@ async function runSoulChat({ requestId, question, telegramUserId, isAdminCaller 
   if (!rid || !UUID_REGEX.test(rid)) {
     rid = (telegramUserId ? await getLastCompletedRequestForUser(telegramUserId) : null) || "";
   }
-  if (!rid || !UUID_REGEX.test(rid)) {
-    return { ok: false, error: "Нет заявки для чата. Сначала создай звуковой ключ в приложении." };
+
+  // Есть заявка — используем её данные
+  if (rid && UUID_REGEX.test(rid)) {
+    const loaded = await getRequestForSoulChat(rid);
+    if (loaded.error) return { ok: false, error: loaded.error };
+    const { row, astro } = loaded;
+    if (!isAdminCaller && Number(row.telegram_user_id) !== Number(telegramUserId)) {
+      return { ok: false, error: "Нет доступа к этой заявке" };
+    }
+    const soulPrompt = buildSoulChatPrompt(row, astro, q);
+    const llm = await chatCompletion(
+      "Ты этичный и тёплый собеседник. Отвечай 3-6 предложениями, конкретно и бережно. Не используй астрологические термины.",
+      soulPrompt,
+      { model: process.env.DEEPSEEK_MODEL || "deepseek-reasoner", max_tokens: 1200, temperature: 1.1 }
+    );
+    if (!llm.ok) return { ok: false, error: llm.error || "Ошибка генерации soul-chat" };
+    const answer = String(llm.text || "").trim();
+    if (supabase) {
+      const access = isAdminCaller ? null : await getSoulChatAccess(telegramUserId);
+      supabase.from("soul_chat_sessions").insert({
+        telegram_user_id: Number(telegramUserId),
+        track_request_id: rid,
+        question: q,
+        answer,
+        source: access?.source || "admin",
+      }).then(() => {}).catch(() => {});
+    }
+    return { ok: true, answer, request: row };
   }
 
-  const loaded = await getRequestForSoulChat(rid);
-  if (loaded.error) return { ok: false, error: loaded.error };
-  const { row, astro } = loaded;
-
-  if (!isAdminCaller && Number(row.telegram_user_id) !== Number(telegramUserId)) {
-    return { ok: false, error: "Нет доступа к этой заявке" };
+  // Нет заявки — пробуем профиль пользователя
+  if (telegramUserId) {
+    const profile = await getUserProfileForSoulChat(telegramUserId);
+    if (profile && profile.name && profile.birthdate) {
+      const soulPrompt = buildSoulChatPromptFromProfile(profile, q);
+      const llm = await chatCompletion(
+        "Ты этичный и тёплый собеседник. Отвечай 3-6 предложениями, конкретно и бережно.",
+        soulPrompt,
+        { model: process.env.DEEPSEEK_MODEL || "deepseek-reasoner", max_tokens: 1200, temperature: 1.1 }
+      );
+      if (!llm.ok) return { ok: false, error: llm.error || "Ошибка генерации soul-chat" };
+      const answer = String(llm.text || "").trim();
+      if (supabase) {
+        const access = await getSoulChatAccess(telegramUserId);
+        supabase.from("soul_chat_sessions").insert({
+          telegram_user_id: Number(telegramUserId),
+          track_request_id: null,
+          question: q,
+          answer,
+          source: access?.source || "profile",
+        }).then(() => {}).catch(() => {});
+      }
+      return { ok: true, answer, request: { name: profile.name } };
+    }
   }
 
-  const soulPrompt = buildSoulChatPrompt(row, astro, q);
-  const llm = await chatCompletion(
-    "Ты этичный и тёплый собеседник. Отвечай 3-6 предложениями, конкретно и бережно. Не используй астрологические термины.",
-    soulPrompt,
-    { model: process.env.DEEPSEEK_MODEL || "deepseek-reasoner", max_tokens: 1200, temperature: 1.1 }
-  );
-  if (!llm.ok) return { ok: false, error: llm.error || "Ошибка генерации soul-chat" };
-  const answer = String(llm.text || "").trim();
-
-  // Сохраняем в историю soul_chat_sessions
-  if (supabase) {
-    const access = isAdminCaller ? null : await getSoulChatAccess(telegramUserId);
-    supabase.from("soul_chat_sessions").insert({
-      telegram_user_id: Number(telegramUserId),
-      track_request_id: rid,
-      question: q,
-      answer,
-      source: access?.source || "admin",
-    }).then(() => {}).catch(() => {});
-  }
-
-  return { ok: true, answer, request: row };
+  return { ok: false, error: "Заполни профиль (имя и дата рождения), чтобы начать чат." };
 }
 
 // Сохранение заявки: в Supabase и/или в память (для админки). Поддержка client_id (тариф Мастер).
@@ -2946,10 +2992,12 @@ app.get("/api/soul-chat/access", asyncApi(async (req, res) => {
   const initData = req.headers["x-telegram-init"] || req.query?.initData || "";
   const telegramUserId = validateInitData(initData, BOT_TOKEN);
   if (telegramUserId == null) return res.status(401).json({ success: false, allowed: false, reason: "Нужна авторизация Telegram." });
-  const [access, lastReqId] = await Promise.all([
+  const [access, lastReqId, profile] = await Promise.all([
     getSoulChatAccess(telegramUserId),
     getLastCompletedRequestForUser(telegramUserId),
+    getUserProfileForSoulChat(telegramUserId),
   ]);
+  const hasProfile = !!(profile && profile.name && profile.birthdate);
   return res.json({
     success: true,
     allowed: !!access.allowed,
@@ -2958,6 +3006,7 @@ app.get("/api/soul-chat/access", asyncApi(async (req, res) => {
     source: access.source || null,
     expires_at: access.expires_at || null,
     last_request_id: lastReqId || null,
+    has_profile: hasProfile,
   });
 }));
 
