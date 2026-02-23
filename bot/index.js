@@ -36,8 +36,8 @@ if (!MINI_APP_BASE || MINI_APP_BASE.includes("vercel.app")) {
 const APP_BUILD = Date.now(); // Меняется при каждом перезапуске — для cache-busting в браузере
 // MINI_APP_URL — с timestamp для menu button и /start (принудительный сброс кеша)
 const MINI_APP_URL = MINI_APP_BASE.replace(/\/app\/?$/, "") + "/app?v=" + APP_BUILD;
-// MINI_APP_STABLE_URL — без timestamp, для bot-сообщений с кнопками (не меняется при деплоях)
-const MINI_APP_STABLE_URL = MINI_APP_BASE.replace(/\/app\/?$/, "") + "/app";
+// MINI_APP_STABLE_URL — с cache-bust как MINI_APP_URL, чтобы после деплоя пользователи получали свежую версию (раньше без ?v= Telegram кэшировал навсегда)
+const MINI_APP_STABLE_URL = MINI_APP_BASE.replace(/\/app\/?$/, "") + "/app?v=" + APP_BUILD;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";
@@ -414,7 +414,7 @@ function buildHotCheckoutUrl({ itemId, orderId, amount, currency, requestId, sku
   // redirect_url: после оплаты HOT отправляет пользователя сюда.
   // Используем /app путь, чтобы мини-апп открылся и определил payment=success.
   const redirectUrl = process.env.HOT_REDIRECT_URL ||
-    (MINI_APP_STABLE_URL + "?payment=success&request_id=" + encodeURIComponent(requestId || ""));
+    (MINI_APP_STABLE_URL + "&payment=success&request_id=" + encodeURIComponent(requestId || ""));
   if (redirectUrl) url.searchParams.set("redirect_url", redirectUrl);
   // notify_url: HOT шлёт webhook сюда при изменении статуса платежа.
   // Без этого параметра — webhook нужно настраивать вручную в кабинете HOT.
@@ -821,7 +821,7 @@ async function getRequestsForAdmin(limit = 30) {
 // Отправляет пользователю сообщение с кнопками "Оплатить" / "Отменить" когда заявка не оплачена.
 async function sendPendingPaymentBotMessage(telegramUserId, requestId) {
   // Используем СТАБИЛЬНЫЙ URL (без timestamp) — кнопки в сообщениях живут дольше одного деплоя
-  const payUrl = MINI_APP_STABLE_URL + "?requestId=" + encodeURIComponent(requestId);
+  const payUrl = MINI_APP_STABLE_URL + "&requestId=" + encodeURIComponent(requestId);
   const shortId = String(requestId || "").substring(0, 8);
   const trialAvailable = supabase ? await isTrialAvailable(telegramUserId, "first_song_gift") : false;
   const firstSongHint = trialAvailable
