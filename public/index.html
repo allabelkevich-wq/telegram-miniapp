@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.46';
+        var APP_VERSION = '1.2.47';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -1809,6 +1809,15 @@
         <!-- Блок: есть доступ — чат -->
         <div id="scPageChat" style="display:none;">
           <div id="scPageTimer" style="display:none;text-align:center;font-size:0.75rem;color:rgba(212,175,55,0.6);background:rgba(212,175,55,0.08);padding:5px 14px;border-radius:20px;margin-bottom:16px;"></div>
+          <!-- Если нет заявки — просим создать -->
+          <div id="scPageNoRequest" style="display:none;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(236,72,153,0.05));border:1px solid rgba(212,175,55,0.25);border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;">
+            <div style="font-size:1.6rem;margin-bottom:10px;">🎵</div>
+            <div style="font-weight:700;color:#d4af37;margin-bottom:8px;font-size:0.95rem;">Сначала создай свой звуковой ключ</div>
+            <div style="font-size:0.84rem;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:16px;">Soul Chat строит разговор на основе твоих личных данных — даты рождения, запроса и астро-профиля. Для этого нужна хотя бы одна заявка на песню.</div>
+            <button type="button" onclick="goToPage('formPage')" style="width:100%;padding:12px;border-radius:13px;background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(236,72,153,0.2));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
+              Создать заявку на песню →
+            </button>
+          </div>
           <!-- История сообщений -->
           <div id="scPageHistory" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;min-height:40px;"></div>
           <!-- Поле ввода — стиль как на форме заявки -->
@@ -4283,10 +4292,22 @@
 
           if (json && json.last_request_id) {
             window._scLastRequestId = json.last_request_id;
+          } else {
+            window._scLastRequestId = null;
           }
 
           if (json && json.allowed) {
             scpShow('scPageChat');
+            // Если нет заявки — скрываем поле ввода, показываем подсказку
+            var noReqEl = document.getElementById('scPageNoRequest');
+            var inputBox = document.querySelector('#scPageChat .request-input-box');
+            if (!window._scLastRequestId) {
+              if (noReqEl) noReqEl.style.display = '';
+              if (inputBox) inputBox.style.display = 'none';
+            } else {
+              if (noReqEl) noReqEl.style.display = 'none';
+              if (inputBox) inputBox.style.display = '';
+            }
             var timerEl = document.getElementById('scPageTimer');
             if (timerEl && json.expires_at) {
               timerEl.style.display = 'inline-block';
