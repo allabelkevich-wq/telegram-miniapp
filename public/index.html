@@ -923,7 +923,7 @@
       </div>
 
       <!-- Профиль, Помощь, Мои герои — доступ с главной -->
-      <nav class="home-nav" style="display:flex;justify-content:center;gap:14px;margin-top:var(--spacing-lg);padding:8px 0;">
+      <nav class="home-nav" style="display:flex;justify-content:center;gap:8px;margin-top:var(--spacing-lg);padding:8px 4px;flex-wrap:wrap;">
         <button type="button" class="home-nav-link" onclick="goToProfileFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">Профиль</button>
         <button type="button" class="home-nav-link" onclick="goToSoulChat()" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">Soul Chat</button>
         <button type="button" class="home-nav-link" onclick="goToHelpFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;">Помощь</button>
@@ -1648,7 +1648,7 @@
           <!-- Состояние: активен (чат) -->
           <div id="scActiveState" style="display:none;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-              <div style="font-weight:700;color:#d4af37;font-size:1rem;">💬 Soul Chat</div>
+              <div style="font-weight:700;color:#d4af37;font-size:1rem;">Soul Chat</div>
               <div id="scTimer" style="font-size:0.8rem;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.07);padding:4px 10px;border-radius:20px;"></div>
             </div>
             <!-- История сообщений -->
@@ -1688,7 +1688,7 @@
     <div class="page" id="soulChatPage">
       <div class="profile-header">
         <button type="button" class="profile-back-btn" onclick="goBack()" aria-label="Назад">←</button>
-        <div class="profile-header-title">💬 Soul Chat</div>
+        <div class="profile-header-title">Soul Chat</div>
       </div>
       <div class="page-scroll" style="padding:16px 20px calc(env(safe-area-inset-bottom)+40px);">
 
