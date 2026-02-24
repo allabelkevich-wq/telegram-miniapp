@@ -210,6 +210,7 @@
     <div class="admin-tabs">
       <button class="tab-btn active" onclick="switchTab('requests', this)">📋 Заявки</button>
       <button class="tab-btn" onclick="switchTab('monetization', this)">💳 Монетизация</button>
+      <button class="tab-btn" onclick="switchTab('users', this)">👥 Пользователи</button>
       <button class="tab-btn" onclick="switchTab('languages', this)">🌍 Языки</button>
       <button class="tab-btn" onclick="switchTab('settings', this)">⚙️ Настройки</button>
       <button class="tab-btn" onclick="switchTab('referrals', this)">🔗 Рефералы</button>
@@ -319,6 +320,28 @@
         <div id="grantSubInfo" style="font-size:13px;color:#94a3b8;margin-top:8px;"></div>
       </div>
 
+      <!-- ═══ СПИСОК АКТИВНЫХ ПОДПИСОК ═══ -->
+      <div class="details-section" style="margin-bottom:20px;">
+        <div class="section-title">📋 Активные подписки</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
+          <select id="subListPlan" style="padding:8px 12px;background:#1a1a2e;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-size:13px;">
+            <option value="">Все тарифы</option>
+            <option value="soul_basic_sub">Basic</option>
+            <option value="soul_plus_sub">Plus</option>
+            <option value="master_monthly">Лаборатория</option>
+          </select>
+          <input type="text" id="subListSearch" placeholder="ID / имя / @username" style="padding:8px 12px;background:#1a1a2e;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-size:13px;width:200px;">
+          <button type="button" class="btn btn-primary" onclick="loadActiveSubs()">🔍 Показать</button>
+        </div>
+        <div class="mono-table-wrap">
+          <table class="mono-table" id="activeSubsTable">
+            <thead><tr><th>ID</th><th>Имя / @</th><th>Тариф</th><th>Истекает</th><th>Осталось</th><th>Действие</th></tr></thead>
+            <tbody id="activeSubsBody"><tr><td colspan="6" class="mono-muted">Нажмите «Показать»</td></tr></tbody>
+          </table>
+        </div>
+        <div id="activeSubsMsg" class="mono-msg"></div>
+      </div>
+
       <div class="details-section" style="margin-bottom:20px;">
         <div class="section-title">💳 Монетизация HOT</div>
         <p class="mono-muted">Управление тарифами, промокодами и быстрый просмотр статусов оплат.</p>
@@ -373,6 +396,71 @@
           </div>
           <div id="paymentsMsg" class="mono-msg"></div>
         </div>
+      </div>
+    </div>
+
+    <!-- Tab: Пользователи -->
+    <div class="tab-pane" id="tab-users">
+      <div class="details-section" style="margin-bottom:20px;">
+        <div class="section-title">👥 Статистика пользователей</div>
+        <div class="mono-actions" style="margin-bottom:16px;">
+          <button class="btn btn-primary" onclick="loadUserStats()">🔄 Обновить статистику</button>
+        </div>
+
+        <!-- Карточки: юзеры -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:20px;">
+          <div style="background:#1e293b;border-radius:10px;padding:14px;text-align:center;">
+            <div id="us-total" style="font-size:2rem;font-weight:700;color:#a78bfa;">—</div>
+            <div style="font-size:0.75rem;color:#64748b;margin-top:4px;">Всего пользователей</div>
+          </div>
+          <div style="background:#1e293b;border-radius:10px;padding:14px;text-align:center;">
+            <div id="us-today" style="font-size:2rem;font-weight:700;color:#38bdf8;">—</div>
+            <div style="font-size:0.75rem;color:#64748b;margin-top:4px;">Сегодня</div>
+          </div>
+          <div style="background:#1e293b;border-radius:10px;padding:14px;text-align:center;">
+            <div id="us-week" style="font-size:2rem;font-weight:700;color:#34d399;">—</div>
+            <div style="font-size:0.75rem;color:#64748b;margin-top:4px;">За 7 дней</div>
+          </div>
+          <div style="background:#1e293b;border-radius:10px;padding:14px;text-align:center;">
+            <div id="us-month" style="font-size:2rem;font-weight:700;color:#fb923c;">—</div>
+            <div style="font-size:0.75rem;color:#64748b;margin-top:4px;">За 30 дней</div>
+          </div>
+        </div>
+
+        <!-- Карточки: подписки -->
+        <div class="section-title" style="font-size:0.9rem;margin-bottom:10px;">Активные подписки</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:20px;">
+          <div style="background:#1e293b;border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(56,189,248,0.2);">
+            <div id="us-basic" style="font-size:2rem;font-weight:700;color:#38bdf8;">—</div>
+            <div style="font-size:0.75rem;color:#64748b;margin-top:4px;">Basic</div>
+          </div>
+          <div style="background:#1e293b;border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(167,139,250,0.2);">
+            <div id="us-plus" style="font-size:2rem;font-weight:700;color:#a78bfa;">—</div>
+            <div style="font-size:0.75rem;color:#64748b;margin-top:4px;">Plus</div>
+          </div>
+          <div style="background:#1e293b;border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(212,175,55,0.3);">
+            <div id="us-master" style="font-size:2rem;font-weight:700;color:#d4af37;">—</div>
+            <div style="font-size:0.75rem;color:#64748b;margin-top:4px;">Лаборатория</div>
+          </div>
+          <div style="background:#1e293b;border-radius:10px;padding:14px;text-align:center;">
+            <div id="us-sc-week" style="font-size:2rem;font-weight:700;color:#f472b6;">—</div>
+            <div style="font-size:0.75rem;color:#64748b;margin-top:4px;">Soul Chat (7д)</div>
+          </div>
+          <div style="background:#1e293b;border-radius:10px;padding:14px;text-align:center;">
+            <div id="us-avg-rating" style="font-size:2rem;font-weight:700;color:#fbbf24;">—</div>
+            <div style="font-size:0.75rem;color:#64748b;margin-top:4px;">Ср. рейтинг ⭐</div>
+          </div>
+        </div>
+
+        <!-- Топ-10 -->
+        <div class="section-title" style="font-size:0.9rem;margin-bottom:10px;">Топ-10 по заказам</div>
+        <div class="mono-table-wrap">
+          <table class="mono-table" id="top10Table">
+            <thead><tr><th>#</th><th>ID</th><th>Имя</th><th>Заказов</th></tr></thead>
+            <tbody id="top10Body"><tr><td colspan="4" class="mono-muted">Нажмите «Обновить»</td></tr></tbody>
+          </table>
+        </div>
+        <div id="userStatsMsg" class="mono-msg"></div>
       </div>
     </div>
 
@@ -458,6 +546,37 @@
 
     <!-- Tab: Рефералы -->
     <div class="tab-pane" id="tab-referrals">
+
+      <!-- ═══ БЛОГЕРСКИЕ КАМПАНИИ ═══ -->
+      <div class="details-section" style="margin-bottom:20px;border:1.5px solid rgba(212,175,55,0.3);">
+        <div class="section-title">📢 Блогерские кампании</div>
+        <p class="mono-muted">Создайте кампанию и дайте блогеру ссылку: <code style="color:#d4af37">https://t.me/бот?start=camp_КОД</code></p>
+
+        <details id="newCampDetails" style="margin-bottom:14px;border:1px solid rgba(212,175,55,0.3);border-radius:10px;padding:12px 16px;background:rgba(212,175,55,0.05);">
+          <summary style="cursor:pointer;font-weight:600;color:#d4af37;font-size:0.95rem;list-style:none;">➕ Создать кампанию</summary>
+          <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div><label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Название <span style="color:#ef4444">*</span></label><input id="newCampName" type="text" placeholder="Иванов блог" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;"></div>
+            <div><label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Код <span style="color:#ef4444">*</span></label><input id="newCampCode" type="text" placeholder="ivanov" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;"></div>
+            <div style="grid-column:1/-1;"><label style="font-size:0.8rem;color:#94a3b8;display:block;margin-bottom:4px;">Заметки</label><input id="newCampNotes" type="text" placeholder="@ivanov_blog, 50к подписчиков" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:0.9rem;box-sizing:border-box;"></div>
+          </div>
+          <div style="margin-top:10px;">
+            <button class="btn btn-primary" onclick="createCampaign()">Создать</button>
+          </div>
+          <div id="newCampMsg" class="mono-msg"></div>
+        </details>
+
+        <div class="mono-actions" style="margin-bottom:10px;">
+          <button class="btn" style="background:#334155;color:#e2e8f0;" onclick="loadCampaigns()">🔄 Обновить</button>
+        </div>
+        <div class="mono-table-wrap">
+          <table class="mono-table" id="campaignsTable">
+            <thead><tr><th>Название</th><th>Код</th><th>Ссылка</th><th>Регистрации</th><th>Оплаты</th><th>Заметки</th><th>Дата</th><th></th></tr></thead>
+            <tbody id="campaignsBody"><tr><td colspan="8" class="mono-muted">Загрузка…</td></tr></tbody>
+          </table>
+        </div>
+        <div id="campaignsMsg" class="mono-msg"></div>
+      </div>
+
       <div class="details-section" style="margin-bottom:20px;">
         <div class="section-title">🔗 Реферальная программа</div>
         <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
@@ -501,6 +620,8 @@
       const pane = document.getElementById('tab-' + tabId);
       if (pane) pane.classList.add('active');
       if (btn) btn.classList.add('active');
+      if (tabId === 'referrals') { loadReferralData(); loadCampaigns(); }
+      if (tabId === 'users') { loadUserStats(); }
     }
 
     function toggleRow(id) {
@@ -1543,6 +1664,163 @@
           '<td>' + rewardBadge + '</td>' +
           '</tr>';
       }).join('');
+    }
+
+    // ─── Статистика пользователей ────────────────────────────────────────────
+    async function loadUserStats() {
+      setMonoMsg('userStatsMsg', 'Загрузка…', true);
+      try {
+        const r = await fetchJson(API_BASE + '/api/admin/user-stats' + authQueryFromPath(), { headers: authHeaders() });
+        const d = r.json;
+        if (!d || !d.success) { setMonoMsg('userStatsMsg', 'Ошибка: ' + (d && d.error || 'unknown'), false); return; }
+        document.getElementById('us-total').textContent  = d.users.total  ?? '—';
+        document.getElementById('us-today').textContent  = d.users.today  ?? '—';
+        document.getElementById('us-week').textContent   = d.users.week   ?? '—';
+        document.getElementById('us-month').textContent  = d.users.month  ?? '—';
+        document.getElementById('us-basic').textContent  = d.subscriptions.basic  ?? '—';
+        document.getElementById('us-plus').textContent   = d.subscriptions.plus   ?? '—';
+        document.getElementById('us-master').textContent = d.subscriptions.master ?? '—';
+        document.getElementById('us-sc-week').textContent   = d.soul_chat_week  ?? '—';
+        document.getElementById('us-avg-rating').textContent = d.avg_rating ? (d.avg_rating + ' (' + d.ratings_count + ')') : '—';
+        const tbody = document.getElementById('top10Body');
+        if (tbody) {
+          if (!d.top10 || !d.top10.length) { tbody.innerHTML = '<tr><td colspan="4" class="mono-muted">Нет данных</td></tr>'; }
+          else {
+            tbody.innerHTML = d.top10.map(function(u, i) {
+              return '<tr><td>' + (i+1) + '</td><td><code>' + escapeHtml(String(u.telegram_user_id)) + '</code></td>' +
+                '<td>' + escapeHtml(u.name || '—') + '</td><td><b>' + u.count + '</b></td></tr>';
+            }).join('');
+          }
+        }
+        setMonoMsg('userStatsMsg', 'Обновлено ' + new Date().toLocaleTimeString('ru-RU'), true);
+      } catch (e) {
+        setMonoMsg('userStatsMsg', 'Ошибка: ' + e.message, false);
+      }
+    }
+
+    // ─── Активные подписки ───────────────────────────────────────────────────
+    async function loadActiveSubs() {
+      const plan   = document.getElementById('subListPlan')?.value   || '';
+      const search = document.getElementById('subListSearch')?.value || '';
+      const tbody  = document.getElementById('activeSubsBody');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="mono-muted">Загрузка…</td></tr>';
+      try {
+        let url = API_BASE + '/api/admin/active-subscriptions' + authQueryFromPath();
+        if (plan)   url += '&plan='   + encodeURIComponent(plan);
+        if (search) url += '&search=' + encodeURIComponent(search);
+        const r = await fetchJson(url, { headers: authHeaders() });
+        const d = r.json;
+        if (!d || !d.success) { setMonoMsg('activeSubsMsg', 'Ошибка: ' + (d && d.error || 'unknown'), false); return; }
+        const rows = d.rows || [];
+        if (!rows.length) { if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="mono-muted">Активных подписок нет.</td></tr>'; return; }
+        const PLAN_NAMES = { soul_basic_sub: 'Basic', soul_plus_sub: 'Plus', master_monthly: 'Лаборатория' };
+        if (tbody) tbody.innerHTML = rows.map(function(s) {
+          const exp = s.renew_at ? new Date(s.renew_at).toLocaleDateString('ru-RU') : '—';
+          const days = s.days_left != null ? s.days_left + ' дн.' : '—';
+          const daysColor = s.days_left <= 3 ? '#ef4444' : s.days_left <= 7 ? '#f59e0b' : '#22c55e';
+          const prof = s.user_profiles || {};
+          const name = escapeHtml(prof.name || '—');
+          const uname = prof.tg_username ? '<a href="https://t.me/' + escapeHtml(prof.tg_username) + '" target="_blank" style="color:#38bdf8;">@' + escapeHtml(prof.tg_username) + '</a>' : '';
+          return '<tr>' +
+            '<td><code>' + escapeHtml(String(s.telegram_user_id)) + '</code></td>' +
+            '<td>' + name + (uname ? ' ' + uname : '') + '</td>' +
+            '<td>' + escapeHtml(PLAN_NAMES[s.plan_sku] || s.plan_sku) + '</td>' +
+            '<td>' + escapeHtml(exp) + '</td>' +
+            '<td style="color:' + daysColor + ';font-weight:600;">' + escapeHtml(days) + '</td>' +
+            '<td><button class="btn" style="padding:4px 10px;font-size:12px;background:#7f1d1d;color:#fca5a5;" onclick="revokeSub(\'' + escapeHtml(s.id) + '\',\'' + escapeHtml(String(s.telegram_user_id)) + '\')">Отозвать</button></td>' +
+            '</tr>';
+        }).join('');
+        setMonoMsg('activeSubsMsg', 'Показано ' + rows.length + ' подписок', true);
+      } catch (e) {
+        setMonoMsg('activeSubsMsg', 'Ошибка: ' + e.message, false);
+      }
+    }
+
+    async function revokeSub(subId, userId) {
+      if (!confirm('Отозвать подписку пользователя ' + userId + '? Это немедленно прекратит доступ.')) return;
+      try {
+        const r = await fetchJson(API_BASE + '/api/admin/revoke-subscription' + authQueryFromPath(), {
+          method: 'POST',
+          headers: Object.assign({'Content-Type':'application/json'}, authHeaders()),
+          body: JSON.stringify({ subscription_id: subId, telegram_user_id: Number(userId) }),
+        });
+        const d = r.json;
+        if (d && d.success) { setMonoMsg('activeSubsMsg', '✅ Подписка отозвана', true); loadActiveSubs(); }
+        else setMonoMsg('activeSubsMsg', 'Ошибка: ' + (d && d.error || 'unknown'), false);
+      } catch (e) {
+        setMonoMsg('activeSubsMsg', 'Ошибка: ' + e.message, false);
+      }
+    }
+
+    // ─── Блогерские кампании ─────────────────────────────────────────────────
+    async function loadCampaigns() {
+      const tbody = document.getElementById('campaignsBody');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="mono-muted">Загрузка…</td></tr>';
+      try {
+        const r = await fetchJson(API_BASE + '/api/admin/campaigns' + authQueryFromPath(), { headers: authHeaders() });
+        const d = r.json;
+        if (!d || !d.success) { setMonoMsg('campaignsMsg', 'Ошибка: ' + (d && d.error || 'unknown'), false); return; }
+        const camps = d.campaigns || [];
+        if (!camps.length) { if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="mono-muted">Кампаний нет. Создайте первую.</td></tr>'; return; }
+        const botUser = (window.API_BASE || '').includes('localhost') ? 'yupsoul_bot' : 'yupsoul_bot';
+        if (tbody) tbody.innerHTML = camps.map(function(c) {
+          const link = 'https://t.me/' + botUser + '?start=camp_' + encodeURIComponent(c.code);
+          const dt = c.created_at ? new Date(c.created_at).toLocaleDateString('ru-RU') : '—';
+          return '<tr>' +
+            '<td>' + escapeHtml(c.name) + '</td>' +
+            '<td><code>' + escapeHtml(c.code) + '</code></td>' +
+            '<td><a href="' + link + '" target="_blank" style="color:#38bdf8;font-size:11px;" onclick="navigator.clipboard&&navigator.clipboard.writeText(\'' + link + '\').then(()=>alert(\'Ссылка скопирована!\'))">📋 Скопировать</a></td>' +
+            '<td style="text-align:center;font-weight:600;color:#a78bfa;">' + (c.registrations || 0) + '</td>' +
+            '<td style="text-align:center;font-weight:600;color:#22c55e;">' + (c.paid_orders || 0) + '</td>' +
+            '<td style="font-size:12px;color:#64748b;">' + escapeHtml(c.notes || '—') + '</td>' +
+            '<td class="mono-muted">' + escapeHtml(dt) + '</td>' +
+            '<td><button class="btn" style="padding:4px 8px;font-size:11px;background:#7f1d1d;color:#fca5a5;" onclick="deleteCampaign(\'' + escapeHtml(c.code) + '\')">✕</button></td>' +
+            '</tr>';
+        }).join('');
+        setMonoMsg('campaignsMsg', 'Кампаний: ' + camps.length, true);
+      } catch (e) {
+        setMonoMsg('campaignsMsg', 'Ошибка: ' + e.message, false);
+      }
+    }
+
+    async function createCampaign() {
+      const name  = document.getElementById('newCampName')?.value.trim();
+      const code  = document.getElementById('newCampCode')?.value.trim();
+      const notes = document.getElementById('newCampNotes')?.value.trim();
+      if (!name || !code) { setMonoMsg('newCampMsg', 'Заполните название и код', false); return; }
+      try {
+        const r = await fetchJson(API_BASE + '/api/admin/campaigns' + authQueryFromPath(), {
+          method: 'POST',
+          headers: Object.assign({'Content-Type':'application/json'}, authHeaders()),
+          body: JSON.stringify({ name, code, notes }),
+        });
+        const d = r.json;
+        if (d && d.success) {
+          setMonoMsg('newCampMsg', '✅ Кампания создана: camp_' + d.campaign.code, true);
+          document.getElementById('newCampName').value = '';
+          document.getElementById('newCampCode').value = '';
+          document.getElementById('newCampNotes').value = '';
+          loadCampaigns();
+        } else {
+          setMonoMsg('newCampMsg', 'Ошибка: ' + (d && d.error || 'unknown'), false);
+        }
+      } catch (e) {
+        setMonoMsg('newCampMsg', 'Ошибка: ' + e.message, false);
+      }
+    }
+
+    async function deleteCampaign(code) {
+      if (!confirm('Удалить кампанию "' + code + '"? Статистика пользователей сохранится.')) return;
+      try {
+        const r = await fetchJson(API_BASE + '/api/admin/campaigns/' + encodeURIComponent(code) + authQueryFromPath(), {
+          method: 'DELETE', headers: authHeaders(),
+        });
+        const d = r.json;
+        if (d && d.success) { setMonoMsg('campaignsMsg', '✅ Удалено', true); loadCampaigns(); }
+        else setMonoMsg('campaignsMsg', 'Ошибка: ' + (d && d.error || 'unknown'), false);
+      } catch (e) {
+        setMonoMsg('campaignsMsg', 'Ошибка: ' + e.message, false);
+      }
     }
 
     function renderPricingRows(rows) {

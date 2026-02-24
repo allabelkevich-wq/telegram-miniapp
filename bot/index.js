@@ -93,14 +93,15 @@ const memoryRequests = [];
 const pendingSoulChatByUser = new Map();
 
 const DEFAULT_PRICING_CATALOG = [
-  { sku: "single_song", title: "Single song", description: "Персональный звуковой ключ", price: "5.99", currency: "USDT", active: true, limits_json: { requests: 1 } },
-  { sku: "transit_energy_song", title: "Transit energy song", description: "Энергия дня (транзит)", price: "6.99", currency: "USDT", active: true, limits_json: { requests: 1 } },
-  { sku: "couple_song", title: "Couple song", description: "Песня совместимости пары", price: "8.99", currency: "USDT", active: true, limits_json: { requests: 1 } },
-  { sku: "deep_analysis_addon", title: "Deep analysis", description: "Дополнительный детальный разбор", price: "3.99", currency: "USDT", active: true, limits_json: { requests: 1 } },
-  { sku: "extra_regeneration", title: "Extra regeneration", description: "Повторная генерация трека", price: "2.49", currency: "USDT", active: true, limits_json: { requests: 1 } },
-  { sku: "soul_basic_sub", title: "Soul Basic", description: "5 треков/месяц + Soul Chat", price: "14.99", currency: "USDT", active: true, limits_json: { monthly_tracks: 5, monthly_soulchat: 50, kind: "subscription" } },
-  { sku: "soul_plus_sub", title: "Soul Plus", description: "10 треков/месяц + Soul Chat без лимита + приоритет", price: "24.99", currency: "USDT", active: true, limits_json: { monthly_tracks: 10, monthly_soulchat: -1, priority: true, kind: "subscription" } },
-  { sku: "master_monthly", title: "Лаборатория", description: "30 треков/месяц + Картотека + История генераций", price: "39.99", currency: "USDT", active: true, limits_json: { monthly_tracks: 30, monthly_soulchat: -1, priority: true, lab_access: true, kind: "subscription" } },
+  { sku: "single_song",          title: "Single song",         description: "Персональный звуковой ключ",                      price: "5.99",  currency: "USDT", active: true, stars_price: 460,  limits_json: { requests: 1 } },
+  { sku: "transit_energy_song",  title: "Transit energy song", description: "Энергия дня (транзит)",                           price: "6.99",  currency: "USDT", active: true, stars_price: 540,  limits_json: { requests: 1 } },
+  { sku: "couple_song",          title: "Couple song",         description: "Песня совместимости пары",                        price: "8.99",  currency: "USDT", active: true, stars_price: 690,  limits_json: { requests: 1 } },
+  { sku: "deep_analysis_addon",  title: "Deep analysis",       description: "Дополнительный детальный разбор",                 price: "3.99",  currency: "USDT", active: true, stars_price: 310,  limits_json: { requests: 1 } },
+  { sku: "extra_regeneration",   title: "Extra regeneration",  description: "Повторная генерация трека",                       price: "2.49",  currency: "USDT", active: true, stars_price: 190,  limits_json: { requests: 1 } },
+  { sku: "soul_basic_sub",       title: "Soul Basic",          description: "5 треков/месяц + Soul Chat",                      price: "14.99", currency: "USDT", active: true, stars_price: 1150, limits_json: { monthly_tracks: 5, monthly_soulchat: 50, kind: "subscription" } },
+  { sku: "soul_plus_sub",        title: "Soul Plus",           description: "10 треков/месяц + Soul Chat без лимита + приоритет", price: "24.99", currency: "USDT", active: true, stars_price: 1920, limits_json: { monthly_tracks: 10, monthly_soulchat: -1, priority: true, kind: "subscription" } },
+  { sku: "master_monthly",       title: "Лаборатория",         description: "30 треков/месяц + Картотека + История генераций", price: "39.99", currency: "USDT", active: true, stars_price: 3070, limits_json: { monthly_tracks: 30, monthly_soulchat: -1, priority: true, lab_access: true, kind: "subscription" } },
+  { sku: "soul_chat_1day",       title: "Soul Chat 1 день",    description: "Безлимитный чат с душой на 24 часа",              price: "2.99",  currency: "USDT", active: true, stars_price: 230,  limits_json: { kind: "soul_chat_1day" } },
 ];
 
 function resolveSkuByMode(mode) {
@@ -985,6 +986,29 @@ async function sendPendingPaymentBotMessage(telegramUserId, requestId) {
 // Обработчик нажатия кнопки "Отменить заявку"
 bot.on("callback_query:data", async (ctx) => {
   const data = ctx.callbackQuery?.data || "";
+
+  // Рейтинг трека: rate_song:{1-5}:{requestId}
+  if (data.startsWith("rate_song:")) {
+    const parts = data.split(":");
+    const stars = parseInt(parts[1], 10);
+    const requestId = parts[2];
+    const callerId = ctx.from?.id;
+    if (supabase && stars >= 1 && stars <= 5 && requestId && callerId) {
+      await supabase.from("song_ratings").upsert(
+        { request_id: requestId, telegram_user_id: callerId, rating: stars },
+        { onConflict: "request_id,telegram_user_id" }
+      ).catch((e) => console.warn("[rate_song] supabase error:", e?.message));
+    }
+    const labels = ["", "⭐", "⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐⭐⭐"];
+    await ctx.answerCallbackQuery({ text: `Спасибо! Ты поставил ${labels[stars] || stars} — это ценно 🙏` }).catch(() => {});
+    try {
+      await ctx.editMessageText(`Оценка принята: ${labels[stars] || stars}\nСпасибо, что помогаешь нам становиться лучше! 🙏`);
+    } catch (e) {
+      console.warn("[rate_song] editMessageText:", e?.message);
+    }
+    return;
+  }
+
   if (!data.startsWith("cancel_req:")) {
     await ctx.answerCallbackQuery().catch(() => {});
     return;
@@ -1008,6 +1032,65 @@ bot.on("callback_query:data", async (ctx) => {
     );
   } catch (e) {
     console.warn("[cancel_req] editMessageText:", e?.message);
+  }
+});
+
+// ─── Telegram Stars: pre_checkout и successful_payment ───────────────────────
+bot.on("pre_checkout_query", async (ctx) => {
+  // Просто подтверждаем — детальная проверка уже прошла при создании инвойса
+  await ctx.answerPreCheckoutQuery(true).catch((e) =>
+    console.warn("[Stars] answerPreCheckoutQuery error:", e?.message)
+  );
+});
+
+bot.on(":successful_payment", async (ctx) => {
+  const sp = ctx.message?.successful_payment;
+  if (!sp) return;
+  const payload = sp.invoice_payload || "";
+  // payload формат: "stars:{sku}:{requestId}:{userId}"
+  const parts = payload.split(":");
+  if (parts[0] !== "stars") return;
+  const sku       = parts[1];
+  const requestId = parts[2];
+  const userId    = Number(parts[3]) || ctx.from?.id;
+  const telegramChargeId = sp.telegram_payment_charge_id || "";
+
+  console.log(`[Stars] successful_payment: sku=${sku}, requestId=${requestId}, userId=${userId}, charge=${telegramChargeId}`);
+
+  try {
+    if (supabase && requestId) {
+      await supabase.from("track_requests")
+        .update({
+          payment_status: "paid",
+          payment_provider: "stars",
+          payment_amount: String(sp.total_amount),
+          payment_order_id: telegramChargeId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", requestId);
+    }
+
+    const grantResult = await grantPurchaseBySku({ telegramUserId: userId, sku, source: "stars_payment", orderId: telegramChargeId });
+    if (!grantResult?.ok) {
+      console.error(`[Stars] grantPurchaseBySku failed: sku=${sku}, userId=${userId}, error=${grantResult?.error}`);
+    } else {
+      console.log(`[Stars] grantPurchaseBySku ok: sku=${sku}, userId=${userId}`);
+    }
+
+    // Запускаем воркер для SKU-песен
+    const songSkus = ["single_song", "transit_energy_song", "couple_song", "extra_regeneration"];
+    if (songSkus.includes(sku) && requestId) {
+      try {
+        const { generateSoundKey } = await import("./workerSoundKey.js");
+        generateSoundKey(requestId).catch((e) =>
+          console.error("[Stars] generateSoundKey error:", e?.message)
+        );
+      } catch (e) {
+        console.warn("[Stars] Не удалось запустить воркер:", e?.message);
+      }
+    }
+  } catch (e) {
+    console.error("[Stars] Ошибка обработки successful_payment:", e?.message);
   }
 });
 
@@ -1081,6 +1164,28 @@ bot.command("start", async (ctx) => {
       }
     } catch (e) {
       console.warn('[Referral] Ошибка обработки ref_ payload:', e?.message);
+    }
+  }
+  // -----------------------------------------
+
+  // --- Блогерская кампания: camp_CODENAME ---
+  if (supabase && payload?.startsWith('camp_') && telegramUserId) {
+    const campCode = payload.slice(5).toLowerCase();
+    try {
+      const { data: camp } = await supabase.from('blogger_campaigns')
+        .select('code').eq('code', campCode).maybeSingle();
+      if (camp) {
+        const { data: existing } = await supabase.from('user_profiles')
+          .select('campaign_code').eq('telegram_id', Number(telegramUserId)).maybeSingle();
+        if (!existing?.campaign_code) {
+          await supabase.from('user_profiles')
+            .upsert({ telegram_id: Number(telegramUserId), campaign_code: campCode },
+                     { onConflict: 'telegram_id' });
+          console.log(`[Campaign] Пользователь ${telegramUserId} пришёл из кампании: ${campCode}`);
+        }
+      }
+    } catch (e) {
+      console.warn('[Campaign] Ошибка обработки camp_ payload:', e?.message);
     }
   }
   // -----------------------------------------
@@ -2363,6 +2468,66 @@ function buildAdminUserLine(telegramUserId, name, username) {
     `[ID ${telegramUserId}](tg://user?id=${telegramUserId})`,
   ].filter(Boolean).join("  ·  ");
 }
+
+// ─── Telegram Stars: создание инвойса ────────────────────────────────────────
+app.post("/api/payments/stars/invoice", express.json(), asyncApi(async (req, res) => {
+  const body = req.body || {};
+  const { sku: rawSku, initData, request_id: existingRequestId } = body;
+  const sku = String(rawSku || "").trim();
+  if (!sku) return res.status(400).json({ success: false, error: "sku обязателен" });
+  if (!initData) return res.status(400).json({ success: false, error: "initData обязателен" });
+
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (!telegramUserId) return res.status(401).json({ success: false, error: "Невалидный initData" });
+
+  // Найти продукт в каталоге
+  const catalog = await getPricingCatalog();
+  const product = catalog.find((p) => p.sku === sku && p.active !== false);
+  if (!product) return res.status(400).json({ success: false, error: "Продукт не найден: " + sku });
+  const starsPrice = product.stars_price;
+  if (!starsPrice || starsPrice < 1) return res.status(400).json({ success: false, error: "Продукт недоступен для оплаты звёздами" });
+
+  // Создать или найти track_request
+  let requestId = existingRequestId || null;
+  if (!requestId && supabase) {
+    const { data: newReq } = await supabase.from("track_requests").insert({
+      telegram_user_id: Number(telegramUserId),
+      mode: sku.startsWith("soul_") ? sku : (sku === "extra_regeneration" ? "extra_regen" : "single"),
+      status: "pending",
+      payment_status: "pending",
+      payment_provider: "stars",
+      name: String(body.name || "").trim() || null,
+      created_at: new Date().toISOString(),
+    }).select("id").single();
+    requestId = newReq?.id || null;
+  }
+
+  // Создать invoice link через Bot API
+  const payload = `stars:${sku}:${requestId || ""}:${telegramUserId}`;
+  const invoiceResp = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/createInvoiceLink`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      title: product.title || sku,
+      description: product.description || sku,
+      payload,
+      currency: "XTR",
+      prices: [{ label: product.title || sku, amount: starsPrice }],
+    }),
+  });
+  const invoiceData = await invoiceResp.json();
+  if (!invoiceData.ok) {
+    console.error("[Stars] createInvoiceLink error:", invoiceData);
+    return res.status(500).json({ success: false, error: "Не удалось создать инвойс: " + (invoiceData.description || "unknown") });
+  }
+
+  return res.json({
+    success: true,
+    invoice_link: invoiceData.result,
+    request_id: requestId,
+    stars_price: starsPrice,
+  });
+}));
 
 // HOT webhook: верификация подписи (X-HOT-Signature), идемпотентность по payment_order_id и payment_tx_id
 app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, res) => {
@@ -4207,6 +4372,196 @@ app.get("/api/admin/referrals", asyncApi(async (req, res) => {
   const rewarded = rewardedRes.status === "fulfilled" ? (rewardedRes.value.count || 0) : 0;
 
   return res.json({ success: true, rows, total, rewarded });
+}));
+
+// ─── Статистика пользователей ────────────────────────────────────────────────
+app.get("/api/admin/user-stats", asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+
+  const now = new Date();
+  const d7  = new Date(now - 7  * 86400_000).toISOString();
+  const d30 = new Date(now - 30 * 86400_000).toISOString();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+
+  const [
+    totalUsersRes, newTodayRes, new7dRes, new30dRes,
+    subsBasicRes, subsPlusRes, subsMasterRes,
+    top10Res, scWeekRes, ratingsRes,
+  ] = await Promise.allSettled([
+    supabase.from("user_profiles").select("*", { count: "exact", head: true }),
+    supabase.from("user_profiles").select("*", { count: "exact", head: true }).gte("created_at", today),
+    supabase.from("user_profiles").select("*", { count: "exact", head: true }).gte("created_at", d7),
+    supabase.from("user_profiles").select("*", { count: "exact", head: true }).gte("created_at", d30),
+    supabase.from("subscriptions").select("*", { count: "exact", head: true }).eq("plan_sku", "soul_basic_sub").gt("renew_at", now.toISOString()),
+    supabase.from("subscriptions").select("*", { count: "exact", head: true }).eq("plan_sku", "soul_plus_sub").gt("renew_at", now.toISOString()),
+    supabase.from("subscriptions").select("*", { count: "exact", head: true }).eq("plan_sku", "master_monthly").gt("renew_at", now.toISOString()),
+    supabase.from("track_requests")
+      .select("telegram_user_id, name")
+      .eq("payment_status", "paid")
+      .order("telegram_user_id"),
+    supabase.from("soul_chat_sessions").select("*", { count: "exact", head: true }).gte("created_at", d7),
+    supabase.from("song_ratings")
+      .select("rating, request_id, track_requests!inner(mode)")
+      .order("created_at", { ascending: false })
+      .limit(500),
+  ]);
+
+  const v = (r) => r.status === "fulfilled" ? r.value : null;
+
+  // Топ-10 по количеству заказов
+  const allOrders = v(top10Res)?.data || [];
+  const orderMap = {};
+  for (const o of allOrders) {
+    const id = o.telegram_user_id;
+    if (!orderMap[id]) orderMap[id] = { telegram_user_id: id, name: o.name, count: 0 };
+    orderMap[id].count++;
+  }
+  const top10 = Object.values(orderMap).sort((a, b) => b.count - a.count).slice(0, 10);
+
+  // Средний рейтинг
+  const ratingsData = v(ratingsRes)?.data || [];
+  const avgRating = ratingsData.length
+    ? (ratingsData.reduce((s, r) => s + r.rating, 0) / ratingsData.length).toFixed(2)
+    : null;
+
+  return res.json({
+    success: true,
+    users: {
+      total:   v(totalUsersRes)?.count ?? 0,
+      today:   v(newTodayRes)?.count  ?? 0,
+      week:    v(new7dRes)?.count     ?? 0,
+      month:   v(new30dRes)?.count    ?? 0,
+    },
+    subscriptions: {
+      basic:  v(subsBasicRes)?.count  ?? 0,
+      plus:   v(subsPlusRes)?.count   ?? 0,
+      master: v(subsMasterRes)?.count ?? 0,
+    },
+    top10,
+    soul_chat_week: v(scWeekRes)?.count ?? 0,
+    ratings_count: ratingsData.length,
+    avg_rating: avgRating,
+  });
+}));
+
+// ─── Активные подписки + отзыв ───────────────────────────────────────────────
+app.get("/api/admin/active-subscriptions", asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+
+  const plan = req.query.plan || null;
+  const search = String(req.query.search || "").trim();
+
+  let q = supabase.from("subscriptions")
+    .select("id, telegram_user_id, plan_sku, renew_at, created_at, user_profiles(name, tg_username)")
+    .gt("renew_at", new Date().toISOString())
+    .order("renew_at", { ascending: true })
+    .limit(200);
+  if (plan) q = q.eq("plan_sku", plan);
+
+  const { data, error } = await q;
+  if (error) return res.status(500).json({ success: false, error: error.message });
+
+  let rows = data || [];
+  if (search) {
+    const s = search.toLowerCase();
+    rows = rows.filter(r =>
+      String(r.telegram_user_id).includes(s) ||
+      (r.user_profiles?.name || "").toLowerCase().includes(s) ||
+      (r.user_profiles?.tg_username || "").toLowerCase().includes(s)
+    );
+  }
+
+  // Добавить дней до конца
+  const now = Date.now();
+  rows = rows.map(r => ({
+    ...r,
+    days_left: Math.ceil((new Date(r.renew_at) - now) / 86400_000),
+  }));
+
+  return res.json({ success: true, rows, total: rows.length });
+}));
+
+app.post("/api/admin/revoke-subscription", express.json(), asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+
+  const { subscription_id, telegram_user_id } = req.body || {};
+  if (!subscription_id && !telegram_user_id) {
+    return res.status(400).json({ success: false, error: "Нужен subscription_id или telegram_user_id" });
+  }
+
+  let q = supabase.from("subscriptions").update({ renew_at: new Date().toISOString() });
+  if (subscription_id) q = q.eq("id", subscription_id);
+  else q = q.eq("telegram_user_id", Number(telegram_user_id)).gt("renew_at", new Date().toISOString());
+
+  const { error } = await q;
+  if (error) return res.status(500).json({ success: false, error: error.message });
+
+  console.log(`[Admin] Подписка отозвана: subscription_id=${subscription_id}, user=${telegram_user_id} (admin: ${auth.userId})`);
+  return res.json({ success: true });
+}));
+
+// ─── Блогерские кампании ─────────────────────────────────────────────────────
+app.get("/api/admin/campaigns", asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+
+  const { data: campaigns } = await supabase
+    .from("blogger_campaigns").select("*").order("created_at", { ascending: false });
+
+  // Статистика по каждой кампании
+  const stats = await Promise.all((campaigns || []).map(async (c) => {
+    const [regRes, ordersRes] = await Promise.allSettled([
+      supabase.from("user_profiles").select("*", { count: "exact", head: true }).eq("campaign_code", c.code),
+      supabase.from("track_requests")
+        .select("telegram_user_id", { count: "exact", head: true })
+        .eq("payment_status", "paid")
+        .in("telegram_user_id",
+          supabase.from("user_profiles").select("telegram_user_id").eq("campaign_code", c.code)
+        ),
+    ]);
+    return {
+      ...c,
+      registrations: regRes.status === "fulfilled" ? (regRes.value.count ?? 0) : 0,
+      paid_orders:   ordersRes.status === "fulfilled" ? (ordersRes.value.count ?? 0) : 0,
+    };
+  }));
+
+  return res.json({ success: true, campaigns: stats });
+}));
+
+app.post("/api/admin/campaigns", express.json(), asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+
+  const { name, code, notes } = req.body || {};
+  if (!name || !code) return res.status(400).json({ success: false, error: "name и code обязательны" });
+  const cleanCode = String(code).trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
+  if (!cleanCode) return res.status(400).json({ success: false, error: "Невалидный code" });
+
+  const { data, error } = await supabase.from("blogger_campaigns")
+    .insert({ name: String(name).trim(), code: cleanCode, notes: notes || null })
+    .select().single();
+  if (error) return res.status(400).json({ success: false, error: error.message });
+
+  return res.json({ success: true, campaign: data });
+}));
+
+app.delete("/api/admin/campaigns/:code", asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+
+  const { error } = await supabase.from("blogger_campaigns").delete().eq("code", req.params.code);
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  return res.json({ success: true });
 }));
 
 app.use("/api", (err, req, res, next) => {

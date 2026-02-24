@@ -640,6 +640,32 @@ async function sendPhotoToUser(telegramUserId, photoUrl, caption) {
   return { ok: true };
 }
 
+async function sendRatingRequest(telegramUserId, requestId, trackTitle) {
+  if (!BOT_TOKEN || !telegramUserId || !requestId) return;
+  const title = trackTitle ? `«${trackTitle}»` : 'свою песню';
+  try {
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: telegramUserId,
+        text: `Как тебе ${title}?\nОцени трек — это помогает нам делать лучше 🙏`,
+        reply_markup: {
+          inline_keyboard: [[
+            { text: "⭐", callback_data: `rate_song:1:${requestId}` },
+            { text: "⭐⭐", callback_data: `rate_song:2:${requestId}` },
+            { text: "⭐⭐⭐", callback_data: `rate_song:3:${requestId}` },
+            { text: "⭐⭐⭐⭐", callback_data: `rate_song:4:${requestId}` },
+            { text: "⭐⭐⭐⭐⭐", callback_data: `rate_song:5:${requestId}` },
+          ]],
+        },
+      }),
+    });
+  } catch (e) {
+    console.warn("[Воркер] Не удалось отправить запрос рейтинга:", e?.message);
+  }
+}
+
 async function sendAudioToUser(telegramUserId, audioUrl, caption, { title = "", performer = "YupSoul" } = {}) {
   if (!BOT_TOKEN || !telegramUserId) return { ok: false, error: "Нет BOT_TOKEN или chat_id" };
   const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`;
@@ -1372,6 +1398,13 @@ ${extBlock ? "\n" + extBlock : ""}
         await sendTrackLimitWarningIfNeeded(request.telegram_user_id, request.name);
       } catch (e) {
         console.warn('[Воркер] Ошибка проверки лимита треков:', e?.message);
+      }
+
+      // Запрос рейтинга после доставки
+      try {
+        await sendRatingRequest(request.telegram_user_id, requestId, parsed?.title);
+      } catch (e) {
+        console.warn('[Воркер] Ошибка отправки запроса рейтинга:', e?.message);
       }
     }
     await setStep('pipeline_done', 'Генерация полностью завершена');

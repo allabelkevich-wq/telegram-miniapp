@@ -450,7 +450,7 @@
     .quick-cat{display:none}
     /* Новый блок ввода запроса */
     .request-input-box{border:1px solid rgba(255,255,255,0.1);border-radius:14px;overflow:visible;background:rgba(255,255,255,0.04);position:relative;}
-    .request-textarea{width:100%;background:transparent;border:none;border-radius:14px 14px 0 0;padding:14px 14px 10px;resize:none;min-height:90px;font-size:0.95rem;color:inherit;font-family:inherit;box-sizing:border-box;outline:none;}
+    .request-textarea{width:100%;background:transparent;border:none;border-radius:14px 14px 0 0;padding:14px 14px 10px;resize:none;min-height:90px;font-size:16px;color:inherit;font-family:inherit;box-sizing:border-box;outline:none;}
     .request-textarea:focus{outline:none;box-shadow:none;border:none;}
     .request-quick-bar{border-top:1px solid rgba(255,255,255,0.07);position:relative;}
     .request-quick-toggle{width:100%;background:none;border:none;color:rgba(212,175,55,0.55);font-size:0.72rem;font-weight:600;font-family:inherit;padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:0.03em;transition:color .2s;min-height:unset;box-shadow:none;animation:none;margin:0;border-radius:0 0 14px 14px;justify-content:space-between;}
@@ -5061,6 +5061,7 @@
 
           scPageAddMsg('user', question);
           questionEl.value = '';
+          questionEl.blur();
           sendBtn.disabled = true;
           if (statusEl) { statusEl.textContent = '🧘 Слушаю душу…'; statusEl.style.display = ''; }
 
@@ -6292,17 +6293,80 @@
       if (profileCreateSongBtn) profileCreateSongBtn.addEventListener('click', function() { goToPage('formPage'); });
       var PLAN_PRICES = { plan_basic: '$14.99', plan_plus: '$24.99', plan_master: '$39.99' };
       var PLAN_TRACKS = { plan_basic: '5', plan_plus: '10', plan_master: '30' };
+      var PLAN_SKU_MAP = { plan_basic: 'soul_basic_sub', plan_plus: 'soul_plus_sub', plan_master: 'master_monthly' };
+      var PLAN_STARS = { plan_basic: '1 150 ⭐', plan_plus: '1 920 ⭐', plan_master: '3 070 ⭐' };
+
+      // ── Stars: универсальная функция открытия инвойса ─────────────────────
+      window.payWithStars = async function payWithStars(sku, requestId, btn) {
+        var apiBase  = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        var initData = getInitData ? getInitData() : '';
+        if (!apiBase || !initData) { alert('Ошибка авторизации. Открой приложение из Telegram.'); return; }
+        var origText = btn ? btn.textContent : '';
+        if (btn) { btn.disabled = true; btn.textContent = 'Создаём инвойс…'; }
+        try {
+          var resp = await fetch(apiBase + '/api/payments/stars/invoice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+            body: JSON.stringify({ sku: sku, initData: initData, request_id: requestId || null })
+          });
+          var data = await resp.json().catch(function() { return {}; });
+          if (!data.success || !data.invoice_link) {
+            alert('Не удалось создать инвойс: ' + (data.error || 'попробуй ещё раз'));
+            return;
+          }
+          // Открываем инвойс Stars через Telegram WebApp
+          var tgApp = window.Telegram && window.Telegram.WebApp;
+          if (tgApp && typeof tgApp.openInvoice === 'function') {
+            tgApp.openInvoice(data.invoice_link, function(status) {
+              if (status === 'paid') {
+                if (btn) btn.textContent = '✅ Оплачено!';
+                setTimeout(function() {
+                  var ov = document.getElementById('planConfirmOverlay') || document.getElementById('paymentOverlay');
+                  if (ov) ov.style.display = 'none';
+                }, 1200);
+              } else {
+                if (btn) { btn.disabled = false; btn.textContent = origText; }
+              }
+            });
+          } else if (tgApp && typeof tgApp.openLink === 'function') {
+            tgApp.openLink(data.invoice_link);
+            if (btn) { btn.disabled = false; btn.textContent = origText; }
+          } else {
+            window.open(data.invoice_link, '_blank');
+            if (btn) { btn.disabled = false; btn.textContent = origText; }
+          }
+        } catch (e) {
+          alert('Ошибка соединения: ' + (e.message || e));
+          if (btn) { btn.disabled = false; btn.textContent = origText; }
+        }
+      };
+
+      // Кнопка Stars в оверлее разовой покупки
+      var payOvStarsBtn = document.getElementById('payOvStarsBtn');
+      if (payOvStarsBtn) payOvStarsBtn.addEventListener('click', function() {
+        var sku = pendingPaymentSku || '';
+        if (!sku) { alert('Сначала заполни форму заявки.'); return; }
+        payWithStars(sku, pendingPaymentRequestId, payOvStarsBtn);
+      });
 
       window.showPlanConfirm = function showPlanConfirm(planKey, planName) {
         var overlay = document.getElementById('planConfirmOverlay');
         var title = document.getElementById('planConfirmTitle');
         var desc = document.getElementById('planConfirmDesc');
         var btn = document.getElementById('planConfirmBtn');
+        var starsBtn = document.getElementById('planConfirmStarsBtn');
         if (!overlay) return;
         var price = PLAN_PRICES[planKey] || '';
         var tracks = PLAN_TRACKS[planKey] || '';
+        var starsPrice = PLAN_STARS[planKey] || '';
         if (title) title.textContent = planName + (price ? ' — ' + price + '/мес' : '');
         if (desc) desc.textContent = (tracks ? tracks + ' персональных треков в месяц.' : '') + ' Оплата через HOT Pay. Приложение остаётся открытым.';
+        if (starsBtn && starsPrice) {
+          starsBtn.textContent = '⭐ Оплатить звёздами — ' + starsPrice;
+          starsBtn.disabled = false;
+          var skuForStars = PLAN_SKU_MAP[planKey] || '';
+          starsBtn.onclick = function() { payWithStars(skuForStars, null, starsBtn); };
+        }
         if (btn) {
           btn.textContent = 'Перейти к оплате →';
           btn.onclick = async function() {
@@ -7291,8 +7355,12 @@
             <div id="payOvPriceHint" style="font-size:0.8rem;color:rgba(16,185,129,0.8);margin-top:6px;"></div>
           </div>
           <button id="payOvPayBtn" type="button"
-            style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:0;letter-spacing:0;">
+            style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;letter-spacing:0;">
             💳 Оплатить через HOT Pay
+          </button>
+          <button id="payOvStarsBtn" type="button"
+            style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:0;letter-spacing:0;">
+            ⭐ Оплатить звёздами Telegram
           </button>
         </div>
 
@@ -7367,6 +7435,14 @@
         box-shadow:0 6px 20px rgba(212,175,55,0.3);
         margin-bottom:10px;
       ">Перейти в бот →</button>
+      <button id="planConfirmStarsBtn" type="button" style="
+        width:100%;padding:14px;border-radius:14px;
+        background:linear-gradient(135deg,#7c3aed,#4f46e5);
+        border:none;color:#fff;font-size:1rem;font-weight:700;
+        cursor:pointer;font-family:inherit;
+        box-shadow:0 6px 20px rgba(124,58,237,0.3);
+        margin-bottom:10px;
+      ">⭐ Оплатить звёздами</button>
       <button type="button" onclick="document.getElementById('planConfirmOverlay').style.display='none'" style="
         width:100%;padding:12px;border-radius:14px;
         background:transparent;border:1px solid rgba(255,255,255,0.15);
