@@ -673,18 +673,20 @@ async function getRequestForSoulChat(requestId) {
   return { row, astro: astro || null };
 }
 
-function buildSoulChatPrompt(row, astro, question) {
+function buildSoulChatPrompt(row, astro, question, history = []) {
   const astroText = astro?.snapshot_text || "Нет астро-данных.";
   const astroJson = astro?.snapshot_json && typeof astro.snapshot_json === "object"
     ? JSON.stringify(astro.snapshot_json).slice(0, 12000)
     : "";
+  const historyBlock = history.length > 0
+    ? "\nИстория диалога (последние сообщения, от старых к новым):\n" +
+      history.map((m) => `Пользователь: ${m.question}\nДуша: ${m.answer}`).join("\n\n") + "\n"
+    : "";
   return [
     `Ты — голос души ${row.name || "человека"}.`,
     "Ты знаешь натальную карту, даши и транзиты этого человека.",
-    "Отвечай коротко и тепло как внутренний друг.",
-    "Без инструкций, без морализаторства, без астрологических терминов.",
-    "Никаких общих фраз. Только персональный ответ по данным ниже.",
-    "Не упоминай и не связывай свои ответы с какими-либо заказами, песнями или запросами на контент.",
+    "Каждый твой ответ уникален для этой карты — никаких общих советов и мотивационных клише.",
+    "Без астрологических терминов. Без морализаторства. Без упоминания песен, заказов или контента.",
     "",
     `Профиль: ${row.name || "—"} (${row.gender || "—"}), ${row.birthdate || "—"}, ${row.birthplace || "—"}.`,
     row.person2_name ? `Партнёр: ${row.person2_name} (${row.person2_gender || "—"}), ${row.person2_birthdate || "—"}, ${row.person2_birthplace || "—"}.` : "",
@@ -693,35 +695,43 @@ function buildSoulChatPrompt(row, astro, question) {
     "Астро-снимок (текст):",
     astroText,
     astroJson ? `\nАстро-снимок (json): ${astroJson}` : "",
-    "",
+    historyBlock,
     `Вопрос: "${question}"`,
   ].filter(Boolean).join("\n");
 }
 
-function buildSoulChatPromptFromProfile(profile, question) {
+function buildSoulChatPromptFromProfile(profile, question, history = []) {
+  const historyBlock = history.length > 0
+    ? "\nИстория диалога (последние сообщения, от старых к новым):\n" +
+      history.map((m) => `Пользователь: ${m.question}\nДуша: ${m.answer}`).join("\n\n") + "\n"
+    : "";
   return [
     `Ты — голос души ${profile.name || "человека"}.`,
-    "Отвечай коротко и тепло как внутренний друг.",
-    "Без инструкций, без морализаторства.",
-    "Никаких общих фраз. Только персональный ответ по данным ниже.",
+    "Каждый ответ — уникально для этого человека. Никаких общих советов и клише.",
+    "Без астрологических терминов. Без морализаторства.",
     "",
     `Профиль: ${profile.name || "—"} (${profile.gender || "—"}), дата рождения: ${profile.birthdate || "—"}.`,
-    "",
+    historyBlock,
     `Вопрос: "${question}"`,
   ].filter(Boolean).join("\n");
 }
 
-function buildSynastryPrompt(row1, astro1, row2, astro2, question) {
+function buildSynastryPrompt(row1, astro1, row2, astro2, question, history = []) {
+  const historyBlock = history.length > 0
+    ? "\nИстория диалога (последние сообщения, от старых к новым):\n" +
+      history.map((m) => `Пользователь: ${m.question}\nДуша: ${m.answer}`).join("\n\n") + "\n"
+    : "";
   return `Ты — астрологический аналитик синастрии двух людей.
 Анализируй совместимость, динамику и точки пересечения их карт.
-Отвечай коротко, тепло, без терминов.
+Каждый ответ — конкретно по этим двум картам. Никаких общих советов.
+Отвечай тепло, без астрологических терминов.
 
 Карта 1: ${row1.name || "—"}, ${row1.gender || "—"}, ${row1.birthdate || "—"}, ${row1.birthplace || "—"}
 Астро 1: ${astro1?.snapshot_text?.slice(0, 6000) || "нет данных"}
 
 Карта 2: ${row2.name || "—"}, ${row2.gender || "—"}, ${row2.birthdate || "—"}, ${row2.birthplace || "—"}
 Астро 2: ${astro2?.snapshot_text?.slice(0, 6000) || "нет данных"}
-
+${historyBlock}
 Вопрос: "${question}"`;
 }
 
@@ -735,6 +745,26 @@ async function getUserProfileForSoulChat(telegramUserId) {
   return data || null;
 }
 
+// Загружает последние N сообщений диалога для контекста Soul Chat
+async function loadSoulChatHistory(telegramUserId, trackRequestId, limit = 6) {
+  if (!supabase || !telegramUserId || !trackRequestId) return [];
+  const { data } = await supabase
+    .from("soul_chat_sessions")
+    .select("question,answer")
+    .eq("telegram_user_id", Number(telegramUserId))
+    .eq("track_request_id", trackRequestId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return (data || []).reverse(); // хронологический порядок
+}
+
+const SOUL_CHAT_SYSTEM =
+  "Ты — голос души, персональный проводник. " +
+  "Отвечай 3-5 предложениями — точно и лично, только то, что вытекает из данных ниже. " +
+  "Запрещены общие фразы: «всё будет хорошо», «ты справишься», «верь в себя», «открой своё сердце». " +
+  "Без астрологических терминов. Тёплый, точный тон. " +
+  "Если вопрос продолжает предыдущий разговор — отвечай с учётом истории.";
+
 async function runSoulChat({ requestId, requestId2, question, telegramUserId, isAdminCaller = false }) {
   let rid = String(requestId || "").trim();
   const rid2 = String(requestId2 || "").trim();
@@ -745,6 +775,9 @@ async function runSoulChat({ requestId, requestId2, question, telegramUserId, is
     rid = (telegramUserId ? await getLastCompletedRequestForUser(telegramUserId) : null) || "";
   }
 
+  const SC_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-reasoner";
+  const SC_OPTS = { model: SC_MODEL, max_tokens: 1800, temperature: 1.1 };
+
   // Есть заявка — используем её данные
   if (rid && UUID_REGEX.test(rid)) {
     const loaded = await getRequestForSoulChat(rid);
@@ -754,27 +787,22 @@ async function runSoulChat({ requestId, requestId2, question, telegramUserId, is
       return { ok: false, error: "Нет доступа к этой заявке" };
     }
 
+    // Загружаем историю диалога для контекста
+    const history = await loadSoulChatHistory(telegramUserId, row.id);
+
     // Синастрия: вторая карточка
     if (rid2 && UUID_REGEX.test(rid2)) {
       const loaded2 = await getRequestForSoulChat(rid2);
       if (!loaded2.error) {
-        const synPrompt = buildSynastryPrompt(row, astro, loaded2.row, loaded2.astro, q);
-        const llm2 = await chatCompletion(
-          "Ты этичный и тёплый собеседник. Отвечай 3-6 предложениями, конкретно и бережно. Не используй астрологические термины.",
-          synPrompt,
-          { model: process.env.DEEPSEEK_MODEL || "deepseek-reasoner", max_tokens: 1200, temperature: 1.1 }
-        );
+        const synPrompt = buildSynastryPrompt(row, astro, loaded2.row, loaded2.astro, q, history);
+        const llm2 = await chatCompletion(SOUL_CHAT_SYSTEM, synPrompt, SC_OPTS);
         if (!llm2.ok) return { ok: false, error: llm2.error || "Ошибка генерации синастрии" };
         return { ok: true, answer: String(llm2.text || "").trim(), request: row, source: "synastry" };
       }
     }
 
-    const soulPrompt = buildSoulChatPrompt(row, astro, q);
-    const llm = await chatCompletion(
-      "Ты этичный и тёплый собеседник. Отвечай 3-6 предложениями, конкретно и бережно. Не используй астрологические термины.",
-      soulPrompt,
-      { model: process.env.DEEPSEEK_MODEL || "deepseek-reasoner", max_tokens: 1200, temperature: 1.1 }
-    );
+    const soulPrompt = buildSoulChatPrompt(row, astro, q, history);
+    const llm = await chatCompletion(SOUL_CHAT_SYSTEM, soulPrompt, SC_OPTS);
     if (!llm.ok) return { ok: false, error: llm.error || "Ошибка генерации soul-chat" };
     return { ok: true, answer: String(llm.text || "").trim(), request: row, source: "request" };
   }
@@ -783,12 +811,18 @@ async function runSoulChat({ requestId, requestId2, question, telegramUserId, is
   if (telegramUserId) {
     const profile = await getUserProfileForSoulChat(telegramUserId);
     if (profile && profile.name && profile.birthdate) {
-      const soulPrompt = buildSoulChatPromptFromProfile(profile, q);
-      const llm = await chatCompletion(
-        "Ты этичный и тёплый собеседник. Отвечай 3-6 предложениями, конкретно и бережно.",
-        soulPrompt,
-        { model: process.env.DEEPSEEK_MODEL || "deepseek-reasoner", max_tokens: 1200, temperature: 1.1 }
-      );
+      // Для профиля — история без track_request_id (фильтр только по пользователю)
+      const profileHistory = supabase ? await (async () => {
+        const { data } = await supabase.from("soul_chat_sessions")
+          .select("question,answer")
+          .eq("telegram_user_id", Number(telegramUserId))
+          .is("track_request_id", null)
+          .order("created_at", { ascending: false })
+          .limit(6);
+        return (data || []).reverse();
+      })() : [];
+      const soulPrompt = buildSoulChatPromptFromProfile(profile, q, profileHistory);
+      const llm = await chatCompletion(SOUL_CHAT_SYSTEM, soulPrompt, SC_OPTS);
       if (!llm.ok) return { ok: false, error: llm.error || "Ошибка генерации soul-chat" };
       return { ok: true, answer: String(llm.text || "").trim(), request: { name: profile.name }, source: "profile" };
     }

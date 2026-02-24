@@ -673,6 +673,66 @@ async function updateStepLog(requestId, steps) {
 // ============================================================================
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Лимиты треков по тарифам (соответствуют PLAN_META в index.js)
+const SUBSCRIPTION_TRACK_LIMITS = {
+  soul_basic_sub: 5,
+  soul_plus_sub:  10,
+  master_monthly: 30,
+};
+
+async function sendTrackLimitWarningIfNeeded(telegramUserId, userName) {
+  if (!supabase || !BOT_TOKEN || !telegramUserId) return;
+  const nowIso = new Date().toISOString();
+
+  // Получаем активную подписку
+  const { data: sub } = await supabase
+    .from("subscriptions")
+    .select("plan_sku")
+    .eq("telegram_user_id", Number(telegramUserId))
+    .eq("status", "active")
+    .gte("renew_at", nowIso)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!sub?.plan_sku) return; // нет активной подписки — нет лимита
+  const trackLimit = SUBSCRIPTION_TRACK_LIMITS[sub.plan_sku];
+  if (!trackLimit || trackLimit < 0) return; // безлимитный тариф или неизвестный
+
+  // Считаем использованные треки в текущем месяце
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+  const { count } = await supabase
+    .from("track_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("telegram_user_id", Number(telegramUserId))
+    .gte("created_at", monthStart.toISOString())
+    .not("generation_status", "in", '("failed","cancelled","rejected")');
+
+  const used = Number(count || 0);
+  const remaining = Math.max(0, trackLimit - used);
+
+  let text = null;
+  if (remaining === 1) {
+    text = `${userName || "Привет"}, это была предпоследняя песня в этом месяце — осталась ещё 1.\n\nКогда понадобится больше — обновись до следующего тарифа в профиле. 🎵`;
+  } else if (remaining === 0) {
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    nextMonth.setDate(1);
+    const dateStr = nextMonth.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+    text = `${userName || "Привет"}, лимит треков на этот месяц исчерпан.\n\nСледующий цикл начнётся ${dateStr}. Хочешь больше — загляни в профиль, там можно расширить тариф. 🎵`;
+  }
+
+  if (text) {
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: telegramUserId, text })
+    });
+  }
+}
+
 export async function generateSoundKey(requestId) {
   const stepLog = {}; // логи этапов для админки
   const setStep = async (key, value) => {
@@ -1306,6 +1366,13 @@ ${extBlock ? "\n" + extBlock : ""}
       // Проверяем и начисляем реферальную награду пригласившему
       try { await triggerReferralRewardIfEligible(request.telegram_user_id); }
       catch (e) { console.warn('[Referral] Ошибка начисления награды:', e?.message); }
+
+      // Уведомление о приближении лимита треков (только для подписчиков с конечным лимитом)
+      try {
+        await sendTrackLimitWarningIfNeeded(request.telegram_user_id, request.name);
+      } catch (e) {
+        console.warn('[Воркер] Ошибка проверки лимита треков:', e?.message);
+      }
     }
     await setStep('pipeline_done', 'Генерация полностью завершена');
     
@@ -1376,6 +1443,30 @@ ${extBlock ? "\n" + extBlock : ""}
         } catch (e) {
           console.error('[Воркер] Не удалось уведомить админа:', e.message);
         }
+      }
+    }
+
+    // Уведомить пользователя о финальном сбое — кредит не списан
+    if (BOT_TOKEN) {
+      try {
+        const { data: reqInfo } = await supabase
+          .from('track_requests')
+          .select('telegram_user_id,name')
+          .eq('id', requestId)
+          .maybeSingle()
+          .catch(() => ({ data: null }));
+        if (reqInfo?.telegram_user_id) {
+          await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: reqInfo.telegram_user_id,
+              text: `Привет, ${reqInfo.name || "друг"}! Что-то пошло не так при создании твоей песни — мы уже разбираемся.\n\nТвой кредит сохранён. Если проблема не решится в ближайшее время — напиши в поддержку, всё исправим.\n\n— YupSoul ❤️`
+            })
+          });
+        }
+      } catch (e) {
+        console.warn('[Воркер] Не удалось уведомить пользователя об ошибке:', e?.message);
       }
     }
 
