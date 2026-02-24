@@ -1205,20 +1205,9 @@
       }).catch(() => prompt('Скопируй Telegram ID:', String(id)));
     }
     function openTgUser(id) {
-      // Пробуем открыть Telegram через протокол tg://
-      // Если не сработает (браузер заблокировал) — предлагаем скопировать ID
-      const url = 'tg://user?id=' + id;
-      const win = window.open(url, '_blank');
-      // Fallback: если браузер не смог открыть, window.open вернёт null или заблокируется
-      setTimeout(() => {
-        try {
-          if (!win || win.closed) {
-            window.location.href = url;
-          }
-        } catch(e) {
-          window.location.href = url;
-        }
-      }, 300);
+      // tg://openmessage?user_id= — открывает переписку с конкретным пользователем по ID
+      // (tg://user?id= открывает только профиль, не чат)
+      window.location.href = 'tg://openmessage?user_id=' + id;
     }
     function escapeHtml(s) {
       if (s == null) return '';
