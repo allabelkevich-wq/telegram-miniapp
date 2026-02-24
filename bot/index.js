@@ -1092,10 +1092,19 @@ bot.command("start", async (ctx) => {
     ? bMsg(ctx, 'startReturning', name)
     : bMsg(ctx, 'startNew', name);
 
+  const startKeyboard = isReturning
+    ? {
+        inline_keyboard: [
+          [{ text: bMsg(ctx, 'btnOpenApp'), web_app: { url: MINI_APP_STABLE_URL } }],
+          [{ text: "🔔 Песня не пришла?", callback_data: "song_not_arrived" }],
+        ],
+      }
+    : { inline_keyboard: [[{ text: bMsg(ctx, 'btnOpenApp'), web_app: { url: MINI_APP_STABLE_URL } }]] };
+
   try {
     await ctx.reply(startText, {
       parse_mode: "Markdown",
-      reply_markup: { inline_keyboard: [[{ text: bMsg(ctx, 'btnOpenApp'), web_app: { url: MINI_APP_STABLE_URL } }]] },
+      reply_markup: startKeyboard,
     });
   } catch (e) {
     console.error("[start] Ошибка ответа:", e?.message || e);
@@ -1389,6 +1398,12 @@ async function sendAnalysisIfPaid(ctx) {
 bot.command("get_analysis", sendAnalysisIfPaid);
 bot.hears(/^(расшифровка|получить расшифровку|детальный анализ)$/i, sendAnalysisIfPaid);
 
+// Кнопка «Получить расшифровку» из inline keyboard
+bot.callbackQuery("get_analysis", async (ctx) => {
+  await ctx.answerCallbackQuery().catch(() => {});
+  await sendAnalysisIfPaid(ctx);
+});
+
 // Определяем язык пользователя по Telegram language_code
 function getUserLang(ctx) {
   const lc = (ctx.from?.language_code || '').toLowerCase();
@@ -1492,8 +1507,8 @@ function bMsg(ctx, key, ...args) {
 const resendCooldownMs = 10 * 60 * 1000;
 const resendLastAttempt = new Map();
 
-// Пользователь пишет «песня не пришла» — пробуем повторно отправить не доставленные
-bot.hears(/^(песня не пришла|не пришла песня|не получил песню|не получила песню|повторно отправь|отправь снова|пісня не прийшла|не прийшла пісня|не отримав пісню|не отримала пісню|надішли ще раз|song not arrived|song didn.t arrive|resend song|send again|lied nicht angekommen|lied kam nicht an|sende nochmal|erneut senden|chanson pas arrivée|chanson n.est pas arrivée|renvoyer la chanson|renvoie la chanson)$/i, async (ctx) => {
+// Пользователь пишет «песня не пришла» или нажимает кнопку — пробуем повторно отправить не доставленные
+async function handleSongNotArrived(ctx) {
   const telegramUserId = ctx.from?.id;
   if (!telegramUserId || !supabase || !BOT_TOKEN) {
     await ctx.reply(bMsg(ctx, 'noUser'));
@@ -1600,6 +1615,14 @@ bot.hears(/^(песня не пришла|не пришла песня|не по
     console.error("[resend] Ошибка:", e?.message);
     await ctx.reply(bMsg(ctx, 'resendErr'));
   }
+}
+
+bot.hears(/^(песня не пришла|не пришла песня|не получил песню|не получила песню|повторно отправь|отправь снова|пісня не прийшла|не прийшла пісня|не отримав пісню|не отримала пісню|надішли ще раз|song not arrived|song didn.t arrive|resend song|send again|lied nicht angekommen|lied kam nicht an|sende nochmal|erneut senden|chanson pas arrivée|chanson n.est pas arrivée|renvoyer la chanson|renvoie la chanson)$/i, handleSongNotArrived);
+
+// Кнопка «Песня не пришла?» из inline keyboard
+bot.callbackQuery("song_not_arrived", async (ctx) => {
+  await ctx.answerCallbackQuery().catch(() => {});
+  await handleSongNotArrived(ctx);
 });
 
 // Команда для админа: просмотр натальной карты по request_id
