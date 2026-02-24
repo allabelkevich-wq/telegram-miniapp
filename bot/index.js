@@ -536,15 +536,20 @@ async function getActiveSubscriptionFull(telegramUserId) {
   return data;
 }
 
-async function countTracksUsedThisMonth(telegramUserId) {
+async function countTracksUsedThisMonth(telegramUserId, subCreatedAt = null) {
   if (!supabase) return 0;
   const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  // Считаем только треки ПОСЛЕ активации подписки (защита от засчитывания
+  // треков, сделанных до оформления тарифа)
+  const countFrom = subCreatedAt && new Date(subCreatedAt) > monthStart
+    ? new Date(subCreatedAt).toISOString()
+    : monthStart.toISOString();
   const { count, error } = await supabase
     .from("track_requests")
     .select("id", { count: "exact", head: true })
     .eq("telegram_user_id", Number(telegramUserId))
-    .gte("created_at", monthStart)
+    .gte("created_at", countFrom)
     .not("generation_status", "in", '("failed","cancelled","rejected")');
   if (error && /does not exist|column/i.test(error.message)) return 0;
   if (error) return 0;
@@ -4194,7 +4199,7 @@ app.get("/api/subscription/status", asyncApi(async (req, res) => {
   const planSku = sub?.plan_sku || null;
   const planMeta = planSku ? PLAN_META[planSku] : null;
   const tracksLimit = planMeta?.tracks ?? 0;
-  const tracksUsed = planSku ? await countTracksUsedThisMonth(telegramUserId) : 0;
+  const tracksUsed = planSku ? await countTracksUsedThisMonth(telegramUserId, sub?.created_at) : 0;
   const tracksRemaining = planSku ? Math.max(0, tracksLimit - tracksUsed) : 0;
 
   // Доступ к Soul Chat: Plus и Мастер — безлимитно (-1), Basic — по лимиту
@@ -4807,9 +4812,10 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   
   await supabase.from("track_requests").update(updateData).eq("id", requestId);
   const mode = body.person1 && body.mode === "couple" ? "couple" : "single";
-  console.log(`[API] Заявка ${requestId} сохранена — ГЕНЕРИРУЕМ ПЕСНЮ БЕСПЛАТНО (режим: ${mode})`);
-  const successText =
-    "✨ Твой звуковой ключ создаётся! Первый трек — в подарок 🎁\n\nОн придёт в этот чат, когда будет готов.";
+  console.log(`[API] Заявка ${requestId} сохранена — ГЕНЕРИРУЕМ ПЕСНЮ (источник: ${access.source}, режим: ${mode})`);
+  const successText = access.source === "subscription"
+    ? "✨ Твой звуковой ключ создаётся!\n\nПесня придёт в этот чат, когда будет готова. Можешь закрыть приложение — ничего не пропадёт 🎵"
+    : "✨ Твой звуковой ключ создаётся! Первый трек — в подарок 🎁\n\nОн придёт в этот чат, когда будет готов.";
   bot.api.sendMessage(telegramUserId, successText).catch((e) => console.warn("[submit-request] sendMessage:", e?.message));
   if (ADMIN_IDS.length) {
     const requestPreview = (userRequest || "").trim().slice(0, 150);
@@ -4846,7 +4852,9 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   return res.status(200).json({
     ok: true,
     requestId,
-    message: "✨ Твой звуковой ключ создаётся! Первый трек — в подарок 🎁\nПесня генерируется на сервере и придёт в этот чат. Можно закрыть окно — ничего не пропадёт. Спасибо ❤️",
+    message: access.source === "subscription"
+      ? "✨ Твой звуковой ключ создаётся!\nПесня генерируется на сервере и придёт в этот чат. Можно закрыть окно — ничего не пропадёт. Спасибо ❤️"
+      : "✨ Твой звуковой ключ создаётся! Первый трек — в подарок 🎁\nПесня генерируется на сервере и придёт в этот чат. Можно закрыть окно — ничего не пропадёт. Спасибо ❤️",
   });
 });
 

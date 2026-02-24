@@ -713,7 +713,7 @@ async function sendTrackLimitWarningIfNeeded(telegramUserId, userName) {
   // Получаем активную подписку
   const { data: sub } = await supabase
     .from("subscriptions")
-    .select("plan_sku")
+    .select("plan_sku, created_at")
     .eq("telegram_user_id", Number(telegramUserId))
     .eq("status", "active")
     .gte("renew_at", nowIso)
@@ -725,15 +725,20 @@ async function sendTrackLimitWarningIfNeeded(telegramUserId, userName) {
   const trackLimit = SUBSCRIPTION_TRACK_LIMITS[sub.plan_sku];
   if (!trackLimit || trackLimit < 0) return; // безлимитный тариф или неизвестный
 
-  // Считаем использованные треки в текущем месяце
+  // Считаем треки только с момента активации подписки (не с начала месяца),
+  // чтобы треки до оформления тарифа не засчитывались в лимит
   const monthStart = new Date();
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
+  const subActivatedAt = sub.created_at ? new Date(sub.created_at) : null;
+  const countFrom = subActivatedAt && subActivatedAt > monthStart
+    ? subActivatedAt.toISOString()
+    : monthStart.toISOString();
   const { count } = await supabase
     .from("track_requests")
     .select("id", { count: "exact", head: true })
     .eq("telegram_user_id", Number(telegramUserId))
-    .gte("created_at", monthStart.toISOString())
+    .gte("created_at", countFrom)
     .not("generation_status", "in", '("failed","cancelled","rejected")');
 
   const used = Number(count || 0);
