@@ -2669,7 +2669,7 @@ app.get("/api/admin/requests", asyncApi(async (req, res) => {
   const statusFilter = req.query?.status || "all";
   const requestIdSearch = String(req.query?.request_id || req.query?.id || "").trim().toLowerCase().replace(/[^0-9a-f-]/g, "");
   const userIdSearch = String(req.query?.user_id || req.query?.telegram_user_id || "").trim().replace(/[^0-9]/g, "");
-  const fullSelect = "id,name,gender,birthdate,birthplace,person2_name,person2_gender,person2_birthdate,person2_birthplace,status,generation_status,delivery_status,delivered_at,created_at,audio_url,mode,request,generation_steps,payment_status,payment_provider,promo_code,promo_discount_amount,payment_amount,telegram_user_id,error_message,user_profiles(tg_username)";
+  const fullSelect = "id,name,gender,birthdate,birthplace,person2_name,person2_gender,person2_birthdate,person2_birthplace,status,generation_status,delivery_status,delivered_at,created_at,audio_url,mode,request,generation_steps,payment_status,payment_provider,promo_code,promo_discount_amount,payment_amount,telegram_user_id,error_message";
   let q = supabase.from("track_requests").select(fullSelect).order("created_at", { ascending: false }).limit(userIdSearch || requestIdSearch ? 200 : limit);
   if (userIdSearch) {
     q = q.eq("telegram_user_id", Number(userIdSearch));
@@ -2693,7 +2693,20 @@ app.get("/api/admin/requests", asyncApi(async (req, res) => {
     result = await q2;
   }
   if (result.error) return res.status(500).json({ success: false, error: result.error.message });
-  return res.json({ success: true, data: result.data || [] });
+  // Обогащаем tg_username отдельным запросом (нет FK между таблицами)
+  const rows = result.data || [];
+  try {
+    const tgIds = [...new Set(rows.map(r => r.telegram_user_id).filter(Boolean).map(Number))];
+    if (tgIds.length) {
+      const { data: profiles } = await supabase
+        .from("user_profiles").select("telegram_id,tg_username").in("telegram_id", tgIds);
+      if (profiles?.length) {
+        const umap = Object.fromEntries(profiles.map(p => [String(p.telegram_id), p.tg_username]));
+        rows.forEach(r => { r.tg_username = umap[String(r.telegram_user_id)] || null; });
+      }
+    }
+  } catch (_) { /* tg_username недоступен — не критично */ }
+  return res.json({ success: true, data: rows });
 }));
 
 // Убираем token из query, если попал в path (например /requests/xxx&token=yyy)
@@ -2715,7 +2728,7 @@ app.get("/api/admin/requests/:id", asyncApi(async (req, res) => {
   const id = sanitizeRequestId(req.params.id);
   if (!id) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
   if (!isValidRequestId(id)) return res.status(400).json({ success: false, error: "Используйте полный UUID заявки (с дефисами), не обрезанный ID" });
-  const fullCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,delivery_status,error_message,llm_truncated,generation_steps,delivered_at,payment_status,payment_provider,promo_code,promo_discount_amount,payment_amount,telegram_user_id,user_profiles(tg_username)";
+  const fullCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,delivery_status,error_message,llm_truncated,generation_steps,delivered_at,payment_status,payment_provider,promo_code,promo_discount_amount,payment_amount,telegram_user_id";
   const coreCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,delivery_status,error_message,delivered_at";
   const minCols = "id,name,gender,birthdate,birthplace,request,created_at,status,telegram_user_id";
   let usedFallbackCols = false;
@@ -2733,6 +2746,14 @@ app.get("/api/admin/requests/:id", asyncApi(async (req, res) => {
   if (result.error) return res.status(500).json({ success: false, error: result.error.message });
   if (!result.data) return res.status(404).json({ success: false, error: "Заявка не найдена" });
   const row = result.data;
+  // Обогащаем tg_username отдельным запросом (нет FK между таблицами)
+  try {
+    if (row.telegram_user_id) {
+      const { data: prof } = await supabase
+        .from("user_profiles").select("tg_username").eq("telegram_id", row.telegram_user_id).maybeSingle();
+      row.tg_username = prof?.tg_username || null;
+    }
+  } catch (_) { row.tg_username = null; }
   let astroSnapshotText = null;
   let astroSnapshotJson = null;
   try {
