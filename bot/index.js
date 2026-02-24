@@ -7,7 +7,7 @@
 import { Bot, webhookCallback } from "grammy";
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
-import { createHeroesRouter, getOrCreateAppUser, validateInitData } from "./heroesApi.js";
+import { createHeroesRouter, getOrCreateAppUser, validateInitData, parseUserFromInitData } from "./heroesApi.js";
 import { chatCompletion } from "./deepseek.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -3232,6 +3232,20 @@ app.post("/api/soul-chat", express.json(), asyncApi(async (req, res) => {
       source: access.source || null,
     },
   });
+}));
+
+// Сохраняет tg_username при каждом открытии Mini App
+app.post("/api/user/sync", asyncApi(async (req, res) => {
+  const initData = req.headers["x-telegram-init"] || req.body?.initData || "";
+  const tgUser = parseUserFromInitData(initData, BOT_TOKEN);
+  if (!tgUser?.id) return res.json({ success: false, error: "invalid_init_data" });
+  if (!supabase) return res.json({ success: false, error: "db_unavailable" });
+  const profileData = { telegram_id: Number(tgUser.id), updated_at: new Date().toISOString() };
+  if (tgUser.username) profileData.tg_username = tgUser.username;
+  if (tgUser.first_name) profileData.name = tgUser.first_name;
+  await supabase.from("user_profiles").upsert(profileData, { onConflict: "telegram_id" }).catch(() => {});
+  console.log(`[user/sync] ${tgUser.id} @${tgUser.username || "—"}`);
+  return res.json({ success: true });
 }));
 
 app.get("/api/pricing/catalog", asyncApi(async (req, res) => {

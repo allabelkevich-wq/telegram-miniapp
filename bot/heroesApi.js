@@ -14,6 +14,11 @@ router.use(express.json({ limit: "500kb" }));
  * @see https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
  */
 export function validateInitData(initData, botToken) {
+  const parsed = parseUserFromInitData(initData, botToken);
+  return parsed ? parsed.id : null;
+}
+
+export function parseUserFromInitData(initData, botToken) {
   if (!initData || typeof initData !== "string" || !botToken) return null;
   const params = new URLSearchParams(initData);
   const hash = params.get("hash");
@@ -27,14 +32,11 @@ export function validateInitData(initData, botToken) {
   const computed = crypto.createHmac("sha256", secretKey).update(dataCheckString).digest("hex");
   if (computed !== hash) return null;
   const userStr = params.get("user");
-  let telegramUserId = null;
-  if (userStr) {
-    try {
-      const user = JSON.parse(decodeURIComponent(userStr));
-      telegramUserId = user.id ?? user.user_id;
-    } catch (_) {}
-  }
-  return telegramUserId;
+  if (!userStr) return null;
+  try {
+    const user = JSON.parse(decodeURIComponent(userStr));
+    return { id: user.id ?? user.user_id, username: user.username || null, first_name: user.first_name || null };
+  } catch (_) { return null; }
 }
 
 /**

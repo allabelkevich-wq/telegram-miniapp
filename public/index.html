@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.62';
+        var APP_VERSION = '1.2.63';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -943,7 +943,7 @@
       </div><!-- /нижняя обёртка -->
 
       <footer>
-        <p>YupSoul • 2026 • v1.2.62</p>
+        <p>YupSoul • 2026 • v1.2.63</p>
       </footer>
     </div>
 
@@ -2524,6 +2524,17 @@
               if (tg.setBackgroundColor) tg.setBackgroundColor('#08071a');
             } catch(e) {}
             console.log('[Telegram] ready() и expand() выполнены');
+            // Сохраняем tg_username при каждом открытии — нужно для связи с клиентом из админки
+            try {
+              var _initD = tg.initData;
+              if (_initD) {
+                var _base = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+                fetch(_base + '/api/user/sync', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': _initD }
+                }).catch(function(){});
+              }
+            } catch(e) {}
             
             if (tg.enableClosingConfirmation) {
               tg.enableClosingConfirmation();
