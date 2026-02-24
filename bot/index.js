@@ -638,7 +638,7 @@ async function getRequestForSoulChat(requestId) {
   if (!supabase) return { error: "Supabase недоступен" };
   const { data: row, error } = await supabase
     .from("track_requests")
-    .select("id,telegram_user_id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,request,person2_name,person2_gender,person2_birthdate,person2_birthplace,transit_date,transit_time,transit_location,transit_intent")
+    .select("id,telegram_user_id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,transit_date,transit_time,transit_location,transit_intent")
     .eq("id", requestId)
     .maybeSingle();
   if (error || !row) return { error: error?.message || "Заявка не найдена" };
@@ -658,15 +658,15 @@ function buildSoulChatPrompt(row, astro, question) {
     : "";
   return [
     `Ты — голос души ${row.name || "человека"}.`,
-    "Ты знаешь натальную карту, даши, транзиты и контекст запроса.",
+    "Ты знаешь натальную карту, даши и транзиты этого человека.",
     "Отвечай коротко и тепло как внутренний друг.",
     "Без инструкций, без морализаторства, без астрологических терминов.",
     "Никаких общих фраз. Только персональный ответ по данным ниже.",
+    "Не упоминай и не связывай свои ответы с какими-либо заказами, песнями или запросами на контент.",
     "",
-    `Профиль: ${row.name || "—"} (${row.gender || "—"}), ${row.birthdate || "—"}, ${row.birthplace || "—"}, режим: ${row.mode || "single"}.`,
-    row.person2_name ? `Пара: ${row.name || "—"} + ${row.person2_name} (${row.person2_gender || "—"}).` : "",
-    row.transit_date || row.transit_location ? `Транзит: ${row.transit_date || "—"} ${row.transit_time || ""}, ${row.transit_location || "—"}, намерение: ${row.transit_intent || "—"}.` : "",
-    `Исходный запрос: ${row.request || "—"}`,
+    `Профиль: ${row.name || "—"} (${row.gender || "—"}), ${row.birthdate || "—"}, ${row.birthplace || "—"}.`,
+    row.person2_name ? `Партнёр: ${row.person2_name} (${row.person2_gender || "—"}), ${row.person2_birthdate || "—"}, ${row.person2_birthplace || "—"}.` : "",
+    row.transit_date || row.transit_location ? `Транзит: ${row.transit_date || "—"} ${row.transit_time || ""}, ${row.transit_location || "—"}.` : "",
     "",
     "Астро-снимок (текст):",
     astroText,
