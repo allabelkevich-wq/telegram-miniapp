@@ -3971,6 +3971,43 @@ app.get("/api/subscription/status", asyncApi(async (req, res) => {
   });
 }));
 
+// Admin: ручная активация подписки для пользователя (когда вебхук не пришёл)
+app.post("/api/admin/grant-subscription", express.json(), asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const userId = Number(req.body?.telegram_user_id);
+  const planKey = String(req.body?.plan_key || "").trim(); // plan_basic | plan_plus | plan_master
+  const PLAN_MAP = { plan_basic: "soul_basic_sub", plan_plus: "soul_plus_sub", plan_master: "master_monthly" };
+  const sku = PLAN_MAP[planKey];
+  if (!userId || !sku) {
+    return res.status(400).json({ success: false, error: "Нужны telegram_user_id и plan_key (plan_basic|plan_plus|plan_master)" });
+  }
+  const result = await grantPurchaseBySku({ telegramUserId: userId, sku, source: "admin_manual" });
+  if (!result?.ok) return res.status(500).json({ success: false, error: result?.error || "grant_failed" });
+  console.log(`[admin/grant-sub] admin=${auth.id}, userId=${userId}, sku=${sku}${result.already_active ? " (already_active)" : " (GRANTED)"}`);
+  return res.json({ success: true, already_active: result.already_active || false, sku, renew_at: result.renew_at });
+}));
+
+// Admin: статус подписки пользователя
+app.get("/api/admin/user-subscription", asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const userId = Number(req.query?.telegram_user_id);
+  if (!userId) return res.status(400).json({ success: false, error: "telegram_user_id обязателен" });
+  const sub = await getActiveSubscriptionFull(userId);
+  // Последние 5 заявок с режимом sub_*
+  const { data: subRequests } = await supabase
+    .from("track_requests")
+    .select("id,mode,payment_status,payment_order_id,created_at,updated_at")
+    .eq("telegram_user_id", userId)
+    .like("mode", "sub_%")
+    .order("created_at", { ascending: false })
+    .limit(5);
+  return res.json({ success: true, active_subscription: sub || null, recent_sub_requests: subRequests || [] });
+}));
+
 app.get("/api/admin/pricing", asyncApi(async (req, res) => {
   const auth = resolveAdminAuth(req);
   if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });

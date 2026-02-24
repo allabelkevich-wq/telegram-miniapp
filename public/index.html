@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.70';
+        var APP_VERSION = '1.2.71';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -1071,7 +1071,6 @@
           <div id="profileName" class="profile-name">Загрузка…</div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;">
             <div id="profilePlanBadge" class="profile-plan-badge">✦ YupSoul Free</div>
-            <button id="profileRefreshBtn" type="button" onclick="if(typeof loadProfilePage==='function')loadProfilePage()" title="Обновить" style="background:none;border:1px solid rgba(255,255,255,0.12);border-radius:20px;color:rgba(255,255,255,0.35);font-size:0.7rem;padding:2px 8px;cursor:pointer;font-family:inherit;line-height:1.5;">↻</button>
           </div>
         </div>
 

@@ -300,6 +300,25 @@
 
     <!-- Tab: Монетизация -->
     <div class="tab-pane" id="tab-monetization">
+
+      <!-- ═══ РУЧНАЯ АКТИВАЦИЯ ПОДПИСКИ ═══ -->
+      <div class="details-section" style="margin-bottom:20px;border:1.5px solid rgba(212,175,55,0.4);background:rgba(212,175,55,0.04);">
+        <div class="section-title">🔑 Ручная активация подписки</div>
+        <p class="mono-muted">Использовать когда пользователь оплатил, но вебхук не пришёл и тариф не обновился.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+          <input type="text" id="grantSubUserId" placeholder="telegram_user_id" style="padding:8px 12px;background:#1a1a2e;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-size:14px;width:180px;">
+          <select id="grantSubPlan" style="padding:8px 12px;background:#1a1a2e;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-size:14px;">
+            <option value="plan_basic">Basic ($14.99)</option>
+            <option value="plan_plus">Plus ($24.99)</option>
+            <option value="plan_master">Лаборатория ($39.99)</option>
+          </select>
+          <button type="button" id="grantSubCheckBtn" class="btn" style="background:#334155;color:#e2e8f0;">🔍 Проверить статус</button>
+          <button type="button" id="grantSubBtn" class="btn btn-primary">✅ Активировать подписку</button>
+        </div>
+        <div id="grantSubMsg" class="mono-msg"></div>
+        <div id="grantSubInfo" style="font-size:13px;color:#94a3b8;margin-top:8px;"></div>
+      </div>
+
       <div class="details-section" style="margin-bottom:20px;">
         <div class="section-title">💳 Монетизация HOT</div>
         <p class="mono-muted">Управление тарифами, промокодами и быстрый просмотр статусов оплат.</p>
@@ -2160,7 +2179,74 @@
       } catch(e) { statusEl.textContent = 'Ошибка: ' + (e.message || e); }
     }
 
+    // ─── Ручная активация подписки ────────────────────────────────────────────
+    async function grantSubCheck() {
+      const userId = document.getElementById('grantSubUserId').value.trim();
+      const msgEl = document.getElementById('grantSubMsg');
+      const infoEl = document.getElementById('grantSubInfo');
+      if (!userId) { msgEl.textContent = '⚠️ Введи telegram_user_id'; msgEl.style.color = '#f59e0b'; return; }
+      msgEl.textContent = '⏳ Проверяю…'; msgEl.style.color = '#94a3b8';
+      infoEl.innerHTML = '';
+      try {
+        const resp = await fetch(API_BASE + '/api/admin/user-subscription?telegram_user_id=' + encodeURIComponent(userId) + '&token=' + encodeURIComponent(ADMIN_TOKEN));
+        const json = await resp.json();
+        if (!json.success) { msgEl.textContent = '❌ ' + json.error; msgEl.style.color = '#ef4444'; return; }
+        const sub = json.active_subscription;
+        const reqs = json.recent_sub_requests || [];
+        let html = '';
+        if (sub) {
+          html += '<div style="color:#22c55e;margin-bottom:6px;">✅ Активная подписка: <strong>' + escapeHtml(sub.plan_sku) + '</strong> до ' + new Date(sub.renew_at).toLocaleDateString('ru-RU') + '</div>';
+        } else {
+          html += '<div style="color:#f59e0b;margin-bottom:6px;">⚠️ Активной подписки нет</div>';
+        }
+        if (reqs.length) {
+          html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+          html += '<tr style="color:#94a3b8"><td>Заявка</td><td>Режим</td><td>Статус оплаты</td><td>Создана</td></tr>';
+          reqs.forEach(function(r) {
+            var color = r.payment_status === 'paid' ? '#22c55e' : '#f59e0b';
+            html += '<tr><td style="color:#94a3b8">' + escapeHtml(r.id.slice(0,8)) + '…</td><td>' + escapeHtml(r.mode) + '</td><td style="color:' + color + '">' + escapeHtml(r.payment_status || '—') + '</td><td>' + new Date(r.created_at).toLocaleString('ru-RU') + '</td></tr>';
+          });
+          html += '</table>';
+        } else {
+          html += '<div>Заявок на подписку нет</div>';
+        }
+        infoEl.innerHTML = html;
+        msgEl.textContent = ''; 
+      } catch(e) { msgEl.textContent = 'Ошибка: ' + e.message; msgEl.style.color = '#ef4444'; }
+    }
+
+    async function grantSubActivate() {
+      const userId = document.getElementById('grantSubUserId').value.trim();
+      const planKey = document.getElementById('grantSubPlan').value;
+      const msgEl = document.getElementById('grantSubMsg');
+      if (!userId) { msgEl.textContent = '⚠️ Введи telegram_user_id'; msgEl.style.color = '#f59e0b'; return; }
+      if (!confirm('Активировать ' + planKey + ' для пользователя ' + userId + '?')) return;
+      msgEl.textContent = '⏳ Активирую…'; msgEl.style.color = '#94a3b8';
+      try {
+        const resp = await fetch(API_BASE + '/api/admin/grant-subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-token': ADMIN_TOKEN },
+          body: JSON.stringify({ telegram_user_id: Number(userId), plan_key: planKey })
+        });
+        const json = await resp.json();
+        if (json.success) {
+          msgEl.textContent = json.already_active
+            ? '✓ Подписка ' + json.sku + ' уже была активна'
+            : '🎉 Подписка ' + json.sku + ' активирована! До ' + (json.renew_at ? new Date(json.renew_at).toLocaleDateString('ru-RU') : '?');
+          msgEl.style.color = '#22c55e';
+          grantSubCheck();
+        } else {
+          msgEl.textContent = '❌ ' + (json.error || 'Ошибка'); msgEl.style.color = '#ef4444';
+        }
+      } catch(e) { msgEl.textContent = 'Ошибка: ' + e.message; msgEl.style.color = '#ef4444'; }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+      var checkBtn = document.getElementById('grantSubCheckBtn');
+      var grantBtn = document.getElementById('grantSubBtn');
+      if (checkBtn) checkBtn.addEventListener('click', grantSubCheck);
+      if (grantBtn) grantBtn.addEventListener('click', grantSubActivate);
+
       loadAdminData().catch(function(e) {
         setLoadingStatus(false);
         const msg = (e && e.message) ? e.message : String(e);
