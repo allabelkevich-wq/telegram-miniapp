@@ -928,7 +928,7 @@
         if (statsJson.success && statsJson.stats) {
           const s = statsJson.stats;
           document.getElementById('total').textContent = s.total;
-          document.getElementById('pending').textContent = (s.pending || 0) + (s.astro_calculated || 0) + (s.lyrics_generated || 0) + (s.suno_processing || 0);
+          document.getElementById('pending').textContent = (s.pending || 0) + (s.processing || 0) + (s.astro_calculated || 0) + (s.lyrics_generated || 0) + (s.suno_processing || 0);
           document.getElementById('completed').textContent = s.completed || 0;
           const dfEl = document.getElementById('stat-delivery-failed');
           if (dfEl) dfEl.textContent = s.delivery_failed || 0;
@@ -1008,7 +1008,7 @@
         if (statsRes.json && statsRes.json.success && statsRes.json.stats) {
           const s = statsRes.json.stats;
           document.getElementById('total').textContent = s.total;
-          document.getElementById('pending').textContent = (s.pending || 0) + (s.astro_calculated || 0) + (s.lyrics_generated || 0) + (s.suno_processing || 0);
+          document.getElementById('pending').textContent = (s.pending || 0) + (s.processing || 0) + (s.astro_calculated || 0) + (s.lyrics_generated || 0) + (s.suno_processing || 0);
           document.getElementById('completed').textContent = s.completed || 0;
           const dfEl = document.getElementById('stat-delivery-failed');
           if (dfEl) dfEl.textContent = s.delivery_failed || 0;

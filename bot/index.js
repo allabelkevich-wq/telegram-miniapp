@@ -2521,7 +2521,7 @@ app.get("/api/admin/stats", asyncApi(async (req, res) => {
   }
   if (result.error) return res.status(500).json({ success: false, error: result.error.message });
   const rows = result.data || [];
-  const stats = { total: rows.length, pending: 0, pending_payment: 0, cancelled: 0, astro_calculated: 0, lyrics_generated: 0, suno_processing: 0, completed: 0, delivery_failed: 0, failed: 0 };
+  const stats = { total: rows.length, pending: 0, processing: 0, pending_payment: 0, cancelled: 0, astro_calculated: 0, lyrics_generated: 0, suno_processing: 0, completed: 0, delivery_failed: 0, failed: 0 };
   rows.forEach((r) => {
     const s = (r.generation_status ?? r.status) || "pending";
     if (s === "completed") stats.completed++;
@@ -2529,6 +2529,7 @@ app.get("/api/admin/stats", asyncApi(async (req, res) => {
     else if (s === "failed") stats.failed++;
     else if (s === "cancelled") stats.cancelled++;
     else if (s === "pending_payment") stats.pending_payment++;
+    else if (s === "processing") stats.processing++;
     else if (s === "suno_processing") stats.suno_processing++;
     else if (s === "lyrics_generated") stats.lyrics_generated++;
     else if (s === "astro_calculated") stats.astro_calculated++;
@@ -2550,7 +2551,7 @@ app.get("/api/admin/requests", asyncApi(async (req, res) => {
   if (userIdSearch) {
     q = q.eq("telegram_user_id", Number(userIdSearch));
   }
-  if (statusFilter === "pending") q = q.in("generation_status", ["pending", "astro_calculated", "lyrics_generated", "suno_processing"]);
+  if (statusFilter === "pending") q = q.in("generation_status", ["pending", "processing", "astro_calculated", "lyrics_generated", "suno_processing"]);
   else if (statusFilter === "pending_payment") q = q.eq("generation_status", "pending_payment");
   else if (statusFilter === "completed") q = q.eq("generation_status", "completed");
   else if (statusFilter === "delivery_failed") q = q.eq("generation_status", "delivery_failed");
