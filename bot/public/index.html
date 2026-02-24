@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.67';
+        var APP_VERSION = '1.2.68';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -936,8 +936,8 @@
       <!-- Профиль, Помощь, Мои герои — доступ с главной -->
       <nav class="home-nav" style="display:flex;justify-content:space-around;align-items:stretch;gap:4px;margin-top:var(--spacing-lg);padding:8px 4px;flex-wrap:nowrap;">
         <button type="button" class="home-nav-link" onclick="goToSoulChat()" style="background:none;border:none;color:rgba(212,175,55,0.65);font-size:clamp(0.72rem,2.5vw,0.88rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:6px 4px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;font-weight:600;">Soul Chat</button>
-        <button type="button" class="home-nav-link" onclick="goToHelpFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.65);font-size:clamp(0.72rem,2.5vw,0.88rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:6px 4px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;font-weight:600;">Помощь</button>
-        <button type="button" class="home-nav-link" onclick="goToHeroesFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.65);font-size:clamp(0.72rem,2.5vw,0.88rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:6px 4px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;font-weight:600;">Лаборатория</button>
+        <button type="button" id="goHelpBtn" class="home-nav-link" onclick="goToHelpFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.65);font-size:clamp(0.72rem,2.5vw,0.88rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:6px 4px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;font-weight:600;">Помощь</button>
+        <button type="button" id="goHeroesBtn" class="home-nav-link" onclick="goToHeroesFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.65);font-size:clamp(0.72rem,2.5vw,0.88rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:6px 4px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;font-weight:600;">Лаборатория</button>
       </nav>
 
       </div><!-- /нижняя обёртка -->
@@ -954,8 +954,8 @@
           <button type="button" class="help-back-btn" onclick="goBack()" aria-label="Назад">←</button>
         </div>
         <div class="help-title-wrap">
-          <div class="help-title">Помощь и поддержка</div>
-          <div class="help-subtitle">Всё о YupSoul — просто и по делу</div>
+          <div id="helpPageTitle" class="help-title">Помощь и поддержка</div>
+          <div id="helpPageSubtitle" class="help-subtitle">Всё о YupSoul — просто и по делу</div>
         </div>
       </div>
       <div class="page-scroll" style="padding-top:12px">
@@ -1225,7 +1225,7 @@
         <button type="button" id="profileCreateSongBtn" class="profile-create-btn">
           Создать свою песню
         </button>
-        <button type="button" class="secondary" onclick="goToHelpFrom('profilePage')" style="width:100%;margin-bottom:16px;background:transparent;border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);font-size:0.82rem;">Помощь и поддержка</button>
+        <button type="button" id="profileHelpBtn" class="secondary" onclick="goToHelpFrom('profilePage')" style="width:100%;margin-bottom:16px;background:transparent;border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);font-size:0.82rem;">Помощь и поддержка</button>
       </div>
     </div>
 
@@ -1856,7 +1856,7 @@
       var LANG = {
         ru: {
           tagline: 'Музыка твоей души',
-          startBtn: 'Создать свою песню', myProfile: '👤 Профиль', myHeroes: 'Лаборатория', admin: '👑 Админка',
+          startBtn: 'Создать свою песню', myProfile: '👤 Профиль', myHeroes: 'Лаборатория', myHelp: 'Помощь', admin: '👑 Админка',
           profileTitle: 'Профиль', profileSubtitle: 'Твои данные и бесплатные генерации',
           profileFreeCredits: 'Бесплатных генераций', profileInviteFriend: 'Пригласи друга', profileShare: 'Поделиться',
           profileInvited: 'Приглашено', profileActivated: 'Активировано', profileCreateSong: 'Создать песню',
@@ -1975,6 +1975,8 @@
           previewHome: 'Главная', previewForm: 'Форма', previewPayment: 'Оплата', previewLoading: 'Загрузка', previewSuccess: 'Успех',
           supportBtn: '💬 Написать в поддержку',
           subActivated: '🎉 Подписка активирована!', subBtnProfile: '👤 Мой профиль',
+          helpPageTitle: 'Помощь и поддержка', helpPageSubtitle: 'Всё о YupSoul — просто и по делу',
+          profileHelpBtn: 'Помощь и поддержка',
           helpT1: 'Что такое YupSoul', helpB1: '<p>YupSoul создаёт <strong>персональную песню именно для тебя</strong> — на основе даты, времени и места рождения. Система анализирует твою личность и пишет песню о твоих реальных качествах, пути и силе.</p><p>Это не шаблон и не случайный текст — каждая песня уникальна и принадлежит только тебе.</p>',
           helpT2: 'Что можно создать', helpB2: '<ul><li><strong>Песня о себе</strong> — твой личный звуковой портрет: кто ты, твоя сила и внутренний путь</li><li><strong>Песня для пары</strong> — для двоих (влюблённых, друзей, подруг). Анализирует обе карты и отражает союз</li><li><strong>Энергия дня</strong> — песня под конкретную дату и место. Какие возможности открываются прямо сейчас</li></ul><p>Также есть <strong>быстрые запросы</strong> — готовые идеи: песня силы, поздравление с днём рождения, медитативная, про отпускание прошлого и другие.</p>',
           helpT3: 'Сколько ждать песню', helpB3: '<p>Обычно <strong>5–15 минут</strong>. Бот пришлёт уведомление в чат, как только песня будет готова.</p><p>Можно закрыть приложение — результат придёт сам, ты ничего не потеряешь.</p>',
@@ -1985,7 +1987,7 @@
         },
         en: {
           tagline: 'Music of your soul',
-          startBtn: 'Create My Song', myProfile: '👤 Profile', myHeroes: 'Lab', admin: '👑 Admin',
+          startBtn: 'Create My Song', myProfile: '👤 Profile', myHeroes: 'Lab', myHelp: 'Help', admin: '👑 Admin',
           profileTitle: 'Profile', profileSubtitle: 'Your data and free generations',
           profileFreeCredits: 'Free generations', profileInviteFriend: 'Invite a friend', profileShare: 'Share',
           profileInvited: 'Invited', profileActivated: 'Activated', profileCreateSong: 'Create song',
@@ -2103,6 +2105,8 @@
           previewHome: 'Home', previewForm: 'Form', previewPayment: 'Payment', previewLoading: 'Loading', previewSuccess: 'Success',
           supportBtn: '💬 Contact support',
           subActivated: '🎉 Subscription activated!', subBtnProfile: '👤 My profile',
+          helpPageTitle: 'Help & Support', helpPageSubtitle: 'Everything about YupSoul — clear and simple',
+          profileHelpBtn: 'Help & support',
           helpT1: 'What is YupSoul', helpB1: '<p>YupSoul creates a <strong>personal song just for you</strong> — based on your date, time and place of birth. The system analyses your personality and writes a song about your real qualities, path and strength.</p><p>This is not a template — each song is unique and belongs only to you.</p>',
           helpT2: 'What can be created', helpB2: '<ul><li><strong>Song about me</strong> — your personal sonic portrait: who you are, your strength and inner path</li><li><strong>Song for two</strong> — for a couple (lovers, friends). Analyses both charts and reflects the union</li><li><strong>Day energy</strong> — a song for a specific date and place. What opportunities are opening right now</li></ul><p>There are also <strong>quick requests</strong> — ready-made ideas: power song, birthday song, meditative, about letting go of the past, and more.</p>',
           helpT3: 'How long to wait', helpB3: '<p>Usually <strong>5–15 minutes</strong>. The bot will send a notification when your song is ready.</p><p>You can close the app — the result will arrive on its own, nothing will be lost.</p>',
@@ -2113,7 +2117,7 @@
         },
         de: {
           tagline: 'Musik deiner Seele',
-          startBtn: 'Mein Lied erschaffen', myProfile: '👤 Profil', myHeroes: 'Labor', admin: '👑 Admin',
+          startBtn: 'Mein Lied erschaffen', myProfile: '👤 Profil', myHeroes: 'Labor', myHelp: 'Hilfe', admin: '👑 Admin',
           profileTitle: 'Profil', profileSubtitle: 'Deine Daten und kostenlose Generierungen',
           profileFreeCredits: 'Kostenlose Generierungen', profileInviteFriend: 'Freund einladen', profileShare: 'Teilen',
           profileInvited: 'Eingeladen', profileActivated: 'Aktiviert', profileCreateSong: 'Lied erstellen',
@@ -2231,6 +2235,8 @@
           previewHome: 'Startseite', previewForm: 'Formular', previewPayment: 'Zahlung', previewLoading: 'Laden', previewSuccess: 'Erfolg',
           supportBtn: '💬 Support kontaktieren',
           subActivated: '🎉 Abo aktiviert!', subBtnProfile: '👤 Mein Profil',
+          helpPageTitle: 'Hilfe & Support', helpPageSubtitle: 'Alles über YupSoul — klar und kurz',
+          profileHelpBtn: 'Hilfe & Support',
           helpT1: 'Was ist YupSoul', helpB1: '<p>YupSoul erstellt ein <strong>persönliches Lied genau für dich</strong> — basierend auf Datum, Uhrzeit und Geburtsort. Das System analysiert deine Persönlichkeit und schreibt ein Lied über deine echten Qualitäten, Weg und Stärke.</p><p>Dies ist kein Template — jedes Lied ist einzigartig und gehört nur dir.</p>',
           helpT2: 'Was kann erstellt werden', helpB2: '<ul><li><strong>Lied über mich</strong> — dein persönliches Klangportrait: wer du bist, deine Stärke und innerer Weg</li><li><strong>Lied für zwei</strong> — für ein Paar (Verliebte, Freunde). Analysiert beide Karten und spiegelt die Verbindung wider</li><li><strong>Tagesenergie</strong> — ein Lied für ein bestimmtes Datum und Ort. Welche Möglichkeiten öffnen sich gerade jetzt</li></ul><p>Es gibt auch <strong>Schnellanfragen</strong> — fertige Ideen: Kraftlied, Geburtstagslied, meditativ, über das Loslassen der Vergangenheit und mehr.</p>',
           helpT3: 'Wie lange warten', helpB3: '<p>Normalerweise <strong>5–15 Minuten</strong>. Der Bot schickt eine Benachrichtigung, wenn dein Lied fertig ist.</p><p>Du kannst die App schließen — das Ergebnis kommt von selbst, nichts geht verloren.</p>',
@@ -2241,7 +2247,7 @@
         },
         fr: {
           tagline: 'La musique de ton âme',
-          startBtn: 'Créer ma chanson', myProfile: '👤 Profil', myHeroes: 'Labo', admin: '👑 Admin',
+          startBtn: 'Créer ma chanson', myProfile: '👤 Profil', myHeroes: 'Labo', myHelp: 'Aide', admin: '👑 Admin',
           profileTitle: 'Profil', profileSubtitle: 'Tes données et générations gratuites',
           profileFreeCredits: 'Générations gratuites', profileInviteFriend: 'Inviter un ami', profileShare: 'Partager',
           profileInvited: 'Invités', profileActivated: 'Activés', profileCreateSong: 'Créer une chanson',
@@ -2359,6 +2365,8 @@
           previewHome: 'Accueil', previewForm: 'Formulaire', previewPayment: 'Paiement', previewLoading: 'Chargement', previewSuccess: 'Succès',
           supportBtn: '💬 Contacter le support',
           subActivated: '🎉 Abonnement activé !', subBtnProfile: '👤 Mon profil',
+          helpPageTitle: 'Aide & Support', helpPageSubtitle: 'Tout sur YupSoul — simple et concis',
+          profileHelpBtn: 'Aide & support',
           helpT1: 'Qu\'est-ce que YupSoul', helpB1: '<p>YupSoul crée une <strong>chanson personnelle rien que pour toi</strong> — basée sur ta date, heure et lieu de naissance. Le système analyse ta personnalité et écrit une chanson sur tes vraies qualités, ton chemin et ta force.</p><p>Ce n\'est pas un modèle — chaque chanson est unique et t\'appartient.</p>',
           helpT2: 'Ce qu\'on peut créer', helpB2: '<ul><li><strong>Chanson sur moi</strong> — ton portrait sonore personnel : qui tu es, ta force et ton chemin intérieur</li><li><strong>Chanson pour deux</strong> — pour un couple (amoureux, amis). Analyse les deux cartes et reflète l\'union</li><li><strong>Énergie du jour</strong> — une chanson pour une date et un lieu précis. Quelles opportunités s\'ouvrent en ce moment</li></ul><p>Il y a aussi des <strong>requêtes rapides</strong> — idées prêtes : chanson de force, d\'anniversaire, méditative, sur le lâcher-prise, et plus.</p>',
           helpT3: 'Combien de temps attendre', helpB3: '<p>Généralement <strong>5–15 minutes</strong>. Le bot enverra une notification quand ta chanson sera prête.</p><p>Tu peux fermer l\'appli — le résultat arrivera tout seul, rien ne sera perdu.</p>',
@@ -2398,7 +2406,7 @@
       function applyTranslations() {
         document.documentElement.lang = currentLang || 'ru';
         var map = [
-          ['tagline','#homeTagline'], ['startBtn','#startBtn'], ['myProfile','#goProfileBtn'], ['myHeroes','#goHeroesBtn'], ['admin','#adminLinkBtn'],
+          ['tagline','#homeTagline'], ['startBtn','#startBtn'], ['myProfile','#goProfileBtn'], ['myHeroes','#goHeroesBtn'], ['myHelp','#goHelpBtn'], ['admin','#adminLinkBtn'],
           ['profileShare','#profileRefShareBtn'], ['profileCreateSong','#profileCreateSongBtn'],
           ['heroesTitle','#heroesPage header h1'], ['heroesSubtitle','#heroesPage .subtitle'],
           ['searchByName','#heroesPage label[for="heroesSearch"]'], ['searchPlaceholder','#heroesSearch'], ['searchBtn','#heroesSearchBtn'],
@@ -2422,6 +2430,8 @@
           ['previewHome','button[data-page="home"]'], ['previewForm','button[data-page="form"]'], 
           ['previewPayment','button[data-page="payment"]'], ['previewLoading','button[data-page="loading"]'], ['previewSuccess','button[data-page="success"]'],
           ['supportBtn','#helpSupportBtn'],
+          ['helpPageTitle','#helpPageTitle'], ['helpPageSubtitle','#helpPageSubtitle'],
+          ['profileHelpBtn','#profileHelpBtn'],
           ['helpT1','#helpT1'], ['helpT2','#helpT2'], ['helpT3','#helpT3'], ['helpT4','#helpT4'],
           ['helpT5','#helpT5'], ['helpT6','#helpT6'], ['helpT7','#helpT7']
         ];
@@ -2430,15 +2440,8 @@
           ['helpB1','#helpB1'], ['helpB2','#helpB2'], ['helpB3','#helpB3'], ['helpB4','#helpB4'],
           ['helpB5','#helpB5'], ['helpB6','#helpB6'], ['helpB7','#helpB7']
         ];
-        // #region agent log
-        var _dbgMissing = [];
-        var _dbgFound = [];
-        // #endregion
         map.forEach(function(pair) {
           var el = document.querySelector(pair[1]);
-          // #region agent log
-          if (!el) _dbgMissing.push(pair[1]); else _dbgFound.push(pair[1]);
-          // #endregion
           if (el) {
             if (pair[1].indexOf('placeholder') === -1 && (pair[1].indexOf('#') === 0 || pair[1].indexOf('label') >= 0 || pair[1].indexOf('h3') >= 0 || pair[1].indexOf('.') >= 0)) {
               if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = t(pair[0]);
@@ -2447,9 +2450,6 @@
             else el.textContent = t(pair[0]);
           }
         });
-        // #region agent log
-        fetch('http://127.0.0.1:7541/ingest/a23f7bd3-8d81-4071-9471-afbe563aaa69',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4df312'},body:JSON.stringify({sessionId:'4df312',location:'index.html:applyTranslations',message:'translation map results',data:{lang:currentLang,missing:_dbgMissing,found:_dbgFound.length},timestamp:Date.now(),hypothesisId:'A'})}).catch(function(){});
-        // #endregion
         var phMap = [
           ['namePh','#name'], ['birthplacePh','#birthplace'], ['name2Ph','#name2'], ['birthplace2Ph','#birthplace2'],
           ['transitDatePh','#transitDate'], ['transitTimePh','#transitTime'], ['transitLocationPh','#transitLocation'],
