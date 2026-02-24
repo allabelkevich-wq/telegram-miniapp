@@ -1205,17 +1205,28 @@
       }).catch(() => prompt('Скопируй Telegram ID:', String(id)));
     }
     function openTgUser(id, username) {
-      // Если есть username — используем https://t.me/username (работает в любом браузере)
-      // Если нет — tg://user?id= через скрытый <a> (требует Telegram Desktop)
-      const url = username ? 'https://t.me/' + username : 'tg://user?id=' + id;
-      const a = document.createElement('a');
-      a.href = url;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => document.body.removeChild(a), 300);
+      if (username) {
+        window.open('https://t.me/' + username, '_blank');
+        return;
+      }
+      // Нет username — показываем всплывающее окно с вариантами
+      const existing = document.getElementById('tgUserModal');
+      if (existing) existing.remove();
+      const modal = document.createElement('div');
+      modal.id = 'tgUserModal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;';
+      modal.innerHTML = `
+        <div style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:24px;max-width:360px;width:90%;color:#e2e8f0;text-align:center;">
+          <div style="font-size:1.1rem;font-weight:600;margin-bottom:8px;">📋 Telegram ID: ${id}</div>
+          <div style="font-size:0.82rem;color:#94a3b8;margin-bottom:18px;">У пользователя нет @username.<br>Откройте Telegram и найдите пользователя вручную.</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <button onclick="navigator.clipboard.writeText('${id}').then(()=>{this.textContent='✅ Скопировано!';setTimeout(()=>this.textContent='📋 Скопировать ID',1500)})" style="padding:10px;background:#3b82f6;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">📋 Скопировать ID</button>
+            <a href="tg://user?id=${id}" style="padding:10px;background:#22c55e;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;text-decoration:none;display:block;">🚀 Открыть в Telegram Desktop</a>
+            <button onclick="document.getElementById('tgUserModal').remove()" style="padding:8px;background:#475569;color:#e2e8f0;border:none;border-radius:8px;cursor:pointer;font-size:0.85rem;">Закрыть</button>
+          </div>
+        </div>`;
+      modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+      document.body.appendChild(modal);
     }
     function escapeHtml(s) {
       if (s == null) return '';
