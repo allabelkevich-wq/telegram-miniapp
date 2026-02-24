@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.55';
+        var APP_VERSION = '1.2.56';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -3592,7 +3592,17 @@
           if (!resp.ok || !json.valid) {
             activePromo = null;
             resetPaymentUI();
-            var errMsg = json.error || (json.reason === 'not_found' ? 'Промокод не найден' : json.reason === 'expired' ? 'Срок действия промокода истёк' : json.reason === 'user_limit_reached' ? 'Вы уже использовали этот промокод' : 'Промокод недействителен');
+            var reasonMap = {
+              not_found: 'Промокод не найден',
+              expired: 'Срок действия промокода истёк',
+              not_started: 'Промокод ещё не активен',
+              inactive: 'Промокод деактивирован',
+              user_limit_reached: 'Вы уже использовали этот промокод',
+              global_limit_reached: 'Промокод больше недоступен (лимит исчерпан)',
+              sku_mismatch: 'Этот промокод не действует для выбранного типа заявки',
+              empty: 'Введите промокод'
+            };
+            var errMsg = json.error || reasonMap[json.reason] || 'Промокод недействителен';
             throw new Error(errMsg);
           }
           

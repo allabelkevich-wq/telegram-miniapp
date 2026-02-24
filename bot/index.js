@@ -3840,34 +3840,24 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   const requestModeForAccess = isNewFormat && (body.mode === "couple" || body.mode === "transit") ? body.mode : "single";
   
   // ── ПРОВЕРКА ПРОМОКОДА ДО resolveAccessForRequest ──────────────────────────────
-  // Если фронт передал промокод — проверяем его. Если скидка 100% → сразу ok: true.
+  // Используем validatePromoForOrder — полная проверка: SKU, лимит пользователя, сроки.
   const promoCodeRaw = String(body.promo_code || body.promoCode || "").trim().toUpperCase();
   let promoGrantsAccess = false;
   let promoData = null;
   if (promoCodeRaw && supabase) {
-    const { data: promo, error: promoErr } = await supabase
-      .from("promo_codes")
-      .select("*")
-      .eq("code", promoCodeRaw)
-      .maybeSingle();
-    if (!promoErr && promo && promo.active) {
-      const now = new Date();
-      const validFrom = promo.valid_from || promo.starts_at ? new Date(promo.valid_from || promo.starts_at) : null;
-      const validUntil = promo.valid_until || promo.expires_at ? new Date(promo.valid_until || promo.expires_at) : null;
-      const isTimeValid = (!validFrom || now >= validFrom) && (!validUntil || now <= validUntil);
-      const hasUsesLeft = promo.max_uses == null || (promo.used_count || 0) < promo.max_uses;
-      if (isTimeValid && hasUsesLeft) {
-        // Промокод валидный — используем applyPromoToAmount для единообразия с /api/promos/validate
-        const sku = requestModeForAccess === "couple" ? "couple_song" : (requestModeForAccess === "transit" ? "transit_energy_song" : "single_song");
-        const skuPrice = await getSkuPrice(sku);
-        const baseAmount = skuPrice ? Number(skuPrice.price) : 0;
-        const applied = applyPromoToAmount(baseAmount, promo);
-        if (applied.finalAmount === 0) {
-          console.log("[submit-request] Промокод", promoCodeRaw, "тип:", promo.type, "— даёт бесплатный доступ");
-          promoGrantsAccess = true;
-          promoData = { code: promoCodeRaw, id: promo.id, discount: applied.discountAmount, finalAmount: 0, used_count: promo.used_count || 0 };
-        }
+    const sku = requestModeForAccess === "couple" ? "couple_song" : (requestModeForAccess === "transit" ? "transit_energy_song" : "single_song");
+    const checked = await validatePromoForOrder({ promoCode: promoCodeRaw, sku, telegramUserId });
+    if (checked.ok && checked.promo) {
+      const skuPrice = await getSkuPrice(sku);
+      const baseAmount = skuPrice ? Number(skuPrice.price) : 0;
+      const applied = applyPromoToAmount(baseAmount, checked.promo);
+      if (applied.finalAmount === 0) {
+        console.log("[submit-request] Промокод", promoCodeRaw, "тип:", checked.promo.type, "— даёт бесплатный доступ");
+        promoGrantsAccess = true;
+        promoData = { code: promoCodeRaw, id: checked.promo.id, discount: applied.discountAmount, finalAmount: 0 };
       }
+    } else if (promoCodeRaw) {
+      console.log("[submit-request] Промокод", promoCodeRaw, "отклонён:", checked.reason);
     }
   }
   
