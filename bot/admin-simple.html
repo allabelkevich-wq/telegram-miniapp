@@ -545,7 +545,7 @@
         <div class="dsi-title">👤 Данные пользователя</div>
         <div class="dsi-body">
           ${field('Имя', r.name)}
-          ${r.telegram_user_id ? `<div class="field-row"><span class="field-label">Telegram ID</span><span class="field-value" style="display:flex;align-items:center;gap:8px;">${r.telegram_user_id} <button class="rmb rmb-blue" style="padding:2px 10px;font-size:11px;" onclick="copyTgId(${r.telegram_user_id})" title="Скопировать ID">📋 Копировать</button><a class="rmb rmb-green" style="padding:2px 10px;font-size:11px;text-decoration:none;display:inline-block;" href="https://t.me/@id${r.telegram_user_id}" target="_blank" title="Открыть в Telegram">✉️ Написать</a></span></div>` : field('Telegram ID', '—')}
+          ${r.telegram_user_id ? `<div class="field-row"><span class="field-label">Telegram ID</span><span class="field-value" style="display:flex;align-items:center;gap:8px;">${r.telegram_user_id} <button class="rmb rmb-blue" style="padding:2px 10px;font-size:11px;" onclick="copyTgId(${r.telegram_user_id})" title="Скопировать ID">📋 Копировать</button><a class="rmb rmb-green" style="padding:2px 10px;font-size:11px;text-decoration:none;display:inline-block;" href="tg://user?id=${r.telegram_user_id}" title="Открыть в Telegram">✉️ Написать</a></span></div>` : field('Telegram ID', '—')}
           ${field('Пол', r.gender)}
           ${field('Дата рождения', r.birthdate)}
           ${field('Время рождения', r.birthtime_unknown ? 'неизвестно' : r.birthtime)}
@@ -1130,7 +1130,7 @@
             <span class="req-row-status ${statusClass(gs)}" style="font-size:10px;padding:2px 8px;">${statusLabel(gs)}</span>
             ${(r.delivered_at || r.delivery_status === 'sent') ? '<span style="font-size:10px;color:#86efac;margin-left:4px;white-space:nowrap;" title="' + (r.delivered_at ? 'Доставлено в чат ' + new Date(r.delivered_at).toLocaleString('ru-RU') : 'Доставлено в чат') + '">✓ В чат</span>' : ''}
             ${paymentMethodBadge(r)}
-            ${r.telegram_user_id ? `<span class="tg-id-badge" onclick="event.stopPropagation();copyTgId(${r.telegram_user_id})" title="Нажми чтобы скопировать Telegram ID">ID: ${r.telegram_user_id}</span>` : ''}
+            ${r.telegram_user_id ? `<a class="tg-id-badge" href="tg://user?id=${r.telegram_user_id}" onclick="event.stopPropagation();" title="Открыть чат в Telegram" style="text-decoration:none;">✉️ ${r.telegram_user_id}</a>` : ''}
             <div class="req-row-btns" onclick="event.stopPropagation()">
               <button class="rmb rmb-orange" onclick="restart('${safeId}',this)" title="${gs === 'completed' ? 'Перегенерировать' : 'Перезапустить'}">↻</button>
               ${isPendingPay ? `<button class="rmb rmb-green" onclick="markPaid('${safeId}')" title="Отметить оплаченным">✓ Оплачен</button>` : ''}
