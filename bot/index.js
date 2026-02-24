@@ -1313,6 +1313,27 @@ function stripMarkdown(text) {
     .trim();
 }
 
+// Убирает технические блоки Suno/LLM из текста анализа перед отправкой пользователю
+function cleanAnalysisForUser(text) {
+  if (!text) return "";
+  const lines = text.split("\n");
+  const cleaned = [];
+  let skipBlock = false;
+  for (const line of lines) {
+    // Начало технического блока — пропускаем всё до конца
+    if (/^\s*(MUSIC PROMPT|SUNO PROMPT|STRICT TECHNICAL|ТЕХНИЧЕСКИЕ|ЭТАП\s*3|ЛИРИКА\s*:|LYRICS?\s*:|Текст песни\s*:|Song lyrics?\s*:|\[style:|ПЕСНЯ ДЛЯ SUNO)/i.test(line)) {
+      skipBlock = true;
+    }
+    // Отдельные технические строки с тегами Suno
+    if (/^\s*\[(style|vocal|mood|instruments|tempo|verse|chorus|intro|outro|bridge|pre-chorus|hook)\s*[:=]/i.test(line)) {
+      continue;
+    }
+    if (skipBlock) continue;
+    cleaned.push(line);
+  }
+  return cleaned.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
 // Расшифровка: в чат пользователю отправляется глубокий анализ из результата промта (detailed_analysis = Этап 1 + при необходимости Этап 2). Первая бесплатно, далее — этичное предложение заказать новую песню.
 async function sendAnalysisIfPaid(ctx) {
   const telegramUserId = ctx.from?.id;
@@ -1328,7 +1349,7 @@ async function sendAnalysisIfPaid(ctx) {
   try {
     const { data, error } = await supabase
       .from("track_requests")
-      .select("id, detailed_analysis, analysis_paid")
+      .select("id, detailed_analysis, lyrics, analysis_paid")
       .eq("telegram_user_id", telegramUserId)
       .eq("status", "completed")
       .not("detailed_analysis", "is", null)
@@ -1377,8 +1398,8 @@ async function sendAnalysisIfPaid(ctx) {
   }
 
   const TELEGRAM_MAX = 4096;
-  // detailed_analysis = глубокий анализ из ответа LLM на промт (Этап 1 + при необходимости Этап 2)
-  const text = stripMarkdown(String(row.detailed_analysis || "").trim());
+  // detailed_analysis = глубокий анализ из ответа LLM (только личный разбор, без Suno-технических блоков)
+  const text = stripMarkdown(cleanAnalysisForUser(String(row.detailed_analysis || "").trim()));
   if (!text) {
     await ctx.reply("Текст расшифровки пуст. Обратись в поддержку.");
     return;
@@ -1399,20 +1420,31 @@ async function sendAnalysisIfPaid(ctx) {
 
   if (text.length <= TELEGRAM_MAX) {
     await ctx.reply("📜 Текстовая расшифровка запроса к этой песне:\n\n" + text);
-    return;
-  }
-  await ctx.reply("📜 Текстовая расшифровка запроса (несколько сообщений):");
-  for (let i = 0; i < text.length; i += TELEGRAM_MAX - 50) {
-    await ctx.reply(text.slice(i, i + TELEGRAM_MAX - 50));
+  } else {
+    await ctx.reply("📜 Текстовая расшифровка запроса (несколько сообщений):");
+    for (let i = 0; i < text.length; i += TELEGRAM_MAX - 50) {
+      await ctx.reply(text.slice(i, i + TELEGRAM_MAX - 50));
+    }
   }
 
-  // После выдачи бесплатной расшифровки — мягкое предложение попробовать ещё
+  // Предложение посмотреть текст песни — только если lyrics есть в БД
+  const hasLyrics = !!(row.lyrics && String(row.lyrics).trim().length > 50);
+  const lyricsKeyboard = hasLyrics
+    ? { reply_markup: { inline_keyboard: [[{ text: "🎵 Текст песни", callback_data: "get_lyrics" }]] } }
+    : {};
+
+  // После выдачи бесплатной расшифровки — мягкое предложение
   if (allowFree) {
     await ctx.reply("Если захочешь ещё одну песню и расшифровку к ней — закажи в приложении. Музыка твоей души 💫", {
       reply_markup: {
-        inline_keyboard: [[{ text: "🎵 Заказать песню", web_app: { url: MINI_APP_STABLE_URL } }]],
+        inline_keyboard: [
+          ...(hasLyrics ? [[{ text: "🎵 Текст песни", callback_data: "get_lyrics" }]] : []),
+          [{ text: "🎵 Заказать песню", web_app: { url: MINI_APP_STABLE_URL } }],
+        ],
       },
     });
+  } else if (hasLyrics) {
+    await ctx.reply("Хочешь прочитать слова своей песни?", lyricsKeyboard);
   }
 }
 
@@ -1423,6 +1455,45 @@ bot.hears(/^(расшифровка|получить расшифровку|де
 bot.callbackQuery("get_analysis", async (ctx) => {
   await ctx.answerCallbackQuery().catch(() => {});
   await sendAnalysisIfPaid(ctx);
+});
+
+// Кнопка «Текст песни» — отправляет только лирику последней завершённой заявки
+bot.callbackQuery("get_lyrics", async (ctx) => {
+  await ctx.answerCallbackQuery().catch(() => {});
+  const telegramUserId = ctx.from?.id;
+  if (!telegramUserId || !supabase) {
+    await ctx.reply("Не удалось загрузить текст песни. Попробуй позже.");
+    return;
+  }
+  try {
+    const { data: row } = await supabase
+      .from("track_requests")
+      .select("title, lyrics")
+      .eq("telegram_user_id", telegramUserId)
+      .eq("status", "completed")
+      .not("lyrics", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!row?.lyrics || String(row.lyrics).trim().length < 20) {
+      await ctx.reply("Текст песни не найден. Возможно, он ещё не сохранился — попробуй позже.");
+      return;
+    }
+    const title = row.title ? `🎵 «${row.title}»\n\n` : "🎵 Текст твоей песни:\n\n";
+    const lyricsText = String(row.lyrics).trim();
+    const TELEGRAM_MAX = 4096;
+    if ((title + lyricsText).length <= TELEGRAM_MAX) {
+      await ctx.reply(title + lyricsText);
+    } else {
+      await ctx.reply(title);
+      for (let i = 0; i < lyricsText.length; i += TELEGRAM_MAX - 50) {
+        await ctx.reply(lyricsText.slice(i, i + TELEGRAM_MAX - 50));
+      }
+    }
+  } catch (e) {
+    console.error("[get_lyrics]", e?.message);
+    await ctx.reply("Не удалось загрузить текст песни. Попробуй позже.");
+  }
 });
 
 // Определяем язык пользователя по Telegram language_code
