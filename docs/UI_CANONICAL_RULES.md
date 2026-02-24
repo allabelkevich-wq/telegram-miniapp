@@ -2,12 +2,13 @@
 
 > **Этот файл — источник истины.** Перед каждым коммитом в `public/index.html` — проверить все пункты ниже. Если что-то изменилось — обновить этот документ.
 
-Последнее обновление: v1.2.57
+Последнее обновление: v1.2.58
 
 ---
 
 ## ✅ Чек-лист перед деплоем
 
+**Фронтенд (`public/index.html`):**
 - [ ] Пол «Другой» не добавлен ни в один `<select>`
 - [ ] Кнопка Soul Chat открывает `soulChatPage`, а не бота
 - [ ] В чат-режиме Soul Chat нет заголовка/статистики — только диалог
@@ -17,6 +18,16 @@
 - [ ] `.lang-switcher-compact { position: relative }` — не static
 - [ ] Все `.page`-дивы закрыты до начала следующей страницы
 - [ ] `.song-preview` — тёмный фон, не `background:white`
+
+**Бэкенд (`bot/index.js`):**
+- [ ] `validatePromoForOrder` используется везде (не прямые запросы к `promo_codes`)
+- [ ] Промокоды заблокированы для подписных SKU (`SUBSCRIPTION_SKUS`)
+- [ ] Статус `processing` включён в фильтр `/api/admin/requests?status=pending`
+- [ ] Статус `processing` учитывается отдельно в `/api/admin/stats`
+
+**Админка (`bot/admin-simple.html`):**
+- [ ] Ссылка «Написать» пользователю — `tg://user?id={id}`, не `t.me/@id{id}`
+- [ ] Бейдж «В работе» суммирует `pending + processing + astro_calculated + lyrics_generated + suno_processing`
 
 ---
 
@@ -219,10 +230,76 @@ if (sku && SUBSCRIPTION_SKUS.has(String(sku))) return { ok: false, reason: "sku_
 
 ---
 
+---
+
+## 10. Статусы заявок в админке (`bot/index.js` + `bot/admin-simple.html`)
+
+### Полная статусная модель `generation_status`
+
+| Статус | Описание | Финальный? |
+|--------|----------|-----------|
+| `pending` | Ожидает обработки | нет |
+| `processing` | Воркер активно работает | нет |
+| `astro_calculated` | Астро-расчёт выполнен | нет |
+| `lyrics_generated` | Текст песни сгенерирован | нет |
+| `suno_processing` | Генерация аудио в Suno | нет |
+| `pending_payment` | Ожидает оплаты | нет |
+| `completed` | Готово и доставлено | ✅ да |
+| `delivery_failed` | Не удалось доставить | ✅ да |
+| `failed` | Ошибка генерации | ✅ да |
+| `cancelled` | Отменено | ✅ да |
+
+### Правило: фильтр «В работе» включает `processing`
+
+```js
+// ✅ ПРАВИЛЬНО — в /api/admin/requests
+if (statusFilter === "pending")
+  q = q.in("generation_status", ["pending", "processing", "astro_calculated", "lyrics_generated", "suno_processing"]);
+
+// ❌ НЕВЕРНО — processing выпадает из списка
+q = q.in("generation_status", ["pending", "astro_calculated", "lyrics_generated", "suno_processing"]);
+```
+
+### Правило: бейдж «В работе» в admin-simple.html
+
+```js
+// ✅ ПРАВИЛЬНО
+document.getElementById('pending').textContent =
+  (s.pending || 0) + (s.processing || 0) + (s.astro_calculated || 0) +
+  (s.lyrics_generated || 0) + (s.suno_processing || 0);
+```
+
+**Почему критично:** `processing` начислялся в счётчик через `else → stats.pending`, но не попадал в фильтр списка → бейдж показывал «2 в работе», список был пустым.
+
+### Watchdog — защита от застревания
+
+Заявки зависшие в `processing` > 20 мин автоматически сбрасываются в `pending` и перезапускаются (`STALE_PROCESSING_MS = 20 * 60 * 1000`).
+
+---
+
+## 11. Ссылки на пользователей Telegram в админке
+
+Для открытия чата с пользователем по числовому ID — только `tg://` deep link.
+
+```html
+<!-- ✅ ПРАВИЛЬНО — открывает Telegram app -->
+<a href="tg://user?id={telegram_user_id}">✉️ Написать</a>
+
+<!-- ❌ НЕ РАБОТАЕТ — Telegram не обрабатывает этот формат -->
+<a href="https://t.me/@id{telegram_user_id}">✉️ Написать</a>
+```
+
+**Затронутые места в `admin-simple.html`:**
+- Детальная карточка заявки (кнопка «✉️ Написать»)
+- Бейдж с ID в строке списка заявок (`tg-id-badge`)
+
+---
+
 ## История изменений
 
 | Версия | Что изменилось |
 |--------|---------------|
+| v1.2.58 | Правила 10–11: статусы заявок, фильтр processing, tg:// ссылки |
 | v1.2.57 | Бизнес-правило: промокоды только на разовые покупки, не на подписки |
 | v1.2.56 | Безопасность промокодов: validatePromoForOrder везде, расширены тексты ошибок |
 | v1.2.54 | Все правила введены: пол, Soul Chat, successPage, кнопки, язык |
