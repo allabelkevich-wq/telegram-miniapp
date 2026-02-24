@@ -122,11 +122,16 @@ async function getPricingCatalog() {
   if (!supabase) return DEFAULT_PRICING_CATALOG;
   const { data, error } = await supabase
     .from("pricing_catalog")
-    .select("sku,title,description,price,currency,active,limits_json")
+    .select("sku,title,description,price,currency,active,limits_json,stars_price")
     .order("sku", { ascending: true });
   if (error && /does not exist|relation/i.test(error.message)) return DEFAULT_PRICING_CATALOG;
   if (error || !Array.isArray(data) || data.length === 0) return DEFAULT_PRICING_CATALOG;
-  return data.map((row) => ({ ...row, limits_json: parseJsonSafe(row.limits_json, {}) || {} }));
+  return data.map((row) => ({
+    ...row,
+    limits_json: parseJsonSafe(row.limits_json, {}) || {},
+    // Если колонка ещё не добавлена в БД — берём из DEFAULT_PRICING_CATALOG
+    stars_price: row.stars_price ?? (DEFAULT_PRICING_CATALOG.find((d) => d.sku === row.sku)?.stars_price ?? null),
+  }));
 }
 
 async function getSkuPrice(sku) {
