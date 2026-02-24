@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.54';
+        var APP_VERSION = '1.2.55';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -4366,8 +4366,8 @@
         var content = document.getElementById('scMoreContent');
         if (!btn || !content) return;
         btn.addEventListener('click', function() {
-          if (content.style.display === 'none' || !content.style.display) {
-            content.style.display = '';
+          if (content.style.display === 'none') {
+            content.style.display = 'block';
             btn.textContent = 'Свернуть ↑';
           } else {
             content.style.display = 'none';
