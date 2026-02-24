@@ -1292,6 +1292,27 @@ bot.on("message:web_app_data", async (ctx) => {
   }
 });
 
+// Убирает markdown-символы из текста LLM перед отправкой в Telegram без parse_mode
+function stripMarkdown(text) {
+  return text
+    .replace(/^#{1,6}\s+/gm, '')          // # ## ### заголовки
+    .replace(/\*\*\*(.+?)\*\*\*/gs, '$1') // ***жирный курсив***
+    .replace(/\*\*(.+?)\*\*/gs, '$1')     // **жирный**
+    .replace(/\*(.+?)\*/gs, '$1')         // *курсив*
+    .replace(/__(.+?)__/gs, '$1')         // __жирный__
+    .replace(/_(.+?)_/gs, '$1')           // _курсив_
+    .replace(/~~(.+?)~~/gs, '$1')         // ~~зачёркнутый~~
+    .replace(/`{3}[\s\S]*?`{3}/g, '')     // ```блок кода```
+    .replace(/`(.+?)`/g, '$1')            // `инлайн код`
+    .replace(/^>\s+/gm, '')               // > цитата
+    .replace(/^[-*+]\s+/gm, '• ')         // - * + списки → •
+    .replace(/^\d+\.\s+/gm, '')           // 1. нумерованные списки
+    .replace(/^---+$/gm, '')              // горизонтальные линии
+    .replace(/\[(.+?)\]\(.*?\)/g, '$1')   // [ссылка](url) → текст
+    .replace(/\n{3,}/g, '\n\n')           // тройные переносы → двойные
+    .trim();
+}
+
 // Расшифровка: в чат пользователю отправляется глубокий анализ из результата промта (detailed_analysis = Этап 1 + при необходимости Этап 2). Первая бесплатно, далее — этичное предложение заказать новую песню.
 async function sendAnalysisIfPaid(ctx) {
   const telegramUserId = ctx.from?.id;
@@ -1357,7 +1378,7 @@ async function sendAnalysisIfPaid(ctx) {
 
   const TELEGRAM_MAX = 4096;
   // detailed_analysis = глубокий анализ из ответа LLM на промт (Этап 1 + при необходимости Этап 2)
-  const text = String(row.detailed_analysis || "").trim();
+  const text = stripMarkdown(String(row.detailed_analysis || "").trim());
   if (!text) {
     await ctx.reply("Текст расшифровки пуст. Обратись в поддержку.");
     return;
