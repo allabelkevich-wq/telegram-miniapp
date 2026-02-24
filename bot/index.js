@@ -52,7 +52,7 @@ const ADMIN_SECRET = process.env.ADMIN_SECRET || "";
 const HOT_API_JWT = process.env.HOT_API_JWT || "";
 // Реальное username бота — заполняется при старте через bot.api.getMe()
 let RESOLVED_BOT_USERNAME = process.env.BOT_USERNAME || "";
-const SUPPORT_TG_USERNAME = (process.env.SUPPORT_TG_USERNAME || "").trim().replace(/^@/, "");
+const SUPPORT_TG_USERNAME = (process.env.SUPPORT_TG_USERNAME || "yupsoul").trim().replace(/^@/, "");
 const HOT_WEBHOOK_SECRET = process.env.HOT_WEBHOOK_SECRET || "";
 const HOT_PAYMENT_URL = (process.env.HOT_PAYMENT_URL || "https://pay.hot-labs.org/payment").trim();
 
