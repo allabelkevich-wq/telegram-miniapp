@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.60';
+        var APP_VERSION = '1.2.61';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -909,7 +909,7 @@
       <!-- Лого и приветствие — по центру -->
       <div id="homeHero">
         <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="140" height="140">
-        <div class="home-tagline">Музыка твоей души</div>
+        <div id="homeTagline" class="home-tagline">Музыка твоей души</div>
         <p id="homeGreeting" class="home-greeting">Привет</p>
         <button id="startBtn">Создать свою песню</button>
       </div>
@@ -943,7 +943,7 @@
       </div><!-- /нижняя обёртка -->
 
       <footer>
-        <p>YupSoul • 2026 • v1.2.60</p>
+        <p>YupSoul • 2026 • v1.2.61</p>
       </footer>
     </div>
 
@@ -1811,7 +1811,7 @@
       var BOT_USERNAME = 'Yup_Soul_bot'; // единственное место для имени бота
       var LANG = {
         ru: {
-          tagline: 'Исследуй свои грани так, как ты этого захочешь',
+          tagline: 'Музыка твоей души',
           startBtn: 'Создать свою песню', myProfile: '👤 Профиль', myHeroes: 'Лаборатория', admin: '👑 Админка',
           profileTitle: 'Профиль', profileSubtitle: 'Твои данные и бесплатные генерации',
           profileFreeCredits: 'Бесплатных генераций', profileInviteFriend: 'Пригласи друга', profileShare: 'Поделиться',
@@ -1931,7 +1931,7 @@
           previewHome: 'Главная', previewForm: 'Форма', previewPayment: 'Оплата', previewLoading: 'Загрузка', previewSuccess: 'Успех'
         },
         en: {
-          tagline: 'Explore your edges the way you want',
+          tagline: 'Music of your soul',
           startBtn: 'Create My Song', myProfile: '👤 Profile', myHeroes: 'Lab', admin: '👑 Admin',
           profileTitle: 'Profile', profileSubtitle: 'Your data and free generations',
           profileFreeCredits: 'Free generations', profileInviteFriend: 'Invite a friend', profileShare: 'Share',
@@ -2050,7 +2050,7 @@
           previewHome: 'Home', previewForm: 'Form', previewPayment: 'Payment', previewLoading: 'Loading', previewSuccess: 'Success'
         },
         de: {
-          tagline: 'Erkunde deine Facetten, wie du es möchtest',
+          tagline: 'Musik deiner Seele',
           startBtn: 'Mein Lied erschaffen', myProfile: '👤 Profil', myHeroes: 'Labor', admin: '👑 Admin',
           profileTitle: 'Profil', profileSubtitle: 'Deine Daten und kostenlose Generierungen',
           profileFreeCredits: 'Kostenlose Generierungen', profileInviteFriend: 'Freund einladen', profileShare: 'Teilen',
@@ -2169,7 +2169,7 @@
           previewHome: 'Startseite', previewForm: 'Formular', previewPayment: 'Zahlung', previewLoading: 'Laden', previewSuccess: 'Erfolg'
         },
         fr: {
-          tagline: 'Explore tes facettes comme tu le souhaites',
+          tagline: 'La musique de ton âme',
           startBtn: 'Créer ma chanson', myProfile: '👤 Profil', myHeroes: 'Labo', admin: '👑 Admin',
           profileTitle: 'Profil', profileSubtitle: 'Tes données et générations gratuites',
           profileFreeCredits: 'Générations gratuites', profileInviteFriend: 'Inviter un ami', profileShare: 'Partager',
