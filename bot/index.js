@@ -2338,6 +2338,32 @@ if (WEBHOOK_URL) {
 } else {
   console.log("[Bot] WEBHOOK_URL не задан, webhook обработчик не установлен");
 }
+// Подгружает имя и @username пользователя из user_profiles для уведомлений
+async function fetchUserProfileForNotif(telegramUserId, fallbackName = null) {
+  let name = fallbackName || null;
+  let username = null;
+  if (supabase && telegramUserId) {
+    const { data } = await supabase
+      .from("user_profiles")
+      .select("name,tg_username")
+      .eq("telegram_id", Number(telegramUserId))
+      .maybeSingle()
+      .catch(() => ({ data: null }));
+    if (data?.tg_username) username = data.tg_username;
+    if (!name && data?.name) name = data.name;
+  }
+  return { name, username };
+}
+
+// Строит строку пользователя для админских уведомлений
+function buildAdminUserLine(telegramUserId, name, username) {
+  return [
+    name ? `👤 ${name}` : null,
+    username ? `@${username}` : null,
+    `[ID ${telegramUserId}](tg://user?id=${telegramUserId})`,
+  ].filter(Boolean).join("  ·  ");
+}
+
 // HOT webhook: верификация подписи (X-HOT-Signature), идемпотентность по payment_order_id и payment_tx_id
 app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, res) => {
   try {
@@ -2463,10 +2489,17 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
           `✅ *Soul Chat активирован!*\n\n💬 24 часа общения с душой открыты.${expiresStr}\n\nОткрой YupSoul и задавай вопросы — я здесь ✨`,
           { parse_mode: "Markdown" }
         ).catch((e) => console.warn("[webhook] notify soul chat user:", e?.message));
+        const scProf = await fetchUserProfileForNotif(row.telegram_user_id, row.name);
+        const scUserLine = buildAdminUserLine(row.telegram_user_id, scProf.name, scProf.username);
+        const scPaidAt = new Date().toLocaleString("ru-RU", { timeZone: "Europe/Moscow", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
         for (const adminId of ADMIN_IDS) {
           bot.api.sendMessage(
             adminId,
-            `💰 *Soul Chat куплен*\nЗаявка: \`${shortId}\`\nСумма: ${body.amount || "?"} ${body.currency || "USDT"}`
+            `💬 *Soul Chat куплен*\n` +
+            `${scUserLine}\n` +
+            `💵 Сумма: *${body.amount || "?"} ${body.currency || "USDT"}*\n` +
+            `📅 Оплачено: ${scPaidAt} МСК\n` +
+            `🆔 Заявка: \`${shortId}\``
           , { parse_mode: "Markdown" }).catch(() => {});
         }
       } else if (["soul_basic_sub", "soul_plus_sub", "master_monthly"].includes(purchasedSku)) {
@@ -2490,33 +2523,17 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
           }
         ).catch((e) => console.warn("[webhook] notify subscription user:", e?.message));
 
-        // Подгружаем профиль для имени и username
-        let tgUsername = null;
-        let profileName = row.name || null;
-        if (supabase) {
-          const { data: prof } = await supabase
-            .from("user_profiles")
-            .select("name,tg_username")
-            .eq("telegram_id", Number(row.telegram_user_id))
-            .maybeSingle()
-            .catch(() => ({ data: null }));
-          if (prof?.tg_username) tgUsername = prof.tg_username;
-          if (!profileName && prof?.name) profileName = prof.name;
-        }
-        const paidAt = new Date().toLocaleString("ru-RU", { timeZone: "Europe/Moscow", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-        const userLine = [
-          profileName ? `👤 ${profileName}` : null,
-          tgUsername ? `@${tgUsername}` : null,
-          `[tg://user?id=${row.telegram_user_id}](tg://user?id=${row.telegram_user_id})`,
-        ].filter(Boolean).join("  ·  ");
+        const subProf = await fetchUserProfileForNotif(row.telegram_user_id, row.name);
+        const subUserLine = buildAdminUserLine(row.telegram_user_id, subProf.name, subProf.username);
+        const subPaidAt = new Date().toLocaleString("ru-RU", { timeZone: "Europe/Moscow", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
         for (const adminId of ADMIN_IDS) {
           bot.api.sendMessage(
             adminId,
             `💎 *Новая подписка!*\n` +
             `📦 Тариф: *${subPlanInfo.name}*\n` +
-            `${userLine}\n` +
+            `${subUserLine}\n` +
             `💵 Сумма: *${body.amount || "?"} ${body.currency || "USDT"}*\n` +
-            `📅 Оплачено: ${paidAt} МСК\n` +
+            `📅 Оплачено: ${subPaidAt} МСК\n` +
             `🔑 До: ${renewStr}\n` +
             `🆔 Заявка: \`${shortId}\``
           , { parse_mode: "Markdown" }).catch(() => {});
@@ -2539,10 +2556,26 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
         ).catch((e) => console.warn("[webhook] notify user paid:", e?.message));
 
         // Уведомляем администраторов
+        const songSkuLabels = {
+          single_song: "Одиночная песня",
+          couple_song: "Песня пары",
+          transit_energy_song: "Транзитная энергия",
+          deep_analysis_addon: "Глубокий анализ",
+          extra_regeneration: "Повторная генерация",
+        };
+        const skuLabel = songSkuLabels[purchasedSku] || purchasedSku;
+        const songProf = await fetchUserProfileForNotif(row.telegram_user_id, row.name);
+        const songUserLine = buildAdminUserLine(row.telegram_user_id, songProf.name, songProf.username);
+        const songPaidAt = new Date().toLocaleString("ru-RU", { timeZone: "Europe/Moscow", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
         for (const adminId of ADMIN_IDS) {
           bot.api.sendMessage(
             adminId,
-            `💰 *Оплата получена*\nЗаявка: \`${shortId}\`\nСумма: ${body.amount || "?"} ${body.currency || "USDT"}\nSKU: ${purchasedSku}`
+            `🎵 *Новая оплата!*\n` +
+            `📦 Тип: *${skuLabel}*\n` +
+            `${songUserLine}\n` +
+            `💵 Сумма: *${body.amount || "?"} ${body.currency || "USDT"}*\n` +
+            `📅 Оплачено: ${songPaidAt} МСК\n` +
+            `🆔 Заявка: \`${shortId}\``
           , { parse_mode: "Markdown" }).catch(() => {});
         }
       }
