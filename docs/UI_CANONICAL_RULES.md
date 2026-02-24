@@ -2,7 +2,7 @@
 
 > **Этот файл — источник истины.** Перед каждым коммитом в `public/index.html` — проверить все пункты ниже. Если что-то изменилось — обновить этот документ.
 
-Последнее обновление: v1.2.54
+Последнее обновление: v1.2.57
 
 ---
 
@@ -199,9 +199,31 @@ for name in pages:
 
 ---
 
+## 9. Бизнес-правило: промокоды — только на разовые покупки
+
+Промокоды действуют **исключительно** на:
+- разовую песню (`single_song`, `couple_song`, `transit_energy_song`)
+- разовый день Soul Chat (`soul_chat_day`)
+
+**На подписки промокодов нет и быть не должно** (`soul_basic_sub`, `soul_plus_sub`, `master_monthly`).
+
+В `bot/index.js` это закреплено в `validatePromoForOrder`:
+
+```js
+const SUBSCRIPTION_SKUS = new Set(["soul_basic_sub", "soul_plus_sub", "master_monthly"]);
+// ...
+if (sku && SUBSCRIPTION_SKUS.has(String(sku))) return { ok: false, reason: "sku_mismatch" };
+```
+
+`/api/payments/subscription/checkout` не принимает и не читает `promo_code` — это намеренно.
+
+---
+
 ## История изменений
 
 | Версия | Что изменилось |
 |--------|---------------|
+| v1.2.57 | Бизнес-правило: промокоды только на разовые покупки, не на подписки |
+| v1.2.56 | Безопасность промокодов: validatePromoForOrder везде, расширены тексты ошибок |
 | v1.2.54 | Все правила введены: пол, Soul Chat, successPage, кнопки, язык |
 | v1.2.53 | Исправлен незакрытый `<div>` formPage — Soul Chat был дочерним |

@@ -160,9 +160,15 @@ async function getPromoUsageByUser(promoCodeId, telegramUserId) {
   return Number(count || 0);
 }
 
+// Промокоды действуют ТОЛЬКО на разовые покупки (песня / чат-день).
+// На подписки (soul_basic_sub, soul_plus_sub, master_monthly) промокоды не распространяются.
+const SUBSCRIPTION_SKUS = new Set(["soul_basic_sub", "soul_plus_sub", "master_monthly"]);
+
 async function validatePromoForOrder({ promoCode, sku, telegramUserId }) {
   const code = normalizePromoCode(promoCode);
   if (!code) return { ok: false, reason: "empty" };
+  // Жёсткий запрет промокодов на подписки
+  if (sku && SUBSCRIPTION_SKUS.has(String(sku))) return { ok: false, reason: "sku_mismatch" };
   const promo = await getPromoByCode(code);
   if (!promo) return { ok: false, reason: "not_found" };
   if (promo.active === false) return { ok: false, reason: "inactive" };
