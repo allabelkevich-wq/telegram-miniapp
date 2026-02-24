@@ -2188,7 +2188,7 @@
       msgEl.textContent = '⏳ Проверяю…'; msgEl.style.color = '#94a3b8';
       infoEl.innerHTML = '';
       try {
-        const resp = await fetch(API_BASE + '/api/admin/user-subscription?telegram_user_id=' + encodeURIComponent(userId) + '&token=' + encodeURIComponent(ADMIN_TOKEN));
+        const resp = await fetch(API_BASE + '/api/admin/user-subscription?telegram_user_id=' + encodeURIComponent(userId) + '&token=' + encodeURIComponent(getToken() || ''));
         const json = await resp.json();
         if (!json.success) { msgEl.textContent = '❌ ' + json.error; msgEl.style.color = '#ef4444'; return; }
         const sub = json.active_subscription;
@@ -2225,7 +2225,7 @@
       try {
         const resp = await fetch(API_BASE + '/api/admin/grant-subscription', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-admin-token': ADMIN_TOKEN },
+          headers: { 'Content-Type': 'application/json', 'x-admin-token': getToken() || '' },
           body: JSON.stringify({ telegram_user_id: Number(userId), plan_key: planKey })
         });
         const json = await resp.json();
