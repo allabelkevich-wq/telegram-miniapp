@@ -52,6 +52,7 @@ const ADMIN_SECRET = process.env.ADMIN_SECRET || "";
 const HOT_API_JWT = process.env.HOT_API_JWT || "";
 // Реальное username бота — заполняется при старте через bot.api.getMe()
 let RESOLVED_BOT_USERNAME = process.env.BOT_USERNAME || "";
+const SUPPORT_TG_USERNAME = (process.env.SUPPORT_TG_USERNAME || "").trim().replace(/^@/, "");
 const HOT_WEBHOOK_SECRET = process.env.HOT_WEBHOOK_SECRET || "";
 const HOT_PAYMENT_URL = (process.env.HOT_PAYMENT_URL || "https://pay.hot-labs.org/payment").trim();
 
@@ -3247,6 +3248,14 @@ app.post("/api/user/sync", asyncApi(async (req, res) => {
   console.log(`[user/sync] ${tgUser.id} @${tgUser.username || "—"}`);
   return res.json({ success: true });
 }));
+
+// Публичный конфиг для фронтенда (не секреты)
+app.get("/api/config", (req, res) => {
+  res.json({
+    bot_username: RESOLVED_BOT_USERNAME || "Yup_Soul_bot",
+    support_username: SUPPORT_TG_USERNAME || RESOLVED_BOT_USERNAME || "Yup_Soul_bot",
+  });
+});
 
 app.get("/api/pricing/catalog", asyncApi(async (req, res) => {
   const initData = req.headers["x-telegram-init"] || req.query?.initData || "";

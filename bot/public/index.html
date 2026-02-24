@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.64';
+        var APP_VERSION = '1.2.65';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -943,7 +943,7 @@
       </div><!-- /нижняя обёртка -->
 
       <footer>
-        <p>YupSoul • 2026 • v1.2.64</p>
+        <p>YupSoul • 2026 • v1.2.65</p>
       </footer>
     </div>
 
@@ -1796,16 +1796,16 @@
       <header class="page-header">
         <h1>YupSoul</h1>
         <div style="font-size:0.78rem;font-weight:400;letter-spacing:0.12em;color:rgba(212,175,55,0.5);margin:2px 0 0;text-transform:uppercase">Музыка твоей души</div>
-        <div class="subtitle">заявка принята</div>
+        <div id="paymentThanksSubtitle" class="subtitle">заявка принята</div>
       </header>
       <div class="section page-scroll" style="text-align:center; padding-top:40px">
-        <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.06));border:1.5px solid rgba(212,175,55,0.35);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.8rem;color:#d4af37;font-weight:300">✓</div>
-        <h2 class="success-title" style="font-size:1.5rem; margin:0 0 12px 0">Оплата прошла</h2>
+        <div id="paymentThanksIcon" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.06));border:1.5px solid rgba(212,175,55,0.35);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.8rem;color:#d4af37;font-weight:300">✓</div>
+        <h2 id="paymentThanksTitle" class="success-title" style="font-size:1.5rem; margin:0 0 12px 0">Оплата прошла</h2>
         <p class="success-text" id="paymentThanksMessage" style="margin:0 0 24px 0; font-size:0.92rem; color:rgba(255,255,255,0.6); line-height:1.65">
           Песня создаётся. Придёт в чат с ботом. Можно закрыть окно.
         </p>
         <button id="paymentThanksBackBtn" class="primary" style="margin-bottom:12px">Создать свою песню</button>
-        <p style="font-size:0.72rem;color:rgba(255,255,255,0.3);line-height:1.5;margin:0;">Не пришла за 20 минут? Напиши боту «песня не пришла»</p>
+        <p id="paymentThanksHint" style="font-size:0.72rem;color:rgba(255,255,255,0.3);line-height:1.5;margin:0;">Не пришла за 20 минут? Напиши боту «песня не пришла»</p>
       </div>
   </div>
 
@@ -4690,22 +4690,55 @@
         goToPage('paymentThanksPage');
         var requestIdMatch = search.match(/request_id=([^&\s]+)/);
         var thanksRequestId = requestIdMatch ? decodeURIComponent(requestIdMatch[1]) : null;
+
+        // Мгновенно определяем тип оплаты из localStorage (сохранили перед редиректом на HOT)
+        var pendingPayment = null;
+        try {
+          var _pp = localStorage.getItem('pending_payment_type');
+          if (_pp) { pendingPayment = JSON.parse(_pp); localStorage.removeItem('pending_payment_type'); }
+        } catch(e) {}
+        var isSubPaymentImmediate = pendingPayment && pendingPayment.type === 'subscription'
+          && pendingPayment.ts && (Date.now() - pendingPayment.ts) < 30 * 60 * 1000; // не старше 30 мин
+
+        if (isSubPaymentImmediate) {
+          // Сразу показываем экран подписки — без ожидания API
+          var subName = pendingPayment.plan_name || (
+            pendingPayment.plan_key === 'plan_basic' ? 'Basic' :
+            pendingPayment.plan_key === 'plan_plus' ? 'Plus' : 'Лаборатория');
+          var ptTitle = document.getElementById('paymentThanksTitle');
+          var ptSubtitle = document.getElementById('paymentThanksSubtitle');
+          var ptHint = document.getElementById('paymentThanksHint');
+          var ptBackBtn = document.getElementById('paymentThanksBackBtn');
+          if (ptTitle) ptTitle.textContent = '🎉 Подписка активирована!';
+          if (ptSubtitle) ptSubtitle.textContent = 'тариф ' + subName;
+          if (paymentThanksMsg) paymentThanksMsg.innerHTML =
+            'Твой план <strong>' + subName + '</strong> активен.<br>' +
+            '<span style="opacity:0.7">Треки этого месяца и Soul Chat теперь доступны.</span>';
+          if (ptHint) ptHint.style.display = 'none';
+          if (ptBackBtn) {
+            ptBackBtn.textContent = '👤 Мой профиль';
+            ptBackBtn.onclick = function() {
+              goToPage('profilePage');
+              setTimeout(function() { if (typeof loadProfilePage === 'function') loadProfilePage(); }, 600);
+            };
+          }
+        }
+
         (async function checkPaymentAndConfirm() {
-          if (!paymentThanksMsg) return;
           if (!thanksRequestId) {
-            paymentThanksMsg.textContent = t('songInProgress');
+            if (paymentThanksMsg && !isSubPaymentImmediate) paymentThanksMsg.textContent = t('songInProgress');
             return;
           }
           var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
           var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
           if (!apiBase || !initData) {
-            if (paymentThanksMsg) paymentThanksMsg.textContent = t('songInProgress');
+            if (paymentThanksMsg && !isSubPaymentImmediate) paymentThanksMsg.textContent = t('songInProgress');
             return;
           }
           try {
             var payStatus = '';
             var payMode = '';
-            for (var attempt = 0; attempt < 3; attempt++) {
+            for (var attempt = 0; attempt < 5; attempt++) {
               var statusResp = await fetch(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(thanksRequestId), {
                 headers: { 'X-Telegram-Init': initData }
               });
@@ -4713,7 +4746,7 @@
               payStatus = statusJson && statusJson.data && statusJson.data.payment_status ? String(statusJson.data.payment_status).toLowerCase() : '';
               payMode = statusJson && statusJson.data && statusJson.data.mode ? String(statusJson.data.mode) : '';
               if (payStatus === 'paid') break;
-              if (attempt < 2) await new Promise(function(r) { setTimeout(r, 2000); });
+              if (attempt < 4) await new Promise(function(r) { setTimeout(r, 2500); });
             }
             if (payStatus === 'paid') {
               var confirmResp = await fetch(apiBase + '/api/payments/hot/confirm', {
@@ -4723,28 +4756,26 @@
               });
               confirmResp.json().catch(function() {});
             }
-            // Это подписка (mode = sub_soul_basic_sub, sub_soul_plus_sub, sub_master_monthly)?
-            var isSubPayment = payMode.startsWith('sub_') || payMode.includes('sub');
-            if (isSubPayment) {
-              // Показываем сообщение о подписке и кнопку перехода в профиль
-              var subName = payMode.includes('basic') ? 'Basic' : payMode.includes('plus') ? 'Plus' : 'Лаборатория';
-              paymentThanksMsg.innerHTML = '✅ Подписка <strong>' + subName + '</strong> активирована!<br><span style="font-size:0.82rem;opacity:0.7">Треки и Soul Chat теперь доступны.</span>';
-              var backBtn = document.getElementById('paymentThanksBackBtn');
-              if (backBtn) {
-                backBtn.textContent = '👤 Посмотреть профиль';
-                backBtn.onclick = function() {
-                  goToPage('profilePage');
-                  // Небольшая задержка перед загрузкой — даём webhook обработаться
-                  setTimeout(function() { if (typeof loadProfilePage === 'function') loadProfilePage(); }, 800);
-                };
+            // Если не знали про подписку из localStorage — определяем по mode
+            if (!isSubPaymentImmediate) {
+              var isSubFromMode = payMode.startsWith('sub_');
+              if (isSubFromMode && paymentThanksMsg) {
+                var sn = payMode.includes('basic') ? 'Basic' : payMode.includes('plus') ? 'Plus' : 'Лаборатория';
+                var ptT = document.getElementById('paymentThanksTitle');
+                var ptS = document.getElementById('paymentThanksSubtitle');
+                var ptH = document.getElementById('paymentThanksHint');
+                var ptB = document.getElementById('paymentThanksBackBtn');
+                if (ptT) ptT.textContent = '🎉 Подписка активирована!';
+                if (ptS) ptS.textContent = 'тариф ' + sn;
+                paymentThanksMsg.innerHTML = 'Твой план <strong>' + sn + '</strong> активен.<br><span style="opacity:0.7">Треки и Soul Chat теперь доступны.</span>';
+                if (ptH) ptH.style.display = 'none';
+                if (ptB) { ptB.textContent = '👤 Мой профиль'; ptB.onclick = function() { goToPage('profilePage'); setTimeout(function() { if(typeof loadProfilePage==='function') loadProfilePage(); }, 600); }; }
+              } else if (paymentThanksMsg) {
+                paymentThanksMsg.textContent = t('songInProgressConfirmed');
               }
-              var hint = document.querySelector('#paymentThanksPage p[style*="0.72rem"]');
-              if (hint) hint.style.display = 'none';
-            } else {
-              paymentThanksMsg.textContent = t('songInProgressConfirmed');
             }
           } catch (e) {
-            paymentThanksMsg.textContent = t('songInProgress');
+            if (paymentThanksMsg && !isSubPaymentImmediate) paymentThanksMsg.textContent = t('songInProgress');
           }
         })();
         if (window.history && window.history.replaceState) {
@@ -5606,6 +5637,12 @@
                 return;
               }
               overlay.style.display = 'none';
+              // Сохраняем в localStorage что это оплата подписки — нужно для экрана после возврата
+              try {
+                localStorage.setItem('pending_payment_type', JSON.stringify({
+                  type: 'subscription', plan_key: planKey, plan_name: planName, ts: Date.now()
+                }));
+              } catch(e) {}
               // Открываем оплату без закрытия приложения
               if (tg && tg.openLink) {
                 tg.openLink(data.checkout_url);
@@ -6405,8 +6442,17 @@
       var openBotBeforeSubmitBtn = document.getElementById('openBotBeforeSubmitBtn');
       if (openBotBeforeSubmitBtn) openBotBeforeSubmitBtn.addEventListener('click', function() { openBotLink('miniapp_start'); });
       var helpSupportBtn = document.getElementById('helpSupportBtn');
+      // Загружаем актуальный support_username из бэкенда
+      var SUPPORT_USERNAME = BOT_USERNAME;
+      (function() {
+        var _base = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        if (!_base) return;
+        fetch(_base + '/api/config').then(function(r){ return r.json(); }).then(function(d){
+          if (d && d.support_username) SUPPORT_USERNAME = d.support_username;
+        }).catch(function(){});
+      })();
       if (helpSupportBtn) helpSupportBtn.addEventListener('click', function() {
-        var supportUrl = 'https://t.me/' + BOT_USERNAME;
+        var supportUrl = 'https://t.me/' + SUPPORT_USERNAME;
         try {
           if (tg && tg.openTelegramLink) { tg.openTelegramLink(supportUrl); return; }
           if (tg && tg.openLink) { tg.openLink(supportUrl); return; }
