@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.74';
+        var APP_VERSION = '1.2.75';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -455,10 +455,10 @@
     .request-quick-bar{border-top:1px solid rgba(255,255,255,0.07);position:relative;}
     .request-quick-toggle{width:100%;background:none;border:none;color:rgba(212,175,55,0.55);font-size:0.72rem;font-weight:600;font-family:inherit;padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:0.03em;transition:color .2s;min-height:unset;box-shadow:none;animation:none;margin:0;border-radius:0 0 14px 14px;justify-content:space-between;}
     /* Soul Chat page */
-    .sc-msg-user{display:flex;justify-content:flex-end;}
-    .sc-msg-soul{display:flex;justify-content:flex-start;}
-    .sc-bubble-user{max-width:82%;padding:11px 14px;border-radius:14px 14px 4px 14px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.22);font-size:0.88rem;line-height:1.6;color:rgba(255,255,255,0.9);white-space:pre-wrap;}
-    .sc-bubble-soul{max-width:88%;padding:11px 14px;border-radius:14px 14px 14px 4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:0.88rem;line-height:1.6;color:rgba(255,255,255,0.82);white-space:pre-wrap;}
+    .sc-msg-user{display:flex;justify-content:flex-end;margin-bottom:10px;padding:0 4px;}
+    .sc-msg-soul{display:flex;justify-content:flex-start;margin-bottom:10px;padding:0 4px;}
+    .sc-bubble-user{max-width:80%;padding:11px 15px;border-radius:18px 18px 4px 18px;background:rgba(212,175,55,0.16);border:1px solid rgba(212,175,55,0.3);font-size:0.9rem;line-height:1.65;color:#fff;white-space:pre-wrap;}
+    .sc-bubble-soul{max-width:88%;padding:12px 16px;border-radius:18px 18px 18px 4px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.14);font-size:0.9rem;line-height:1.65;color:#fff;white-space:pre-wrap;}
     .sc-send-bar{border-top:1px solid rgba(255,255,255,0.07);padding:8px 10px;display:flex;justify-content:flex-end;align-items:center;gap:8px;}
     .sc-char-hint{font-size:0.7rem;color:rgba(255,255,255,0.25);flex:1;}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(0.88);}}
@@ -525,7 +525,7 @@
     #homeHero .home-tagline{font-size:0.72rem;font-weight:400;letter-spacing:0.14em;color:rgba(212,175,55,0.45);margin-top:var(--spacing-md);text-transform:uppercase}
     #homeHero .home-greeting{font-size:0.95rem;color:rgba(255,255,255,0.6);line-height:1.6;max-width:240px;margin:var(--spacing-lg) auto var(--spacing-xl);letter-spacing:0.01em}
     #homeHero #startBtn{margin-top:0;width:auto;max-width:280px;padding:14px 36px;font-weight:600;letter-spacing:0.02em;border-radius:50px;align-self:center}
-    #homeTopBar .lang-switcher-compact{position:relative;display:flex;align-items:center;align-self:center}
+    #homeTopBar .lang-switcher-compact{position:relative;display:flex;align-items:center;align-self:center;height:36px}
     .lang-switcher-compact{position:relative}
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* ── СТОРИС-ОНБОРДИНГ ── */
@@ -1574,7 +1574,7 @@
 
           <!-- Блок ввода: textarea + нижняя полоска с быстрыми запросами -->
           <div class="request-input-box">
-            <textarea id="request" class="request-textarea" placeholder="О чём песня? Любой запрос — от юмора до глубокой темы" aria-label="Запрос" rows="4"></textarea>
+            <textarea id="request" class="request-textarea" placeholder="Напиши любой запрос" aria-label="Запрос" rows="4"></textarea>
             <div class="request-quick-bar">
               <button type="button" class="request-quick-toggle" id="quickPickerBtn" onclick="toggleQuickPicker(event)">
                 <span id="quickPickerLabel">✦ Быстрые запросы</span>
@@ -1878,7 +1878,7 @@
           sendRequest: 'Что будешь исследовать сегодня?', quickRequests: 'Быстрые запросы', hide: 'Скрыть',
           requestDesc: 'О чём песня? Любой запрос — от юмора до глубокой темы',
           requestQuickHint: 'Выбери готовый запрос или напиши свой',
-          requestPh: 'Напиши запрос…', toPayment: 'К оплате',
+          requestPh: 'Напиши любой запрос', toPayment: 'К оплате',
           paymentSubtitle: 'Твоя песня', paymentAndAccess: 'Оплата и доступ',
           paymentIntro: 'Первая песня — в подарок. Дальше можно оплатить отдельный элемент или оформить подписку на полный доступ.',
           loadingPricing: 'Загрузка тарифов...', currentItem: 'Текущий элемент',
@@ -2062,7 +2062,7 @@
           sendRequest: 'What will you explore today?', quickRequests: 'Quick requests', hide: 'Hide',
           requestDesc: 'What\'s the song about? Any request — from humor to deep themes.',
           requestQuickHint: 'Pick a ready-made request or write your own',
-          requestPh: 'Write your request…', toPayment: 'To payment',
+          requestPh: 'Write any request', toPayment: 'To payment',
           paymentSubtitle: 'Your sound key', paymentAndAccess: 'Payment & access',
           paymentIntro: 'First song is free. You can pay for individual items or subscribe for full access.',
           loadingPricing: 'Loading plans...', currentItem: 'Current item',
@@ -2245,7 +2245,7 @@
           sendRequest: 'Was wirst du heute erkunden?', quickRequests: 'Schnellanfragen', hide: 'Ausblenden',
           requestDesc: 'Worum geht das Lied? Jede Anfrage — von Humor bis tiefe Themen.',
           requestQuickHint: 'Wähle eine Vorlage oder schreib deine eigene',
-          requestPh: 'Schreib deine Anfrage…', toPayment: 'Zur Kasse',
+          requestPh: 'Schreib eine beliebige Anfrage', toPayment: 'Zur Kasse',
           paymentSubtitle: 'Dein Klangschlüssel', paymentAndAccess: 'Zahlung & Zugang',
           paymentIntro: 'Das erste Lied ist gratis. Du kannst Einzelelemente kaufen oder ein Abo für vollen Zugang abschließen.',
           loadingPricing: 'Tarife laden...', currentItem: 'Aktuelles Element',
@@ -2428,7 +2428,7 @@
           sendRequest: 'Que vas-tu explorer aujourd\'hui ?', quickRequests: 'Demandes rapides', hide: 'Masquer',
           requestDesc: 'De quoi parle la chanson ? Toute demande — de l\'humour aux thèmes profonds.',
           requestQuickHint: 'Choisis une demande prête ou écris la tienne',
-          requestPh: 'Écris ta demande…', toPayment: 'Paiement',
+          requestPh: 'Écris n\'importe quelle demande', toPayment: 'Paiement',
           paymentSubtitle: 'Ta clé sonore', paymentAndAccess: 'Paiement et accès',
           paymentIntro: 'La première chanson est offerte. Tu peux payer des éléments individuels ou t\'abonner pour un accès complet.',
           loadingPricing: 'Chargement des tarifs...', currentItem: 'Élément actuel',
