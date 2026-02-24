@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.71';
+        var APP_VERSION = '1.2.72';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -5273,7 +5273,29 @@
           try {
             var payStatus = '';
             var payMode = '';
-            // Для подписок ждём дольше (вебхук может прийти позже редиректа)
+            var isSub = isSubPaymentImmediate;
+
+            // ── Для подписок: сразу запускаем claim параллельно с поллингом вебхука ──
+            // Claim идемпотентен — если вебхук уже активировал, вернёт already_active
+            if (isSubPaymentImmediate && thanksRequestId) {
+              (async function runClaim() {
+                // Ждём 4 сек — даём вебхуку шанс прийти первым
+                await new Promise(function(r){ setTimeout(r, 4000); });
+                try {
+                  var claimResp = await fetch(apiBase + '/api/subscription/claim', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+                    body: JSON.stringify({ request_id: thanksRequestId, initData: initData })
+                  });
+                  var claimJson = await claimResp.json().catch(function(){ return {}; });
+                  console.log('[sub] claim early result:', claimJson && claimJson.status);
+                } catch(claimErr) {
+                  console.warn('[sub] claim early error:', claimErr && claimErr.message);
+                }
+              })();
+            }
+
+            // ── Поллинг payment_status (вебхук путь) ──
             var maxAttempts = isSubPaymentImmediate ? 20 : 5;
             var delayMs = 3000;
             for (var attempt = 0; attempt < maxAttempts; attempt++) {
@@ -5286,31 +5308,27 @@
               if (payStatus === 'paid') break;
               if (attempt < maxAttempts - 1) await new Promise(function(r) { setTimeout(r, delayMs); });
             }
-            var isSub = isSubPaymentImmediate || (payMode && payMode.startsWith('sub_'));
+            isSub = isSubPaymentImmediate || (payMode && payMode.startsWith('sub_'));
+
             if (payStatus === 'paid') {
-              var confirmResp = await fetch(apiBase + '/api/payments/hot/confirm', {
+              // Вебхук пришёл — вызываем confirm (он тоже вызовет grantPurchaseBySku)
+              fetch(apiBase + '/api/payments/hot/confirm', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
                 body: JSON.stringify({ request_id: thanksRequestId, initData: initData })
-              });
-              confirmResp.json().catch(function() {});
+              }).catch(function(){});
             } else if (isSub && thanksRequestId) {
-              // Вебхук не пришёл за 60 секунд — используем fallback /api/subscription/claim
+              // Вебхук не пришёл за 60 сек — финальный вызов claim (страховка)
               try {
-                var claimResp = await fetch(apiBase + '/api/subscription/claim', {
+                await fetch(apiBase + '/api/subscription/claim', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
                   body: JSON.stringify({ request_id: thanksRequestId, initData: initData })
                 });
-                var claimJson = await claimResp.json().catch(function(){ return {}; });
-                if (claimJson && claimJson.success) {
-                  console.log('[sub] claim fallback ok:', claimJson.status);
-                }
-              } catch(claimErr) {
-                console.warn('[sub] claim fallback error:', claimErr && claimErr.message);
-              }
+              } catch(e) {}
             }
-            // Опрашиваем /api/subscription/status чтобы убедиться что подписка в БД
+
+            // ── Ждём появления подписки в БД, обновляем кнопку ──
             if (isSub) {
               for (var si = 0; si < 12; si++) {
                 await new Promise(function(r){ setTimeout(r, 2500); });

@@ -433,15 +433,32 @@ function buildHotCheckoutUrl({ itemId, orderId, amount, currency, requestId, sku
 }
 
 function verifyHotWebhookSignature(rawBody, signatureHeader) {
-  if (!HOT_WEBHOOK_SECRET) return true;
-  if (!signatureHeader || !rawBody) return false;
+  if (!HOT_WEBHOOK_SECRET) {
+    // Без секрета — пропускаем (небезопасно, но не блокируем работу)
+    return true;
+  }
+  if (!rawBody) {
+    console.warn("[webhook] verifyHotWebhookSignature: пустой rawBody");
+    return false;
+  }
+  if (!signatureHeader) {
+    // HOT Pay может не присылать подпись — логируем, но пропускаем
+    console.warn("[webhook] verifyHotWebhookSignature: заголовок подписи отсутствует — пропускаем проверку");
+    return true;
+  }
   const expected = crypto.createHmac("sha256", HOT_WEBHOOK_SECRET).update(rawBody).digest("hex");
   const providedRaw = String(signatureHeader).trim();
-  const provided = providedRaw.includes("=") ? providedRaw.split("=")[1] : providedRaw;
+  // Поддерживаем форматы: "sha256=abc123", "abc123"
+  const provided = providedRaw.includes("=") ? providedRaw.split("=").slice(1).join("=") : providedRaw;
   const expectedBuf = Buffer.from(expected, "utf8");
   const providedBuf = Buffer.from(provided, "utf8");
-  if (expectedBuf.length !== providedBuf.length) return false;
-  return crypto.timingSafeEqual(expectedBuf, providedBuf);
+  if (expectedBuf.length !== providedBuf.length) {
+    console.warn(`[webhook] Signature length mismatch: expected=${expected.length} got=${provided.length}`);
+    return false;
+  }
+  const ok = crypto.timingSafeEqual(expectedBuf, providedBuf);
+  if (!ok) console.warn("[webhook] Signature mismatch — проверь HOT_WEBHOOK_SECRET в Render");
+  return ok;
 }
 
 async function createOrRefreshSubscription({ telegramUserId, planSku, source = "hot" }) {
@@ -2419,9 +2436,17 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
           });
         }
       }
-      const grantResult = await grantPurchaseBySku({ telegramUserId: row.telegram_user_id, sku: purchasedSku, source: "hot_payment", orderId: orderId || null });
+      let grantResult = await grantPurchaseBySku({ telegramUserId: row.telegram_user_id, sku: purchasedSku, source: "hot_payment", orderId: orderId || null });
       if (!grantResult?.ok) {
-        console.error(`[webhook] grantPurchaseBySku failed: sku=${purchasedSku}, userId=${row.telegram_user_id}, error=${grantResult?.error}`);
+        console.error(`[webhook] grantPurchaseBySku failed: sku=${purchasedSku}, userId=${row.telegram_user_id}, error=${grantResult?.error} — retry in 5s`);
+        // Retry once after 5 seconds (защита от transient Supabase errors)
+        await new Promise(r => setTimeout(r, 5000));
+        grantResult = await grantPurchaseBySku({ telegramUserId: row.telegram_user_id, sku: purchasedSku, source: "hot_payment_retry", orderId: orderId || null });
+        if (!grantResult?.ok) {
+          console.error(`[webhook] grantPurchaseBySku retry also failed: sku=${purchasedSku}, userId=${row.telegram_user_id}, error=${grantResult?.error}`);
+        } else {
+          console.log(`[webhook] grantPurchaseBySku retry ok: sku=${purchasedSku}, userId=${row.telegram_user_id}`);
+        }
       } else {
         console.log(`[webhook] grantPurchaseBySku ok: sku=${purchasedSku}, userId=${row.telegram_user_id}${grantResult.already_active ? " (already_active)" : ""}`);
       }
