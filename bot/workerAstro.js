@@ -64,7 +64,11 @@ export async function computeAndSaveAstroSnapshot(supabase, trackRequestId, prov
     if (!coords) {
       return { ok: false, error: "Не удалось определить координаты места рождения: " + (req.birthplace || "") };
     }
-    console.log("[workerAstro] Координаты получены через геокодинг:", coords);
+    if (coords.approximate) {
+      console.warn("[workerAstro] Используем приближённые координаты для:", req.birthplace, "→", coords.lat, coords.lon);
+    } else {
+      console.log("[workerAstro] Координаты получены через геокодинг:", coords);
+    }
   }
 
   const dt = parseBirthDateTime(req.birthdate, req.birthtime, req.birthtime_unknown);
