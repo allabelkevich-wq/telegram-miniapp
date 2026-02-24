@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.63';
+        var APP_VERSION = '1.2.64';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -943,7 +943,7 @@
       </div><!-- /нижняя обёртка -->
 
       <footer>
-        <p>YupSoul • 2026 • v1.2.63</p>
+        <p>YupSoul • 2026 • v1.2.64</p>
       </footer>
     </div>
 
@@ -1069,7 +1069,10 @@
           <!-- Скрытый input для выбора фото -->
           <input type="file" id="avatarFileInput" accept="image/*" style="display:none">
           <div id="profileName" class="profile-name">Загрузка…</div>
-          <div id="profilePlanBadge" class="profile-plan-badge">✦ YupSoul Free</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;">
+            <div id="profilePlanBadge" class="profile-plan-badge">✦ YupSoul Free</div>
+            <button id="profileRefreshBtn" type="button" onclick="if(typeof loadProfilePage==='function')loadProfilePage()" title="Обновить" style="background:none;border:1px solid rgba(255,255,255,0.12);border-radius:20px;color:rgba(255,255,255,0.35);font-size:0.7rem;padding:2px 8px;cursor:pointer;font-family:inherit;line-height:1.5;">↻</button>
+          </div>
         </div>
 
         <!-- Баланс генераций -->
@@ -2524,6 +2527,12 @@
               if (tg.setBackgroundColor) tg.setBackgroundColor('#08071a');
             } catch(e) {}
             console.log('[Telegram] ready() и expand() выполнены');
+            // Кешируем photo_url в localStorage — иногда недоступен после редиректа HOT Pay
+            try {
+              var _u = tg.initDataUnsafe && tg.initDataUnsafe.user;
+              if (_u && _u.photo_url) localStorage.setItem('tg_photo_url', _u.photo_url);
+              if (_u && _u.id) localStorage.setItem('tg_user_id', String(_u.id));
+            } catch(e) {}
             // Сохраняем tg_username при каждом открытии — нужно для связи с клиентом из админки
             try {
               var _initD = tg.initData;
@@ -2938,8 +2947,10 @@
 
         // Сначала — инициал
         if (avatarInitialEl) avatarInitialEl.textContent = displayName.charAt(0).toUpperCase();
-        // Telegram photo_url (если доступно)
-        if (tgUser && tgUser.photo_url) setAvatarPhoto(tgUser.photo_url);
+        // Telegram photo_url: берём из initDataUnsafe или из кеша localStorage
+        var photoUrl = (tgUser && tgUser.photo_url) || '';
+        if (!photoUrl) { try { photoUrl = localStorage.getItem('tg_photo_url') || ''; } catch(e) {} }
+        if (photoUrl) setAvatarPhoto(photoUrl);
         if (!initData || !apiBase) {
           if (nameEl) nameEl.textContent = displayName;
           return;
@@ -4693,12 +4704,14 @@
           }
           try {
             var payStatus = '';
+            var payMode = '';
             for (var attempt = 0; attempt < 3; attempt++) {
               var statusResp = await fetch(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(thanksRequestId), {
                 headers: { 'X-Telegram-Init': initData }
               });
               var statusJson = await statusResp.json().catch(function() { return {}; });
               payStatus = statusJson && statusJson.data && statusJson.data.payment_status ? String(statusJson.data.payment_status).toLowerCase() : '';
+              payMode = statusJson && statusJson.data && statusJson.data.mode ? String(statusJson.data.mode) : '';
               if (payStatus === 'paid') break;
               if (attempt < 2) await new Promise(function(r) { setTimeout(r, 2000); });
             }
@@ -4710,7 +4723,26 @@
               });
               confirmResp.json().catch(function() {});
             }
-            paymentThanksMsg.textContent = t('songInProgressConfirmed');
+            // Это подписка (mode = sub_soul_basic_sub, sub_soul_plus_sub, sub_master_monthly)?
+            var isSubPayment = payMode.startsWith('sub_') || payMode.includes('sub');
+            if (isSubPayment) {
+              // Показываем сообщение о подписке и кнопку перехода в профиль
+              var subName = payMode.includes('basic') ? 'Basic' : payMode.includes('plus') ? 'Plus' : 'Лаборатория';
+              paymentThanksMsg.innerHTML = '✅ Подписка <strong>' + subName + '</strong> активирована!<br><span style="font-size:0.82rem;opacity:0.7">Треки и Soul Chat теперь доступны.</span>';
+              var backBtn = document.getElementById('paymentThanksBackBtn');
+              if (backBtn) {
+                backBtn.textContent = '👤 Посмотреть профиль';
+                backBtn.onclick = function() {
+                  goToPage('profilePage');
+                  // Небольшая задержка перед загрузкой — даём webhook обработаться
+                  setTimeout(function() { if (typeof loadProfilePage === 'function') loadProfilePage(); }, 800);
+                };
+              }
+              var hint = document.querySelector('#paymentThanksPage p[style*="0.72rem"]');
+              if (hint) hint.style.display = 'none';
+            } else {
+              paymentThanksMsg.textContent = t('songInProgressConfirmed');
+            }
           } catch (e) {
             paymentThanksMsg.textContent = t('songInProgress');
           }

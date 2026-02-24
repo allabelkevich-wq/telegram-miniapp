@@ -3671,7 +3671,7 @@ app.get("/api/payments/hot/status", asyncApi(async (req, res) => {
   }
   const { data, error } = await supabase
     .from("track_requests")
-    .select("id,telegram_user_id,payment_provider,payment_status,payment_order_id,payment_tx_id,payment_amount,payment_currency,payment_raw,paid_at,generation_status,status")
+    .select("id,telegram_user_id,payment_provider,payment_status,payment_order_id,payment_tx_id,payment_amount,payment_currency,payment_raw,paid_at,generation_status,status,mode")
     .eq("id", requestId)
     .maybeSingle();
   if (error || !data) return res.status(404).json({ success: false, error: "Заявка не найдена" });
