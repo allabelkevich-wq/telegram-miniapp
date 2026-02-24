@@ -321,7 +321,7 @@ async function consumeReferralCreditIfAvailable(telegramUserId) {
 
 // ============================================================================
 
-async function hasActiveSubscription(telegramUserId) {
+async function hasActiveSubscription(telegramUserId, skus = ["soul_basic_sub", "soul_plus_sub", "master_monthly"]) {
   if (!supabase) return false;
   const nowIso = new Date().toISOString();
   const { data, error } = await supabase
@@ -330,7 +330,7 @@ async function hasActiveSubscription(telegramUserId) {
     .eq("telegram_user_id", Number(telegramUserId))
     .eq("status", "active")
     .gte("renew_at", nowIso)
-    .in("plan_sku", ["soul_basic_sub", "soul_plus_sub", "master_monthly"])
+    .in("plan_sku", skus)
     .limit(1)
     .maybeSingle();
   if (error && /does not exist|relation/i.test(error.message)) return false;
@@ -580,7 +580,10 @@ async function getSoulChatAccess(telegramUserId) {
 
   // 1. Активная подписка Soul Basic / Soul Plus / Лаборатория (все дают Soul Chat)
   const hasSub = await hasActiveSubscription(telegramUserId);
-  if (hasSub) return { allowed: true, source: "subscription", expires_at: null };
+  if (hasSub) {
+    const isMaster = await hasActiveSubscription(telegramUserId, ["master_monthly"]);
+    return { allowed: true, source: "subscription", is_master: isMaster, expires_at: null };
+  }
 
   // 2. Активный суточный доступ (подарочный или купленный)
   if (supabase) {
@@ -708,6 +711,20 @@ function buildSoulChatPromptFromProfile(profile, question) {
   ].filter(Boolean).join("\n");
 }
 
+function buildSynastryPrompt(row1, astro1, row2, astro2, question) {
+  return `Ты — астрологический аналитик синастрии двух людей.
+Анализируй совместимость, динамику и точки пересечения их карт.
+Отвечай коротко, тепло, без терминов.
+
+Карта 1: ${row1.name || "—"}, ${row1.gender || "—"}, ${row1.birthdate || "—"}, ${row1.birthplace || "—"}
+Астро 1: ${astro1?.snapshot_text?.slice(0, 6000) || "нет данных"}
+
+Карта 2: ${row2.name || "—"}, ${row2.gender || "—"}, ${row2.birthdate || "—"}, ${row2.birthplace || "—"}
+Астро 2: ${astro2?.snapshot_text?.slice(0, 6000) || "нет данных"}
+
+Вопрос: "${question}"`;
+}
+
 async function getUserProfileForSoulChat(telegramUserId) {
   if (!supabase || !telegramUserId) return null;
   const { data } = await supabase
@@ -718,8 +735,9 @@ async function getUserProfileForSoulChat(telegramUserId) {
   return data || null;
 }
 
-async function runSoulChat({ requestId, question, telegramUserId, isAdminCaller = false }) {
+async function runSoulChat({ requestId, requestId2, question, telegramUserId, isAdminCaller = false }) {
   let rid = String(requestId || "").trim();
+  const rid2 = String(requestId2 || "").trim();
   const q = String(question || "").trim();
   if (!q) return { ok: false, error: "Пустой вопрос" };
   // Если request_id не передан или невалиден — ищем последнюю заявку пользователя
@@ -735,6 +753,22 @@ async function runSoulChat({ requestId, question, telegramUserId, isAdminCaller 
     if (!isAdminCaller && Number(row.telegram_user_id) !== Number(telegramUserId)) {
       return { ok: false, error: "Нет доступа к этой заявке" };
     }
+
+    // Синастрия: вторая карточка
+    if (rid2 && UUID_REGEX.test(rid2)) {
+      const loaded2 = await getRequestForSoulChat(rid2);
+      if (!loaded2.error) {
+        const synPrompt = buildSynastryPrompt(row, astro, loaded2.row, loaded2.astro, q);
+        const llm2 = await chatCompletion(
+          "Ты этичный и тёплый собеседник. Отвечай 3-6 предложениями, конкретно и бережно. Не используй астрологические термины.",
+          synPrompt,
+          { model: process.env.DEEPSEEK_MODEL || "deepseek-reasoner", max_tokens: 1200, temperature: 1.1 }
+        );
+        if (!llm2.ok) return { ok: false, error: llm2.error || "Ошибка генерации синастрии" };
+        return { ok: true, answer: String(llm2.text || "").trim(), request: row, source: "synastry" };
+      }
+    }
+
     const soulPrompt = buildSoulChatPrompt(row, astro, q);
     const llm = await chatCompletion(
       "Ты этичный и тёплый собеседник. Отвечай 3-6 предложениями, конкретно и бережно. Не используй астрологические термины.",
@@ -3160,6 +3194,7 @@ app.get("/api/soul-chat/access", asyncApi(async (req, res) => {
     expires_at: access.expires_at || null,
     last_request_id: lastReqId || null,
     has_profile: hasProfile,
+    is_master: !!access.is_master,
   });
 }));
 
@@ -3210,6 +3245,7 @@ app.post("/api/soul-chat", express.json(), asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
   const body = req.body || {};
   const requestId = String(body.request_id || "").trim();
+  const requestId2 = String(body.request_id_2 || "").trim();
   const question = String(body.question || "").trim();
   const adminToken = String(body.admin_token || "").trim();
   const isAdminCaller = !!ADMIN_SECRET && adminToken === ADMIN_SECRET;
@@ -3232,7 +3268,7 @@ app.post("/api/soul-chat", express.json(), asyncApi(async (req, res) => {
       need_payment: !access.trial_available,
     });
   }
-  const result = await runSoulChat({ requestId, question, telegramUserId, isAdminCaller });
+  const result = await runSoulChat({ requestId, requestId2, question, telegramUserId, isAdminCaller });
   if (!result.ok) return res.status(400).json({ success: false, error: result.error });
 
   // Сохраняем диалог в историю (не блокируем ответ на ошибку записи)
@@ -3243,6 +3279,7 @@ app.post("/api/soul-chat", express.json(), asyncApi(async (req, res) => {
       question,
       answer: result.answer,
       source: result.source || access.source || null,
+      request_id_2: (requestId2 && UUID_REGEX.test(requestId2)) ? requestId2 : null,
     }).then(() => {}).catch((e) => console.warn("[soul-chat] save session:", e?.message));
   }
 
@@ -3276,6 +3313,23 @@ app.get("/api/soul-chat/history", asyncApi(async (req, res) => {
   // Возвращаем в хронологическом порядке (oldest first)
   const messages = (data || []).reverse();
   return res.json({ success: true, messages });
+}));
+
+// Карточки пользователя для синастрии (только для тарифа Лаборатория)
+app.get("/api/user/cards", asyncApi(async (req, res) => {
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const initData = req.headers["x-telegram-init"] || req.query?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, error: "Unauthorized" });
+  const { data } = await supabase
+    .from("track_requests")
+    .select("id,name,birthdate,birthplace,mode,person2_name,person2_birthdate,created_at")
+    .eq("telegram_user_id", telegramUserId)
+    .not("mode", "eq", "soul_chat_day")
+    .in("generation_status", ["completed", "done"])
+    .order("created_at", { ascending: false })
+    .limit(20);
+  return res.json({ success: true, cards: data || [] });
 }));
 
 // Сохраняет tg_username при каждом открытии Mini App

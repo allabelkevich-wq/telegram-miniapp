@@ -1748,9 +1748,42 @@
 
       <!-- ЧАТ-ЗОНА: есть доступ — история прокручивается, ввод фиксирован внизу -->
       <!-- Миниатюрная шапка чата (только кнопка назад + таймер) -->
-      <div id="scChatHeader" style="display:none;flex-shrink:0;display:none;align-items:center;padding:max(10px,env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid rgba(255,255,255,0.06);">
+      <div id="scChatHeader" style="display:none;flex-shrink:0;display:none;align-items:center;gap:8px;padding:max(10px,env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid rgba(255,255,255,0.06);">
         <button type="button" class="profile-back-btn" onclick="goBack()" aria-label="Назад" style="margin-right:auto;">←</button>
-        <div id="scPageTimer" style="display:none;font-size:0.72rem;color:rgba(212,175,55,0.6);background:rgba(212,175,55,0.08);padding:4px 11px;border-radius:16px;"></div>
+        <button id="scCardPickerBtn" type="button" style="display:none;font-size:0.78rem;font-weight:600;color:#d4af37;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.25);border-radius:14px;padding:4px 12px;cursor:pointer;font-family:inherit;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;" onclick="scOpenCardPicker()">— ↓</button>
+        <div id="scPageTimer" style="display:none;font-size:0.72rem;color:rgba(212,175,55,0.6);background:rgba(212,175,55,0.08);padding:4px 11px;border-radius:16px;white-space:nowrap;"></div>
+      </div>
+
+      <!-- Модальное окно выбора карточек (синастрия) -->
+      <div id="scCardPickerModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.65);" onclick="if(event.target===this)scCloseCardPicker()">
+        <div style="position:absolute;bottom:0;left:0;right:0;background:#0f0e24;border-radius:20px 20px 0 0;padding:20px 16px calc(env(safe-area-inset-bottom)+20px);max-height:82vh;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;margin-bottom:16px;">
+            <div style="font-size:1rem;font-weight:700;color:#d4af37;flex:1;">Контекст чата</div>
+            <button type="button" onclick="scCloseCardPicker()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.3rem;cursor:pointer;padding:0;line-height:1;">×</button>
+          </div>
+          <!-- Переключатель режима -->
+          <div id="scPickerModeTabs" style="display:flex;gap:8px;margin-bottom:16px;">
+            <button id="scPickerTabSingle" type="button" onclick="scSetPickerMode('single')" style="flex:1;padding:8px;border-radius:10px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid rgba(212,175,55,0.5);background:rgba(212,175,55,0.18);color:#d4af37;">Одна карточка</button>
+            <button id="scPickerTabSynastry" type="button" onclick="scSetPickerMode('synastry')" style="flex:1;padding:8px;border-radius:10px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);">Синастрия (2 карточки)</button>
+          </div>
+          <!-- Режим: одна карточка -->
+          <div id="scPickerSinglePane" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;min-height:0;">
+            <div id="scPickerSingleList" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+          <!-- Режим: синастрия -->
+          <div id="scPickerSynastryPane" style="display:none;flex:1;overflow-y:auto;display:none;flex-direction:column;gap:12px;min-height:0;">
+            <div>
+              <div style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Карточка A</div>
+              <div id="scPickerSynListA" style="display:flex;flex-direction:column;gap:6px;"></div>
+            </div>
+            <div>
+              <div style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Карточка B</div>
+              <div id="scPickerSynListB" style="display:flex;flex-direction:column;gap:6px;"></div>
+            </div>
+          </div>
+          <!-- Кнопка применить -->
+          <button id="scPickerApplyBtn" type="button" onclick="scApplyCardPicker()" style="margin-top:16px;width:100%;padding:13px;border-radius:13px;background:linear-gradient(135deg,rgba(212,175,55,0.28),rgba(236,72,153,0.18));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">Применить</button>
+        </div>
       </div>
 
       <!-- Список сообщений — flex:1 + overflow-y:auto -->
@@ -1771,6 +1804,11 @@
         </div>
         <!-- История сообщений -->
         <div id="scPageHistory"></div>
+        <!-- Тизер синастрии для Basic/Plus (не Master) -->
+        <div id="scSynastryTeaser" style="display:none;margin-top:12px;padding:12px 14px;border-radius:14px;background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.18);font-size:0.82rem;color:rgba(255,255,255,0.6);line-height:1.5;">
+          <span style="color:rgba(212,175,55,0.8);">✦</span> Синастрия — сравнение двух карт — доступна в тарифе Лаборатория
+          <button type="button" onclick="goToProfileFrom('soulChatPage')" style="display:inline-block;margin-left:8px;padding:3px 10px;border-radius:8px;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.3);color:#d4af37;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;min-height:unset;">Узнать →</button>
+        </div>
         <div id="scPageStatus" style="display:none;text-align:center;font-size:0.8rem;color:rgba(255,255,255,0.45);padding:8px 0;"></div>
       </div>
 
@@ -4216,6 +4254,12 @@
       // Глобальные переменные для soulChatPage (новая полная страница)
       window._scLastRequestId = null;
       window._scHasProfile    = false;
+      window._scIsMaster      = false;
+      window._scRequestId2    = null;
+      window._scUserCards     = [];
+      window._scPickerMode    = 'single';
+      window._scPickerSelA    = null;
+      window._scPickerSelB    = null;
 
       function scShow(state) {
         ['scLoading','scGiftState','scActiveState','scPayState'].forEach(function(id) {
@@ -4347,6 +4391,7 @@
 
           window._scLastRequestId = (json && json.last_request_id) || null;
           window._scHasProfile   = !!(json && json.has_profile);
+          window._scIsMaster     = !!(json && json.is_master);
 
           if (json && json.allowed) {
             showChat();
@@ -4359,6 +4404,19 @@
             } else {
               if (noReqEl)   noReqEl.style.display   = 'none';
             }
+            // Кнопка выбора карточек — только для Master
+            var cardPickerBtn = document.getElementById('scCardPickerBtn');
+            if (window._scIsMaster) {
+              if (cardPickerBtn) cardPickerBtn.style.display = '';
+              scLoadUserCards(apiBase, initData);
+            } else {
+              if (cardPickerBtn) cardPickerBtn.style.display = 'none';
+              // Тизер синастрии для Basic/Plus
+              var teaserEl = document.getElementById('scSynastryTeaser');
+              if (teaserEl) teaserEl.style.display = '';
+            }
+            // Обновляем заголовок кнопки карточки
+            scUpdateCardPickerLabel();
             // Таймер доступа
             var timerEl = document.getElementById('scPageTimer');
             if (timerEl && json.expires_at) {
@@ -4442,6 +4500,144 @@
           scPageAddMsg('soul', msg.answer);
         });
       }
+
+      // ── Card Picker (синастрия) ─────────────────────────────────────────────
+      async function scLoadUserCards(apiBase, initData) {
+        try {
+          var r = await fetch(apiBase + '/api/user/cards', {
+            headers: { 'X-Telegram-Init': initData }
+          });
+          var d = await r.json().catch(function(){ return {}; });
+          if (d.success && Array.isArray(d.cards)) {
+            window._scUserCards = d.cards;
+            // Если текущая карточка есть — предвыбрать её
+            if (!window._scPickerSelA && window._scLastRequestId) {
+              window._scPickerSelA = window._scLastRequestId;
+            }
+            scUpdateCardPickerLabel();
+          }
+        } catch(e) {}
+      }
+
+      function scCardLabel(card) {
+        if (!card) return '—';
+        var icon = card.mode === 'couple' ? ' ♥' : '';
+        if (card.mode === 'couple' && card.person2_name) {
+          return card.name + ' & ' + card.person2_name + icon;
+        }
+        return card.name + (card.birthdate ? ', ' + card.birthdate : '') + icon;
+      }
+
+      function scUpdateCardPickerLabel() {
+        var btn = document.getElementById('scCardPickerBtn');
+        if (!btn) return;
+        var cards = window._scUserCards || [];
+        var selA = window._scPickerSelA || window._scLastRequestId;
+        var selB = window._scRequestId2;
+        var cardA = cards.find(function(c){ return c.id === selA; });
+        var cardB = selB ? cards.find(function(c){ return c.id === selB; }) : null;
+        if (cardA && cardB) {
+          var nameA = cardA.name || '?';
+          var nameB = cardB.name || '?';
+          btn.textContent = nameA + ' ↔ ' + nameB + ' ↓';
+        } else if (cardA) {
+          btn.textContent = scCardLabel(cardA) + ' ↓';
+        } else {
+          btn.textContent = 'Выбрать карточку ↓';
+        }
+      }
+
+      function scBuildPickerList(containerId, selectedId, onSelect) {
+        var container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+        var cards = window._scUserCards || [];
+        if (cards.length === 0) {
+          container.innerHTML = '<div style="color:rgba(255,255,255,0.35);font-size:0.82rem;text-align:center;padding:12px 0;">Нет завершённых карточек</div>';
+          return;
+        }
+        cards.forEach(function(card) {
+          var isSelected = card.id === selectedId;
+          var item = document.createElement('button');
+          item.type = 'button';
+          item.style.cssText = 'width:100%;text-align:left;padding:9px 12px;border-radius:10px;font-family:inherit;font-size:0.84rem;cursor:pointer;border:1px solid ' +
+            (isSelected ? 'rgba(212,175,55,0.5)' : 'rgba(255,255,255,0.1)') + ';background:' +
+            (isSelected ? 'rgba(212,175,55,0.14)' : 'rgba(255,255,255,0.04)') + ';color:' +
+            (isSelected ? '#d4af37' : 'rgba(255,255,255,0.75)') + ';';
+          item.textContent = scCardLabel(card);
+          item.setAttribute('data-id', card.id);
+          item.addEventListener('click', function() { onSelect(card.id); });
+          container.appendChild(item);
+        });
+      }
+
+      function scSetPickerMode(mode) {
+        window._scPickerMode = mode;
+        var singlePane = document.getElementById('scPickerSinglePane');
+        var synPane = document.getElementById('scPickerSynastryPane');
+        var tabSingle = document.getElementById('scPickerTabSingle');
+        var tabSyn = document.getElementById('scPickerTabSynastry');
+        var activeTab = 'border:1px solid rgba(212,175,55,0.5);background:rgba(212,175,55,0.18);color:#d4af37;';
+        var inactiveTab = 'border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);';
+        if (mode === 'single') {
+          if (singlePane) singlePane.style.display = 'flex';
+          if (synPane)    synPane.style.display    = 'none';
+          if (tabSingle)  tabSingle.style.cssText  += activeTab;
+          if (tabSyn)     tabSyn.style.cssText     += inactiveTab;
+          scBuildPickerList('scPickerSingleList', window._scPickerSelA || window._scLastRequestId, function(id) {
+            window._scPickerSelA = id;
+            window._scRequestId2 = null;
+            scBuildPickerList('scPickerSingleList', id, arguments.callee);
+          });
+        } else {
+          if (singlePane) singlePane.style.display = 'none';
+          if (synPane)    synPane.style.display    = 'flex';
+          if (tabSingle)  tabSingle.style.cssText  += inactiveTab;
+          if (tabSyn)     tabSyn.style.cssText     += activeTab;
+          var rebuildA = function(selId) {
+            window._scPickerSelA = selId;
+            scBuildPickerList('scPickerSynListA', selId, rebuildA);
+          };
+          var rebuildB = function(selId) {
+            window._scPickerSelB = selId;
+            scBuildPickerList('scPickerSynListB', selId, rebuildB);
+          };
+          scBuildPickerList('scPickerSynListA', window._scPickerSelA || window._scLastRequestId, rebuildA);
+          scBuildPickerList('scPickerSynListB', window._scPickerSelB, rebuildB);
+        }
+      }
+
+      function scOpenCardPicker() {
+        var modal = document.getElementById('scCardPickerModal');
+        if (!modal) return;
+        modal.style.display = '';
+        // Перезапускаем текущий режим чтобы отрисовать актуальный список
+        scSetPickerMode(window._scPickerMode || 'single');
+      }
+      window.scOpenCardPicker = scOpenCardPicker;
+
+      function scCloseCardPicker() {
+        var modal = document.getElementById('scCardPickerModal');
+        if (modal) modal.style.display = 'none';
+      }
+      window.scCloseCardPicker = scCloseCardPicker;
+
+      function scApplyCardPicker() {
+        if (window._scPickerMode === 'single') {
+          var selA = window._scPickerSelA || window._scLastRequestId;
+          window._scLastRequestId = selA || window._scLastRequestId;
+          window._scRequestId2 = null;
+        } else {
+          var selA2 = window._scPickerSelA || window._scLastRequestId;
+          var selB2 = window._scPickerSelB;
+          if (selA2) window._scLastRequestId = selA2;
+          window._scRequestId2 = (selB2 && selB2 !== selA2) ? selB2 : null;
+        }
+        scUpdateCardPickerLabel();
+        scCloseCardPicker();
+      }
+      window.scApplyCardPicker = scApplyCardPicker;
+      // ── /Card Picker ────────────────────────────────────────────────────────
 
       // Кнопка «Подробнее» в промо Soul Chat
       (function() {
@@ -4554,7 +4750,8 @@
               body: JSON.stringify({
                 initData: initData,
                 question: question,
-                request_id: window._scLastRequestId || ''
+                request_id: window._scLastRequestId || '',
+                request_id_2: window._scRequestId2 || ''
               })
             });
             var json = await resp.json().catch(function(){ return {}; });
