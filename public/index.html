@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.66';
+        var APP_VERSION = '1.2.67';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -4287,6 +4287,7 @@
       // ══════════════ SOUL CHAT PAGE ══════════════
       function goToSoulChat() {
         window.returnToPage = 'homePage';
+        window._scHistoryLoaded = false; // При каждом открытии страницы история подгружается заново
         goToPage('soulChatPage');
       }
       window.goToSoulChat = goToSoulChat;
@@ -4371,6 +4372,8 @@
               };
               updateTimer();
             }
+            // Загружаем историю диалогов
+            scLoadHistory(apiBase, initData);
           } else {
             // Промо: показываем кнопки
             if (json && json.trial_available) {
@@ -4385,6 +4388,59 @@
           // Ошибка — показываем промо (чтобы не зависнуть на загрузке)
           showPromo();
         }
+      }
+
+      // Загрузка и отображение истории диалогов Soul Chat
+      window._scHistoryLoaded = false;
+      async function scLoadHistory(apiBase, initData) {
+        if (window._scHistoryLoaded) return; // Уже загружали в этой сессии
+        var historyEl = document.getElementById('scPageHistory');
+        if (!historyEl) return;
+
+        // Мгновенно показываем кэш из localStorage
+        var cacheKey = 'scHistory_' + (window._tgUserId || 'anon');
+        try {
+          var cached = localStorage.getItem(cacheKey);
+          if (cached) {
+            var cachedMsgs = JSON.parse(cached);
+            if (Array.isArray(cachedMsgs) && cachedMsgs.length > 0) {
+              scRenderHistory(historyEl, cachedMsgs);
+              window._scHistoryLoaded = true;
+            }
+          }
+        } catch(e) {}
+
+        // Запрашиваем актуальную историю с сервера
+        try {
+          var r = await fetch(apiBase + '/api/soul-chat/history', {
+            headers: { 'X-Telegram-Init': initData }
+          });
+          var d = await r.json().catch(function(){ return {}; });
+          if (d.success && Array.isArray(d.messages)) {
+            // Если с сервера больше сообщений — перерисовываем
+            scRenderHistory(historyEl, d.messages);
+            window._scHistoryLoaded = true;
+            try { localStorage.setItem(cacheKey, JSON.stringify(d.messages.slice(-50))); } catch(e) {}
+          }
+        } catch(e) {}
+
+        // Прокручиваем вниз
+        var chatEl = document.getElementById('scPageChat');
+        if (chatEl) setTimeout(function(){ chatEl.scrollTop = chatEl.scrollHeight; }, 100);
+      }
+
+      function scRenderHistory(historyEl, messages) {
+        historyEl.innerHTML = '';
+        if (!messages || messages.length === 0) return;
+        // Метка «начало истории»
+        var divider = document.createElement('div');
+        divider.style.cssText = 'text-align:center;font-size:0.72rem;color:rgba(255,255,255,0.25);padding:6px 0 10px;';
+        divider.textContent = '✦ история переписки ✦';
+        historyEl.appendChild(divider);
+        messages.forEach(function(msg) {
+          scPageAddMsg('user', msg.question);
+          scPageAddMsg('soul', msg.answer);
+        });
       }
 
       // Кнопка «Подробнее» в промо Soul Chat
@@ -4456,26 +4512,28 @@
         });
       })();
 
+      // Добавляет сообщение в историю Soul Chat (глобальная функция)
+      function scPageAddMsg(role, text) {
+        var historyEl = document.getElementById('scPageHistory');
+        if (!historyEl) return;
+        var isUser = (role === 'user');
+        var wrap = document.createElement('div');
+        wrap.className = isUser ? 'sc-msg-user' : 'sc-msg-soul';
+        var bubble = document.createElement('div');
+        bubble.className = isUser ? 'sc-bubble-user' : 'sc-bubble-soul';
+        bubble.textContent = text;
+        wrap.appendChild(bubble);
+        historyEl.appendChild(wrap);
+        var chatEl = document.getElementById('scPageChat');
+        if (chatEl) chatEl.scrollTop = chatEl.scrollHeight;
+      }
+
       // Кнопка «Спросить» на странице Soul Chat
       (function() {
         var sendBtn   = document.getElementById('scPageSendBtn');
         var questionEl = document.getElementById('scPageQuestion');
-        var historyEl  = document.getElementById('scPageHistory');
         var statusEl   = document.getElementById('scPageStatus');
         if (!sendBtn || !questionEl) return;
-
-        function addMsg(role, text) {
-          if (!historyEl) return;
-          var isUser = (role === 'user');
-          var wrap = document.createElement('div');
-          wrap.className = isUser ? 'sc-msg-user' : 'sc-msg-soul';
-          var bubble = document.createElement('div');
-          bubble.className = isUser ? 'sc-bubble-user' : 'sc-bubble-soul';
-          bubble.textContent = text;
-          wrap.appendChild(bubble);
-          historyEl.appendChild(wrap);
-          historyEl.scrollTop = historyEl.scrollHeight;
-        }
 
         sendBtn.addEventListener('click', async function() {
           var question = questionEl.value.trim();
@@ -4484,7 +4542,7 @@
           var initData = getInitData();
           if (!apiBase || !initData) return;
 
-          addMsg('user', question);
+          scPageAddMsg('user', question);
           questionEl.value = '';
           sendBtn.disabled = true;
           if (statusEl) { statusEl.textContent = '🧘 Слушаю душу…'; statusEl.style.display = ''; }
@@ -4502,15 +4560,22 @@
             var json = await resp.json().catch(function(){ return {}; });
             var answer = (json && json.data && json.data.answer) || (json && json.answer) || null;
             if (answer) {
-              addMsg('soul', answer);
+              scPageAddMsg('soul', answer);
+              // Обновляем кэш истории в localStorage
+              try {
+                var cacheKey = 'scHistory_' + (window._tgUserId || 'anon');
+                var cached = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+                cached.push({ question: question, answer: answer, created_at: new Date().toISOString() });
+                localStorage.setItem(cacheKey, JSON.stringify(cached.slice(-50)));
+              } catch(ex) {}
             } else if (json && json.error) {
-              addMsg('soul', '❌ ' + json.error);
+              scPageAddMsg('soul', '❌ ' + json.error);
               if (!json.success) setTimeout(function(){ initSoulChatPage(); }, 1200);
             } else {
-              addMsg('soul', '❌ Ошибка. Попробуй ещё раз.');
+              scPageAddMsg('soul', '❌ Ошибка. Попробуй ещё раз.');
             }
           } catch(e) {
-            addMsg('soul', '❌ Ошибка соединения.');
+            scPageAddMsg('soul', '❌ Ошибка соединения.');
           } finally {
             sendBtn.disabled = false;
             if (statusEl) statusEl.style.display = 'none';

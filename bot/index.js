@@ -106,6 +106,8 @@ const DEFAULT_PRICING_CATALOG = [
 function resolveSkuByMode(mode) {
   if (mode === "couple") return "couple_song";
   if (mode === "transit") return "transit_energy_song";
+  // Подписки: mode = "sub_soul_basic_sub" → sku = "soul_basic_sub"
+  if (typeof mode === "string" && mode.startsWith("sub_")) return mode.slice(4);
   return "single_song";
 }
 
@@ -444,19 +446,35 @@ function verifyHotWebhookSignature(rawBody, signatureHeader) {
 
 async function createOrRefreshSubscription({ telegramUserId, planSku, source = "hot" }) {
   if (!supabase) return { ok: false, error: "Supabase недоступен" };
+  // Проверяем: нет ли уже активной подписки на этот план (идемпотентность)
+  const existing = await getActiveSubscriptionFull(telegramUserId);
+  if (existing && existing.plan_sku === planSku) {
+    console.log(`[sub] Подписка ${planSku} для ${telegramUserId} уже активна (renew_at: ${existing.renew_at})`);
+    return { ok: true, renew_at: existing.renew_at, already_active: true };
+  }
   const now = new Date();
   const renewAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  // Деактивируем все прежние подписки этого пользователя на любой план
+  await supabase.from("subscriptions")
+    .update({ status: "cancelled", updated_at: now.toISOString() })
+    .eq("telegram_user_id", Number(telegramUserId))
+    .eq("status", "active");
   const payload = {
     telegram_user_id: Number(telegramUserId),
     plan_sku: planSku,
     status: "active",
     renew_at: renewAt,
     source,
-    updated_at: new Date().toISOString(),
+    created_at: now.toISOString(),
+    updated_at: now.toISOString(),
   };
   const { error } = await supabase.from("subscriptions").insert(payload);
   if (error && /does not exist|relation/i.test(error.message)) return { ok: false, error: "missing_table" };
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    console.error(`[sub] Ошибка создания подписки ${planSku} для ${telegramUserId}:`, error.message);
+    return { ok: false, error: error.message };
+  }
+  console.log(`[sub] Подписка ${planSku} создана для ${telegramUserId}, renew_at: ${renewAt}`);
   return { ok: true, renew_at: renewAt };
 }
 
@@ -2330,7 +2348,12 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
           });
         }
       }
-      await grantPurchaseBySku({ telegramUserId: row.telegram_user_id, sku: purchasedSku, source: "hot_payment", orderId: orderId || null });
+      const grantResult = await grantPurchaseBySku({ telegramUserId: row.telegram_user_id, sku: purchasedSku, source: "hot_payment", orderId: orderId || null });
+      if (!grantResult?.ok) {
+        console.error(`[webhook] grantPurchaseBySku failed: sku=${purchasedSku}, userId=${row.telegram_user_id}, error=${grantResult?.error}`);
+      } else {
+        console.log(`[webhook] grantPurchaseBySku ok: sku=${purchasedSku}, userId=${row.telegram_user_id}${grantResult.already_active ? " (already_active)" : ""}`);
+      }
 
       // Специальная обработка для Soul Chat 1day
       if (purchasedSku === "soul_chat_1day") {
@@ -3235,6 +3258,26 @@ app.post("/api/soul-chat", express.json(), asyncApi(async (req, res) => {
   });
 }));
 
+// История диалогов Soul Chat (последние 50 сообщений)
+app.get("/api/soul-chat/history", asyncApi(async (req, res) => {
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const initData = req.headers["x-telegram-init"] || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, error: "Unauthorized" });
+
+  const { data, error } = await supabase
+    .from("soul_chat_sessions")
+    .select("id,question,answer,created_at")
+    .eq("telegram_user_id", Number(telegramUserId))
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  // Возвращаем в хронологическом порядке (oldest first)
+  const messages = (data || []).reverse();
+  return res.json({ success: true, messages });
+}));
+
 // Сохраняет tg_username при каждом открытии Mini App
 app.post("/api/user/sync", asyncApi(async (req, res) => {
   const initData = req.headers["x-telegram-init"] || req.body?.initData || "";
@@ -3701,7 +3744,7 @@ app.post("/api/payments/hot/confirm", express.json(), asyncApi(async (req, res) 
   }
   const { data, error } = await supabase
     .from("track_requests")
-    .select("id,telegram_user_id,payment_status,status,generation_status")
+    .select("id,telegram_user_id,payment_status,status,generation_status,mode")
     .eq("id", requestId)
     .maybeSingle();
   if (error || !data) return res.status(404).json({ success: false, error: "Заявка не найдена" });
@@ -3710,6 +3753,11 @@ app.post("/api/payments/hot/confirm", express.json(), asyncApi(async (req, res) 
   }
   const paid = String(data.payment_status || "").toLowerCase() === "paid";
   if (!paid) return res.status(409).json({ success: false, error: "Оплата не подтверждена" });
+  // Подписки и Soul Chat Day активируются через webhook — не запускаем генерацию песни
+  const isSubOrService = String(data.mode || "").startsWith("sub_") || data.mode === "soul_chat_day";
+  if (isSubOrService) {
+    return res.json({ success: true, started: false, status: "subscription_active" });
+  }
   const gs = String(data.generation_status || data.status || "pending");
   if (["completed", "processing", "lyrics_generated", "suno_processing", "astro_calculated"].includes(gs)) {
     return res.json({ success: true, started: false, status: gs });
