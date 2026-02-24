@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.69';
+        var APP_VERSION = '1.2.70';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -5274,7 +5274,10 @@
           try {
             var payStatus = '';
             var payMode = '';
-            for (var attempt = 0; attempt < 5; attempt++) {
+            // Для подписок ждём дольше (вебхук может прийти позже редиректа)
+            var maxAttempts = isSubPaymentImmediate ? 20 : 5;
+            var delayMs = 3000;
+            for (var attempt = 0; attempt < maxAttempts; attempt++) {
               var statusResp = await fetch(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(thanksRequestId), {
                 headers: { 'X-Telegram-Init': initData }
               });
@@ -5282,8 +5285,9 @@
               payStatus = statusJson && statusJson.data && statusJson.data.payment_status ? String(statusJson.data.payment_status).toLowerCase() : '';
               payMode = statusJson && statusJson.data && statusJson.data.mode ? String(statusJson.data.mode) : '';
               if (payStatus === 'paid') break;
-              if (attempt < 4) await new Promise(function(r) { setTimeout(r, 2500); });
+              if (attempt < maxAttempts - 1) await new Promise(function(r) { setTimeout(r, delayMs); });
             }
+            var isSub = isSubPaymentImmediate || (payMode && payMode.startsWith('sub_'));
             if (payStatus === 'paid') {
               var confirmResp = await fetch(apiBase + '/api/payments/hot/confirm', {
                 method: 'POST',
@@ -5291,6 +5295,39 @@
                 body: JSON.stringify({ request_id: thanksRequestId, initData: initData })
               });
               confirmResp.json().catch(function() {});
+            } else if (isSub && thanksRequestId) {
+              // Вебхук не пришёл за 60 секунд — используем fallback /api/subscription/claim
+              try {
+                var claimResp = await fetch(apiBase + '/api/subscription/claim', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+                  body: JSON.stringify({ request_id: thanksRequestId, initData: initData })
+                });
+                var claimJson = await claimResp.json().catch(function(){ return {}; });
+                if (claimJson && claimJson.success) {
+                  console.log('[sub] claim fallback ok:', claimJson.status);
+                }
+              } catch(claimErr) {
+                console.warn('[sub] claim fallback error:', claimErr && claimErr.message);
+              }
+            }
+            // Опрашиваем /api/subscription/status чтобы убедиться что подписка в БД
+            if (isSub) {
+              for (var si = 0; si < 12; si++) {
+                await new Promise(function(r){ setTimeout(r, 2500); });
+                try {
+                  var subCheckResp = await fetch(apiBase + '/api/subscription/status', { headers: { 'X-Telegram-Init': initData } });
+                  var subCheckJson = await subCheckResp.json().catch(function(){ return {}; });
+                  if (subCheckJson && subCheckJson.subscription_active) {
+                    var ptB2 = document.getElementById('paymentThanksBackBtn');
+                    if (ptB2 && !ptB2._subConfirmed) {
+                      ptB2._subConfirmed = true;
+                      ptB2.textContent = '✓ ' + t('subBtnProfile');
+                    }
+                    break;
+                  }
+                } catch(e2) {}
+              }
             }
             // Если не знали про подписку из localStorage — определяем по mode
             if (!isSubPaymentImmediate) {

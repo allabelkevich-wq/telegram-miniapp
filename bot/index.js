@@ -3558,6 +3558,57 @@ app.post("/api/payments/subscription/checkout", express.json(), asyncApi(async (
   });
 }));
 
+// Fallback: пользователь вернулся по HOT Pay redirect но вебхук ещё не пришёл.
+// Активируем подписку напрямую, если: user owns the request, mode=sub_*, created <2ч назад.
+// Аудит: source = "user_claimed_no_webhook" для ручной проверки.
+app.post("/api/subscription/claim", express.json(), asyncApi(async (req, res) => {
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const initData = req.headers["x-telegram-init"] || req.body?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, error: "Unauthorized" });
+  const requestId = String(req.body?.request_id || "").trim();
+  if (!requestId || !UUID_REGEX.test(requestId)) {
+    return res.status(400).json({ success: false, error: "request_id (UUID) обязателен" });
+  }
+  const { data, error } = await supabase
+    .from("track_requests")
+    .select("id,telegram_user_id,payment_status,mode,created_at,payment_order_id")
+    .eq("id", requestId)
+    .maybeSingle();
+  if (error || !data) return res.status(404).json({ success: false, error: "Заявка не найдена" });
+  if (Number(data.telegram_user_id) !== Number(telegramUserId)) {
+    return res.status(403).json({ success: false, error: "Нет доступа к этой заявке" });
+  }
+  // Только для режима подписки
+  const mode = String(data.mode || "");
+  if (!mode.startsWith("sub_")) {
+    return res.status(400).json({ success: false, error: "Только для заявок-подписок" });
+  }
+  // Заявка не старше 2 часов
+  const ageMs = Date.now() - new Date(data.created_at).getTime();
+  if (ageMs > 2 * 60 * 60 * 1000) {
+    return res.status(409).json({ success: false, error: "Заявка слишком старая" });
+  }
+  // Если уже есть активная подписка этого SKU — успех (idempotent)
+  const sku = resolveSkuByMode(mode);
+  const existing = await getActiveSubscriptionFull(telegramUserId);
+  if (existing && existing.plan_sku === sku) {
+    return res.json({ success: true, status: "already_active", plan_sku: sku });
+  }
+  // Логируем для аудита
+  console.log(`[sub/claim] userId=${telegramUserId}, requestId=${requestId.slice(0,8)}, sku=${sku}, payStatus=${data.payment_status}, ageMin=${Math.round(ageMs/60000)}`);
+  const grantResult = await grantPurchaseBySku({
+    telegramUserId,
+    sku,
+    source: "user_claimed_no_webhook",
+    orderId: data.payment_order_id || null,
+  });
+  if (!grantResult?.ok) {
+    return res.status(500).json({ success: false, error: grantResult?.error || "grant_failed" });
+  }
+  return res.json({ success: true, status: "activated", plan_sku: sku });
+}));
+
 // create: owner-check (заявка принадлежит telegram_user_id), идемпотентность (already_paid + тот же payment_order_id)
 app.post("/api/payments/hot/create", express.json(), asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
@@ -3835,7 +3886,7 @@ app.post("/api/payments/hot/confirm", express.json(), asyncApi(async (req, res) 
   }
   const { data, error } = await supabase
     .from("track_requests")
-    .select("id,telegram_user_id,payment_status,status,generation_status,mode")
+    .select("id,telegram_user_id,payment_status,payment_order_id,status,generation_status,mode")
     .eq("id", requestId)
     .maybeSingle();
   if (error || !data) return res.status(404).json({ success: false, error: "Заявка не найдена" });
@@ -3844,9 +3895,30 @@ app.post("/api/payments/hot/confirm", express.json(), asyncApi(async (req, res) 
   }
   const paid = String(data.payment_status || "").toLowerCase() === "paid";
   if (!paid) return res.status(409).json({ success: false, error: "Оплата не подтверждена" });
-  // Подписки и Soul Chat Day активируются через webhook — не запускаем генерацию песни
+  // Подписки и Soul Chat Day: убеждаемся что подписка активна (вебхук мог не прийти)
   const isSubOrService = String(data.mode || "").startsWith("sub_") || data.mode === "soul_chat_day";
   if (isSubOrService) {
+    const sku = resolveSkuByMode(data.mode);
+    if (sku && data.mode !== "soul_chat_day") {
+      // Идемпотентно: createOrRefreshSubscription вернёт already_active если подписка уже есть
+      const grantResult = await grantPurchaseBySku({
+        telegramUserId: data.telegram_user_id,
+        sku,
+        source: "hot_payment_confirm_fallback",
+      });
+      if (!grantResult?.ok) {
+        console.error(`[confirm] grantPurchaseBySku failed: sku=${sku}, userId=${data.telegram_user_id}, error=${grantResult?.error}`);
+      } else {
+        console.log(`[confirm] sub activated: sku=${sku}, userId=${data.telegram_user_id}${grantResult.already_active ? " (already_active)" : " (NEW)"}`);
+      }
+    } else if (data.mode === "soul_chat_day") {
+      // Soul Chat Day — тоже активируем через confirm как фолбек
+      const orderId = data.payment_order_id || null;
+      const dayResult = await activateSoulChatDay(data.telegram_user_id, orderId);
+      if (!dayResult?.ok) {
+        console.error(`[confirm] activateSoulChatDay failed: userId=${data.telegram_user_id}, error=${dayResult?.error}`);
+      }
+    }
     return res.json({ success: true, started: false, status: "subscription_active" });
   }
   const gs = String(data.generation_status || data.status || "pending");
