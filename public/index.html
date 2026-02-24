@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.61';
+        var APP_VERSION = '1.2.62';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -943,7 +943,7 @@
       </div><!-- /нижняя обёртка -->
 
       <footer>
-        <p>YupSoul • 2026 • v1.2.61</p>
+        <p>YupSoul • 2026 • v1.2.62</p>
       </footer>
     </div>
 
@@ -1652,8 +1652,11 @@
         <div class="profile-header-title">Soul Chat</div>
       </div>
 
+      <!-- Индикатор загрузки — вне промо-зоны, показывается пока идёт запрос доступа -->
+      <div id="scGlobalLoading" style="flex:1;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.35);font-size:0.9rem;">✨ Загружаю…</div>
+
       <!-- ПРОМО-ЗОНА: нет доступа — прокручивается целиком -->
-      <div id="scPromoArea" class="page-scroll" style="padding:16px 20px calc(env(safe-area-inset-bottom)+32px);">
+      <div id="scPromoArea" class="page-scroll" style="display:none;padding:16px 20px calc(env(safe-area-inset-bottom)+32px);">
 
         <!-- Краткое описание + кнопка «Подробнее» -->
         <div style="margin-bottom:18px;">
@@ -4228,11 +4231,17 @@
         var chatEl      = document.getElementById('scPageChat');
         var inputArea   = document.getElementById('scInputArea');
         var loadEl      = document.getElementById('scPageLoading');
+        var globalLoad  = document.getElementById('scGlobalLoading');
         var giftWrap    = document.getElementById('scPageGiftWrap');
         var buyDayWrap  = document.getElementById('scPageBuyDayWrap');
 
+        function hideGlobalLoading() {
+          if (globalLoad) globalLoad.style.display = 'none';
+        }
+
         // Переключение между промо-режимом и чат-режимом
         function showPromo() {
+          hideGlobalLoading();
           if (scHeader)   scHeader.style.display   = '';
           if (scChatHdr)  scChatHdr.style.display  = 'none';
           if (promoArea)  promoArea.style.display   = '';
@@ -4240,6 +4249,7 @@
           if (inputArea)  inputArea.style.display   = 'none';
         }
         function showChat() {
+          hideGlobalLoading();
           if (scHeader)   scHeader.style.display   = 'none';
           if (scChatHdr)  { scChatHdr.style.display = 'flex'; }
           if (promoArea)  promoArea.style.display   = 'none';
@@ -4247,8 +4257,12 @@
           if (inputArea)  inputArea.style.display   = '';
         }
 
-        // По умолчанию показываем промо
-        showPromo();
+        // По умолчанию — только индикатор загрузки, без промо-контента
+        if (scHeader)   scHeader.style.display  = 'none';
+        if (promoArea)  promoArea.style.display  = 'none';
+        if (chatEl)     chatEl.style.display     = 'none';
+        if (inputArea)  inputArea.style.display  = 'none';
+        if (scChatHdr)  scChatHdr.style.display  = 'none';
         if (giftWrap)   giftWrap.style.display   = 'none';
         if (buyDayWrap) buyDayWrap.style.display  = 'none';
 
@@ -4301,7 +4315,8 @@
             }
           }
         } catch(e) {
-          // Промо уже показан — ничего не делаем
+          // Ошибка — показываем промо (чтобы не зависнуть на загрузке)
+          showPromo();
         }
       }
 
