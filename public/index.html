@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.68';
+        var APP_VERSION = '1.2.69';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -1053,7 +1053,7 @@
       <!-- Шапка с кнопкой Назад -->
       <div class="profile-header">
         <button type="button" class="profile-back-btn" onclick="goBack()" aria-label="Назад">←</button>
-        <div class="profile-header-title">Профиль</div>
+        <div id="profilePageTitle" class="profile-header-title">Профиль</div>
       </div>
 
       <div class="profile-scroll page-scroll">
@@ -1080,14 +1080,14 @@
           <div class="profile-balance-left">
             <div id="profileBalanceLabel" class="profile-balance-label">Бесплатных генераций</div>
             <div id="profileCreditsCount" class="profile-balance-value">—</div>
-            <div id="profileBalanceHint" class="profile-balance-hint">Приглашай друзей — получай треки в подарок</div>
+            <div id="profileBalanceHintText" class="profile-balance-hint">Приглашай друзей — получай треки в подарок</div>
             <div id="profileRenewalDate" class="profile-balance-hint" style="display:none;color:rgba(212,175,55,0.65);margin-top:2px;"></div>
           </div>
           <div class="profile-balance-icon"><img src="assets/icons/music.png" style="width:32px;height:32px;object-fit:contain;display:block;opacity:0.85;" alt=""></div>
         </div>
 
         <!-- Мои данные -->
-        <div class="profile-section-title">Мои данные</div>
+        <div id="profileSectionMyData" class="profile-section-title">Мои данные</div>
         <div id="profileDataCard" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.2);border-radius:14px;margin-bottom:20px;gap:12px;box-sizing:border-box;">
           <div class="pfa-info" style="flex:1;min-width:0;">
             <svg class="pfa-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -1097,22 +1097,21 @@
             <span id="profileDataCitySep" class="pfa-sep" style="display:none;">·</span>
             <span id="profileDataCity" class="pfa-date" style="color:rgba(255,255,255,0.35);"></span>
           </div>
-          <button type="button" onclick="goToPage('formPage')" style="background:none;border:none;color:rgba(212,175,55,0.65);font-size:0.78rem;font-weight:600;font-family:inherit;padding:0;cursor:pointer;min-height:unset;box-shadow:none;animation:none;white-space:nowrap;flex-shrink:0;letter-spacing:0.02em;">Изменить →</button>
+          <button type="button" id="profileEditBtn" onclick="goToPage('formPage')" style="background:none;border:none;color:rgba(212,175,55,0.65);font-size:0.78rem;font-weight:600;font-family:inherit;padding:0;cursor:pointer;min-height:unset;box-shadow:none;animation:none;white-space:nowrap;flex-shrink:0;letter-spacing:0.02em;">Изменить →</button>
         </div>
 
         <!-- Тарифы — Suno-style -->
-        <div class="profile-section-title">Тарифы
-        </div>
+        <div id="profileSectionPlans" class="profile-section-title">Тарифы</div>
         <div class="profile-plans-grid">
           <!-- Free -->
           <div class="profile-plan-card current" id="planCardFree">
-            <div class="ppc-badge">Текущий</div>
+            <div id="planFreeBadge" class="ppc-badge">Текущий</div>
             <div class="ppc-name">Free</div>
             <div class="ppc-features">
               <div class="ppc-feature">✦ 1 трек в подарок <i class="ppc-info" data-tip="Первая песня создаётся бесплатно — без условий и скрытых платежей.">i</i></div>
               <div class="ppc-feature">✦ Все форматы <i class="ppc-info" data-tip="Доступны все три формата: Для себя, Для двоих и Энергия дня.">i</i></div>
             </div>
-            <div class="ppc-price">Уже у тебя</div>
+            <div id="planFreePrice" class="ppc-price">Уже у тебя</div>
           </div>
           <!-- Soul Basic -->
           <div class="profile-plan-card" id="planCardBasic">
@@ -1128,11 +1127,11 @@
               <div class="ppc-save">−50% vs разовых</div>
             </div>
             <button class="ppc-btn" id="planBtnBasic">Оформить</button>
-            <button class="ppc-details-btn" onclick="openPlanDetails('basic')">Подробнее</button>
+            <button class="ppc-details-btn" id="planDetailsBasic" onclick="openPlanDetails('basic')">Подробнее</button>
           </div>
           <!-- Soul Plus -->
           <div class="profile-plan-card popular" id="planCardPlus">
-            <div class="ppc-badge hot">✦ Популярный</div>
+            <div id="planPlusBadge" class="ppc-badge hot">✦ Популярный</div>
             <div class="ppc-name">Plus</div>
             <div class="ppc-features">
               <div class="ppc-feature">✦ 10 треков/мес <i class="ppc-info" data-tip="10 персональных песен в месяц. Разовая цена — $5.99/трек. По подписке выходит $2.5/трек. Экономия 58%.">i</i></div>
@@ -1145,12 +1144,12 @@
               <div class="ppc-save">−58% vs разовых</div>
             </div>
             <button class="ppc-btn popular-btn" id="planBtnPlus">Оформить</button>
-            <button class="ppc-details-btn" onclick="openPlanDetails('plus')">Подробнее</button>
+            <button class="ppc-details-btn" id="planDetailsPlus" onclick="openPlanDetails('plus')">Подробнее</button>
           </div>
           <!-- Мастер — Лаборатория -->
           <div class="profile-plan-card master" id="planCardMaster">
-            <div class="ppc-badge master-badge">Мастер</div>
-            <div class="ppc-name">Лаборатория</div>
+            <div id="planMasterBadge" class="ppc-badge master-badge">Мастер</div>
+            <div id="planMasterName" class="ppc-name">Лаборатория</div>
             <div class="ppc-features">
               <div class="ppc-feature">✦ 30 треков/мес <i class="ppc-info" data-tip="30 персональных песен каждый месяц — для себя и для близких. Максимальный объём.">i</i></div>
               <div class="ppc-feature">✦ Картотека людей <i class="ppc-info" data-tip="Добавляй близких в Лабораторию и создавай для них песни в один тап. Данные сохраняются — вводить повторно не нужно.">i</i></div>
@@ -1162,31 +1161,31 @@
               <div class="ppc-save">−83% vs разовых</div>
             </div>
             <button class="ppc-btn master-btn" id="planBtnMaster">Открыть Лабораторию</button>
-            <button class="ppc-details-btn" onclick="openPlanDetails('master')">Подробнее</button>
+            <button class="ppc-details-btn" id="planDetailsMaster" onclick="openPlanDetails('master')">Подробнее</button>
           </div>
         </div>
 
         <!-- Разовые треки -->
-        <div class="profile-section-title" style="margin-top:24px">Разовые треки</div>
+        <div id="profileSectionTracks" class="profile-section-title" style="margin-top:24px">Разовые треки</div>
         <div class="profile-track-list">
           <div class="profile-track-item" onclick="goToPage('formPage');setTimeout(function(){var b=document.querySelector('.mode-btn[data-mode=\'single\']');if(b){b.click();}},100)">
             <div>
-              <div class="pti-name">Для себя</div>
-              <div class="pti-desc">Твоя личность в звуке</div>
+              <div id="ptiSingleName" class="pti-name">Для себя</div>
+              <div id="ptiSingleDesc" class="pti-desc">Твоя личность в звуке</div>
             </div>
             <div class="pti-right"><div class="pti-price">$5.99</div><div class="pti-arrow">›</div></div>
           </div>
           <div class="profile-track-item" onclick="goToPage('formPage');setTimeout(function(){var b=document.querySelector('.mode-btn[data-mode=\'couple\']');if(b){b.click();}},100)">
             <div>
-              <div class="pti-name">Для двоих</div>
-              <div class="pti-desc">Ваша связь и резонанс</div>
+              <div id="ptiCoupleName" class="pti-name">Для двоих</div>
+              <div id="ptiCoupleDesc" class="pti-desc">Ваша связь и резонанс</div>
             </div>
             <div class="pti-right"><div class="pti-price">$8.99</div><div class="pti-arrow">›</div></div>
           </div>
           <div class="profile-track-item" onclick="goToPage('formPage');setTimeout(function(){var b=document.querySelector('.mode-btn[data-mode=\'transit\']');if(b){b.click();}},100)">
             <div>
-              <div class="pti-name">Энергия дня</div>
-              <div class="pti-desc">Песня под сегодняшний день</div>
+              <div id="ptiTransitName" class="pti-name">Энергия дня</div>
+              <div id="ptiTransitDesc" class="pti-desc">Песня под сегодняшний день</div>
             </div>
             <div class="pti-right"><div class="pti-price">$6.99</div><div class="pti-arrow">›</div></div>
           </div>
@@ -1196,9 +1195,9 @@
         <div class="profile-referral-section">
           <div class="profile-section-title">
             <div style="width:18px;height:18px;border-radius:5px;overflow:hidden;background:#fdf8ec;box-shadow:0 1px 4px rgba(0,0,0,0.2);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;"><img src="assets/icons/forward.png" style="width:100%;height:100%;object-fit:contain;display:block;padding:2px;box-sizing:border-box;" alt=""></div>
-            Пригласи друга
+            <span id="profileInviteFriendTitle">Пригласи друга</span>
           </div>
-          <div class="profile-ref-tagline">Приглашай друзей — получай бесплатные песни по нарастающей</div>
+          <div id="profileRefTagline" class="profile-ref-tagline">Приглашай друзей — получай бесплатные песни по нарастающей</div>
           <div class="profile-ref-milestones">
             <div class="ref-milestone" data-n="1"><span class="ref-mi-num">1</span><span class="ref-mi-label">друг</span></div>
             <div class="ref-milestone-arrow">→</div>
@@ -1215,8 +1214,8 @@
           </div>
           <button type="button" id="profileRefShareBtn" class="profile-ref-share-btn">Поделиться ссылкой</button>
           <div class="profile-ref-stats">
-            <span><strong id="profileRefInvited">0</strong><span class="profile-ref-stats-label">Приглашено</span></span>
-            <span><strong id="profileRefRewarded">0</strong><span class="profile-ref-stats-label">Активировано</span></span>
+            <span><strong id="profileRefInvited">0</strong><span id="profileRefInvitedLabel" class="profile-ref-stats-label">Приглашено</span></span>
+            <span><strong id="profileRefRewarded">0</strong><span id="profileRefActivatedLabel" class="profile-ref-stats-label">Активировано</span></span>
           </div>
           <div id="profileRefNextHint" style="font-size:0.72rem;color:rgba(212,175,55,0.6);text-align:center;margin-top:6px;"></div>
         </div>
@@ -1235,7 +1234,7 @@
       <div class="page-header" style="padding:max(20px,calc(env(safe-area-inset-top)+12px)) 18px 12px; display:flex; align-items:center; gap:12px;">
         <button type="button" id="heroesBackBtn" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.4rem;cursor:pointer;padding:4px 8px;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;line-height:1">←</button>
         <div style="flex:1">
-          <div style="font-size:1.15rem;font-weight:700;color:#fff;line-height:1.2">Лаборатория</div>
+          <div id="heroesPageTitle" style="font-size:1.15rem;font-weight:700;color:#fff;line-height:1.2">Лаборатория</div>
           <div style="font-size:0.75rem;color:rgba(212,175,55,0.65);margin-top:2px" id="masterAccessBadge"></div>
         </div>
       </div>
@@ -1244,20 +1243,20 @@
       <div id="masterPaywall" class="page-scroll" style="display:none; padding-top:28px;">
         <div style="text-align:center; margin-bottom:20px">
           <div style="font-size:2rem;margin-bottom:12px;color:#d4af37;letter-spacing:0.1em">✦</div>
-          <div style="font-size:1.2rem;font-weight:700;color:#d4af37;margin-bottom:8px">Личный кабинет для мастеров</div>
-          <div style="font-size:0.85rem;color:rgba(255,255,255,0.5);line-height:1.6">Добавляй людей один раз — и генерируй для них<br>песни в один тап. Полная история с текстами.</div>
+          <div id="heroesPromoHeading" style="font-size:1.2rem;font-weight:700;color:#d4af37;margin-bottom:8px">Личный кабинет для мастеров</div>
+          <div id="heroesPromoDesc" style="font-size:0.85rem;color:rgba(255,255,255,0.5);line-height:1.6">Добавляй людей один раз — и генерируй для них<br>песни в один тап. Полная история с текстами.</div>
         </div>
         <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.18);border-radius:14px;padding:16px;margin-bottom:22px;font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.65">
-          <div style="color:#d4af37;font-weight:600;margin-bottom:8px">Что входит в тариф:</div>
-          <div>✦ Неограниченное число героев</div>
-          <div>✦ Быстрый запуск соло и совместных песен</div>
-          <div>✦ Предпочтения по стилю музыки</div>
-          <div>✦ Полная история генераций с текстами и анализом</div>
-          <div>✦ Аудио прямо из карточки героя</div>
+          <div id="heroesPromoFeaturesTitle" style="color:#d4af37;font-weight:600;margin-bottom:8px">Что входит в тариф:</div>
+          <div id="heroesF1">✦ Неограниченное число героев</div>
+          <div id="heroesF2">✦ Быстрый запуск соло и совместных песен</div>
+          <div id="heroesF3">✦ Предпочтения по стилю музыки</div>
+          <div id="heroesF4">✦ Полная история генераций с текстами и анализом</div>
+          <div id="heroesF5">✦ Аудио прямо из карточки героя</div>
         </div>
         <button type="button" id="masterTrialBtn" style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.08));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">1 день бесплатно — попробовать</button>
         <button type="button" id="masterSubBtn" onclick="showPlanConfirm('plan_master','Лаборатория')" style="width:100%;padding:14px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(167,139,250,0.15),rgba(167,139,250,0.06));border:1.5px solid rgba(167,139,250,0.35);color:rgba(167,139,250,0.9);font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">Оформить Лабораторию — $39.99/мес</button>
-        <div style="font-size:0.7rem;color:rgba(255,255,255,0.22);text-align:center;margin-top:12px">30 треков в месяц · Оплата через HOT Pay</div>
+        <div id="heroesSubNote" style="font-size:0.7rem;color:rgba(255,255,255,0.22);text-align:center;margin-top:12px">30 треков в месяц · Оплата через HOT Pay</div>
       </div>
 
       <!-- Кабинет героев (показывается если есть доступ) -->
@@ -1278,7 +1277,7 @@
           <div style="font-size:1rem;font-weight:700;color:#fff" id="heroFormTitle">Добавить героя</div>
         </div>
         <div class="field"><label for="heroName">Имя *</label><input type="text" id="heroName" placeholder="Как зовут человека"></div>
-        <div class="field"><label for="heroRelationship">Кто для тебя</label>
+        <div class="field"><label id="heroRelLabel" for="heroRelationship">Кто для тебя</label>
           <select id="heroRelationship">
             <option value="">— выбери —</option>
             <option value="мать">Мать</option>
@@ -1309,7 +1308,7 @@
             </div>
             <input type="date" id="heroBirthdate" tabindex="-1">
           </div>
-          <div style="font-size:0.85rem;color:var(--tg-theme-hint-color,#9ca3af);margin-top:6px;">Выбери день, месяц и год</div>
+          <div id="heroBirthdateHint" style="font-size:0.85rem;color:var(--tg-theme-hint-color,#9ca3af);margin-top:6px;">Выбери день, месяц и год</div>
         </div>
         <div class="field">
           <label for="heroBirthplace" data-icon="📍">Место рождения</label>
@@ -1321,7 +1320,7 @@
           <div id="heroBirthplaceHint" class="birthplace-hint" style="display:block;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">Начни вводить город и выбери из выпавшего списка.</div>
         </div>
         <div class="field">
-          <label data-icon="🕐">Время рождения</label>
+          <label id="heroTimeBirthLabel" for="heroBirthtime" data-icon="🕐">Время рождения</label>
           <div class="time-group" role="group" aria-label="Время рождения">
             <input type="time" id="heroBirthtime" class="time-group-input">
             <div class="checkbox time-group-checkbox">
@@ -1337,7 +1336,7 @@
             <option value="male">Мужской</option>
           </select>
         </div>
-        <div class="field"><label for="heroStyle">Любимые стили музыки</label><input type="text" id="heroStyle" placeholder="поп, джаз, электронная…"></div>
+        <div class="field"><label id="heroStyleLabel" for="heroStyle">Любимые стили музыки</label><input type="text" id="heroStyle" placeholder="поп, джаз, электронная…"></div>
         <div class="field"><label for="heroNotes">Заметки</label><textarea id="heroNotes" placeholder="Что важно помнить об этом человеке" rows="2"></textarea></div>
         <div style="display:flex;gap:10px;margin-top:6px">
           <button type="button" id="heroFormSave" style="flex:2">Сохранить</button>
@@ -1630,19 +1629,19 @@
     <div class="page" id="successPage">
       <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px calc(env(safe-area-inset-bottom)+24px);text-align:center;">
         <div style="font-size:3rem;margin-bottom:20px;">✉️</div>
-        <div style="font-size:1.45rem;font-weight:800;color:#d4af37;margin-bottom:14px;line-height:1.3;">Заявка принята!</div>
-        <p style="font-size:0.95rem;color:rgba(255,255,255,0.65);line-height:1.75;max-width:280px;margin:0 0 32px;">
+        <div id="successTitle" style="font-size:1.45rem;font-weight:800;color:#d4af37;margin-bottom:14px;line-height:1.3;">Заявка принята!</div>
+        <p id="successDesc" style="font-size:0.95rem;color:rgba(255,255,255,0.65);line-height:1.75;max-width:280px;margin:0 0 32px;">
           Твоя песня генерируется.<br>Как только будет готова — придёт в бот.<br>
           <span style="color:rgba(255,255,255,0.4);font-size:0.85rem;">Обычно 10–20 минут.</span>
         </p>
         <button id="openBotBtn" type="button" style="width:100%;max-width:320px;padding:14px 24px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;letter-spacing:0;">
           💬 Перейти в бот
         </button>
-        <p style="font-size:0.78rem;color:rgba(255,255,255,0.35);line-height:1.6;max-width:290px;margin:0 0 28px;">
+        <p id="successHint" style="font-size:0.78rem;color:rgba(255,255,255,0.35);line-height:1.6;max-width:290px;margin:0 0 28px;">
           Не пришла через 20 мин? Напиши боту «песня не пришла».
         </p>
         <button class="secondary" id="newKeyBtn" style="width:100%;max-width:320px;margin-bottom:4px;">Создать ещё одну песню</button>
-        <button type="button" class="form-nav-link" onclick="goToProfileFrom('successPage')" style="background:none;border:none;color:rgba(255,255,255,0.25);font-size:0.78rem;cursor:pointer;font-family:inherit;padding:8px 0;width:100%;text-align:center;min-height:unset;box-shadow:none;">Перейти в профиль</button>
+        <button type="button" id="successToProfileBtn" class="form-nav-link" onclick="goToProfileFrom('successPage')" style="background:none;border:none;color:rgba(255,255,255,0.25);font-size:0.78rem;cursor:pointer;font-family:inherit;padding:8px 0;width:100%;text-align:center;min-height:unset;box-shadow:none;">Перейти в профиль</button>
       </div>
     </div>
 
@@ -1656,18 +1655,18 @@
       </div>
 
       <!-- Индикатор загрузки — вне промо-зоны, показывается пока идёт запрос доступа -->
-      <div id="scGlobalLoading" style="flex:1;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.35);font-size:0.9rem;">✨ Загружаю…</div>
+      <div id="scGlobalLoading" style="flex:1;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.35);font-size:0.9rem;"><span id="scGlobalLoadingText">✨ Загружаю…</span></div>
 
       <!-- ПРОМО-ЗОНА: нет доступа — прокручивается целиком -->
       <div id="scPromoArea" class="page-scroll" style="display:none;padding:16px 20px calc(env(safe-area-inset-bottom)+32px);">
 
         <!-- Краткое описание + кнопка «Подробнее» -->
         <div style="margin-bottom:18px;">
-          <div style="font-size:0.9rem;color:rgba(255,255,255,0.65);line-height:1.65;margin-bottom:10px;">
+          <div id="scPromoIntro" style="font-size:0.9rem;color:rgba(255,255,255,0.65);line-height:1.65;margin-bottom:10px;">
             Soul Chat — твой ИИ-ассистент, который понимает тебя словно лучший друг или Высшее Я. Отвечает на вопросы о характере, предназначении и пути.
           </div>
           <button type="button" id="scMoreBtn" style="background:none;border:none;color:rgba(212,175,55,0.7);font-size:0.82rem;cursor:pointer;padding:0;font-family:inherit;box-shadow:none;animation:none;min-height:unset;">
-            Подробнее ↓
+            <span id="scMoreBtnText">Подробнее ↓</span>
           </button>
         </div>
 
@@ -1676,26 +1675,26 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
             <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.14);border-radius:14px;padding:12px;text-align:center;">
               <div style="font-size:1.4rem;font-weight:700;color:#d4af37;line-height:1;">78%</div>
-              <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">отмечают снижение тревоги</div>
+              <div id="scStat1" style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">отмечают снижение тревоги</div>
             </div>
             <div style="background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.14);border-radius:14px;padding:12px;text-align:center;">
               <div style="font-size:1.4rem;font-weight:700;color:#ec4899;line-height:1;">91%</div>
-              <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">чувствуют себя понятыми</div>
+              <div id="scStat2" style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">чувствуют себя понятыми</div>
             </div>
             <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.14);border-radius:14px;padding:12px;text-align:center;">
               <div style="font-size:1.4rem;font-weight:700;color:#d4af37;line-height:1;">3×</div>
-              <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">быстрее находят ответ</div>
+              <div id="scStat3" style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">быстрее находят ответ</div>
             </div>
             <div style="background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.14);border-radius:14px;padding:12px;text-align:center;">
               <div style="font-size:1.4rem;font-weight:700;color:#ec4899;line-height:1;">84%</div>
-              <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">возвращаются снова</div>
+              <div id="scStat4" style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">возвращаются снова</div>
             </div>
           </div>
-          <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:8px;">Примеры вопросов</div>
+          <div id="scExamplesTitle" style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:8px;">Примеры вопросов</div>
           <div style="display:flex;flex-direction:column;gap:6px;">
-            <div style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.12);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;">«Почему мне так сложно говорить о своих чувствах?»</div>
-            <div style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.12);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;">«Какой мой главный страх и как с ним работать?»</div>
-            <div style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.12);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;">«В чём моё предназначение и как к нему прийти?»</div>
+            <div id="scEx1" style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.12);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;">«Почему мне так сложно говорить о своих чувствах?»</div>
+            <div id="scEx2" style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.12);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;">«Какой мой главный страх и как с ним работать?»</div>
+            <div id="scEx3" style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.12);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;">«В чём моё предназначение и как к нему прийти?»</div>
           </div>
         </div>
 
@@ -1705,7 +1704,7 @@
         <!-- Тарифы -->
         <div id="scPagePromo">
           <div style="background:rgba(15,12,40,0.8);border:1px solid rgba(212,175,55,0.2);border-radius:18px;padding:16px;margin-bottom:12px;">
-            <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:10px;">Soul Chat включён в подписку</div>
+            <div id="scSubIncluded" style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:10px;">Soul Chat включён в подписку</div>
             <div style="display:flex;flex-direction:column;gap:7px;">
               <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:rgba(255,255,255,0.04);border-radius:10px;">
                 <div><div style="font-size:0.85rem;font-weight:600;color:#fff;">Basic</div><div style="font-size:0.7rem;color:rgba(255,255,255,0.38);">5 треков/мес + Soul Chat</div></div>
@@ -1720,7 +1719,7 @@
                 <div style="font-size:0.85rem;font-weight:700;color:#d4af37;">$39.99/мес</div>
               </div>
             </div>
-            <button onclick="goToProfileFrom('soulChatPage')" style="width:100%;margin-top:12px;padding:12px;border-radius:13px;background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(236,72,153,0.2));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:none;animation:none;">
+            <button id="scChoosePlanBtn" onclick="goToProfileFrom('soulChatPage')" style="width:100%;margin-top:12px;padding:12px;border-radius:13px;background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(236,72,153,0.2));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:none;animation:none;">
               Выбрать тариф →
             </button>
           </div>
@@ -1728,8 +1727,8 @@
           <!-- Подарочные 24ч -->
           <div id="scPageGiftWrap" style="display:none;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(236,72,153,0.06));border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:16px;text-align:center;margin-bottom:10px;">
             <div style="font-size:1.6rem;margin-bottom:6px;">🎁</div>
-            <div style="font-weight:700;color:#d4af37;margin-bottom:4px;">Попробуй бесплатно — 24 часа</div>
-            <div style="font-size:0.83rem;color:rgba(255,255,255,0.6);line-height:1.5;margin-bottom:12px;">Один раз для каждого пользователя</div>
+            <div id="scGiftHeading" style="font-weight:700;color:#d4af37;margin-bottom:4px;">Попробуй бесплатно — 24 часа</div>
+            <div id="scGiftNote" style="font-size:0.83rem;color:rgba(255,255,255,0.6);line-height:1.5;margin-bottom:12px;">Один раз для каждого пользователя</div>
             <button id="scPageGiftBtn" type="button" style="padding:12px 24px;border-radius:13px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">
               🎁 Получить 24 часа бесплатно
             </button>
@@ -1737,7 +1736,7 @@
 
           <!-- Купить сутки -->
           <div id="scPageBuyDayWrap" style="display:none;border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px;text-align:center;">
-            <div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-bottom:9px;line-height:1.5;">Не готов к подписке? Попробуй разовый доступ</div>
+            <div id="scBuyDayNote" style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-bottom:9px;line-height:1.5;">Не готов к подписке? Попробуй разовый доступ</div>
             <button id="scPageBuyDayBtn" type="button" style="width:100%;padding:11px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
               ⚡ Открыть Soul Chat на 24ч — $2.99
             </button>
@@ -1977,6 +1976,44 @@
           subActivated: '🎉 Подписка активирована!', subBtnProfile: '👤 Мой профиль',
           helpPageTitle: 'Помощь и поддержка', helpPageSubtitle: 'Всё о YupSoul — просто и по делу',
           profileHelpBtn: 'Помощь и поддержка',
+          profilePageTitle: 'Профиль', profileSectionMyData: 'Мои данные', profileSectionPlans: 'Тарифы',
+          profileEditBtn: 'Изменить →', profileBalanceHintText: 'Приглашай друзей — получай треки в подарок',
+          profileSectionTracks: 'Разовые треки', profileRefTagline: 'Приглашай друзей — получай бесплатные песни по нарастающей',
+          profileRefInvited: 'Приглашено', profileRefActivated: 'Активировано',
+          planCurrentBadge: 'Текущий', planFreeYours: 'Уже у тебя', planSubscribeBtn: 'Оформить',
+          planDetailsBtn: 'Подробнее', planPopularBadge: '✦ Популярный', planMasterBadgeText: 'Мастер',
+          planMasterNameText: 'Лаборатория', planOpenMasterBtn: 'Открыть Лабораторию',
+          ptiSingleName: 'Для себя', ptiSingleDesc: 'Твоя личность в звуке',
+          ptiCoupleName: 'Для двоих', ptiCoupleDesc: 'Ваша связь и резонанс',
+          ptiTransitName: 'Энергия дня', ptiTransitDesc: 'Песня под сегодняшний день',
+          successTitle: 'Заявка принята!', successDesc: 'Твоя песня генерируется. Как только будет готова — придёт в бот. Обычно 10–20 минут.',
+          successHint: 'Не пришла через 20 мин? Напиши боту «песня не пришла».', successToProfile: 'Перейти в профиль',
+          loadingTitle: 'Заявка принята',
+          heroesPageTitle: 'Лаборатория', heroesPromoHeading: 'Личный кабинет для мастеров',
+          heroesPromoDesc: 'Добавляй людей один раз — и генерируй для них песни в один тап. Полная история с текстами.',
+          heroesPromoFeaturesTitle: 'Что входит в тариф:',
+          heroesF1: '✦ Неограниченное число героев', heroesF2: '✦ Быстрый запуск соло и совместных песен',
+          heroesF3: '✦ Предпочтения по стилю музыки', heroesF4: '✦ Полная история генераций с текстами и анализом',
+          heroesF5: '✦ Аудио прямо из карточки героя',
+          heroesTrialBtn: '1 день бесплатно — попробовать', heroesSubBtn: 'Оформить Лабораторию — $39.99/мес',
+          heroesSubNote: '30 треков в месяц · Оплата через HOT Pay',
+          heroFormTitle: 'Добавить героя', heroRelLabel: 'Кто для тебя', heroBirthdateHint: 'Выбери день, месяц и год',
+          heroTimeBirthLabel: 'Время рождения', heroStyleLabel: 'Любимые стили музыки', heroStylePh: 'поп, джаз, электронная…',
+          heroRelOpt0: '— выбери —', heroRelOpt1: 'Мать', heroRelOpt2: 'Отец', heroRelOpt3: 'Дочь', heroRelOpt4: 'Сын',
+          heroRelOpt5: 'Сестра', heroRelOpt6: 'Брат', heroRelOpt7: 'Бабушка', heroRelOpt8: 'Дедушка',
+          heroRelOpt9: 'Муж', heroRelOpt10: 'Жена', heroRelOpt11: 'Любимый человек',
+          heroRelOpt12: 'Друг', heroRelOpt13: 'Подруга', heroRelOpt14: 'Коллега', heroRelOpt15: 'Наставник', heroRelOpt16: 'Другое',
+          dateDay: 'День', dateMonth: 'Месяц', dateYear: 'Год',
+          scLoading: '✨ Загружаю…', scPromoIntro: 'Soul Chat — твой ИИ-ассистент, который понимает тебя словно лучший друг или Высшее Я. Отвечает на вопросы о характере, предназначении и пути.',
+          scMoreBtnText: 'Подробнее ↓', scStat1: 'отмечают снижение тревоги', scStat2: 'чувствуют себя понятыми',
+          scStat3: 'быстрее находят ответ', scStat4: 'возвращаются снова',
+          scExamplesTitle: 'Примеры вопросов',
+          scEx1: '«Почему мне так сложно говорить о своих чувствах?»', scEx2: '«Какой мой главный страх и как с ним работать?»',
+          scEx3: '«В чём моё предназначение и как к нему прийти?»',
+          scSubIncluded: 'Soul Chat включён в подписку', scChoosePlanBtn: 'Выбрать тариф →',
+          scGiftHeading: 'Попробуй бесплатно — 24 часа', scGiftNote: 'Один раз для каждого пользователя',
+          scGiftBtnText: '🎁 Получить 24 часа бесплатно', scBuyDayNote: 'Не готов к подписке? Попробуй разовый доступ',
+          scBuyDayBtnText: '⚡ Открыть Soul Chat на 24ч — $2.99',
           helpT1: 'Что такое YupSoul', helpB1: '<p>YupSoul создаёт <strong>персональную песню именно для тебя</strong> — на основе даты, времени и места рождения. Система анализирует твою личность и пишет песню о твоих реальных качествах, пути и силе.</p><p>Это не шаблон и не случайный текст — каждая песня уникальна и принадлежит только тебе.</p>',
           helpT2: 'Что можно создать', helpB2: '<ul><li><strong>Песня о себе</strong> — твой личный звуковой портрет: кто ты, твоя сила и внутренний путь</li><li><strong>Песня для пары</strong> — для двоих (влюблённых, друзей, подруг). Анализирует обе карты и отражает союз</li><li><strong>Энергия дня</strong> — песня под конкретную дату и место. Какие возможности открываются прямо сейчас</li></ul><p>Также есть <strong>быстрые запросы</strong> — готовые идеи: песня силы, поздравление с днём рождения, медитативная, про отпускание прошлого и другие.</p>',
           helpT3: 'Сколько ждать песню', helpB3: '<p>Обычно <strong>5–15 минут</strong>. Бот пришлёт уведомление в чат, как только песня будет готова.</p><p>Можно закрыть приложение — результат придёт сам, ты ничего не потеряешь.</p>',
@@ -2107,6 +2144,44 @@
           subActivated: '🎉 Subscription activated!', subBtnProfile: '👤 My profile',
           helpPageTitle: 'Help & Support', helpPageSubtitle: 'Everything about YupSoul — clear and simple',
           profileHelpBtn: 'Help & support',
+          profilePageTitle: 'Profile', profileSectionMyData: 'My data', profileSectionPlans: 'Plans',
+          profileEditBtn: 'Edit →', profileBalanceHintText: 'Invite friends — get free tracks',
+          profileSectionTracks: 'Single tracks', profileRefTagline: 'Invite friends — earn free songs',
+          profileRefInvited: 'Invited', profileRefActivated: 'Activated',
+          planCurrentBadge: 'Current', planFreeYours: 'Already yours', planSubscribeBtn: 'Subscribe',
+          planDetailsBtn: 'Details', planPopularBadge: '✦ Popular', planMasterBadgeText: 'Master',
+          planMasterNameText: 'Laboratory', planOpenMasterBtn: 'Open Laboratory',
+          ptiSingleName: 'For myself', ptiSingleDesc: 'Your personality in sound',
+          ptiCoupleName: 'For two', ptiCoupleDesc: 'Your bond and resonance',
+          ptiTransitName: 'Day energy', ptiTransitDesc: 'A song for today',
+          successTitle: 'Request accepted!', successDesc: 'Your song is being generated. When ready — it\'ll arrive in the bot. Usually 10–20 minutes.',
+          successHint: 'Not arrived in 20 min? Tell the bot "song not arrived".', successToProfile: 'Go to profile',
+          loadingTitle: 'Request accepted',
+          heroesPageTitle: 'Laboratory', heroesPromoHeading: 'Master\'s Dashboard',
+          heroesPromoDesc: 'Add people once — and generate songs for them in one tap. Full history with lyrics.',
+          heroesPromoFeaturesTitle: 'What\'s included:',
+          heroesF1: '✦ Unlimited number of people', heroesF2: '✦ Quick solo & duo song generation',
+          heroesF3: '✦ Music style preferences', heroesF4: '✦ Full history with lyrics & analysis',
+          heroesF5: '✦ Audio straight from the person\'s card',
+          heroesTrialBtn: '1 day free — try it out', heroesSubBtn: 'Subscribe to Laboratory — $39.99/mo',
+          heroesSubNote: '30 tracks/month · Payment via HOT Pay',
+          heroFormTitle: 'Add person', heroRelLabel: 'Relationship', heroBirthdateHint: 'Select day, month and year',
+          heroTimeBirthLabel: 'Time of birth', heroStyleLabel: 'Favourite music styles', heroStylePh: 'pop, jazz, electronic…',
+          heroRelOpt0: '— select —', heroRelOpt1: 'Mother', heroRelOpt2: 'Father', heroRelOpt3: 'Daughter', heroRelOpt4: 'Son',
+          heroRelOpt5: 'Sister', heroRelOpt6: 'Brother', heroRelOpt7: 'Grandmother', heroRelOpt8: 'Grandfather',
+          heroRelOpt9: 'Husband', heroRelOpt10: 'Wife', heroRelOpt11: 'Loved one',
+          heroRelOpt12: 'Friend', heroRelOpt13: 'Girlfriend', heroRelOpt14: 'Colleague', heroRelOpt15: 'Mentor', heroRelOpt16: 'Other',
+          dateDay: 'Day', dateMonth: 'Month', dateYear: 'Year',
+          scLoading: '✨ Loading…', scPromoIntro: 'Soul Chat is your AI assistant that understands you like a best friend or your Higher Self. Answers questions about your character, purpose and path.',
+          scMoreBtnText: 'More ↓', scStat1: 'report reduced anxiety', scStat2: 'feel understood',
+          scStat3: 'find answers faster', scStat4: 'come back again',
+          scExamplesTitle: 'Example questions',
+          scEx1: '"Why is it so hard for me to talk about my feelings?"', scEx2: '"What is my main fear and how to work with it?"',
+          scEx3: '"What is my purpose and how do I get there?"',
+          scSubIncluded: 'Soul Chat included in subscription', scChoosePlanBtn: 'Choose a plan →',
+          scGiftHeading: 'Try free — 24 hours', scGiftNote: 'One time per user',
+          scGiftBtnText: '🎁 Get 24 hours free', scBuyDayNote: 'Not ready for a subscription? Try single access',
+          scBuyDayBtnText: '⚡ Open Soul Chat for 24h — $2.99',
           helpT1: 'What is YupSoul', helpB1: '<p>YupSoul creates a <strong>personal song just for you</strong> — based on your date, time and place of birth. The system analyses your personality and writes a song about your real qualities, path and strength.</p><p>This is not a template — each song is unique and belongs only to you.</p>',
           helpT2: 'What can be created', helpB2: '<ul><li><strong>Song about me</strong> — your personal sonic portrait: who you are, your strength and inner path</li><li><strong>Song for two</strong> — for a couple (lovers, friends). Analyses both charts and reflects the union</li><li><strong>Day energy</strong> — a song for a specific date and place. What opportunities are opening right now</li></ul><p>There are also <strong>quick requests</strong> — ready-made ideas: power song, birthday song, meditative, about letting go of the past, and more.</p>',
           helpT3: 'How long to wait', helpB3: '<p>Usually <strong>5–15 minutes</strong>. The bot will send a notification when your song is ready.</p><p>You can close the app — the result will arrive on its own, nothing will be lost.</p>',
@@ -2237,6 +2312,44 @@
           subActivated: '🎉 Abo aktiviert!', subBtnProfile: '👤 Mein Profil',
           helpPageTitle: 'Hilfe & Support', helpPageSubtitle: 'Alles über YupSoul — klar und kurz',
           profileHelpBtn: 'Hilfe & Support',
+          profilePageTitle: 'Profil', profileSectionMyData: 'Meine Daten', profileSectionPlans: 'Tarife',
+          profileEditBtn: 'Bearbeiten →', profileBalanceHintText: 'Freunde einladen — Gratistracks erhalten',
+          profileSectionTracks: 'Einzeltracks', profileRefTagline: 'Freunde einladen — kostenlose Songs erhalten',
+          profileRefInvited: 'Eingeladen', profileRefActivated: 'Aktiviert',
+          planCurrentBadge: 'Aktuell', planFreeYours: 'Bereits deins', planSubscribeBtn: 'Abonnieren',
+          planDetailsBtn: 'Details', planPopularBadge: '✦ Beliebt', planMasterBadgeText: 'Meister',
+          planMasterNameText: 'Labor', planOpenMasterBtn: 'Labor öffnen',
+          ptiSingleName: 'Für mich', ptiSingleDesc: 'Deine Persönlichkeit im Klang',
+          ptiCoupleName: 'Für zwei', ptiCoupleDesc: 'Eure Verbindung und Resonanz',
+          ptiTransitName: 'Tagesenergie', ptiTransitDesc: 'Ein Lied für heute',
+          successTitle: 'Anfrage angenommen!', successDesc: 'Dein Song wird erstellt. Wenn er fertig ist — kommt er im Bot an. Normalerweise 10–20 Minuten.',
+          successHint: 'Nicht angekommen nach 20 Min? Schreib dem Bot "Song nicht angekommen".', successToProfile: 'Zum Profil',
+          loadingTitle: 'Anfrage angenommen',
+          heroesPageTitle: 'Labor', heroesPromoHeading: 'Meister-Dashboard',
+          heroesPromoDesc: 'Personen einmal hinzufügen — und Songs für sie in einem Tipp erstellen. Komplette Geschichte mit Texten.',
+          heroesPromoFeaturesTitle: 'Was ist enthalten:',
+          heroesF1: '✦ Unbegrenzte Personenanzahl', heroesF2: '✦ Schnelle Solo- & Duo-Song-Erstellung',
+          heroesF3: '✦ Musikstil-Präferenzen', heroesF4: '✦ Komplette Geschichte mit Texten & Analyse',
+          heroesF5: '✦ Audio direkt aus der Personenkarte',
+          heroesTrialBtn: '1 Tag kostenlos — ausprobieren', heroesSubBtn: 'Labor abonnieren — $39.99/Mon.',
+          heroesSubNote: '30 Tracks/Monat · Zahlung via HOT Pay',
+          heroFormTitle: 'Person hinzufügen', heroRelLabel: 'Beziehung', heroBirthdateHint: 'Tag, Monat und Jahr wählen',
+          heroTimeBirthLabel: 'Geburtszeit', heroStyleLabel: 'Lieblingsmusikstile', heroStylePh: 'Pop, Jazz, Elektronisch…',
+          heroRelOpt0: '— auswählen —', heroRelOpt1: 'Mutter', heroRelOpt2: 'Vater', heroRelOpt3: 'Tochter', heroRelOpt4: 'Sohn',
+          heroRelOpt5: 'Schwester', heroRelOpt6: 'Bruder', heroRelOpt7: 'Großmutter', heroRelOpt8: 'Großvater',
+          heroRelOpt9: 'Ehemann', heroRelOpt10: 'Ehefrau', heroRelOpt11: 'Geliebte Person',
+          heroRelOpt12: 'Freund', heroRelOpt13: 'Freundin', heroRelOpt14: 'Kollege', heroRelOpt15: 'Mentor', heroRelOpt16: 'Anderes',
+          dateDay: 'Tag', dateMonth: 'Monat', dateYear: 'Jahr',
+          scLoading: '✨ Lade…', scPromoIntro: 'Soul Chat ist dein KI-Assistent, der dich versteht wie ein bester Freund oder dein Höheres Selbst. Beantwortet Fragen zu Charakter, Bestimmung und Weg.',
+          scMoreBtnText: 'Mehr ↓', scStat1: 'berichten von weniger Angst', scStat2: 'fühlen sich verstanden',
+          scStat3: 'finden Antworten schneller', scStat4: 'kommen wieder',
+          scExamplesTitle: 'Beispielfragen',
+          scEx1: '„Warum fällt es mir so schwer, über meine Gefühle zu reden?"', scEx2: '„Was ist meine größte Angst und wie gehe ich damit um?"',
+          scEx3: '„Was ist mein Lebensweg und wie komme ich dahin?"',
+          scSubIncluded: 'Soul Chat im Abo enthalten', scChoosePlanBtn: 'Tarif wählen →',
+          scGiftHeading: 'Kostenlos testen — 24 Stunden', scGiftNote: 'Einmalig pro Nutzer',
+          scGiftBtnText: '🎁 24 Stunden kostenlos', scBuyDayNote: 'Noch nicht bereit für ein Abo? Teste den Einzelzugang',
+          scBuyDayBtnText: '⚡ Soul Chat 24h öffnen — $2.99',
           helpT1: 'Was ist YupSoul', helpB1: '<p>YupSoul erstellt ein <strong>persönliches Lied genau für dich</strong> — basierend auf Datum, Uhrzeit und Geburtsort. Das System analysiert deine Persönlichkeit und schreibt ein Lied über deine echten Qualitäten, Weg und Stärke.</p><p>Dies ist kein Template — jedes Lied ist einzigartig und gehört nur dir.</p>',
           helpT2: 'Was kann erstellt werden', helpB2: '<ul><li><strong>Lied über mich</strong> — dein persönliches Klangportrait: wer du bist, deine Stärke und innerer Weg</li><li><strong>Lied für zwei</strong> — für ein Paar (Verliebte, Freunde). Analysiert beide Karten und spiegelt die Verbindung wider</li><li><strong>Tagesenergie</strong> — ein Lied für ein bestimmtes Datum und Ort. Welche Möglichkeiten öffnen sich gerade jetzt</li></ul><p>Es gibt auch <strong>Schnellanfragen</strong> — fertige Ideen: Kraftlied, Geburtstagslied, meditativ, über das Loslassen der Vergangenheit und mehr.</p>',
           helpT3: 'Wie lange warten', helpB3: '<p>Normalerweise <strong>5–15 Minuten</strong>. Der Bot schickt eine Benachrichtigung, wenn dein Lied fertig ist.</p><p>Du kannst die App schließen — das Ergebnis kommt von selbst, nichts geht verloren.</p>',
@@ -2367,6 +2480,44 @@
           subActivated: '🎉 Abonnement activé !', subBtnProfile: '👤 Mon profil',
           helpPageTitle: 'Aide & Support', helpPageSubtitle: 'Tout sur YupSoul — simple et concis',
           profileHelpBtn: 'Aide & support',
+          profilePageTitle: 'Profil', profileSectionMyData: 'Mes données', profileSectionPlans: 'Abonnements',
+          profileEditBtn: 'Modifier →', profileBalanceHintText: 'Invite des amis — reçois des titres gratuits',
+          profileSectionTracks: 'Titres individuels', profileRefTagline: 'Invite des amis — gagne des chansons gratuites',
+          profileRefInvited: 'Invités', profileRefActivated: 'Activés',
+          planCurrentBadge: 'Actuel', planFreeYours: 'Déjà le tien', planSubscribeBtn: "S'abonner",
+          planDetailsBtn: 'Détails', planPopularBadge: '✦ Populaire', planMasterBadgeText: 'Maître',
+          planMasterNameText: 'Laboratoire', planOpenMasterBtn: 'Ouvrir le Laboratoire',
+          ptiSingleName: 'Pour moi', ptiSingleDesc: 'Ta personnalité en sons',
+          ptiCoupleName: 'Pour deux', ptiCoupleDesc: 'Votre lien et résonance',
+          ptiTransitName: "Énergie du jour", ptiTransitDesc: "Une chanson pour aujourd'hui",
+          successTitle: 'Demande acceptée !', successDesc: "Ta chanson est en cours de création. Quand elle sera prête — elle arrivera dans le bot. Généralement 10–20 minutes.",
+          successHint: 'Pas reçue en 20 min ? Dis au bot « chanson non reçue ».', successToProfile: 'Aller au profil',
+          loadingTitle: 'Demande acceptée',
+          heroesPageTitle: 'Laboratoire', heroesPromoHeading: 'Espace Maître',
+          heroesPromoDesc: "Ajoute des personnes une fois — et génère des chansons pour elles en un tap. Historique complet avec paroles.",
+          heroesPromoFeaturesTitle: 'Ce qui est inclus :',
+          heroesF1: '✦ Nombre illimité de personnes', heroesF2: '✦ Génération solo & duo rapide',
+          heroesF3: '✦ Préférences de style musical', heroesF4: '✦ Historique complet avec paroles & analyse',
+          heroesF5: '✦ Audio directement depuis la fiche personne',
+          heroesTrialBtn: '1 jour gratuit — essayer', heroesSubBtn: "S'abonner au Laboratoire — $39.99/mois",
+          heroesSubNote: '30 titres/mois · Paiement via HOT Pay',
+          heroFormTitle: 'Ajouter une personne', heroRelLabel: 'Relation', heroBirthdateHint: 'Sélectionne jour, mois et année',
+          heroTimeBirthLabel: 'Heure de naissance', heroStyleLabel: 'Styles musicaux préférés', heroStylePh: 'pop, jazz, électronique…',
+          heroRelOpt0: '— choisir —', heroRelOpt1: 'Mère', heroRelOpt2: 'Père', heroRelOpt3: 'Fille', heroRelOpt4: 'Fils',
+          heroRelOpt5: 'Sœur', heroRelOpt6: 'Frère', heroRelOpt7: 'Grand-mère', heroRelOpt8: 'Grand-père',
+          heroRelOpt9: 'Mari', heroRelOpt10: 'Femme', heroRelOpt11: 'Être aimé',
+          heroRelOpt12: 'Ami', heroRelOpt13: 'Amie', heroRelOpt14: 'Collègue', heroRelOpt15: 'Mentor', heroRelOpt16: 'Autre',
+          dateDay: 'Jour', dateMonth: 'Mois', dateYear: 'Année',
+          scLoading: '✨ Chargement…', scPromoIntro: "Soul Chat est ton assistant IA qui te comprend comme un meilleur ami ou ton Moi Supérieur. Répond aux questions sur ton caractère, ta vocation et ton chemin.",
+          scMoreBtnText: 'Plus ↓', scStat1: "signalent moins d'anxiété", scStat2: 'se sentent compris',
+          scStat3: 'trouvent des réponses plus vite', scStat4: 'reviennent',
+          scExamplesTitle: 'Exemples de questions',
+          scEx1: '« Pourquoi est-il si difficile pour moi de parler de mes sentiments ? »', scEx2: '« Quelle est ma principale peur et comment y faire face ? »',
+          scEx3: '« Quelle est ma vocation et comment y parvenir ? »',
+          scSubIncluded: "Soul Chat inclus dans l'abonnement", scChoosePlanBtn: 'Choisir un abonnement →',
+          scGiftHeading: 'Essayer gratuitement — 24 heures', scGiftNote: 'Une fois par utilisateur',
+          scGiftBtnText: '🎁 Obtenir 24 heures gratuitement', scBuyDayNote: "Pas prêt pour un abonnement ? Essaie l'accès individuel",
+          scBuyDayBtnText: '⚡ Ouvrir Soul Chat 24h — $2.99',
           helpT1: 'Qu\'est-ce que YupSoul', helpB1: '<p>YupSoul crée une <strong>chanson personnelle rien que pour toi</strong> — basée sur ta date, heure et lieu de naissance. Le système analyse ta personnalité et écrit une chanson sur tes vraies qualités, ton chemin et ta force.</p><p>Ce n\'est pas un modèle — chaque chanson est unique et t\'appartient.</p>',
           helpT2: 'Ce qu\'on peut créer', helpB2: '<ul><li><strong>Chanson sur moi</strong> — ton portrait sonore personnel : qui tu es, ta force et ton chemin intérieur</li><li><strong>Chanson pour deux</strong> — pour un couple (amoureux, amis). Analyse les deux cartes et reflète l\'union</li><li><strong>Énergie du jour</strong> — une chanson pour une date et un lieu précis. Quelles opportunités s\'ouvrent en ce moment</li></ul><p>Il y a aussi des <strong>requêtes rapides</strong> — idées prêtes : chanson de force, d\'anniversaire, méditative, sur le lâcher-prise, et plus.</p>',
           helpT3: 'Combien de temps attendre', helpB3: '<p>Généralement <strong>5–15 minutes</strong>. Le bot enverra une notification quand ta chanson sera prête.</p><p>Tu peux fermer l\'appli — le résultat arrivera tout seul, rien ne sera perdu.</p>',
@@ -2509,6 +2660,74 @@
         if (obTitle3) obTitle3.textContent = t('onboardingSlide3Title');
         if (obText3)  obText3.textContent  = t('onboardingSlide3Text');
         var startBtn = document.getElementById('onboardingStartBtn'); if (startBtn) startBtn.textContent = t('onboardingBtnStart');
+        // ── Новые переводы всех страниц ──────────────────────────────────────
+        var newMap = [
+          // heroes page
+          ['heroesPageTitle','#heroesPageTitle'], ['heroesPromoHeading','#heroesPromoHeading'],
+          ['heroesPromoDesc','#heroesPromoDesc'], ['heroesPromoFeaturesTitle','#heroesPromoFeaturesTitle'],
+          ['heroesF1','#heroesF1'], ['heroesF2','#heroesF2'], ['heroesF3','#heroesF3'],
+          ['heroesF4','#heroesF4'], ['heroesF5','#heroesF5'],
+          ['heroesTrialBtn','#masterTrialBtn'], ['heroesSubBtn','#masterSubBtn'],
+          ['heroesSubNote','#heroesSubNote'],
+          ['heroFormTitle','#heroFormTitle'], ['heroRelLabel','#heroRelLabel'],
+          ['heroBirthdateHint','#heroBirthdateHint'],
+          ['heroTimeBirthLabel','#heroTimeBirthLabel'], ['heroStyleLabel','#heroStyleLabel'],
+          // profile page
+          ['profilePageTitle','#profilePageTitle'], ['profileSectionMyData','#profileSectionMyData'],
+          ['profileSectionPlans','#profileSectionPlans'], ['profileEditBtn','#profileEditBtn'],
+          ['profileBalanceHintText','#profileBalanceHintText'],
+          ['profileSectionTracks','#profileSectionTracks'],
+          ['profileRefTagline','#profileRefTagline'],
+          ['profileInviteFriend','#profileInviteFriendTitle'],
+          ['profileRefInvited','#profileRefInvitedLabel'], ['profileRefActivated','#profileRefActivatedLabel'],
+          ['planCurrentBadge','#planFreeBadge'], ['planFreeYours','#planFreePrice'],
+          ['planSubscribeBtn','#planBtnBasic'], ['planDetailsBtn','#planDetailsBasic'],
+          ['planPopularBadge','#planPlusBadge'],
+          ['planSubscribeBtn','#planBtnPlus'], ['planDetailsBtn','#planDetailsPlus'],
+          ['planMasterBadgeText','#planMasterBadge'], ['planMasterNameText','#planMasterName'],
+          ['planOpenMasterBtn','#planBtnMaster'], ['planDetailsBtn','#planDetailsMaster'],
+          ['ptiSingleName','#ptiSingleName'], ['ptiSingleDesc','#ptiSingleDesc'],
+          ['ptiCoupleName','#ptiCoupleName'], ['ptiCoupleDesc','#ptiCoupleDesc'],
+          ['ptiTransitName','#ptiTransitName'], ['ptiTransitDesc','#ptiTransitDesc'],
+          // success page
+          ['successTitle','#successTitle'], ['successHint','#successHint'],
+          ['successToProfile','#successToProfileBtn'], ['openBot','#openBotBtn'],
+          // loading page
+          ['loadingTitle','#loadingTitle'],
+          // soul chat promo
+          ['scLoading','#scGlobalLoadingText'], ['scPromoIntro','#scPromoIntro'],
+          ['scMoreBtnText','#scMoreBtnText'], ['scStat1','#scStat1'], ['scStat2','#scStat2'],
+          ['scStat3','#scStat3'], ['scStat4','#scStat4'], ['scExamplesTitle','#scExamplesTitle'],
+          ['scEx1','#scEx1'], ['scEx2','#scEx2'], ['scEx3','#scEx3'],
+          ['scSubIncluded','#scSubIncluded'], ['scChoosePlanBtn','#scChoosePlanBtn'],
+          ['scGiftHeading','#scGiftHeading'], ['scGiftNote','#scGiftNote'],
+          ['scGiftBtnText','#scPageGiftBtn'], ['scBuyDayNote','#scBuyDayNote'],
+          ['scBuyDayBtnText','#scPageBuyDayBtn']
+        ];
+        newMap.forEach(function(pair) {
+          var el = document.querySelector(pair[1]);
+          if (el) {
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = t(pair[0]);
+            else el.textContent = t(pair[0]);
+          }
+        });
+        // successDesc — innerHTML чтобы сохранить <br>
+        var sdEl = document.getElementById('successDesc');
+        if (sdEl) sdEl.innerHTML = t('successDesc').replace(/\n/g,'<br>');
+        // Перевод плейсхолдеров новых полей
+        var newPh = [['heroStylePh','#heroStyle']];
+        newPh.forEach(function(p){ var e = document.querySelector(p[1]); if(e) e.placeholder = t(p[0]); });
+        // Перевод опций heroRelationship
+        var relSel = document.getElementById('heroRelationship');
+        if (relSel) {
+          var relOpts = relSel.querySelectorAll('option');
+          var relKeys = ['heroRelOpt0','heroRelOpt1','heroRelOpt2','heroRelOpt3','heroRelOpt4','heroRelOpt5','heroRelOpt6','heroRelOpt7','heroRelOpt8','heroRelOpt9','heroRelOpt10','heroRelOpt11','heroRelOpt12','heroRelOpt13','heroRelOpt14','heroRelOpt15','heroRelOpt16'];
+          relOpts.forEach(function(opt, i) { if (relKeys[i]) opt.textContent = t(relKeys[i]); });
+        }
+        // Перевод опций dateDay/dateMonth/dateYear во всех date-group select
+        document.querySelectorAll('.date-group-day option[value=""]').forEach(function(o){ o.textContent = t('dateDay'); });
+        document.querySelectorAll('.date-group-month option[value=""]').forEach(function(o){ o.textContent = t('dateMonth'); });
+        document.querySelectorAll('.date-group-year option[value=""]').forEach(function(o){ o.textContent = t('dateYear'); });
         // Убеждаемся, что кнопка оплаты имеет правильный текст после применения переводов
         ensurePayButtonText();
       }
