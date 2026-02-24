@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.59';
+        var APP_VERSION = '1.2.61';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -261,7 +261,7 @@
     .step-panel { margin-top: 20px; }
     .step-nav { display: flex; gap: 12px; margin-top: 16px; }
     .step-nav button { flex: 1; text-transform: none; letter-spacing: 0; }
-    .form-submit-sticky { position: sticky; bottom: 0; background: linear-gradient(to top, rgba(8,7,26,0.97) 55%, rgba(8,7,26,0.6) 80%, transparent); padding: 14px 0 6px; margin: 0; z-index: 5; display: flex; flex-direction: column; align-items: stretch; gap: 0; }
+    .form-submit-sticky { position: sticky; bottom: 0; background: none; padding: 14px 0 6px; margin: 0; z-index: 5; display: flex; flex-direction: column; align-items: stretch; gap: 0; }
     .form-submit-sticky button#stepNext { flex: none; width: 100%; }
     .form-nav-links{display:flex;justify-content:center;gap:14px;margin-top:18px;padding:10px 0}
     .form-nav-link{background:none;border:none;color:rgba(212,175,55,0.55);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;animation:none;font-weight:500}
@@ -909,7 +909,7 @@
       <!-- Лого и приветствие — по центру -->
       <div id="homeHero">
         <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="140" height="140">
-        <div class="home-tagline">Музыка твоей души</div>
+        <div id="homeTagline" class="home-tagline">Музыка твоей души</div>
         <p id="homeGreeting" class="home-greeting">Привет</p>
         <button id="startBtn">Создать свою песню</button>
       </div>
@@ -934,17 +934,16 @@
       </div>
 
       <!-- Профиль, Помощь, Мои герои — доступ с главной -->
-      <nav class="home-nav" style="display:flex;justify-content:space-around;align-items:stretch;gap:2px;margin-top:var(--spacing-lg);padding:8px 2px;flex-wrap:nowrap;">
-        <button type="button" class="home-nav-link" onclick="goToProfileFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:clamp(0.58rem,2vw,0.7rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:4px 2px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;">Профиль</button>
-        <button type="button" class="home-nav-link" onclick="goToSoulChat()" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:clamp(0.58rem,2vw,0.7rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:4px 2px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;">Soul Chat</button>
-        <button type="button" class="home-nav-link" onclick="goToHelpFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:clamp(0.58rem,2vw,0.7rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:4px 2px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;">Помощь</button>
-        <button type="button" class="home-nav-link" onclick="goToHeroesFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:clamp(0.58rem,2vw,0.7rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:4px 2px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;">Лаборатория</button>
+      <nav class="home-nav" style="display:flex;justify-content:space-around;align-items:stretch;gap:4px;margin-top:var(--spacing-lg);padding:8px 4px;flex-wrap:nowrap;">
+        <button type="button" class="home-nav-link" onclick="goToSoulChat()" style="background:none;border:none;color:rgba(212,175,55,0.65);font-size:clamp(0.72rem,2.5vw,0.88rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:6px 4px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;font-weight:600;">Soul Chat</button>
+        <button type="button" class="home-nav-link" onclick="goToHelpFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.65);font-size:clamp(0.72rem,2.5vw,0.88rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:6px 4px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;font-weight:600;">Помощь</button>
+        <button type="button" class="home-nav-link" onclick="goToHeroesFrom('homePage')" style="background:none;border:none;color:rgba(212,175,55,0.65);font-size:clamp(0.72rem,2.5vw,0.88rem);line-height:1.2;cursor:pointer;font-family:inherit;padding:6px 4px;min-height:unset;min-width:0;box-shadow:none;white-space:normal;flex:1 1 0;text-align:center;word-break:break-word;font-weight:600;">Лаборатория</button>
       </nav>
 
       </div><!-- /нижняя обёртка -->
 
       <footer>
-        <p>YupSoul • 2026 • v1.2.37</p>
+        <p>YupSoul • 2026 • v1.2.61</p>
       </footer>
     </div>
 
@@ -1118,7 +1117,7 @@
             <div class="ppc-name">Basic</div>
             <div class="ppc-features">
               <div class="ppc-feature">✦ 5 треков/мес <i class="ppc-info" data-tip="5 новых персональных песен каждый месяц. Разовая цена — $5.99/трек. По подписке выходит $3/трек. Экономия 50%.">i</i></div>
-              <div class="ppc-feature">✦ Soul Chat <i class="ppc-info" data-tip="Soul Chat — живой разговор с твоей душой на основе твоих личных данных. Задавай вопросы о себе, своём характере, пути и предназначении. Каждый ответ уникален — как ты сам.">i</i></div>
+              <div class="ppc-feature">✦ Soul Chat (до 50 сообщ/мес) <i class="ppc-info" data-tip="Soul Chat — живой разговор с твоей душой на основе твоих личных данных. Задавай вопросы о себе, своём характере, пути и предназначении. До 50 сообщений в месяц.">i</i></div>
               <div class="ppc-feature">✦ История заказов <i class="ppc-info" data-tip="Все твои песни сохраняются в истории. Можно вернуться, переслушать и поделиться в любое время.">i</i></div>
             </div>
             <div class="ppc-price-wrap">
@@ -1136,7 +1135,7 @@
               <div class="ppc-feature">✦ 10 треков/мес <i class="ppc-info" data-tip="10 персональных песен в месяц. Разовая цена — $5.99/трек. По подписке выходит $2.5/трек. Экономия 58%.">i</i></div>
               <div class="ppc-feature">✦ Soul Chat без лимита <i class="ppc-info" data-tip="Soul Chat — живой разговор с твоей душой. В Plus — без ограничений по количеству сессий. Общайся когда угодно.">i</i></div>
               <div class="ppc-feature">✦ Приоритет обработки <i class="ppc-info" data-tip="Твои заявки идут в первую очередь — песня готова быстрее, чем у других пользователей.">i</i></div>
-              <div class="ppc-feature">✦ Эксклюзивные стили <i class="ppc-info" data-tip="Доступ к редким музыкальным стилям и форматам, которых нет в бесплатном и Basic тарифе.">i</i></div>
+              <div class="ppc-feature">✦ Полная история треков <i class="ppc-info" data-tip="Все твои песни сохраняются с текстами, аудио и датами создания — всегда доступны в профиле.">i</i></div>
             </div>
             <div class="ppc-price-wrap">
               <div class="ppc-price">$24.99/мес</div>
@@ -1812,7 +1811,7 @@
       var BOT_USERNAME = 'Yup_Soul_bot'; // единственное место для имени бота
       var LANG = {
         ru: {
-          tagline: 'Исследуй свои грани так, как ты этого захочешь',
+          tagline: 'Музыка твоей души',
           startBtn: 'Создать свою песню', myProfile: '👤 Профиль', myHeroes: 'Лаборатория', admin: '👑 Админка',
           profileTitle: 'Профиль', profileSubtitle: 'Твои данные и бесплатные генерации',
           profileFreeCredits: 'Бесплатных генераций', profileInviteFriend: 'Пригласи друга', profileShare: 'Поделиться',
@@ -1870,7 +1869,7 @@
           notFound: 'Не найдено', searchError: 'Ошибка поиска',
           soulChatLoad: 'Загрузка…',
           soulChatHasAccess: 'У тебя есть доступ к Soul Chat. Нажми кнопку ниже — откроется бот. В боте напиши /soulchat и задай вопрос своей душе.',
-          soulChatNoAccess: 'Soul Chat — диалоги с душой. Доступ по подписке Soul Basic (10 диалогов/мес) или Soul Plus (30 диалогов/мес).',
+          soulChatNoAccess: 'Soul Chat — диалоги с душой. Доступ по подписке Soul Basic (до 50 сообщений/мес) или Soul Plus (без лимита).',
           soulChatDefault: 'Soul Chat — диалоги с душой по заявке. Доступ по подписке.',
           soulChatNoApi: 'Soul Chat — диалоги с душой по заявке. Доступ по подписке Soul Basic или Soul Plus. Оформи в приложении: «К оплате».',
           greeting: 'Привет, {name}!',
@@ -1932,7 +1931,7 @@
           previewHome: 'Главная', previewForm: 'Форма', previewPayment: 'Оплата', previewLoading: 'Загрузка', previewSuccess: 'Успех'
         },
         en: {
-          tagline: 'Explore your edges the way you want',
+          tagline: 'Music of your soul',
           startBtn: 'Create My Song', myProfile: '👤 Profile', myHeroes: 'Lab', admin: '👑 Admin',
           profileTitle: 'Profile', profileSubtitle: 'Your data and free generations',
           profileFreeCredits: 'Free generations', profileInviteFriend: 'Invite a friend', profileShare: 'Share',
@@ -1989,7 +1988,7 @@
           notFound: 'Not found', searchError: 'Search error',
           soulChatLoad: 'Loading…',
           soulChatHasAccess: "You have Soul Chat access. Tap below — the bot will open. In the bot, type /soulchat and ask your soul a question.",
-          soulChatNoAccess: 'Soul Chat — dialogues with your soul. Available with Soul Basic (10/month) or Soul Plus (30/month) subscription.',
+          soulChatNoAccess: 'Soul Chat — dialogues with your soul. Available with Soul Basic (up to 50 messages/month) or Soul Plus (unlimited) subscription.',
           soulChatDefault: 'Soul Chat — dialogues with your soul per request. Available by subscription.',
           soulChatNoApi: 'Soul Chat — dialogues with your soul. Available with Soul Basic or Soul Plus subscription. Go to «To payment» in the app.',
           greeting: "Hi, {name}! Come back whenever you want to remember who you are.",
@@ -2051,7 +2050,7 @@
           previewHome: 'Home', previewForm: 'Form', previewPayment: 'Payment', previewLoading: 'Loading', previewSuccess: 'Success'
         },
         de: {
-          tagline: 'Erkunde deine Facetten, wie du es möchtest',
+          tagline: 'Musik deiner Seele',
           startBtn: 'Mein Lied erschaffen', myProfile: '👤 Profil', myHeroes: 'Labor', admin: '👑 Admin',
           profileTitle: 'Profil', profileSubtitle: 'Deine Daten und kostenlose Generierungen',
           profileFreeCredits: 'Kostenlose Generierungen', profileInviteFriend: 'Freund einladen', profileShare: 'Teilen',
@@ -2108,7 +2107,7 @@
           notFound: 'Nicht gefunden', searchError: 'Suchfehler',
           soulChatLoad: 'Laden…',
           soulChatHasAccess: 'Du hast Soul Chat. Tippe unten — der Bot öffnet sich. Im Bot: /soulchat und stelle deiner Seele eine Frage.',
-          soulChatNoAccess: 'Soul Chat — Dialoge mit deiner Seele. Mit Soul Basic (10/Monat) oder Soul Plus (30/Monat) Abo.',
+          soulChatNoAccess: 'Soul Chat — Dialoge mit deiner Seele. Mit Soul Basic (bis 50 Nachrichten/Monat) oder Soul Plus (unbegrenzt) Abo.',
           soulChatDefault: 'Soul Chat — Dialoge mit deiner Seele pro Anfrage. Per Abo.',
           soulChatNoApi: 'Soul Chat — Dialoge mit deiner Seele. Mit Soul Basic oder Soul Plus Abo. Gehe zu «Zur Kasse» in der App.',
           greeting: 'Hallo, {name}! Komm zurück, wann immer du dich erinnern willst, wer du bist.',
@@ -2170,7 +2169,7 @@
           previewHome: 'Startseite', previewForm: 'Formular', previewPayment: 'Zahlung', previewLoading: 'Laden', previewSuccess: 'Erfolg'
         },
         fr: {
-          tagline: 'Explore tes facettes comme tu le souhaites',
+          tagline: 'La musique de ton âme',
           startBtn: 'Créer ma chanson', myProfile: '👤 Profil', myHeroes: 'Labo', admin: '👑 Admin',
           profileTitle: 'Profil', profileSubtitle: 'Tes données et générations gratuites',
           profileFreeCredits: 'Générations gratuites', profileInviteFriend: 'Inviter un ami', profileShare: 'Partager',
@@ -2227,7 +2226,7 @@
           notFound: 'Non trouvé', searchError: 'Erreur de recherche',
           soulChatLoad: 'Chargement…',
           soulChatHasAccess: "Tu as accès à Soul Chat. Appuie ci-dessous — le bot s'ouvrira. Dans le bot, tape /soulchat et pose une question à ton âme.",
-          soulChatNoAccess: 'Soul Chat — dialogues avec ton âme. Avec abonnement Soul Basic (10/mois) ou Soul Plus (30/mois).',
+          soulChatNoAccess: 'Soul Chat — dialogues avec ton âme. Avec abonnement Soul Basic (jusqu\'à 50 messages/mois) ou Soul Plus (illimité).',
           soulChatDefault: 'Soul Chat — dialogues avec ton âme par demande. Sur abonnement.',
           soulChatNoApi: 'Soul Chat — dialogues avec ton âme. Avec abonnement Soul Basic ou Soul Plus. Va dans «Paiement» dans l\'app.',
           greeting: 'Salut, {name} ! Reviens quand tu veux te souvenir de qui tu es.',
@@ -6616,8 +6615,7 @@
           { icon: '🎵', name: '10 треков в месяц', desc: '10 персональных песен каждый месяц. Цена за трек ~$2.5 — экономия 58% по сравнению с разовой покупкой.' },
           { icon: '💬', name: 'Soul Chat без лимита', desc: 'Неограниченное количество диалогов с Soul Chat. Общайся с ИИ-отражением своей души когда угодно и сколько угодно.' },
           { icon: '⚡', name: 'Приоритет обработки', desc: 'Твои заявки обрабатываются в первую очередь — песня готова быстрее, чем у остальных пользователей.' },
-          { icon: '🎨', name: 'Эксклюзивные стили', desc: 'Доступ к редким музыкальным стилям и уникальным форматам, которых нет в бесплатном и Basic-тарифах.' },
-          { icon: '📂', name: 'Полная история', desc: 'Все треки сохраняются с текстами, аудио и датами создания.' },
+          { icon: '📂', name: 'Полная история треков', desc: 'Все треки сохраняются с текстами, аудио и датами создания — всегда доступны в профиле.' },
         ]
       },
       master: {
