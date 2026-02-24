@@ -978,12 +978,12 @@ bot.command("start", async (ctx) => {
   }
   // -----------------------------------------
 
-  // Фиксируем факт старта бота — создаём/обновляем запись в user_profiles
+  // Фиксируем факт старта бота — создаём/обновляем запись в user_profiles (включая username для ссылок в админке)
   if (supabase && telegramUserId) {
-    supabase.from("user_profiles").upsert(
-      { telegram_id: Number(telegramUserId), updated_at: new Date().toISOString() },
-      { onConflict: "telegram_id" }
-    ).then(() => null).catch((e) => console.warn("[start] upsert user_profiles:", e?.message));
+    const profileData = { telegram_id: Number(telegramUserId), updated_at: new Date().toISOString() };
+    if (ctx.from?.username) profileData.tg_username = ctx.from.username;
+    supabase.from("user_profiles").upsert(profileData, { onConflict: "telegram_id" })
+      .then(() => null).catch((e) => console.warn("[start] upsert user_profiles:", e?.message));
   }
 
   const name = ctx.from?.first_name || "друг";
@@ -1161,6 +1161,14 @@ bot.on("message:web_app_data", async (ctx) => {
     console.error("[Заявка] Нет ctx.from.id, ctx.from:", ctx.from);
     await ctx.reply(bMsg(ctx, 'requestError'));
     return;
+  }
+
+  // Сохраняем username при каждой заявке — для ссылок в админке
+  if (supabase && ctx.from?.username) {
+    supabase.from("user_profiles").upsert(
+      { telegram_id: Number(telegramUserId), tg_username: ctx.from.username, updated_at: new Date().toISOString() },
+      { onConflict: "telegram_id" }
+    ).catch((e) => console.warn("[Заявка] upsert tg_username:", e?.message));
   }
 
   console.log("[Заявка] Пользователь:", telegramUserId, "Имя:", payload.name, "Место:", payload.birthplace, "Координаты:", payload.birthplaceLat ? `${payload.birthplaceLat}, ${payload.birthplaceLon}` : "нет");
@@ -2661,7 +2669,7 @@ app.get("/api/admin/requests", asyncApi(async (req, res) => {
   const statusFilter = req.query?.status || "all";
   const requestIdSearch = String(req.query?.request_id || req.query?.id || "").trim().toLowerCase().replace(/[^0-9a-f-]/g, "");
   const userIdSearch = String(req.query?.user_id || req.query?.telegram_user_id || "").trim().replace(/[^0-9]/g, "");
-  const fullSelect = "id,name,gender,birthdate,birthplace,person2_name,person2_gender,person2_birthdate,person2_birthplace,status,generation_status,delivery_status,delivered_at,created_at,audio_url,mode,request,generation_steps,payment_status,payment_provider,promo_code,promo_discount_amount,payment_amount,telegram_user_id,error_message";
+  const fullSelect = "id,name,gender,birthdate,birthplace,person2_name,person2_gender,person2_birthdate,person2_birthplace,status,generation_status,delivery_status,delivered_at,created_at,audio_url,mode,request,generation_steps,payment_status,payment_provider,promo_code,promo_discount_amount,payment_amount,telegram_user_id,error_message,user_profiles(tg_username)";
   let q = supabase.from("track_requests").select(fullSelect).order("created_at", { ascending: false }).limit(userIdSearch || requestIdSearch ? 200 : limit);
   if (userIdSearch) {
     q = q.eq("telegram_user_id", Number(userIdSearch));
@@ -2707,7 +2715,7 @@ app.get("/api/admin/requests/:id", asyncApi(async (req, res) => {
   const id = sanitizeRequestId(req.params.id);
   if (!id) return res.status(400).json({ success: false, error: "Неверный ID заявки" });
   if (!isValidRequestId(id)) return res.status(400).json({ success: false, error: "Используйте полный UUID заявки (с дефисами), не обрезанный ID" });
-  const fullCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,delivery_status,error_message,llm_truncated,generation_steps,delivered_at,payment_status,payment_provider,promo_code,promo_discount_amount,payment_amount,telegram_user_id";
+  const fullCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,delivery_status,error_message,llm_truncated,generation_steps,delivered_at,payment_status,payment_provider,promo_code,promo_discount_amount,payment_amount,telegram_user_id,user_profiles(tg_username)";
   const coreCols = "id,name,gender,birthdate,birthplace,birthtime,birthtime_unknown,mode,person2_name,person2_gender,person2_birthdate,person2_birthplace,person2_birthtime,person2_birthtime_unknown,transit_date,transit_time,transit_location,transit_intent,deepseek_response,lyrics,audio_url,request,created_at,status,generation_status,delivery_status,error_message,delivered_at";
   const minCols = "id,name,gender,birthdate,birthplace,request,created_at,status,telegram_user_id";
   let usedFallbackCols = false;
