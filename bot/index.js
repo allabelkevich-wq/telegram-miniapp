@@ -2361,7 +2361,7 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
     if (orderId) {
       const r1 = await supabase
         .from("track_requests")
-        .select("id,telegram_user_id,payment_status,payment_order_id,mode,payment_raw,payment_tx_id,generation_status,status")
+        .select("id,name,telegram_user_id,payment_status,payment_order_id,mode,payment_raw,payment_tx_id,generation_status,status")
         .eq("payment_order_id", orderId)
         .maybeSingle();
       row = r1.data || null;
@@ -2371,7 +2371,7 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
     if (!row && requestId) {
       const r2 = await supabase
         .from("track_requests")
-        .select("id,telegram_user_id,payment_status,payment_order_id,mode,payment_raw,payment_tx_id,generation_status,status")
+        .select("id,name,telegram_user_id,payment_status,payment_order_id,mode,payment_raw,payment_tx_id,generation_status,status")
         .eq("id", requestId)
         .maybeSingle();
       if (r2.error) return res.status(500).json({ success: false, error: r2.error.message });
@@ -2490,10 +2490,35 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
           }
         ).catch((e) => console.warn("[webhook] notify subscription user:", e?.message));
 
+        // Подгружаем профиль для имени и username
+        let tgUsername = null;
+        let profileName = row.name || null;
+        if (supabase) {
+          const { data: prof } = await supabase
+            .from("user_profiles")
+            .select("name,tg_username")
+            .eq("telegram_id", Number(row.telegram_user_id))
+            .maybeSingle()
+            .catch(() => ({ data: null }));
+          if (prof?.tg_username) tgUsername = prof.tg_username;
+          if (!profileName && prof?.name) profileName = prof.name;
+        }
+        const paidAt = new Date().toLocaleString("ru-RU", { timeZone: "Europe/Moscow", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+        const userLine = [
+          profileName ? `👤 ${profileName}` : null,
+          tgUsername ? `@${tgUsername}` : null,
+          `[tg://user?id=${row.telegram_user_id}](tg://user?id=${row.telegram_user_id})`,
+        ].filter(Boolean).join("  ·  ");
         for (const adminId of ADMIN_IDS) {
           bot.api.sendMessage(
             adminId,
-            `💎 *Подписка оформлена*\nПлан: ${subPlanInfo.name}\nПользователь: ${row.telegram_user_id}\nЗаявка: \`${shortId}\`\nСумма: ${body.amount || "?"} ${body.currency || "USDT"}`
+            `💎 *Новая подписка!*\n` +
+            `📦 Тариф: *${subPlanInfo.name}*\n` +
+            `${userLine}\n` +
+            `💵 Сумма: *${body.amount || "?"} ${body.currency || "USDT"}*\n` +
+            `📅 Оплачено: ${paidAt} МСК\n` +
+            `🔑 До: ${renewStr}\n` +
+            `🆔 Заявка: \`${shortId}\``
           , { parse_mode: "Markdown" }).catch(() => {});
         }
       } else {
