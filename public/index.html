@@ -13,7 +13,7 @@
   <script>
     (function(){
       try {
-        var APP_VERSION = '1.2.72';
+        var APP_VERSION = '1.2.73';
         var CACHE_KEY = 'yupsoul_app_version';
         var cached = localStorage.getItem(CACHE_KEY);
         
@@ -1355,7 +1355,7 @@
       <!-- Выбор героя для мастер-пользователей (скрыт у обычных) -->
       <div id="forWhoWrap" style="display:none; padding:0; margin-bottom:16px">
         <div class="field" style="margin-bottom:0">
-          <label for="forWho" style="font-size:0.82rem">Для кого генерируем?</label>
+          <label id="forWhoLabel" for="forWho" style="font-size:0.82rem">Для кого генерируем?</label>
           <select id="forWho">
             <option value="">Для себя</option>
           </select>
@@ -1405,12 +1405,12 @@
         <div id="formFieldsWrap">
         <div class="step-panel" data-step="2">
         <div class="field">
-          <label for="name" data-icon="👤">Имя</label>
+          <label id="nameLabel" for="name" data-icon="👤">Имя</label>
             <input type="text" id="name" placeholder="Как тебя зовут?" required aria-label="Имя">
         </div>
         
         <div class="field">
-          <label for="birthdate" data-icon="📅">Дата рождения</label>
+          <label id="birthdateLbl" for="birthdate" data-icon="📅">Дата рождения</label>
           <div id="birthdateWrap" class="birthdate-wrap">
             <div class="date-group" role="group" aria-label="Дата рождения">
               <select id="birthdateDay" class="date-group-day" aria-label="День"><option value="">День</option></select>
@@ -1423,7 +1423,7 @@
         </div>
         
         <div class="field">
-          <label for="birthplace" data-icon="📍">Место рождения</label>
+          <label id="birthplaceLbl" for="birthplace" data-icon="📍">Место рождения</label>
           <div id="birthplaceWrap" class="birthplace-wrap">
               <input type="text" id="birthplace" placeholder="Москва, Лондон, Нью-Йорк..." required autocomplete="off" aria-label="Локация рождения">
               <span id="birthplaceCheck" class="birthplace-check" aria-hidden="true">✓</span>
@@ -1433,7 +1433,7 @@
         </div>
         
         <div class="field">
-          <label data-icon="🕐">Время рождения</label>
+          <label id="birthtimeLbl" data-icon="🕐">Время рождения</label>
           <div class="time-group" role="group" aria-label="Время рождения">
             <input type="time" id="birthtime" required aria-label="Время" class="time-group-input">
             <div class="checkbox time-group-checkbox">
@@ -2019,7 +2019,15 @@
           helpT4: 'Не знаю точное время рождения', helpB4: '<p>Не страшно. Отметь <strong>«Время неизвестно»</strong> — система создаст полноценную песню на основе остальных данных.</p>',
           helpT5: 'Бесплатные генерации', helpB5: '<p><strong>Первая генерация — бесплатно.</strong></p><p>Получить ещё бесплатные можно через реферальную программу: поделись своей ссылкой. Когда 5 приглашённых тобой друзей создадут первую песню — тебе автоматически начислится 1 бесплатная генерация.</p><p>Реферальная ссылка — в разделе «Профиль», блок «Пригласи друга».</p>',
           helpT6: 'Оплата и промокоды', helpB6: '<p>Дополнительные генерации оплачиваются по тарифу. Способы оплаты отображаются на экране при оформлении заявки.</p><p>Если у тебя есть <strong>промокод</strong> — введи его на экране оплаты. Промокоды чувствительны к регистру, вводи точно как написано.</p>',
-          helpT7: 'Что-то пошло не так', helpB7: '<p><strong>Приложение закрылось или показало ошибку</strong> — попробуй открыть бота заново. Незавершённые заявки восстанавливаются автоматически.</p><p><strong>Оплатил, но песни нет</strong> — подожди 15–20 минут. Если результата нет — напиши боту «песня не пришла». Или напиши в поддержку.</p><p><strong>Промокод не принимается</strong> — проверь регистр букв. Если всё верно — напиши нам с указанием кода.</p>'
+          helpT7: 'Что-то пошло не так', helpB7: '<p><strong>Приложение закрылось или показало ошибку</strong> — попробуй открыть бота заново. Незавершённые заявки восстанавливаются автоматически.</p><p><strong>Оплатил, но песни нет</strong> — подожди 15–20 минут. Если результата нет — напиши боту «песня не пришла». Или напиши в поддержку.</p><p><strong>Промокод не принимается</strong> — проверь регистр букв. Если всё верно — напиши нам с указанием кода.</p>',
+          forWhoLabel: 'Для кого генерируем?', nameLbl: 'Имя', birthdateLbl: 'Дата рождения', birthplaceLbl: 'Место рождения', birthtimeLbl: 'Время рождения',
+          payOvCardTitleDefault: 'Оплата заявки', payOvTrialText: 'Первая песня — в подарок!', payOvFreeClaimBtn: '🎁 Получить бесплатно',
+          payOvPromoToggle: '▸ Есть промокод?', orPay: 'Или оплати:', priceLabel: 'Цена:',
+          payOvLinkHint: 'Если окно не открылось — скопируйте ссылку и вставьте в браузер:',
+          payOvCopyBtn: '📋 Скопировать ссылку оплаты', payOvCheckBtn: '✅ Я уже оплатил — проверить',
+          payOvPromoConfirmBtn: '🎁 Подтвердить и отправить',
+          paymentThanksTitle: 'Оплата прошла', paymentThanksMsg: 'Песня создаётся. Придёт в чат с ботом. Можно закрыть окно.',
+          paymentThanksHintText: 'Не пришла за 20 минут? Напиши боту «песня не пришла»'
         },
         en: {
           tagline: 'Music of your soul',
@@ -2187,7 +2195,15 @@
           helpT4: "I don't know my exact birth time", helpB4: '<p>No problem. Check <strong>"Time unknown"</strong> — the system will create a full song based on the other data.</p>',
           helpT5: 'Free generations', helpB5: '<p><strong>The first generation is free.</strong></p><p>Get more free ones through the referral programme: share your link. When 5 of your invited friends create their first song — you automatically receive 1 free generation.</p><p>Your referral link is in the "Profile" section, "Invite a friend" block.</p>',
           helpT6: 'Payment & promo codes', helpB6: '<p>Additional generations are paid according to the tariff. Payment options are shown on screen when placing an order.</p><p>If you have a <strong>promo code</strong> — enter it on the payment screen. Promo codes are case-sensitive.</p>',
-          helpT7: 'Something went wrong', helpB7: '<p><strong>App closed or showed an error</strong> — try reopening the bot. Unfinished orders are restored automatically.</p><p><strong>Paid but no song</strong> — wait 15–20 minutes. If nothing arrives — tell the bot "song not arrived". Or contact support.</p><p><strong>Promo code not accepted</strong> — check the letter case. If everything is correct — write to us with the code.</p>'
+          helpT7: 'Something went wrong', helpB7: '<p><strong>App closed or showed an error</strong> — try reopening the bot. Unfinished orders are restored automatically.</p><p><strong>Paid but no song</strong> — wait 15–20 minutes. If nothing arrives — tell the bot "song not arrived". Or contact support.</p><p><strong>Promo code not accepted</strong> — check the letter case. If everything is correct — write to us with the code.</p>',
+          forWhoLabel: 'Who are we generating for?', nameLbl: 'Name', birthdateLbl: 'Date of birth', birthplaceLbl: 'Place of birth', birthtimeLbl: 'Time of birth',
+          payOvCardTitleDefault: 'Payment', payOvTrialText: 'First song — free gift!', payOvFreeClaimBtn: '🎁 Get for free',
+          payOvPromoToggle: '▸ Have a promo code?', orPay: 'Or pay:', priceLabel: 'Price:',
+          payOvLinkHint: "If the window didn't open — copy the link and paste in your browser:",
+          payOvCopyBtn: '📋 Copy payment link', payOvCheckBtn: "✅ I've already paid — verify",
+          payOvPromoConfirmBtn: '🎁 Confirm and submit',
+          paymentThanksTitle: 'Payment successful', paymentThanksMsg: 'Song is being created. It will arrive in the bot chat. You can close the window.',
+          paymentThanksHintText: "Not arrived in 20 minutes? Message the bot 'song not received'"
         },
         de: {
           tagline: 'Musik deiner Seele',
@@ -2355,7 +2371,15 @@
           helpT4: 'Ich kenne meine genaue Geburtszeit nicht', helpB4: '<p>Kein Problem. Wähle <strong>„Zeit unbekannt"</strong> — das System erstellt ein vollständiges Lied anhand der anderen Daten.</p>',
           helpT5: 'Kostenlose Generierungen', helpB5: '<p><strong>Die erste Generierung ist kostenlos.</strong></p><p>Weitere kostenlose gibt es über das Empfehlungsprogramm: Teile deinen Link. Wenn 5 deiner eingeladenen Freunde ihr erstes Lied erstellen — erhältst du automatisch 1 kostenlose Generierung.</p><p>Dein Empfehlungslink ist im Bereich „Profil", Block „Freund einladen".</p>',
           helpT6: 'Zahlung & Gutscheincodes', helpB6: '<p>Zusätzliche Generierungen werden nach Tarif bezahlt. Zahlungsoptionen werden beim Aufgeben einer Bestellung angezeigt.</p><p>Wenn du einen <strong>Gutscheincode</strong> hast — gib ihn auf dem Zahlungsbildschirm ein. Codes sind Groß-/Kleinschreibung-sensitiv.</p>',
-          helpT7: 'Etwas ist schiefgelaufen', helpB7: '<p><strong>App geschlossen oder Fehler</strong> — versuche den Bot neu zu öffnen. Unfertige Bestellungen werden automatisch wiederhergestellt.</p><p><strong>Bezahlt aber kein Lied</strong> — warte 15–20 Minuten. Wenn nichts kommt — schreib dem Bot „Lied nicht angekommen". Oder kontaktiere den Support.</p><p><strong>Gutscheincode nicht akzeptiert</strong> — Groß-/Kleinschreibung prüfen. Falls alles korrekt — schreib uns mit dem Code.</p>'
+          helpT7: 'Etwas ist schiefgelaufen', helpB7: '<p><strong>App geschlossen oder Fehler</strong> — versuche den Bot neu zu öffnen. Unfertige Bestellungen werden automatisch wiederhergestellt.</p><p><strong>Bezahlt aber kein Lied</strong> — warte 15–20 Minuten. Wenn nichts kommt — schreib dem Bot „Lied nicht angekommen". Oder kontaktiere den Support.</p><p><strong>Gutscheincode nicht akzeptiert</strong> — Groß-/Kleinschreibung prüfen. Falls alles korrekt — schreib uns mit dem Code.</p>',
+          forWhoLabel: 'Für wen generieren wir?', nameLbl: 'Name', birthdateLbl: 'Geburtsdatum', birthplaceLbl: 'Geburtsort', birthtimeLbl: 'Geburtszeit',
+          payOvCardTitleDefault: 'Zahlung', payOvTrialText: 'Erstes Lied — Geschenk!', payOvFreeClaimBtn: '🎁 Kostenlos erhalten',
+          payOvPromoToggle: '▸ Haben Sie einen Code?', orPay: 'Oder bezahle:', priceLabel: 'Preis:',
+          payOvLinkHint: 'Wenn sich das Fenster nicht öffnete — Link kopieren und im Browser einfügen:',
+          payOvCopyBtn: '📋 Zahlungslink kopieren', payOvCheckBtn: '✅ Ich habe bezahlt — prüfen',
+          payOvPromoConfirmBtn: '🎁 Bestätigen und senden',
+          paymentThanksTitle: 'Zahlung erfolgreich', paymentThanksMsg: 'Lied wird erstellt. Kommt im Bot-Chat an. Fenster kann geschlossen werden.',
+          paymentThanksHintText: 'Nicht in 20 Min. angekommen? Schreib dem Bot „Lied nicht angekommen"'
         },
         fr: {
           tagline: 'La musique de ton âme',
@@ -2523,7 +2547,15 @@
           helpT4: 'Je ne connais pas mon heure de naissance exacte', helpB4: '<p>Pas de problème. Coche <strong>« Heure inconnue »</strong> — le système créera une chanson complète avec les autres données.</p>',
           helpT5: 'Générations gratuites', helpB5: '<p><strong>La première génération est gratuite.</strong></p><p>Obtiens-en d\'autres gratuitement via le programme de parrainage : partage ton lien. Quand 5 de tes amis invités créent leur première chanson — tu reçois automatiquement 1 génération gratuite.</p><p>Ton lien de parrainage est dans la section « Profil », bloc « Inviter un ami ».</p>',
           helpT6: 'Paiement & codes promo', helpB6: '<p>Les générations supplémentaires sont payantes selon le tarif. Les options de paiement s\'affichent lors de la commande.</p><p>Si tu as un <strong>code promo</strong> — saisis-le sur l\'écran de paiement. Les codes sont sensibles à la casse.</p>',
-          helpT7: 'Quelque chose a mal tourné', helpB7: '<p><strong>L\'appli s\'est fermée ou a affiché une erreur</strong> — essaie de rouvrir le bot. Les commandes inachevées sont restaurées automatiquement.</p><p><strong>Payé mais pas de chanson</strong> — attends 15–20 minutes. Si rien n\'arrive — dis au bot « chanson non reçue ». Ou contacte le support.</p><p><strong>Code promo non accepté</strong> — vérifie la casse. Si tout est correct — écris-nous avec le code.</p>'
+          helpT7: 'Quelque chose a mal tourné', helpB7: '<p><strong>L\'appli s\'est fermée ou a affiché une erreur</strong> — essaie de rouvrir le bot. Les commandes inachevées sont restaurées automatiquement.</p><p><strong>Payé mais pas de chanson</strong> — attends 15–20 minutes. Si rien n\'arrive — dis au bot « chanson non reçue ». Ou contacte le support.</p><p><strong>Code promo non accepté</strong> — vérifie la casse. Si tout est correct — écris-nous avec le code.</p>',
+          forWhoLabel: 'Pour qui générons-nous?', nameLbl: 'Prénom', birthdateLbl: 'Date de naissance', birthplaceLbl: 'Lieu de naissance', birthtimeLbl: 'Heure de naissance',
+          payOvCardTitleDefault: 'Paiement', payOvTrialText: 'Première chanson — cadeau!', payOvFreeClaimBtn: '🎁 Obtenir gratuitement',
+          payOvPromoToggle: '▸ Vous avez un code promo?', orPay: 'Ou payez:', priceLabel: 'Prix:',
+          payOvLinkHint: "Si la fenêtre ne s'est pas ouverte — copiez le lien et collez dans votre navigateur:",
+          payOvCopyBtn: '📋 Copier le lien de paiement', payOvCheckBtn: "✅ J'ai déjà payé — vérifier",
+          payOvPromoConfirmBtn: '🎁 Confirmer et envoyer',
+          paymentThanksTitle: 'Paiement effectué', paymentThanksMsg: 'Chanson en cours de création. Arrivera dans le chat du bot. Vous pouvez fermer.',
+          paymentThanksHintText: "Pas arrivée en 20 min? Écrivez au bot «chanson non reçue»"
         }
       };
       var currentLang = 'ru';
@@ -2583,7 +2615,9 @@
           ['helpPageTitle','#helpPageTitle'], ['helpPageSubtitle','#helpPageSubtitle'],
           ['profileHelpBtn','#profileHelpBtn'],
           ['helpT1','#helpT1'], ['helpT2','#helpT2'], ['helpT3','#helpT3'], ['helpT4','#helpT4'],
-          ['helpT5','#helpT5'], ['helpT6','#helpT6'], ['helpT7','#helpT7']
+          ['helpT5','#helpT5'], ['helpT6','#helpT6'], ['helpT7','#helpT7'],
+          ['forWhoLabel','#forWhoLabel'], ['nameLbl','#nameLabel'],
+          ['birthdateLbl','#birthdateLbl'], ['birthplaceLbl','#birthplaceLbl'], ['birthtimeLbl','#birthtimeLbl']
         ];
         // innerHTML-ключи для help-контента
         var htmlMap = [
@@ -2701,7 +2735,18 @@
           ['scSubIncluded','#scSubIncluded'], ['scChoosePlanBtn','#scChoosePlanBtn'],
           ['scGiftHeading','#scGiftHeading'], ['scGiftNote','#scGiftNote'],
           ['scGiftBtnText','#scPageGiftBtn'], ['scBuyDayNote','#scBuyDayNote'],
-          ['scBuyDayBtnText','#scPageBuyDayBtn']
+          ['scBuyDayBtnText','#scPageBuyDayBtn'],
+          // payment overlay
+          ['payOvCardTitleDefault','#payOvCardTitle'], ['payOvTrialText','#payOvTrialText'],
+          ['payOvFreeClaimBtn','#payOvFreeClaimBtn'], ['payOvPromoToggle','#payOvPromoToggle'],
+          ['apply','#payOvPromoBtn'], ['orPay','#payOvOrPayText'], ['priceLabel','#payOvPriceLabel'],
+          ['payWithHot','#payOvPayBtn'], ['payOvLinkHint','#payOvLinkHint'],
+          ['payOvCopyBtn','#payOvCopyBtn'], ['payOvCheckBtn','#payOvCheckBtn'],
+          ['payOvPromoConfirmBtn','#payOvPromoConfirmBtn'], ['backFromPayment','#payOvBackBtn'],
+          // payment thanks page
+          ['paymentThanksTitle','#paymentThanksTitle'],
+          ['paymentThanksMsg','#paymentThanksMessage'],
+          ['paymentThanksHintText','#paymentThanksHint']
         ];
         newMap.forEach(function(pair) {
           var el = document.querySelector(pair[1]);
@@ -7144,7 +7189,7 @@
         <!-- Подсказка для новичков (показывается только если free_trial доступен) -->
         <div id="payOvTrialHint" style="display:none;background:rgba(5,150,105,0.15);border:1.5px solid rgba(16,185,129,0.5);border-radius:14px;padding:16px;margin-bottom:16px;">
           <div style="font-size:0.95rem;color:#d1fae5;line-height:1.6;margin-bottom:12px;">
-            🎁 <strong style="color:#6ee7b7;">Первая песня — в подарок!</strong>
+            🎁 <strong id="payOvTrialText" style="color:#6ee7b7;">Первая песня — в подарок!</strong>
           </div>
           <button id="payOvFreeClaimBtn" type="button"
             style="width:100%;padding:14px;border-radius:11px;background:linear-gradient(135deg,#059669,#10b981);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.2px;">
@@ -7182,9 +7227,9 @@
 
         <!-- Секция оплаты (HOT Pay) -->
         <div id="payOvPaymentSection" style="margin-bottom:16px;">
-          <p style="color:rgba(255,255,255,0.8);font-size:0.95rem;margin-bottom:10px;">Или оплати:</p>
+          <p id="payOvOrPayText" style="color:rgba(255,255,255,0.8);font-size:0.95rem;margin-bottom:10px;">Или оплати:</p>
           <div style="background:rgba(212,175,55,0.06);border-radius:12px;padding:14px;margin-bottom:12px;text-align:center;">
-            <div style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-bottom:4px;">Цена:</div>
+            <div id="payOvPriceLabel" style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-bottom:4px;">Цена:</div>
             <div id="payOvPriceDisplay" style="font-size:1.3rem;font-weight:700;color:#d4af37;">5.99 USDT</div>
             <div id="payOvPriceHint" style="font-size:0.8rem;color:rgba(16,185,129,0.8);margin-top:6px;"></div>
           </div>
@@ -7196,7 +7241,7 @@
 
         <!-- Кнопка «скопировать ссылку» (показывается если openLink не сработал) -->
         <div id="payOvLinkRow" style="display:none;margin-bottom:12px;">
-          <p style="color:rgba(255,255,255,0.75);font-size:0.85rem;margin-bottom:6px;">
+          <p id="payOvLinkHint" style="color:rgba(255,255,255,0.75);font-size:0.85rem;margin-bottom:6px;">
             Если окно не открылось — скопируйте ссылку и вставьте в браузер:
           </p>
           <button id="payOvCopyBtn" type="button"
