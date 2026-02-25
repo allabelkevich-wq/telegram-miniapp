@@ -54,22 +54,22 @@
       --secondary-color: #ec4899;
       --success-color: #10b981;
       --subtitle-readable: rgba(255,255,255,0.92);
-      /* Fluid scaling — пропорции Apple: уменьшается пропорционально экрану */
-      --fluid-xs: clamp(0.7rem, 1.8vw, 0.8rem);
-      --fluid-sm: clamp(0.8rem, 2.2vw, 0.95rem);
-      --fluid-base: clamp(0.9rem, 2.8vw, 1.05rem);
-      --fluid-md: clamp(1rem, 3.2vw, 1.2rem);
-      --fluid-lg: clamp(1.1rem, 3.8vw, 1.4rem);
-      --fluid-xl: clamp(1.2rem, 4.5vw, 1.6rem);
-      --fluid-2xl: clamp(1.4rem, 5.5vw, 2.4rem);
-      --spacing-xs: clamp(4px, 1.2vw, 8px);
-      --spacing-sm: clamp(6px, 1.8vw, 12px);
-      --spacing-md: clamp(10px, 2.5vw, 18px);
-      --spacing-lg: clamp(14px, 3.5vw, 24px);
-      --spacing-xl: clamp(18px, 4.5vw, 28px);
-      --radius-sm: clamp(6px, 1.8vw, 10px);
-      --radius-md: clamp(8px, 2.2vw, 14px);
-      --radius-lg: clamp(12px, 3vw, 20px);
+      /* Фиксированные, «мобильные» размеры: пропорции одинаковые при любой ширине окна */
+      --fluid-xs: 0.8rem;
+      --fluid-sm: 0.9rem;
+      --fluid-base: 1rem;
+      --fluid-md: 1.1rem;
+      --fluid-lg: 1.3rem;
+      --fluid-xl: 1.5rem;
+      --fluid-2xl: 1.9rem;
+      --spacing-xs: 6px;
+      --spacing-sm: 10px;
+      --spacing-md: 14px;
+      --spacing-lg: 20px;
+      --spacing-xl: 26px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
       /* базовые переменные темы по умолчанию (dark premium) */
       --tg-theme-bg-color: #0A0A1A;
       --tg-theme-secondary-bg-color: rgba(255,255,255,0.08);
@@ -104,7 +104,7 @@
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
-    html { height: 100%; }
+    html { height: 100%; min-width: 280px; }
     body {
       background: linear-gradient(160deg,#08071a 0%,#100828 40%,#0b1022 70%,#08071a 100%) !important;
       color: var(--tg-theme-text-color) !important;
@@ -113,7 +113,9 @@
       margin: 0;
       padding: 0;
       height: 100%;
-      overflow: hidden;
+      min-width: 280px;
+      overflow-x: auto;
+      overflow-y: hidden;
       -webkit-tap-highlight-color: transparent;
     }
     body::before {
@@ -134,7 +136,7 @@
       background: linear-gradient(180deg, rgba(1,6,26,0.22) 0%, rgba(8,10,38,0.2) 100%);
       pointer-events:none;
     }
-    .content-wrapper { max-width: min(600px,100%); margin: 0 auto; padding: var(--spacing-lg); width: 100%; }
+    .content-wrapper { min-width: 280px; max-width: min(600px,100%); margin: 0 auto; padding: var(--spacing-lg); width: 100%; box-sizing: border-box; }
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; color: var(--tg-theme-text-color, #fff); font-size: 14px; margin-bottom: 8px; font-weight: 500; }
     input::placeholder, textarea::placeholder { color: var(--tg-theme-hint-color, rgba(255,255,255,.45)); opacity: .85; }
@@ -273,10 +275,10 @@
     }
     /* Остальные стили приложения */
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Comfortaa',sans-serif}
-    .container{max-width:min(600px,100%);margin:0 auto;width:100%;position:relative;z-index:1;padding:0 var(--spacing-md)}
-    .page{position:fixed;inset:0;display:none !important;flex-direction:column;overflow:hidden}
+    .container{min-width:280px;max-width:min(600px,100%);margin:0 auto;width:100%;position:relative;z-index:1;padding:0 var(--spacing-md);box-sizing:border-box}
+    .page{position:fixed;inset:0;display:none !important;flex-direction:column;overflow-x:auto;overflow-y:hidden;min-width:280px}
     .page.active{display:flex !important}
-    .page-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 var(--spacing-md) calc(env(safe-area-inset-bottom) + 24px)}
+    .page-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 var(--spacing-md) calc(env(safe-area-inset-bottom) + 24px);min-width:280px;box-sizing:border-box}
     .page-header{flex-shrink:0}
     .page-footer{flex-shrink:0;padding:var(--spacing-md);padding-bottom:max(var(--spacing-md),env(safe-area-inset-bottom))}
     header{text-align:center;margin:var(--spacing-xl) 0 var(--spacing-lg);position:relative}
@@ -520,13 +522,33 @@
     .keys-composition-small .key-music{width:36px;height:50px;transform:rotate(-8deg);opacity:.9}
     .keys-composition-small .key-door{width:34px;height:50px;transform:rotate(6deg);opacity:.9}
     .app-logo{display:block;margin:0 auto;max-width:140px;width:100%;height:auto;border-radius:0;box-shadow:none;opacity:0.94}
-    /* Главная — минимализм: контент по центру, забота о взгляде */
-    #homeHero{position:relative;text-align:center;background:linear-gradient(180deg,rgba(1,6,26,0.4) 0%,transparent 100%);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:var(--spacing-lg) var(--spacing-lg) var(--spacing-xl);gap:0;box-sizing:border-box;min-height:0}
+    /* Главная — контент не съёживается: мин. ширина + без сжатия flex */
+    #homePage{align-items:center;min-width:280px}
+    #homeHero{position:relative;text-align:center;background:linear-gradient(180deg,rgba(1,6,26,0.4) 0%,transparent 100%);flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:var(--spacing-lg) var(--spacing-lg) var(--spacing-xl);gap:0;box-sizing:border-box;min-height:0;width:100%;min-width:280px;max-width:min(420px,100%);margin:0 auto;flex-shrink:0}
     #homeHero .home-tagline{font-size:0.72rem;font-weight:400;letter-spacing:0.14em;color:rgba(212,175,55,0.45);margin-top:var(--spacing-md);text-transform:uppercase}
     #homeHero .home-greeting{font-size:0.95rem;color:rgba(255,255,255,0.6);line-height:1.6;max-width:240px;margin:var(--spacing-lg) auto var(--spacing-xl);letter-spacing:0.01em}
-    #homeHero #startBtn{margin-top:0;width:auto;max-width:280px;padding:14px 36px;font-weight:600;letter-spacing:0.02em;border-radius:50px;align-self:center}
+    #homeHero #startBtn{margin-top:0;width:auto;min-width:200px;max-width:min(280px,90vw);padding:14px 28px;font-weight:600;letter-spacing:0.02em;border-radius:50px;align-self:center;line-height:1.4}
+    @media (max-width:380px){#homeHero #startBtn{white-space:normal;padding:12px 20px;min-width:0}}
+    .home-lower{width:100%;min-width:280px;max-width:min(420px,100%);margin-left:auto;margin-right:auto;box-sizing:border-box;flex-shrink:0}
+    #homeTopBar{width:100%;min-width:280px;max-width:min(420px,100%);margin:0 auto;box-sizing:border-box;flex-shrink:0}
     #homeTopBar .lang-switcher-compact{position:relative;display:flex;align-items:center;align-self:center;height:36px}
     .lang-switcher-compact{position:relative}
+    /* Адаптация под очень небольшие экраны по ширине */
+    @media (max-width: 360px){
+      .app-logo{max-width:120px}
+      #homeHero{padding:var(--spacing-md) var(--spacing-sm) var(--spacing-lg)}
+      .page.active{padding:var(--spacing-md) var(--spacing-sm) calc(var(--spacing-lg)*1.5)}
+      .mode-selector{padding:14px 12px}
+      .mode-btn{padding:12px 10px;font-size:0.9rem}
+      .mode-label{font-size:0.9rem}
+      .mode-desc{font-size:0.78rem}
+    }
+    /* Адаптация под низкие экраны по высоте (маленькие смартфоны, split-screen) */
+    @media (max-height: 640px){
+      #homeHero{padding:var(--spacing-md) var(--spacing-lg) var(--spacing-lg)}
+      #onboardingPage{padding-top:max(20px,calc(env(safe-area-inset-top)+10px));padding-bottom:max(18px,calc(env(safe-area-inset-bottom)+8px))}
+      .onboarding-slide{padding:clamp(16px,4vh,32px) 24px clamp(12px,3vh,24px)}
+    }
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* ── СТОРИС-ОНБОРДИНГ ── */
     #onboardingPage{
@@ -2025,6 +2047,8 @@
           planPlusF1: '✦ 10 треков/мес', planPlusF2: '✦ Soul Chat без лимита', planPlusF3: '✦ Приоритет обработки', planPlusF4: '✦ Полная история треков', planPlusSave: '−58% vs разовых',
           planMasterF1: '✦ 30 треков/мес', planMasterF2: '✦ Картотека людей', planMasterF3: '✦ История генераций', planMasterF4: '✦ Soul Chat без лимита', planMasterSave: '−83% vs разовых',
           refFriend1: 'друг', refFriend2: 'друга', refFriend5: 'друзей', refLinkLoading: 'Загрузка…',
+          profileRefFirstFriend: 'Пригласи первого друга — получи бесплатную песню 🎁',
+          profileRefNextSong: 'До следующей бесплатной песни: ещё ', profileRefMore: '',
           quickPickerLabel: '✦ Быстрые запросы',
           forWhoLabel: 'Для кого генерируем?', nameLbl: 'Имя', birthdateLbl: 'Дата рождения', birthplaceLbl: 'Место рождения', birthtimeLbl: 'Время рождения',
           payOvCardTitleDefault: 'Оплата заявки', payOvTrialText: 'Первая песня — в подарок!', payOvFreeClaimBtn: '🎁 Получить бесплатно',
@@ -2208,6 +2232,8 @@
           planPlusF1: '✦ 10 tracks/mo', planPlusF2: '✦ Soul Chat unlimited', planPlusF3: '✦ Priority processing', planPlusF4: '✦ Full track history', planPlusSave: '−58% vs singles',
           planMasterF1: '✦ 30 tracks/mo', planMasterF2: '✦ People directory', planMasterF3: '✦ Generation history', planMasterF4: '✦ Soul Chat unlimited', planMasterSave: '−83% vs singles',
           refFriend1: 'friend', refFriend2: 'friends', refFriend5: 'friends', refLinkLoading: 'Loading…',
+          profileRefFirstFriend: 'Invite your first friend — get a free song 🎁',
+          profileRefNextSong: 'Until next free song: ', profileRefMore: 'more ',
           quickPickerLabel: '✦ Quick requests',
           forWhoLabel: 'Who are we generating for?', nameLbl: 'Name', birthdateLbl: 'Date of birth', birthplaceLbl: 'Place of birth', birthtimeLbl: 'Time of birth',
           payOvCardTitleDefault: 'Payment', payOvTrialText: 'First song — free gift!', payOvFreeClaimBtn: '🎁 Get for free',
@@ -2391,6 +2417,8 @@
           planPlusF1: '✦ 10 Lieder/Mo.', planPlusF2: '✦ Soul Chat unbegrenzt', planPlusF3: '✦ Prioritätsverarbeitung', planPlusF4: '✦ Vollständige Titel-Historie', planPlusSave: '−58% vs Einzelkauf',
           planMasterF1: '✦ 30 Lieder/Mo.', planMasterF2: '✦ Personenverzeichnis', planMasterF3: '✦ Generierungshistorie', planMasterF4: '✦ Soul Chat unbegrenzt', planMasterSave: '−83% vs Einzelkauf',
           refFriend1: 'Freund', refFriend2: 'Freunde', refFriend5: 'Freunde', refLinkLoading: 'Laden…',
+          profileRefFirstFriend: 'Lade deinen ersten Freund ein — erhalte ein kostenloses Lied 🎁',
+          profileRefNextSong: 'Bis zum nächsten Gratis-Song: noch ', profileRefMore: '',
           quickPickerLabel: '✦ Schnellanfragen',
           forWhoLabel: 'Für wen generieren wir?', nameLbl: 'Name', birthdateLbl: 'Geburtsdatum', birthplaceLbl: 'Geburtsort', birthtimeLbl: 'Geburtszeit',
           payOvCardTitleDefault: 'Zahlung', payOvTrialText: 'Erstes Lied — Geschenk!', payOvFreeClaimBtn: '🎁 Kostenlos erhalten',
@@ -2574,6 +2602,8 @@
           planPlusF1: '✦ 10 titres/mois', planPlusF2: '✦ Soul Chat illimité', planPlusF3: '✦ Traitement prioritaire', planPlusF4: '✦ Historique complet', planPlusSave: '−58% vs séparés',
           planMasterF1: '✦ 30 titres/mois', planMasterF2: '✦ Répertoire de personnes', planMasterF3: '✦ Historique des générations', planMasterF4: '✦ Soul Chat illimité', planMasterSave: '−83% vs séparés',
           refFriend1: 'ami', refFriend2: 'amis', refFriend5: 'amis', refLinkLoading: 'Chargement…',
+          profileRefFirstFriend: 'Invite ton premier ami — reçois une chanson gratuite 🎁',
+          profileRefNextSong: "Jusqu'à la prochaine chanson gratuite : encore ", profileRefMore: '',
           quickPickerLabel: '✦ Demandes rapides',
           forWhoLabel: 'Pour qui générons-nous?', nameLbl: 'Prénom', birthdateLbl: 'Date de naissance', birthplaceLbl: 'Lieu de naissance', birthtimeLbl: 'Heure de naissance',
           payOvCardTitleDefault: 'Paiement', payOvTrialText: 'Première chanson — cadeau!', payOvFreeClaimBtn: '🎁 Obtenir gratuitement',
@@ -2787,7 +2817,12 @@
           var el = document.querySelector(pair[1]);
           if (el) {
             if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = t(pair[0]);
-            else el.textContent = t(pair[0]);
+            else {
+              // Не перезаписывать контейнеры Soul Chat — иначе теряется вложенная разметка и страница «пустая»
+              var sel = pair[1];
+              if (sel.indexOf('#sc') === 0 && el.children && el.children.length > 1) return;
+              el.textContent = t(pair[0]);
+            }
           }
         });
         // Реферальные метки (1 друг / 3 друга / 5+ друзей)
@@ -3326,7 +3361,7 @@
         var refLinkEl = document.getElementById('profileRefLinkInput');
         var refInvEl = document.getElementById('profileRefInvited');
         var refRewEl = document.getElementById('profileRefRewarded');
-        if (nameEl) nameEl.textContent = 'Загрузка…';
+        if (nameEl) nameEl.textContent = (typeof t === 'function' ? t('refLinkLoading') : 'Загрузка…');
         if (creditsEl) creditsEl.textContent = '—';
         if (refLinkEl) refLinkEl.value = '';
         if (refInvEl) refInvEl.textContent = '0';
@@ -3432,8 +3467,8 @@
           if (hintEl) {
             var rem = nextN - invCount;
             hintEl.textContent = invCount === 0
-              ? 'Пригласи первого друга — получи бесплатную песню 🎁'
-              : 'До следующей бесплатной песни: ещё ' + rem + ' ' + (rem === 1 ? 'друг' : rem < 5 ? 'друга' : 'друзей');
+              ? (typeof t === 'function' ? t('profileRefFirstFriend') : 'Пригласи первого друга — получи бесплатную песню 🎁')
+              : (typeof t === 'function' ? t('profileRefNextSong') + rem + ' ' + t('profileRefMore') + t(rem === 1 ? 'refFriend1' : rem < 5 ? 'refFriend2' : 'refFriend5') : 'До следующей бесплатной песни: ещё ' + rem + ' ' + (rem === 1 ? 'друг' : rem < 5 ? 'друга' : 'друзей'));
           }
 
           // --- Статус подписки (новый API) ---
@@ -4671,42 +4706,52 @@
           if (globalLoad) globalLoad.style.display = 'none';
         }
 
-        // Переключение между промо-режимом и чат-режимом
+        // Переключение между промо-режимом и чат-режимом (явные display — в WebView '' не сбрасывает inline none)
         function showPromo() {
           hideGlobalLoading();
-          if (scHeader)   scHeader.style.display   = '';
+          if (scHeader)   scHeader.style.display   = 'block';
           if (scChatHdr)  scChatHdr.style.display  = 'none';
-          if (promoArea)  promoArea.style.display   = '';
+          if (promoArea)  promoArea.style.display   = 'flex';
           if (chatEl)     chatEl.style.display      = 'none';
           if (inputArea)  inputArea.style.display   = 'none';
         }
         function showChat() {
           hideGlobalLoading();
           if (scHeader)   scHeader.style.display   = 'none';
-          if (scChatHdr)  { scChatHdr.style.display = 'flex'; }
-          if (promoArea)  promoArea.style.display   = 'none';
-          if (chatEl)     { chatEl.style.display = 'flex'; }
-          if (inputArea)  inputArea.style.display   = '';
+          if (scChatHdr)  scChatHdr.style.display  = 'flex';
+          if (promoArea)  promoArea.style.display  = 'none';
+          if (chatEl)     chatEl.style.display     = 'flex';
+          if (inputArea)  inputArea.style.display   = 'block';
         }
 
-        // По умолчанию — только индикатор загрузки, без промо-контента
-        if (scHeader)   scHeader.style.display  = 'none';
-        if (promoArea)  promoArea.style.display  = 'none';
-        if (chatEl)     chatEl.style.display     = 'none';
-        if (inputArea)  inputArea.style.display  = 'none';
-        if (scChatHdr)  scChatHdr.style.display  = 'none';
-        if (giftWrap)   giftWrap.style.display   = 'none';
-        if (buyDayWrap) buyDayWrap.style.display  = 'none';
+        // По умолчанию — только индикатор загрузки
+        if (globalLoad)  globalLoad.style.display   = 'flex';
+        if (scHeader)   scHeader.style.display     = 'none';
+        if (promoArea)  promoArea.style.display    = 'none';
+        if (chatEl)     chatEl.style.display      = 'none';
+        if (inputArea)  inputArea.style.display    = 'none';
+        if (scChatHdr)  scChatHdr.style.display   = 'none';
+        if (giftWrap)   giftWrap.style.display     = 'none';
+        if (buyDayWrap) buyDayWrap.style.display   = 'none';
 
         var apiBase  = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
-        var initData = getInitData();
-        if (!apiBase || !initData) return;
+        var initData = (typeof getInitData === 'function' ? getInitData() : '') || '';
+        if (!apiBase || !initData) {
+          showPromo();
+          if (buyDayWrap) buyDayWrap.style.display = 'block';
+          if (giftWrap) giftWrap.style.display = 'none';
+          return;
+        }
 
         try {
+          var controller = new AbortController();
+          var timeoutId = setTimeout(function(){ controller.abort(); }, 12000);
           var resp = await fetch(apiBase + '/api/soul-chat/access', {
             method: 'GET',
-            headers: { 'X-Telegram-Init': initData }
+            headers: { 'X-Telegram-Init': initData },
+            signal: controller.signal
           });
+          clearTimeout(timeoutId);
           var json = await resp.json().catch(function(){ return {}; });
 
           window._scLastRequestId = (json && json.last_request_id) || null;
@@ -4719,7 +4764,7 @@
             var noReqEl  = document.getElementById('scPageNoRequest');
             var hasData  = window._scLastRequestId || window._scHasProfile;
             if (!hasData) {
-              if (noReqEl)   noReqEl.style.display   = '';
+              if (noReqEl)   noReqEl.style.display   = 'block';
               if (inputArea) inputArea.style.display  = 'none';
             } else {
               if (noReqEl)   noReqEl.style.display   = 'none';
@@ -4753,18 +4798,21 @@
             // Загружаем историю диалогов
             scLoadHistory(apiBase, initData);
           } else {
-            // Промо: показываем кнопки
+            // Промо: убираем «Загружаю…» и показываем контент (кнопки подарка/покупки)
+            showPromo();
             if (json && json.trial_available) {
-              if (giftWrap)   giftWrap.style.display   = '';
-              if (buyDayWrap) buyDayWrap.style.display  = 'none';
+              if (giftWrap)   giftWrap.style.display   = 'block';
+              if (buyDayWrap) buyDayWrap.style.display = 'none';
             } else {
               if (giftWrap)   giftWrap.style.display   = 'none';
-              if (buyDayWrap) buyDayWrap.style.display  = '';
+              if (buyDayWrap) buyDayWrap.style.display = 'block';
             }
           }
         } catch(e) {
-          // Ошибка — показываем промо (чтобы не зависнуть на загрузке)
+          // Ошибка или таймаут — показываем промо (чтобы не зависнуть на загрузке)
           showPromo();
+          if (buyDayWrap) buyDayWrap.style.display = 'block';
+          if (giftWrap) giftWrap.style.display = 'none';
         }
       }
 
@@ -5268,9 +5316,12 @@
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
         if (pageId === 'formPage') loadSavedProfileForForm();
         if (pageId === 'homePage' && typeof loadReferralStats === 'function') loadReferralStats();
-        if (pageId === 'profilePage' && typeof loadProfilePage === 'function') loadProfilePage();
+        if (pageId === 'profilePage') {
+          if (typeof applyTranslations === 'function') applyTranslations();
+          if (typeof loadProfilePage === 'function') loadProfilePage();
+        }
         // paymentPage теперь overlay — здесь ничего не делаем
-        // Soul Chat блок удалён со successPage — initSoulChat вызывать не нужно
+        // Soul Chat: только init (как в рабочем коммите a74e300 — без applyTranslations при открытии)
         if (pageId === 'soulChatPage') initSoulChatPage();
         if (document.getElementById('previewNav') && document.getElementById('previewNav').classList.contains('show')) {
           document.querySelectorAll('.preview-nav button').forEach(function(btn) {

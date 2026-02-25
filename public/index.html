@@ -2817,7 +2817,12 @@
           var el = document.querySelector(pair[1]);
           if (el) {
             if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = t(pair[0]);
-            else el.textContent = t(pair[0]);
+            else {
+              // Не перезаписывать контейнеры Soul Chat — иначе теряется вложенная разметка и страница «пустая»
+              var sel = pair[1];
+              if (sel.indexOf('#sc') === 0 && el.children && el.children.length > 1) return;
+              el.textContent = t(pair[0]);
+            }
           }
         });
         // Реферальные метки (1 друг / 3 друга / 5+ друзей)
@@ -4701,38 +4706,39 @@
           if (globalLoad) globalLoad.style.display = 'none';
         }
 
-        // Переключение между промо-режимом и чат-режимом
+        // Переключение между промо-режимом и чат-режимом (явные display — в WebView '' не сбрасывает inline none)
         function showPromo() {
           hideGlobalLoading();
-          if (scHeader)   scHeader.style.display   = '';
+          if (scHeader)   scHeader.style.display   = 'block';
           if (scChatHdr)  scChatHdr.style.display  = 'none';
-          if (promoArea)  promoArea.style.display   = '';
+          if (promoArea)  promoArea.style.display   = 'flex';
           if (chatEl)     chatEl.style.display      = 'none';
           if (inputArea)  inputArea.style.display   = 'none';
         }
         function showChat() {
           hideGlobalLoading();
           if (scHeader)   scHeader.style.display   = 'none';
-          if (scChatHdr)  { scChatHdr.style.display = 'flex'; }
-          if (promoArea)  promoArea.style.display   = 'none';
-          if (chatEl)     { chatEl.style.display = 'flex'; }
-          if (inputArea)  inputArea.style.display   = '';
+          if (scChatHdr)  scChatHdr.style.display  = 'flex';
+          if (promoArea)  promoArea.style.display  = 'none';
+          if (chatEl)     chatEl.style.display     = 'flex';
+          if (inputArea)  inputArea.style.display   = 'block';
         }
 
-        // По умолчанию — только индикатор загрузки, без промо-контента
-        if (scHeader)   scHeader.style.display  = 'none';
-        if (promoArea)  promoArea.style.display  = 'none';
-        if (chatEl)     chatEl.style.display     = 'none';
-        if (inputArea)  inputArea.style.display  = 'none';
-        if (scChatHdr)  scChatHdr.style.display  = 'none';
-        if (giftWrap)   giftWrap.style.display   = 'none';
-        if (buyDayWrap) buyDayWrap.style.display  = 'none';
+        // По умолчанию — только индикатор загрузки
+        if (globalLoad)  globalLoad.style.display   = 'flex';
+        if (scHeader)   scHeader.style.display     = 'none';
+        if (promoArea)  promoArea.style.display    = 'none';
+        if (chatEl)     chatEl.style.display      = 'none';
+        if (inputArea)  inputArea.style.display    = 'none';
+        if (scChatHdr)  scChatHdr.style.display   = 'none';
+        if (giftWrap)   giftWrap.style.display     = 'none';
+        if (buyDayWrap) buyDayWrap.style.display   = 'none';
 
         var apiBase  = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         var initData = (typeof getInitData === 'function' ? getInitData() : '') || '';
         if (!apiBase || !initData) {
           showPromo();
-          if (buyDayWrap) buyDayWrap.style.display = '';
+          if (buyDayWrap) buyDayWrap.style.display = 'block';
           if (giftWrap) giftWrap.style.display = 'none';
           return;
         }
@@ -4758,7 +4764,7 @@
             var noReqEl  = document.getElementById('scPageNoRequest');
             var hasData  = window._scLastRequestId || window._scHasProfile;
             if (!hasData) {
-              if (noReqEl)   noReqEl.style.display   = '';
+              if (noReqEl)   noReqEl.style.display   = 'block';
               if (inputArea) inputArea.style.display  = 'none';
             } else {
               if (noReqEl)   noReqEl.style.display   = 'none';
@@ -4795,17 +4801,17 @@
             // Промо: убираем «Загружаю…» и показываем контент (кнопки подарка/покупки)
             showPromo();
             if (json && json.trial_available) {
-              if (giftWrap)   giftWrap.style.display   = '';
-              if (buyDayWrap) buyDayWrap.style.display  = 'none';
+              if (giftWrap)   giftWrap.style.display   = 'block';
+              if (buyDayWrap) buyDayWrap.style.display = 'none';
             } else {
               if (giftWrap)   giftWrap.style.display   = 'none';
-              if (buyDayWrap) buyDayWrap.style.display  = '';
+              if (buyDayWrap) buyDayWrap.style.display = 'block';
             }
           }
         } catch(e) {
           // Ошибка или таймаут — показываем промо (чтобы не зависнуть на загрузке)
           showPromo();
-          if (buyDayWrap) buyDayWrap.style.display = '';
+          if (buyDayWrap) buyDayWrap.style.display = 'block';
           if (giftWrap) giftWrap.style.display = 'none';
         }
       }
@@ -5315,7 +5321,7 @@
           if (typeof loadProfilePage === 'function') loadProfilePage();
         }
         // paymentPage теперь overlay — здесь ничего не делаем
-        // Soul Chat блок удалён со successPage — initSoulChat вызывать не нужно
+        // Soul Chat: только init (как в рабочем коммите a74e300 — без applyTranslations при открытии)
         if (pageId === 'soulChatPage') initSoulChatPage();
         if (document.getElementById('previewNav') && document.getElementById('previewNav').classList.contains('show')) {
           document.querySelectorAll('.preview-nav button').forEach(function(btn) {
