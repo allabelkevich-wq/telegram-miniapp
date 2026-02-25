@@ -5357,7 +5357,8 @@
             ptBackBtn.textContent = t('subBtnProfile');
             ptBackBtn.onclick = function() {
               goToPage('profilePage');
-              setTimeout(function() { if (typeof loadProfilePage === 'function') loadProfilePage(); }, 600);
+              // Небольшая задержка — даём claim успеть активировать план
+              setTimeout(function() { if (typeof loadProfilePage === 'function') loadProfilePage(); }, 1500);
             };
           }
         }
@@ -5378,12 +5379,18 @@
             var payMode = '';
             var isSub = isSubPaymentImmediate;
 
+            // Определяем ожидаемый plan_sku по plan_key из localStorage
+            var LOCAL_PLAN_SKU_MAP = { plan_basic: 'soul_basic_sub', plan_plus: 'soul_plus_sub', plan_master: 'master_monthly' };
+            var expectedPlanSku = (pendingPayment && pendingPayment.plan_key)
+              ? (LOCAL_PLAN_SKU_MAP[pendingPayment.plan_key] || null)
+              : null;
+
             // ── Для подписок: сразу запускаем claim параллельно с поллингом вебхука ──
             // Claim идемпотентен — если вебхук уже активировал, вернёт already_active
             if (isSubPaymentImmediate && thanksRequestId) {
               (async function runClaim() {
-                // Ждём 4 сек — даём вебхуку шанс прийти первым
-                await new Promise(function(r){ setTimeout(r, 4000); });
+                // Небольшая пауза (1 сек) — даём вебхуку шанс прийти первым; claim идемпотентен
+                await new Promise(function(r){ setTimeout(r, 1000); });
                 try {
                   var claimResp = await fetch(apiBase + '/api/subscription/claim', {
                     method: 'POST',
@@ -5391,7 +5398,14 @@
                     body: JSON.stringify({ request_id: thanksRequestId, initData: initData })
                   });
                   var claimJson = await claimResp.json().catch(function(){ return {}; });
-                  console.log('[sub] claim early result:', claimJson && claimJson.status);
+                  console.log('[sub] claim early result:', claimJson && claimJson.status, 'plan:', claimJson && claimJson.plan_sku);
+                  // После успешного claim — если пользователь уже на профиле, обновляем его
+                  if (claimJson && claimJson.success && typeof loadProfilePage === 'function') {
+                    var curPage = document.querySelector('.page.active');
+                    if (curPage && curPage.id === 'profilePage') {
+                      setTimeout(function() { loadProfilePage(); }, 300);
+                    }
+                  }
                 } catch(claimErr) {
                   console.warn('[sub] claim early error:', claimErr && claimErr.message);
                 }
@@ -5431,18 +5445,31 @@
               } catch(e) {}
             }
 
-            // ── Ждём появления подписки в БД, обновляем кнопку ──
+            // ── Ждём появления нужной подписки в БД, обновляем кнопку ──
+            // Важно: проверяем конкретный plan_sku (защита от апгрейда Basic→Plus,
+            // когда subscription_active=true ещё от Basic, но Plus ещё не активирован)
             if (isSub) {
+              // Вычисляем ожидаемый SKU из payMode (надёжнее, чем из localStorage)
+              var expectedSkuFromMode = payMode.startsWith('sub_') ? payMode.slice(4) : null;
+              var targetPlanSku = expectedSkuFromMode || expectedPlanSku || null;
               for (var si = 0; si < 12; si++) {
                 await new Promise(function(r){ setTimeout(r, 2500); });
                 try {
                   var subCheckResp = await fetch(apiBase + '/api/subscription/status', { headers: { 'X-Telegram-Init': initData } });
                   var subCheckJson = await subCheckResp.json().catch(function(){ return {}; });
-                  if (subCheckJson && subCheckJson.subscription_active) {
+                  // Если знаем ожидаемый план — ждём именно его (апгрейд Basic→Plus)
+                  var planMatched = subCheckJson && subCheckJson.subscription_active &&
+                    (!targetPlanSku || subCheckJson.plan_sku === targetPlanSku);
+                  if (planMatched) {
                     var ptB2 = document.getElementById('paymentThanksBackBtn');
                     if (ptB2 && !ptB2._subConfirmed) {
                       ptB2._subConfirmed = true;
                       ptB2.textContent = '✓ ' + t('subBtnProfile');
+                    }
+                    // После подтверждения — обновляем профиль если он открыт
+                    var curPg = document.querySelector('.page.active');
+                    if (curPg && curPg.id === 'profilePage' && typeof loadProfilePage === 'function') {
+                      setTimeout(function() { loadProfilePage(); }, 300);
                     }
                     break;
                   }
