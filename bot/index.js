@@ -939,6 +939,10 @@ async function saveRequest(data) {
       }
     }
   }
+  if (data.preferred_style && String(data.preferred_style).trim()) {
+    const styleLine = "Предпочтительный музыкальный стиль: " + String(data.preferred_style).trim().slice(0, 200);
+    row.request = (row.request || "").trim() ? row.request.trim() + "\n" + styleLine : styleLine;
+  }
   const record = { id: null, ...row, created_at: new Date().toISOString() };
   if (supabase) {
     const { data: inserted, error } = await supabase.from("track_requests").insert(row).select("id").single();
@@ -4920,6 +4924,13 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
     if (birthplaceLat != null && birthplaceLon != null) {
       saveData.birthplaceLat = birthplaceLat;
       saveData.birthplaceLon = birthplaceLon;
+    }
+    const preferredStyleRaw = (body.preferred_style || (body.person1 && body.person1.preferred_style) || "").trim();
+    if (preferredStyleRaw && supabase) {
+      const sub = await getActiveSubscriptionFull(telegramUserId);
+      if (sub && (sub.plan_sku === "soul_plus_sub" || sub.plan_sku === "master_monthly")) {
+        saveData.preferred_style = preferredStyleRaw.slice(0, 200);
+      }
     }
     requestId = await saveRequest(saveData);
     if (supabase && name && birthdate && birthplace) {

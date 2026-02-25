@@ -528,7 +528,8 @@
     #homeHero .home-tagline{font-size:0.72rem;font-weight:400;letter-spacing:0.14em;color:rgba(212,175,55,0.45);margin-top:var(--spacing-md);text-transform:uppercase}
     #homeHero .home-greeting{font-size:0.95rem;color:rgba(255,255,255,0.6);line-height:1.6;max-width:240px;margin:var(--spacing-lg) auto var(--spacing-xl);letter-spacing:0.01em}
     #homeHero #startBtn{margin-top:0;width:auto;max-width:280px;padding:14px 36px;font-weight:600;letter-spacing:0.02em;border-radius:50px;align-self:center}
-    #homeTopBar .lang-switcher-compact{position:relative;display:flex;align-items:center;align-self:center;height:36px}
+    #homeTopBar .lang-switcher-compact{position:relative;display:flex;align-items:center;align-self:stretch;min-height:44px}
+    #homeTopBar #profileIconBtn{align-self:center}
     .lang-switcher-compact{position:relative}
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* ── СТОРИС-ОНБОРДИНГ ── */
@@ -909,7 +910,7 @@
     <div class="page" id="homePage">
 
       <!-- Шапка: язык слева, профиль справа -->
-      <div id="homeTopBar" style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:max(10px,env(safe-area-inset-top)) 12px 0;min-height:48px;">
+      <div id="homeTopBar" style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:max(10px,env(safe-area-inset-top)) 12px 10px;min-height:52px;gap:8px;">
         <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
           <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
             <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
@@ -1166,6 +1167,7 @@
               <div class="ppc-feature"><span id="planPlusF2">✦ Soul Chat без лимита</span> <i class="ppc-info" data-tip="Soul Chat — живой разговор с твоей душой. В Plus — без ограничений по количеству сессий. Общайся когда угодно.">i</i></div>
               <div class="ppc-feature"><span id="planPlusF3">✦ Приоритет обработки</span> <i class="ppc-info" data-tip="Твои заявки идут в первую очередь — песня готова быстрее, чем у других пользователей.">i</i></div>
               <div class="ppc-feature"><span id="planPlusF4">✦ Полная история треков</span> <i class="ppc-info" data-tip="Все твои песни сохраняются с текстами, аудио и датами создания — всегда доступны в профиле.">i</i></div>
+              <div class="ppc-feature"><span id="planPlusF5">✦ Выбор стилей музыки</span> <i class="ppc-info" data-tip="Укажи желаемый жанр или стиль (поп, соул, джаз, электронная и т.д.) — песня будет создана в этом звучании.">i</i></div>
             </div>
             <div class="ppc-price-wrap">
               <div class="ppc-price">$24.99/мес</div>
@@ -1183,6 +1185,7 @@
               <div class="ppc-feature"><span id="planMasterF2">✦ Картотека людей</span> <i class="ppc-info" data-tip="Добавляй близких в Лабораторию и создавай для них песни в один тап. Данные сохраняются — вводить повторно не нужно.">i</i></div>
               <div class="ppc-feature"><span id="planMasterF3">✦ История генераций</span> <i class="ppc-info" data-tip="Полная история всех созданных песен с текстами, аудио и датами — для тебя и для каждого из твоих людей.">i</i></div>
               <div class="ppc-feature"><span id="planMasterF4">✦ Soul Chat без лимита</span> <i class="ppc-info" data-tip="Неограниченный доступ к Soul Chat — разговаривай с душой столько, сколько нужно.">i</i></div>
+              <div class="ppc-feature"><span id="planMasterF5">✦ Выбор стилей музыки</span> <i class="ppc-info" data-tip="Укажи желаемый жанр или стиль (поп, соул, джаз, электронная и т.д.) — песня будет создана в этом звучании.">i</i></div>
             </div>
             <div class="ppc-price-wrap">
               <div class="ppc-price" id="masterPriceEl">$39.99/мес</div>
@@ -1621,6 +1624,11 @@
               </div>
             </div>
           </div>
+        </div>
+        <!-- Стиль музыки (для подписчиков Plus и Лаборатория) -->
+        <div class="field" style="margin-top:14px;">
+          <label for="requestPreferredStyle" id="requestPreferredStyleLabel" style="font-size:0.82rem;color:rgba(255,255,255,0.5);">Стиль музыки <span style="color:rgba(212,175,55,0.5);">(Plus и Лаборатория)</span></label>
+          <input type="text" id="requestPreferredStyle" placeholder="поп, соул, джаз, электронная…" maxlength="120" autocomplete="off" style="margin-top:6px;font-size:0.9rem;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#fff;width:100%;box-sizing:border-box;">
         </div>
 
         <p id="submitHint" style="display:none"></p>
@@ -5791,6 +5799,10 @@
         // Если есть активный промокод — передаём его серверу для проверки ДО 402
         if (activePromo && activePromo.code) {
           payload.promo_code = activePromo.code;
+        }
+        var preferredStyleEl = document.getElementById('requestPreferredStyle');
+        if (preferredStyleEl && preferredStyleEl.value.trim()) {
+          payload.preferred_style = preferredStyleEl.value.trim();
         }
         var birthplaceField = document.getElementById('birthplace');
         if (birthplaceField && birthplaceField.getAttribute('data-lat') && birthplaceField.getAttribute('data-lon')) {
