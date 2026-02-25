@@ -642,21 +642,20 @@ async function sendPhotoToUser(telegramUserId, photoUrl, caption) {
 
 async function sendRatingRequest(telegramUserId, requestId, trackTitle) {
   if (!BOT_TOKEN || !telegramUserId || !requestId) return;
-  const title = trackTitle ? `«${trackTitle}»` : 'свою песню';
   try {
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: telegramUserId,
-        text: `Как тебе ${title}?\nОцени трек — это помогает нам делать лучше 🙏`,
+        text: "Понравилась песня? Оцени трек от 1 до 5 — твой отзыв помогает нам становиться лучше 🙏",
         reply_markup: {
           inline_keyboard: [[
-            { text: "⭐", callback_data: `rate_song:1:${requestId}` },
-            { text: "⭐⭐", callback_data: `rate_song:2:${requestId}` },
-            { text: "⭐⭐⭐", callback_data: `rate_song:3:${requestId}` },
-            { text: "⭐⭐⭐⭐", callback_data: `rate_song:4:${requestId}` },
-            { text: "⭐⭐⭐⭐⭐", callback_data: `rate_song:5:${requestId}` },
+            { text: "1 ★", callback_data: `rate_song:1:${requestId}` },
+            { text: "2 ★", callback_data: `rate_song:2:${requestId}` },
+            { text: "3 ★", callback_data: `rate_song:3:${requestId}` },
+            { text: "4 ★", callback_data: `rate_song:4:${requestId}` },
+            { text: "5 ★", callback_data: `rate_song:5:${requestId}` },
           ]],
         },
       }),

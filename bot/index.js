@@ -1058,10 +1058,10 @@ bot.on("callback_query:data", async (ctx) => {
         { onConflict: "request_id,telegram_user_id" }
       ).catch((e) => console.warn("[rate_song] supabase error:", e?.message));
     }
-    const labels = ["", "⭐", "⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐⭐⭐"];
-    await ctx.answerCallbackQuery({ text: `Спасибо! Ты поставил ${labels[stars] || stars} — это ценно 🙏` }).catch(() => {});
+    const starLabel = stars + " из 5 ★";
+    await ctx.answerCallbackQuery({ text: `Спасибо! Оценка: ${starLabel} 🙏` }).catch(() => {});
     try {
-      await ctx.editMessageText(`Оценка принята: ${labels[stars] || stars}\nСпасибо, что помогаешь нам становиться лучше! 🙏`);
+      await ctx.editMessageText(`Оценка принята: ${starLabel}\nСпасибо, что помогаешь нам становиться лучше! 🙏`);
     } catch (e) {
       console.warn("[rate_song] editMessageText:", e?.message);
     }
