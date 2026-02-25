@@ -199,7 +199,8 @@
       box-shadow: 0 3px 14px rgba(212,175,55,0.2);
     }
     .mode-icon { display: none; }
-    .mode-label { font-weight: 700; font-size: 0.8rem; line-height: 1.25; }
+    /* Не менее 16px — иначе iOS при тапе по кнопке делает автозум страницы */
+    .mode-label { font-weight: 700; font-size: 1rem; line-height: 1.25; }
     .mode-desc { display: none; }
     /* Аккордеон второго человека */
     #secondPersonAccordion .pfa-header { background: rgba(212,175,55,0.06); border: 1px solid rgba(212,175,55,0.18); }
@@ -807,6 +808,11 @@
       button:hover,#payBtn:hover,.example-btn:hover,.onboarding-btn:hover,.preview-nav button:hover{transform:none}
       .keys-composition .key-music:hover{transform:rotate(-10deg)}
       .keys-composition .key-door:hover{transform:rotate(8deg)}
+    }
+    /* iOS/Android: при фокусе на элементе с текстом < 16px браузер делает автозум. Фиксируем минимум 16px у всех кликабельных элементов. */
+    @media (hover:none) and (pointer:coarse){
+      button,a,input,select,textarea,[role="button"],.mode-btn,.mode-info,.form-nav-link,.home-nav-link,.lang-switcher-btn,.lang-opt,.ppc-details-btn,.ppc-btn,.request-quick-toggle,.quick-item,.quick-picker-btn,.onboarding-btn,.hca-btn,.hero-hist-toggle,.stories-close,.profile-back-btn,.preview-nav button,.example-btn,.request-help-toggle{font-size:max(1rem,16px)}
+      .mode-btn .mode-label,.request-quick-dropdown .quick-item{font-size:max(1rem,16px)}
     }
   </style>
 </head>
