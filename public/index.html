@@ -4701,7 +4701,10 @@
 
         var apiBase  = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         var initData = getInitData();
-        if (!apiBase || !initData) return;
+        if (!apiBase || !initData) {
+          showPromo();
+          return;
+        }
 
         try {
           var resp = await fetch(apiBase + '/api/soul-chat/access', {
@@ -4754,7 +4757,8 @@
             // Загружаем историю диалогов
             scLoadHistory(apiBase, initData);
           } else {
-            // Промо: показываем кнопки
+            // Нет доступа — показываем промо (шапка + зона с тарифами/подарком), убираем загрузку
+            showPromo();
             if (json && json.trial_available) {
               if (giftWrap)   giftWrap.style.display   = '';
               if (buyDayWrap) buyDayWrap.style.display  = 'none';

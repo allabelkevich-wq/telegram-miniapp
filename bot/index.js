@@ -1123,16 +1123,47 @@ bot.on(":successful_payment", async (ctx) => {
   }
 
   try {
-    if (supabase && requestId) {
-      await supabase.from("track_requests")
-        .update({
-          payment_status: "paid",
-          payment_provider: "stars",
-          payment_amount: String(sp.total_amount),
-          payment_order_id: telegramChargeId,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", requestId);
+    if (!supabase || !requestId) return;
+
+    const { data: existing } = await supabase
+      .from("track_requests")
+      .select("id,telegram_user_id,payment_status")
+      .eq("id", requestId)
+      .maybeSingle();
+    if (!existing) {
+      console.warn("[Stars] заявка не найдена, пропуск", { requestId: requestId?.slice(0, 8) });
+      return;
+    }
+    if (Number(existing.telegram_user_id) !== Number(userId)) {
+      console.warn("[Stars] заявка другого пользователя, пропуск", { requestId: requestId?.slice(0, 8) });
+      return;
+    }
+    const ps = String(existing.payment_status || "").toLowerCase();
+    if (ps === "paid") {
+      console.log("[Stars] заявка уже оплачена, пропуск", requestId?.slice(0, 8));
+      return;
+    }
+    if (!["pending", "requires_payment", ""].includes(ps)) {
+      console.warn("[Stars] заявка не в ожидании оплаты, пропуск", { requestId: requestId?.slice(0, 8), payment_status: existing.payment_status });
+      return;
+    }
+
+    const { data: updatedRow, error: updErr } = await supabase
+      .from("track_requests")
+      .update({
+        payment_status: "paid",
+        payment_provider: "stars",
+        payment_amount: String(sp.total_amount),
+        payment_order_id: telegramChargeId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", requestId)
+      .or("payment_status.is.null,payment_status.eq.pending,payment_status.eq.requires_payment")
+      .select("id")
+      .maybeSingle();
+    if (updErr || !updatedRow) {
+      console.warn("[Stars] update не применился", requestId?.slice(0, 8));
+      return;
     }
 
     // Для подписок и soul_chat — grantPurchaseBySku создаёт/активирует подписку (необходимо)
