@@ -2502,7 +2502,13 @@ app.post("/api/payments/stars/invoice", express.json(), asyncApi(async (req, res
   if (!requestId && supabase) {
     const { data: newReq } = await supabase.from("track_requests").insert({
       telegram_user_id: Number(telegramUserId),
-      mode: sku.startsWith("soul_") ? sku : (sku === "extra_regeneration" ? "extra_regen" : "single"),
+      mode: ["soul_basic_sub","soul_plus_sub","master_monthly"].includes(sku)
+        ? `sub_${sku}`
+        : (sku === "soul_chat_1day" ? "soul_chat_day"
+        : (sku === "extra_regeneration" ? "extra_regen"
+        : (sku === "couple_song" ? "couple"
+        : (sku === "transit_energy_song" ? "transit"
+        : "single")))),
       status: "pending",
       payment_status: "pending",
       payment_provider: "stars",
