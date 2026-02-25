@@ -216,14 +216,15 @@
       position: relative;
       flex: 1;
       min-width: 0;
-      padding: 12px 10px;
+      padding: 10px 6px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(212, 175, 55, 0.2);
       border-radius: 12px;
       color: rgba(255, 255, 255, 0.7);
       font-family: 'Comfortaa', sans-serif;
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 600;
+      line-height: 1.2;
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
@@ -233,9 +234,9 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 2px;
       box-sizing: border-box;
-      min-height: 52px;
+      min-height: 44px;
       -webkit-animation: modeFadeIn 0.4s ease-out both;
       animation: modeFadeIn 0.4s ease-out both;
     }
@@ -245,6 +246,8 @@
       text-overflow: ellipsis;
       min-width: 0;
       width: 100%;
+      font-size: inherit;
+      line-height: inherit;
     }
     .mode-btn::before {
       content: '';
@@ -298,7 +301,7 @@
     }
     .mode-btn:active { transform: scale(0.98); transition: transform 0.1s; }
     @media (max-width: 400px) {
-      .mode-btn { padding: 10px 8px; font-size: 12px; }
+      .mode-btn { padding: 8px 4px; font-size: 10px; min-height: 40px; }
       .mode-selector { padding: 16px; margin: 12px; }
     }
     .mode-icon { display: none; }
