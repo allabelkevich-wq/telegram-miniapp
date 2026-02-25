@@ -527,6 +527,22 @@
     #homeHero #startBtn{margin-top:0;width:auto;max-width:280px;padding:14px 36px;font-weight:600;letter-spacing:0.02em;border-radius:50px;align-self:center}
     #homeTopBar .lang-switcher-compact{position:relative;display:flex;align-items:center;align-self:center;height:36px}
     .lang-switcher-compact{position:relative}
+    /* Адаптация под очень небольшие экраны по ширине */
+    @media (max-width: 360px){
+      .app-logo{max-width:120px}
+      #homeHero{padding:var(--spacing-md) var(--spacing-sm) var(--spacing-lg)}
+      .page.active{padding:var(--spacing-md) var(--spacing-sm) calc(var(--spacing-lg)*1.5)}
+      .mode-selector{padding:14px 12px}
+      .mode-btn{padding:12px 10px;font-size:0.9rem}
+      .mode-label{font-size:0.9rem}
+      .mode-desc{font-size:0.78rem}
+    }
+    /* Адаптация под низкие экраны по высоте (маленькие смартфоны, split-screen) */
+    @media (max-height: 640px){
+      #homeHero{padding:var(--spacing-md) var(--spacing-lg) var(--spacing-lg)}
+      #onboardingPage{padding-top:max(20px,calc(env(safe-area-inset-top)+10px));padding-bottom:max(18px,calc(env(safe-area-inset-bottom)+8px))}
+      .onboarding-slide{padding:clamp(16px,4vh,32px) 24px clamp(12px,3vh,24px)}
+    }
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* ── СТОРИС-ОНБОРДИНГ ── */
     #onboardingPage{
