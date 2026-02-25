@@ -38,6 +38,12 @@ const APP_BUILD = Date.now(); // Меняется при каждом перез
 const MINI_APP_URL = MINI_APP_BASE.replace(/\/app\/?$/, "") + "/app?v=" + APP_BUILD;
 // MINI_APP_STABLE_URL — с cache-bust как MINI_APP_URL, чтобы после деплоя пользователи получали свежую версию (раньше без ?v= Telegram кэшировал навсегда)
 const MINI_APP_STABLE_URL = MINI_APP_BASE.replace(/\/app\/?$/, "") + "/app?v=" + APP_BUILD;
+// URL для HOT Pay webhook — должен указывать на бэкенд (Render), иначе оплата не подтвердится
+const _hotNotifyBase = process.env.RENDER_EXTERNAL_URL || process.env.BACKEND_URL || process.env.HOT_WEBHOOK_BASE || MINI_APP_BASE;
+const HOT_NOTIFY_URL_EFFECTIVE = process.env.HOT_NOTIFY_URL || (String(_hotNotifyBase).replace(/\/$/, "").replace(/\/app\/?$/, "") + "/api/payments/hot/webhook");
+if (process.env.HOT_PAYMENT_URL || process.env.HOT_ITEM_ID_DEFAULT) {
+  console.log("[HOT Pay] notify_url для вебхука (проверь в кабинете HOT, если оплаты не подтверждаются):", HOT_NOTIFY_URL_EFFECTIVE);
+}
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PORT = process.env.PORT || process.env.HEROES_API_PORT || "10000";
@@ -426,15 +432,10 @@ function buildHotCheckoutUrl({ itemId, orderId, amount, currency, requestId, sku
   if (requestId) url.searchParams.set("request_id", requestId);
   if (sku) url.searchParams.set("sku", sku);
   // redirect_url: после оплаты HOT отправляет пользователя сюда.
-  // Используем /app путь, чтобы мини-апп открылся и определил payment=success.
   const redirectUrl = process.env.HOT_REDIRECT_URL ||
     (MINI_APP_STABLE_URL + "&payment=success&request_id=" + encodeURIComponent(requestId || ""));
   if (redirectUrl) url.searchParams.set("redirect_url", redirectUrl);
-  // notify_url: HOT шлёт webhook сюда при изменении статуса платежа.
-  // Без этого параметра — webhook нужно настраивать вручную в кабинете HOT.
-  const notifyUrl = process.env.HOT_NOTIFY_URL ||
-    (MINI_APP_BASE.replace(/\/app\/?$/, "") + "/api/payments/hot/webhook");
-  url.searchParams.set("notify_url", notifyUrl);
+  url.searchParams.set("notify_url", HOT_NOTIFY_URL_EFFECTIVE);
   return url.toString();
 }
 
@@ -2630,15 +2631,20 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
   try {
     const rawBody = Buffer.isBuffer(req.body) ? req.body.toString("utf8") : String(req.body || "");
     const signature = req.headers["x-hot-signature"] || req.headers["x-signature"] || "";
-    if (!verifyHotWebhookSignature(rawBody, signature)) {
-      return res.status(401).json({ success: false, error: "Invalid webhook signature" });
-    }
     const body = parseJsonSafe(rawBody, {});
-    // HOT присылает memo (см. Webhook Payload Example), order_id может отсутствовать.
+    // HOT присылает memo (и иногда request_id). Поддержка status: SUCCESS, paid, success и т.д.
     const orderId = String(body.memo || body.order_id || body.orderId || body.data?.order_id || "").trim();
     const requestId = String(body.request_id || body.requestId || body.data?.request_id || body.data?.requestId || "").trim();
-    const status = String(body.payment_status || body.status || body.event || "").toLowerCase();
+    const statusRaw = body.payment_status ?? body.status ?? body.event ?? "";
+    const status = String(statusRaw).toLowerCase();
     const txId = String(body.tx_id || body.txId || body.near_trx || body.transaction_id || body.data?.tx_id || "").trim() || null;
+
+    console.log("[HOT webhook] входящий запрос", { memo: orderId || "(пусто)", request_id: requestId || "(пусто)", status: statusRaw, hasSignature: !!signature, bodyKeys: Object.keys(body) });
+
+    if (!verifyHotWebhookSignature(rawBody, signature)) {
+      console.warn("[HOT webhook] отклонён: неверная подпись. Проверь HOT_WEBHOOK_SECRET или отключи проверку в кабинете HOT.");
+      return res.status(401).json({ success: false, error: "Invalid webhook signature" });
+    }
     if (!orderId && !requestId) return res.status(400).json({ success: false, error: "memo/order_id or request_id is required" });
     if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
 
@@ -2664,10 +2670,14 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
       if (r2.error) return res.status(500).json({ success: false, error: r2.error.message });
       row = r2.data || null;
     }
-    if (!row) return res.status(404).json({ success: false, error: "Order not found" });
+    if (!row) {
+      console.warn("[HOT webhook] заказ не найден в БД", { orderId: orderId || "(пусто)", requestId: requestId || "(пусто)" });
+      return res.status(404).json({ success: false, error: "Order not found" });
+    }
     if ((row.payment_status || "").toLowerCase() === "paid") return res.json({ success: true, message: "Already processed" });
 
     const normalizedPaid = ["paid", "success", "completed", "confirmed"].includes(status);
+    console.log("[HOT webhook] заказ найден", { id: row.id?.slice(0, 8), mode: row.mode, statusRaw, normalizedPaid });
     const paymentStatus = normalizedPaid ? "paid" : (status || "pending");
     const paymentAmount = body.amount != null ? Number(body.amount) : null;
     const paymentCurrency = String(body.currency || "USDT");
