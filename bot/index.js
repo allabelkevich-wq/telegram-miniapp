@@ -5182,8 +5182,8 @@ function startHourlyDeliveryCheck() {
   setInterval(run, HOURLY_DELIVERY_CHECK_MS);
 }
 
-/** Раз в 15 мин: выравнивание подписок — у кого есть оплаченная заявка sub_* (payment_status=paid), но активная подписка не совпадает — активируем. */
-const SUB_RECONCILIATION_INTERVAL_MS = Math.max(15 * 60 * 1000, parseInt(process.env.SUB_RECONCILIATION_INTERVAL_MS, 10) || 15 * 60 * 1000);
+/** Раз в 1 мин: выравнивание подписок — у кого есть оплаченная заявка sub_* (payment_status=paid), но активная подписка не совпадает — активируем. */
+const SUB_RECONCILIATION_INTERVAL_MS = Math.max(60 * 1000, parseInt(process.env.SUB_RECONCILIATION_INTERVAL_MS, 10) || 60 * 1000);
 const SUB_RECONCILIATION_DAYS = 7;
 let _subReconciliationStarted = false;
 function startSubscriptionReconciliation() {

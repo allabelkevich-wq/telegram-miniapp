@@ -5357,8 +5357,7 @@
             ptBackBtn.textContent = t('subBtnProfile');
             ptBackBtn.onclick = function() {
               goToPage('profilePage');
-              // Небольшая задержка — даём claim успеть активировать план
-              setTimeout(function() { if (typeof loadProfilePage === 'function') loadProfilePage(); }, 1500);
+              setTimeout(function() { if (typeof loadProfilePage === 'function') loadProfilePage(); }, 400);
             };
           }
         }
@@ -5385,29 +5384,32 @@
               ? (LOCAL_PLAN_SKU_MAP[pendingPayment.plan_key] || null)
               : null;
 
-            // ── Для подписок: сразу запускаем claim параллельно с поллингом вебхука ──
-            // Claim идемпотентен — если вебхук уже активировал, вернёт already_active
+            // ── Для подписок: моментально запускаем claim (без задержки) и повторяем до успеха ──
             if (isSubPaymentImmediate && thanksRequestId) {
-              (async function runClaim() {
-                // Небольшая пауза (1 сек) — даём вебхуку шанс прийти первым; claim идемпотентен
-                await new Promise(function(r){ setTimeout(r, 1000); });
-                try {
-                  var claimResp = await fetch(apiBase + '/api/subscription/claim', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
-                    body: JSON.stringify({ request_id: thanksRequestId, initData: initData })
-                  });
-                  var claimJson = await claimResp.json().catch(function(){ return {}; });
-                  console.log('[sub] claim early result:', claimJson && claimJson.status, 'plan:', claimJson && claimJson.plan_sku);
-                  // После успешного claim — если пользователь уже на профиле, обновляем его
-                  if (claimJson && claimJson.success && typeof loadProfilePage === 'function') {
-                    var curPage = document.querySelector('.page.active');
-                    if (curPage && curPage.id === 'profilePage') {
-                      setTimeout(function() { loadProfilePage(); }, 300);
+              (async function runClaimLoop() {
+                var maxClaimAttempts = 25;
+                var claimIntervalMs = 1500;
+                for (var ci = 0; ci < maxClaimAttempts; ci++) {
+                  try {
+                    var claimResp = await fetch(apiBase + '/api/subscription/claim', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+                      body: JSON.stringify({ request_id: thanksRequestId, initData: initData })
+                    });
+                    var claimJson = await claimResp.json().catch(function(){ return {}; });
+                    if (claimJson && claimJson.success) {
+                      console.log('[sub] claim ok:', claimJson.status, 'plan:', claimJson.plan_sku);
+                      var curPage = document.querySelector('.page.active');
+                      if (curPage && curPage.id === 'profilePage' && typeof loadProfilePage === 'function') {
+                        setTimeout(function() { loadProfilePage(); }, 200);
+                      }
+                      return;
                     }
+                    if (claimResp.status !== 202) break;
+                  } catch(claimErr) {
+                    console.warn('[sub] claim attempt', ci, claimErr && claimErr.message);
                   }
-                } catch(claimErr) {
-                  console.warn('[sub] claim early error:', claimErr && claimErr.message);
+                  if (ci < maxClaimAttempts - 1) await new Promise(function(r){ setTimeout(r, claimIntervalMs); });
                 }
               })();
             }
@@ -5428,12 +5430,15 @@
             isSub = isSubPaymentImmediate || (payMode && payMode.startsWith('sub_'));
 
             if (payStatus === 'paid') {
-              // Вебхук пришёл — вызываем confirm (он тоже вызовет grantPurchaseBySku)
+              // Моментально: confirm + один запрос subscription/status (запускает repair_on_read)
               fetch(apiBase + '/api/payments/hot/confirm', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
                 body: JSON.stringify({ request_id: thanksRequestId, initData: initData })
               }).catch(function(){});
+              if (isSub) {
+                fetch(apiBase + '/api/subscription/status', { headers: { 'X-Telegram-Init': initData } }).catch(function(){});
+              }
             } else if (isSub && thanksRequestId) {
               // Вебхук не пришёл за 60 сек — финальный вызов claim (страховка)
               try {
@@ -5449,11 +5454,11 @@
             // Важно: проверяем конкретный plan_sku (защита от апгрейда Basic→Plus,
             // когда subscription_active=true ещё от Basic, но Plus ещё не активирован)
             if (isSub) {
-              // Вычисляем ожидаемый SKU из payMode (надёжнее, чем из localStorage)
               var expectedSkuFromMode = payMode.startsWith('sub_') ? payMode.slice(4) : null;
               var targetPlanSku = expectedSkuFromMode || expectedPlanSku || null;
-              for (var si = 0; si < 12; si++) {
-                await new Promise(function(r){ setTimeout(r, 2500); });
+              var subCheckDelayMs = 800;
+              for (var si = 0; si < 20; si++) {
+                if (si > 0) await new Promise(function(r){ setTimeout(r, subCheckDelayMs); });
                 try {
                   var subCheckResp = await fetch(apiBase + '/api/subscription/status', { headers: { 'X-Telegram-Init': initData } });
                   var subCheckJson = await subCheckResp.json().catch(function(){ return {}; });
