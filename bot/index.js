@@ -4376,6 +4376,24 @@ app.get("/api/subscription/status", asyncApi(async (req, res) => {
   });
 }));
 
+// Admin: выдать 24ч доступа к Soul Chat (для тестов, без подписки)
+app.post("/api/admin/soul-chat-grant-day", express.json(), asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const userId = Number(req.body?.telegram_user_id);
+  if (!userId) return res.status(400).json({ success: false, error: "Нужен telegram_user_id" });
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  const { error } = await supabase.from("soul_chat_access").insert({
+    telegram_user_id: userId,
+    expires_at: expiresAt,
+    source: "admin_grant",
+  });
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  console.log(`[admin/soul-chat-grant-day] admin=${auth.id}, userId=${userId}, expires=${expiresAt}`);
+  return res.json({ success: true, expires_at: expiresAt });
+}));
+
 // Admin: ручная активация подписки для пользователя (когда вебхук не пришёл)
 app.post("/api/admin/grant-subscription", express.json(), asyncApi(async (req, res) => {
   const auth = resolveAdminAuth(req);
