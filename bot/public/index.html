@@ -528,14 +528,18 @@
     #homeHero .home-tagline{font-size:0.72rem;font-weight:400;letter-spacing:0.14em;color:rgba(212,175,55,0.45);margin-top:var(--spacing-md);text-transform:uppercase}
     #homeHero .home-greeting{font-size:0.95rem;color:rgba(255,255,255,0.6);line-height:1.6;max-width:240px;margin:var(--spacing-lg) auto var(--spacing-xl);letter-spacing:0.01em}
     #homeHero #startBtn{margin-top:0;width:auto;max-width:280px;padding:14px 36px;font-weight:600;letter-spacing:0.02em;border-radius:50px;align-self:center}
-    /* Шапка главной: строгая симметрия кнопок сверху до низу */
-    #homeTopBar{display:flex;flex-direction:row;align-items:stretch;justify-content:space-between;padding:max(10px,env(safe-area-inset-top)) 20px 10px;min-height:56px;gap:0;box-sizing:border-box}
-    #homeTopBar .home-topbar-slot{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center}
-    #homeTopBar .home-topbar-slot:first-child{justify-content:center}
-    #homeTopBar .home-topbar-slot:last-child{justify-content:center}
+    /* Шапка главной: кнопки в самых верхних углах — минимальный отступ (safe-area или 8px) */
+    #homeTopBar{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;justify-items:center;padding:max(10px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) 10px max(8px,env(safe-area-inset-left));min-height:56px;box-sizing:border-box}
+    #homeTopBar .home-topbar-slot{display:flex;align-items:center;justify-content:center;width:100%;height:100%;min-height:44px}
+    #homeTopBar .home-topbar-slot:first-child{grid-column:1}
+    #homeTopBar .home-topbar-slot:last-child{grid-column:3}
     #homeTopBar .lang-switcher-compact{position:relative;display:flex;align-items:center;justify-content:center;width:44px;height:44px;flex-shrink:0}
     #homeTopBar .lang-switcher-btn,#homeTopBar #profileIconBtn{width:44px !important;height:44px !important;min-width:44px !important;min-height:44px !important;margin:0 !important;padding:0 !important;box-sizing:border-box !important;display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0}
     .lang-switcher-compact{position:relative}
+    /* Нижняя зона главной: центрирование, тройка ссылок — строго 1fr 1fr 1fr */
+    .home-lower{display:flex;flex-direction:column;align-items:center;text-align:center}
+    .home-nav{display:grid !important;grid-template-columns:1fr 1fr 1fr;gap:4px;justify-items:center;align-items:center;width:100%;max-width:300px;margin-left:auto;margin-right:auto}
+    .home-nav .home-nav-link{flex:none !important;min-width:0;text-align:center}
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* ── СТОРИС-ОНБОРДИНГ ── */
     #onboardingPage{
