@@ -178,112 +178,57 @@
     }
     .example-btn:hover { opacity: 0.95; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(212, 175, 55, 0.5); background: linear-gradient(135deg, #e0b83a, #f0d050, #e0b83a); }
     .example-btn.special { background: linear-gradient(135deg, #d4af37, #e8c547); border-color: rgba(212, 175, 55, 0.7); }
-    /* ===== MODE SELECTOR — премиум: glassmorphism, пульс, частицы, slide-in, shimmer ===== */
+    /* ===== MODE SELECTOR — чистый стиль ===== */
     .mode-selector {
-      position: relative;
       background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(212, 175, 55, 0.1);
-      border-radius: 24px;
-      padding: 24px;
-      margin: 20px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-      overflow: hidden;
-    }
-    /* Пульсирующий градиентный фон */
-    .mode-selector::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(212, 175, 55, 0.12) 0%, transparent 65%);
-      will-change: transform, opacity;
-      -webkit-animation: modePulse 8s ease-in-out infinite;
-      animation: modePulse 8s ease-in-out infinite;
-      pointer-events: none;
-    }
-    /* Премиум: эффект частиц (искры) */
-    .mode-selector::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-image: radial-gradient(2px 2px at 20px 30px, rgba(212, 175, 55, 0.35), transparent), radial-gradient(2px 2px at 40px 70px, rgba(236, 72, 153, 0.35), transparent), radial-gradient(1px 1px at 90px 40px, rgba(212, 175, 55, 0.25), transparent), radial-gradient(1.5px 1.5px at 130px 80px, rgba(236, 72, 153, 0.2), transparent), radial-gradient(1px 1px at 60px 15px, rgba(212, 175, 55, 0.28), transparent);
-      background-repeat: repeat;
-      background-size: 200px 100px;
-      will-change: transform;
-      -webkit-animation: modeSparkle 10s linear infinite;
-      animation: modeSparkle 10s linear infinite;
-      pointer-events: none;
-      opacity: 0.65;
-    }
-    @-webkit-keyframes modePulse {
-      0%, 100% { -webkit-transform: scale(1); transform: scale(1); opacity: 0.5; }
-      50% { -webkit-transform: scale(1.1); transform: scale(1.1); opacity: 0.8; }
-    }
-    @keyframes modePulse {
-      0%, 100% { transform: scale(1); opacity: 0.5; }
-      50% { transform: scale(1.1); opacity: 0.8; }
-    }
-    @-webkit-keyframes modeSparkle {
-      0% { -webkit-transform: translateY(0); transform: translateY(0); }
-      100% { -webkit-transform: translateY(100px); transform: translateY(100px); }
-    }
-    @keyframes modeSparkle {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(100px); }
+      border-radius: 20px;
+      padding: 20px;
+      margin: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     }
     .mode-selector h3 {
-      position: relative;
       color: #ffffff;
-      font-size: 20px;
-      font-weight: 700;
-      margin: 0 0 8px;
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 6px;
       text-align: center;
-      letter-spacing: 0.5px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
     }
     .mode-subtitle {
-      position: relative;
       color: rgba(255, 255, 255, 0.6);
-      font-size: 14px;
+      font-size: 13px;
       text-align: center;
-      margin: 0 0 24px;
+      margin-bottom: 16px;
     }
     .mode-buttons {
-      position: relative;
       display: flex;
       gap: 8px;
-      justify-content: space-between;
+      justify-content: center;
       flex-wrap: nowrap;
-      perspective: 1000px;
     }
     .mode-btn {
       position: relative;
       flex: 1;
       min-width: 0;
-      padding: 12px 8px;
+      padding: 12px 10px;
       background: rgba(255, 255, 255, 0.05);
-      border: 2px solid rgba(212, 175, 55, 0.2);
-      border-radius: 16px;
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      border-radius: 12px;
       color: rgba(255, 255, 255, 0.7);
       font-family: 'Comfortaa', sans-serif;
       font-size: 13px;
       font-weight: 600;
-      line-height: 1.2;
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
       text-align: center;
-      letter-spacing: 0.3px;
-      white-space: nowrap !important;
-      word-break: keep-all !important;
-      text-overflow: ellipsis;
+      white-space: nowrap;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -291,7 +236,8 @@
       gap: 6px;
       box-sizing: border-box;
       min-height: 52px;
-      transform-style: preserve-3d;
+      -webkit-animation: modeFadeIn 0.4s ease-out both;
+      animation: modeFadeIn 0.4s ease-out both;
     }
     .mode-btn .mode-label {
       white-space: nowrap !important;
@@ -300,77 +246,60 @@
       min-width: 0;
       width: 100%;
     }
-    .mode-selector.mode-selector-visible .mode-btn {
-      -webkit-animation: modeSlideIn 0.5s ease-out both;
-      animation: modeSlideIn 0.5s ease-out both;
-    }
-    .mode-selector.mode-selector-visible .mode-btn:nth-child(1) { animation-delay: 0.05s; -webkit-animation-delay: 0.05s; }
-    .mode-selector.mode-selector-visible .mode-btn:nth-child(2) { animation-delay: 0.1s; -webkit-animation-delay: 0.1s; }
-    .mode-selector.mode-selector-visible .mode-btn:nth-child(3) { animation-delay: 0.15s; -webkit-animation-delay: 0.15s; }
     .mode-btn::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.2), transparent);
-      transition: left 0.5s;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      border-radius: inherit;
     }
-    .mode-btn:hover::before { left: 100%; }
+    .mode-btn:hover::before { opacity: 1; }
     .mode-btn:hover {
-      background: rgba(212, 175, 55, 0.1);
       border-color: rgba(212, 175, 55, 0.4);
       color: #ffffff;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.15);
     }
     .mode-btn.active {
-      background: linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(236, 72, 153, 0.2));
-      border-color: #d4af37;
-      color: #f5e6a3;
-      box-shadow: 0 0 30px rgba(212, 175, 55, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(212, 175, 55, 0.1) 100%);
+      border-color: #D4AF37;
+      color: #F5E6A3;
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
       transform: translateY(0);
     }
     .mode-btn.active::after {
       content: '';
       position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(212, 175, 55, 0.3), transparent 70%);
-      will-change: transform, opacity;
-      -webkit-animation: modeShimmer 3s ease-in-out infinite;
-      animation: modeShimmer 3s ease-in-out infinite;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(circle, rgba(212, 175, 55, 0.2), transparent 70%);
+      -webkit-animation: gentlePulse 4s ease-in-out infinite;
+      animation: gentlePulse 4s ease-in-out infinite;
       pointer-events: none;
+      border-radius: 50%;
     }
-    @-webkit-keyframes modeShimmer {
+    @-webkit-keyframes gentlePulse {
       0%, 100% { -webkit-transform: scale(1); transform: scale(1); opacity: 0.5; }
       50% { -webkit-transform: scale(1.05); transform: scale(1.05); opacity: 0.8; }
     }
-    @keyframes modeShimmer {
+    @keyframes gentlePulse {
       0%, 100% { transform: scale(1); opacity: 0.5; }
       50% { transform: scale(1.05); opacity: 0.8; }
     }
-    @-webkit-keyframes modeSlideIn {
-      from { opacity: 0; -webkit-transform: translateY(20px) rotateX(10deg); transform: translateY(20px) rotateX(10deg); }
-      to { opacity: 1; -webkit-transform: translateY(0) rotateX(0); transform: translateY(0) rotateX(0); }
+    @-webkit-keyframes modeFadeIn {
+      from { opacity: 0; -webkit-transform: translateY(10px); transform: translateY(10px); }
+      to { opacity: 1; -webkit-transform: translateY(0); transform: translateY(0); }
     }
-    @keyframes modeSlideIn {
-      from { opacity: 0; transform: translateY(20px) rotateX(10deg); }
-      to { opacity: 1; transform: translateY(0) rotateX(0); }
+    @keyframes modeFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-    .mode-btn[data-mode="single"] .mode-label::before { content: '👤 '; }
-    .mode-btn[data-mode="couple"] .mode-label::before { content: '💑 '; }
-    .mode-btn[data-mode="transit"] .mode-label::before { content: '✨ '; }
-    .mode-btn:active { transform: scale(0.95); transition: transform 0.1s; }
-    @media (max-width: 480px) {
-      .mode-selector { padding: 20px 16px; margin: 16px; border-radius: 20px; }
-      .mode-btn { padding: 14px 10px; font-size: 12px; }
-    }
+    .mode-btn:active { transform: scale(0.98); transition: transform 0.1s; }
     @media (max-width: 400px) {
-      .mode-btn { font-size: 11px; padding: 10px 6px; }
+      .mode-btn { padding: 10px 8px; font-size: 12px; }
+      .mode-selector { padding: 16px; margin: 12px; }
     }
     .mode-icon { display: none; }
     .mode-label { font-weight: 700; font-size: max(1rem, 16px); line-height: 1.25; }
@@ -5461,14 +5390,6 @@
         } catch(e) {}
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
         if (pageId === 'formPage') loadSavedProfileForForm();
-        if (pageId === 'formPage') {
-          var modeSel = document.querySelector('#formPage .mode-selector');
-          if (modeSel) {
-            modeSel.classList.remove('mode-selector-visible');
-            modeSel.offsetHeight;
-            requestAnimationFrame(function() { modeSel.classList.add('mode-selector-visible'); });
-          }
-        }
         if (pageId === 'homePage' && typeof loadReferralStats === 'function') loadReferralStats();
         if (pageId === 'profilePage' && typeof loadProfilePage === 'function') loadProfilePage();
         // paymentPage теперь overlay — здесь ничего не делаем
