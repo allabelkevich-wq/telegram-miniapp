@@ -910,7 +910,7 @@
     <div class="page" id="homePage">
 
       <!-- Шапка: язык слева, профиль справа -->
-      <div id="homeTopBar" style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:max(10px,env(safe-area-inset-top)) 12px 10px;min-height:52px;gap:8px;">
+      <div id="homeTopBar" style="flex-shrink:0;display:grid;grid-template-columns:1fr 1fr;align-items:center;justify-items:center;padding:max(10px,env(safe-area-inset-top)) 16px 10px;min-height:52px;gap:0;">
         <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
           <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
             <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
@@ -4759,7 +4759,7 @@
           if (scHeader)   scHeader.style.display   = 'none';
           if (scChatHdr)  { scChatHdr.style.display = 'flex'; }
           if (promoArea)  promoArea.style.display   = 'none';
-          if (chatEl)     { chatEl.style.display = 'flex'; }
+          if (chatEl)     { chatEl.style.display = 'flex'; chatEl.scrollTop = 0; }
           if (inputArea)  inputArea.style.display   = '';
         }
 
@@ -5226,28 +5226,34 @@
         // Всегда проверяем кнопку оплаты при переходах между страницами
         ensurePayButtonText();
         
-        document.querySelectorAll('.page').forEach(function(page) {
-          page.classList.remove('active');
-          page.removeAttribute('role');
-        });
-        // На всякий случай скрываем онбординг если он остался видимым
-        var obp = document.getElementById('onboardingPage');
-        if (obp && obp.style.display !== 'none') obp.style.display = 'none';
-        
         var target = document.getElementById(pageId);
-        
         if (!target) {
           console.warn('[goToPage] Страница не найдена:', pageId, '— переходим на homePage');
           target = document.getElementById('homePage');
           if (!target) return;
         }
+        // Сначала показываем целевую страницу — без кадра «все скрыты» (убирает прыжок при входе в Soul Chat и др.)
         target.classList.add('active');
         target.setAttribute('role', 'main');
-        // Иконка профиля — всегда видима внутри #homeTopBar (не нужно управлять)
-        // Сброс скролла у всех .page-scroll при переходе
+        document.querySelectorAll('.page').forEach(function(page) {
+          if (page !== target) {
+            page.classList.remove('active');
+            page.removeAttribute('role');
+          }
+        });
+        // На всякий случай скрываем онбординг если он остался видимым
+        var obp = document.getElementById('onboardingPage');
+        if (obp && obp.style.display !== 'none') obp.style.display = 'none';
+        // Сброс скролла у .page-scroll целевой страницы (после отрисовки, чтобы не дергало)
         try {
           var scrollArea = document.querySelector('#' + pageId + ' .page-scroll');
-          if (scrollArea) scrollArea.scrollTop = 0;
+          if (scrollArea) {
+            scrollArea.scrollTop = 0;
+          }
+          if (pageId === 'soulChatPage') {
+            var scChat = document.getElementById('scPageChat');
+            if (scChat) scChat.scrollTop = 0;
+          }
         } catch(e) {}
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
         if (pageId === 'formPage') loadSavedProfileForForm();
