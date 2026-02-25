@@ -4697,7 +4697,7 @@
           if (globalLoad) globalLoad.style.display = 'none';
         }
 
-        // Защита от вечной загрузки (зависание fetch/CORS/сеть): через 12 сек принудительно промо
+        // Защита от вечной загрузки: через 6 сек принудительно показываем промо (состояние подписки)
         var accessTimeout = setTimeout(function() {
           if (globalLoad && globalLoad.style.display !== 'none') {
             hideGlobalLoading();
@@ -4710,7 +4710,7 @@
             if (buyDayWrap) buyDayWrap.style.display = '';
             if (errorWrap) errorWrap.style.display = '';
           }
-        }, 12000);
+        }, 6000);
 
         // Переключение между промо-режимом и чат-режимом. isLoadError = true при таймауте/сети/ошибке
         function showPromo(isLoadError) {
@@ -4757,11 +4757,17 @@
           }, 15000);
           var json = await resp.json().catch(function(){ return {}; });
 
+          // При любой ошибке HTTP (401, 403, 5xx) — показываем окно с состоянием подписки и сообщением об ошибке
+          if (!resp.ok) {
+            showPromo(true);
+            return;
+          }
+
           window._scLastRequestId = (json && json.last_request_id) || null;
           window._scHasProfile   = !!(json && json.has_profile);
           window._scIsMaster     = !!(json && json.is_master);
 
-          if (json && json.allowed) {
+          if (json && json.allowed === true) {
             var hadReturnFlag = false;
             try {
               var ts = sessionStorage.getItem('soul_chat_return_from_payment');
