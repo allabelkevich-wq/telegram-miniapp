@@ -541,6 +541,34 @@ async function getActiveSubscriptionFull(telegramUserId) {
   return data;
 }
 
+/** Восстанавливает подписку из оплаченных заявок, если вебхук/claim не сработали. Идемпотентно. */
+async function ensureSubscriptionFromPaidRequests(telegramUserId, source = "repair_on_read") {
+  if (!supabase) return;
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: paidRow } = await supabase
+    .from("track_requests")
+    .select("id,mode,payment_order_id,created_at")
+    .eq("telegram_user_id", Number(telegramUserId))
+    .like("mode", "sub_%")
+    .eq("payment_status", "paid")
+    .gte("created_at", sevenDaysAgo)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!paidRow || !paidRow.mode) return;
+  const sku = resolveSkuByMode(paidRow.mode);
+  if (!sku) return;
+  const existing = await getActiveSubscriptionFull(telegramUserId);
+  if (existing && existing.plan_sku === sku) return;
+  console.log(`[sub/repair] userId=${telegramUserId}, paid request ${paidRow.id?.slice(0, 8)}, sku=${sku}, current=${existing?.plan_sku || "none"} → активируем`);
+  await grantPurchaseBySku({
+    telegramUserId,
+    sku,
+    source,
+    orderId: paidRow.payment_order_id || null,
+  });
+}
+
 async function countTracksUsedThisMonth(telegramUserId, subCreatedAt = null) {
   if (!supabase) return 0;
   const now = new Date();
@@ -3900,19 +3928,23 @@ app.post("/api/subscription/claim", express.json(), asyncApi(async (req, res) =>
   if (!mode.startsWith("sub_")) {
     return res.status(400).json({ success: false, error: "Только для заявок-подписок" });
   }
-  // Заявка не старше 2 часов
+  // Заявка не старше 7 дней (вебхук мог не прийти — claim как страховка)
+  const SUB_CLAIM_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
   const ageMs = Date.now() - new Date(data.created_at).getTime();
-  if (ageMs > 2 * 60 * 60 * 1000) {
-    return res.status(409).json({ success: false, error: "Заявка слишком старая" });
+  if (ageMs > SUB_CLAIM_MAX_AGE_MS) {
+    return res.status(409).json({ success: false, error: "Заявка слишком старая. Обратись в поддержку." });
   }
-  // Если уже есть активная подписка этого SKU — успех (idempotent)
   const sku = resolveSkuByMode(mode);
+  const paid = (data.payment_status || "").toLowerCase() === "paid";
+  if (!paid) {
+    return res.status(202).json({ success: false, error: "Оплата ещё не подтверждена. Подожди минуту и открой профиль снова — подписка подтянется автоматически." });
+  }
+  // Заявка оплачена — применяем подписку (идемпотентно)
   const existing = await getActiveSubscriptionFull(telegramUserId);
   if (existing && existing.plan_sku === sku) {
     return res.json({ success: true, status: "already_active", plan_sku: sku });
   }
-  // Логируем для аудита
-  console.log(`[sub/claim] userId=${telegramUserId}, requestId=${requestId.slice(0,8)}, sku=${sku}, payStatus=${data.payment_status}, ageMin=${Math.round(ageMs/60000)}`);
+  console.log(`[sub/claim] userId=${telegramUserId}, requestId=${requestId.slice(0,8)}, sku=${sku}, ageMin=${Math.round(ageMs/60000)}`);
   const grantResult = await grantPurchaseBySku({
     telegramUserId,
     sku,
@@ -4257,6 +4289,9 @@ app.get("/api/subscription/status", asyncApi(async (req, res) => {
   const initData = req.headers["x-telegram-init"] || req.query?.initData || "";
   const telegramUserId = validateInitData(initData, BOT_TOKEN);
   if (telegramUserId == null) return res.status(401).json({ success: false, error: "Unauthorized" });
+
+  // Восстановление подписки из оплаченных заявок, если вебхук/claim не сработали
+  await ensureSubscriptionFromPaidRequests(telegramUserId, "repair_on_read");
 
   const sub = await getActiveSubscriptionFull(telegramUserId);
   const planSku = sub?.plan_sku || null;
@@ -5147,6 +5182,48 @@ function startHourlyDeliveryCheck() {
   setInterval(run, HOURLY_DELIVERY_CHECK_MS);
 }
 
+/** Раз в 15 мин: выравнивание подписок — у кого есть оплаченная заявка sub_* (payment_status=paid), но активная подписка не совпадает — активируем. */
+const SUB_RECONCILIATION_INTERVAL_MS = Math.max(15 * 60 * 1000, parseInt(process.env.SUB_RECONCILIATION_INTERVAL_MS, 10) || 15 * 60 * 1000);
+const SUB_RECONCILIATION_DAYS = 7;
+let _subReconciliationStarted = false;
+function startSubscriptionReconciliation() {
+  if (!supabase || _subReconciliationStarted) return;
+  _subReconciliationStarted = true;
+  console.log("[SubRecon] Запуск: интервал", SUB_RECONCILIATION_INTERVAL_MS / 60000, "мин, окно заявок", SUB_RECONCILIATION_DAYS, "дней");
+
+  async function run() {
+    try {
+      const since = new Date(Date.now() - SUB_RECONCILIATION_DAYS * 24 * 60 * 60 * 1000).toISOString();
+      const { data: rows } = await supabase
+        .from("track_requests")
+        .select("telegram_user_id,mode")
+        .like("mode", "sub_%")
+        .eq("payment_status", "paid")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false });
+      if (!rows?.length) return;
+      const userIds = [...new Set(rows.map((r) => Number(r.telegram_user_id)))];
+      let fixed = 0;
+      for (const uid of userIds) {
+        const existing = await getActiveSubscriptionFull(uid);
+        const latest = rows.find((r) => Number(r.telegram_user_id) === uid);
+        if (!latest) continue;
+        const expectedSku = resolveSkuByMode(latest.mode);
+        if (!expectedSku) continue;
+        if (existing && existing.plan_sku === expectedSku) continue;
+        await ensureSubscriptionFromPaidRequests(uid, "reconciliation");
+        fixed++;
+      }
+      if (fixed > 0) console.log("[SubRecon] Исправлено подписок:", fixed);
+    } catch (e) {
+      console.error("[SubRecon] Ошибка:", e?.message || e);
+    }
+  }
+
+  run();
+  setInterval(run, SUB_RECONCILIATION_INTERVAL_MS);
+}
+
 function registerMasterRoutes(expressApp) {
   expressApp.get("/api/master/access", async (req, res) => {
     const initData = req.query?.initData ?? req.headers["x-telegram-init"];
@@ -5213,6 +5290,7 @@ if (process.env.RENDER_HEALTHZ_FIRST) {
   }
   startDeliveryWatchdog();
   startHourlyDeliveryCheck();
+  startSubscriptionReconciliation();
 } else {
   console.log("[HTTP] Слушаю порт", HEROES_API_PORT);
   registerMasterRoutes(app);
@@ -5227,5 +5305,6 @@ if (process.env.RENDER_HEALTHZ_FIRST) {
     }
     startDeliveryWatchdog();
     startHourlyDeliveryCheck();
+    startSubscriptionReconciliation();
   });
 }
