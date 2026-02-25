@@ -6819,11 +6819,12 @@
             else window.open(d.payment_url, '_blank');
           }
           masterSubBtn.disabled = false;
-          masterSubBtn.textContent = '💳 Подписка — 299 руб/мес';
+          var priceStr = (d && d.payment_amount != null && d.payment_currency) ? (d.payment_amount + ' ' + d.payment_currency + '/мес') : '39.99 USDT/мес';
+          masterSubBtn.textContent = '💳 Подписка — ' + priceStr;
         }).catch(function(e) {
           alert('Ошибка: ' + (e.message || e));
           masterSubBtn.disabled = false;
-          masterSubBtn.textContent = '💳 Подписка — 299 руб/мес';
+          masterSubBtn.textContent = '💳 Подписка — 39.99 USDT/мес';
         });
       });
 

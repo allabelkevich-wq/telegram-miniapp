@@ -5431,8 +5431,14 @@ function registerMasterRoutes(expressApp) {
     const amount = priceData ? Number(priceData.price) : 39.99;
     const currency = priceData?.currency || "USDT";
 
-    const url = buildHotCheckoutUrl({ orderId, amount, currency, requestId: orderId, sku });
-    return res.json({ ok: true, payment_url: url });
+    const itemId = pickHotItemId(sku);
+    const url = buildHotCheckoutUrl({ itemId: itemId || undefined, orderId, amount, currency, requestId: orderId, sku });
+    return res.json({
+      ok: true,
+      payment_url: url,
+      payment_amount: amount,
+      payment_currency: currency,
+    });
   });
 }
 
