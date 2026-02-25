@@ -534,12 +534,11 @@
     #homeTopBar .home-topbar-slot:first-child{grid-column:1}
     #homeTopBar .home-topbar-slot:last-child{grid-column:3}
     #homeTopBar .lang-switcher-compact{position:relative;width:44px;height:44px;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
-    /* Унификация обеих кнопок topbar: один размер, один шрифт, SVG 18×18 */
-    #homeTopBar .home-topbar-btn{box-sizing:border-box !important;width:44px !important;height:44px !important;min-width:44px !important;min-height:44px !important;max-width:44px !important;max-height:44px !important;margin:0 !important;padding:0 !important;border:1.5px solid rgba(212,175,55,0.4) !important;border-radius:50% !important;display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;line-height:0 !important;font-size:9px !important;font-family:'Comfortaa',sans-serif !important;color:rgba(212,175,55,0.9) !important;overflow:hidden !important;vertical-align:middle !important;background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(236,72,153,0.14)) !important;cursor:pointer !important;box-shadow:0 2px 12px rgba(0,0,0,0.3) !important;position:relative !important;top:auto !important;right:auto !important;bottom:auto !important;left:auto !important}
-    #homeTopBar #profileIconBtn,#homeTopBar .lang-switcher-btn{font-size:9px !important;font-family:'Comfortaa',sans-serif !important}
-    #homeTopBar .home-topbar-btn svg{display:block !important;vertical-align:middle !important;width:18px !important;height:18px !important;flex-shrink:0 !important}
-    #homeTopBar .home-topbar-btn span{line-height:0 !important;vertical-align:middle !important;font-size:9px !important;font-family:'Comfortaa',sans-serif !important}
-    #homeTopBar .home-topbar-btn:active{background:rgba(212,175,55,0.28) !important}
+    /* Унификация кнопок topbar: 44×44, шрифт 9px Comfortaa, SVG 18×18 — перебивают все глобальные и медиаправила */
+    #homeTopBar .home-topbar-btn,#homeTopBar #profileIconBtn,#homeTopBar .lang-switcher-btn{box-sizing:border-box !important;width:44px !important;height:44px !important;min-width:44px !important;min-height:44px !important;max-width:44px !important;max-height:44px !important;margin:0 !important;padding:0 !important;border:1.5px solid rgba(212,175,55,0.4) !important;border-radius:50% !important;display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;line-height:0 !important;font-size:9px !important;font-family:'Comfortaa',sans-serif !important;font-weight:600 !important;color:rgba(212,175,55,0.9) !important;overflow:hidden !important;vertical-align:middle !important;background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(236,72,153,0.14)) !important;cursor:pointer !important;box-shadow:0 2px 12px rgba(0,0,0,0.3) !important;position:relative !important;top:auto !important;right:auto !important;bottom:auto !important;left:auto !important}
+    #homeTopBar .home-topbar-btn svg,#homeTopBar #profileIconBtn svg{display:block !important;vertical-align:middle !important;width:18px !important;height:18px !important;min-width:18px !important;min-height:18px !important;flex-shrink:0 !important;fill:rgba(212,175,55,0.9) !important}
+    #homeTopBar .home-topbar-btn span,#homeTopBar .lang-switcher-btn span{line-height:0 !important;vertical-align:middle !important;font-size:9px !important;font-family:'Comfortaa',sans-serif !important;font-weight:600 !important;color:rgba(212,175,55,0.9) !important}
+    #homeTopBar .home-topbar-btn:active,#homeTopBar #profileIconBtn:active{background:rgba(212,175,55,0.28) !important}
     .lang-switcher-compact{position:relative}
     /* Нижняя зона: три ссылки строго в одну строку без переноса слова */
     .home-lower{display:flex;flex-direction:column;align-items:center;text-align:center}
@@ -829,6 +828,7 @@
     @media (hover:none) and (pointer:coarse){
       button,a,input,select,textarea,[role="button"],.mode-btn,.mode-info,.form-nav-link,.home-nav-link,.lang-switcher-btn,.lang-opt,.ppc-details-btn,.ppc-btn,.request-quick-toggle,.quick-item,.quick-picker-btn,.onboarding-btn,.hca-btn,.hero-hist-toggle,.stories-close,.profile-back-btn,.preview-nav button,.example-btn,.request-help-toggle{font-size:max(1rem,16px)}
       .mode-btn .mode-label,.request-quick-dropdown .quick-item{font-size:max(1rem,16px)}
+      #homeTopBar .home-topbar-btn,#homeTopBar #profileIconBtn,#homeTopBar .lang-switcher-btn,#homeTopBar .home-topbar-btn span{font-size:9px !important}
     }
   </style>
 </head>
