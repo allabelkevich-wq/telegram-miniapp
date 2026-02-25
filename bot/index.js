@@ -1107,7 +1107,20 @@ bot.on(":successful_payment", async (ctx) => {
   const userId    = Number(parts[3]) || ctx.from?.id;
   const telegramChargeId = sp.telegram_payment_charge_id || "";
 
-  console.log(`[Stars] successful_payment: sku=${sku}, requestId=${requestId}, userId=${userId}, charge=${telegramChargeId}`);
+  console.log(`[Stars] successful_payment: sku=${sku}, requestId=${requestId}, userId=${userId}, charge=${telegramChargeId}, total_amount=${sp.total_amount} Stars`);
+
+  // Уведомление админам: оплата Stars пришла (помогает проверить, что Stars подключены)
+  if (ADMIN_IDS.length && sp.total_amount) {
+    const amount = Number(sp.total_amount) || 0;
+    bot.api.sendMessage(
+      ADMIN_IDS[0],
+      `⭐ *Оплата Stars получена*\n\n` +
+      `Сумма: *${amount}* Stars (XTR)\n` +
+      `Товар: ${sku}\n` +
+      `Пользователь: ${userId}\n` +
+      `Charge ID: ${telegramChargeId || "—"}`
+    , { parse_mode: "Markdown" }).catch((e) => console.warn("[Stars] notify admin:", e?.message));
+  }
 
   try {
     if (supabase && requestId) {
