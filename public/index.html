@@ -1623,7 +1623,6 @@
       </div>
       
       </div><!-- /page-scroll -->
-    </div>
     </div><!-- /formPage -->
     
     <!-- paymentPage убран из .page-системы — заменён на #paymentOverlay ниже -->
@@ -2042,6 +2041,8 @@
           planPlusF1: '✦ 10 треков/мес', planPlusF2: '✦ Soul Chat без лимита', planPlusF3: '✦ Приоритет обработки', planPlusF4: '✦ Полная история треков', planPlusSave: '−58% vs разовых',
           planMasterF1: '✦ 30 треков/мес', planMasterF2: '✦ Картотека людей', planMasterF3: '✦ История генераций', planMasterF4: '✦ Soul Chat без лимита', planMasterSave: '−83% vs разовых',
           refFriend1: 'друг', refFriend2: 'друга', refFriend5: 'друзей', refLinkLoading: 'Загрузка…',
+          profileRefFirstFriend: 'Пригласи первого друга — получи бесплатную песню 🎁',
+          profileRefNextSong: 'До следующей бесплатной песни: ещё ', profileRefMore: '',
           quickPickerLabel: '✦ Быстрые запросы',
           forWhoLabel: 'Для кого генерируем?', nameLbl: 'Имя', birthdateLbl: 'Дата рождения', birthplaceLbl: 'Место рождения', birthtimeLbl: 'Время рождения',
           payOvCardTitleDefault: 'Оплата заявки', payOvTrialText: 'Первая песня — в подарок!', payOvFreeClaimBtn: '🎁 Получить бесплатно',
@@ -2225,6 +2226,8 @@
           planPlusF1: '✦ 10 tracks/mo', planPlusF2: '✦ Soul Chat unlimited', planPlusF3: '✦ Priority processing', planPlusF4: '✦ Full track history', planPlusSave: '−58% vs singles',
           planMasterF1: '✦ 30 tracks/mo', planMasterF2: '✦ People directory', planMasterF3: '✦ Generation history', planMasterF4: '✦ Soul Chat unlimited', planMasterSave: '−83% vs singles',
           refFriend1: 'friend', refFriend2: 'friends', refFriend5: 'friends', refLinkLoading: 'Loading…',
+          profileRefFirstFriend: 'Invite your first friend — get a free song 🎁',
+          profileRefNextSong: 'Until next free song: ', profileRefMore: 'more ',
           quickPickerLabel: '✦ Quick requests',
           forWhoLabel: 'Who are we generating for?', nameLbl: 'Name', birthdateLbl: 'Date of birth', birthplaceLbl: 'Place of birth', birthtimeLbl: 'Time of birth',
           payOvCardTitleDefault: 'Payment', payOvTrialText: 'First song — free gift!', payOvFreeClaimBtn: '🎁 Get for free',
@@ -2408,6 +2411,8 @@
           planPlusF1: '✦ 10 Lieder/Mo.', planPlusF2: '✦ Soul Chat unbegrenzt', planPlusF3: '✦ Prioritätsverarbeitung', planPlusF4: '✦ Vollständige Titel-Historie', planPlusSave: '−58% vs Einzelkauf',
           planMasterF1: '✦ 30 Lieder/Mo.', planMasterF2: '✦ Personenverzeichnis', planMasterF3: '✦ Generierungshistorie', planMasterF4: '✦ Soul Chat unbegrenzt', planMasterSave: '−83% vs Einzelkauf',
           refFriend1: 'Freund', refFriend2: 'Freunde', refFriend5: 'Freunde', refLinkLoading: 'Laden…',
+          profileRefFirstFriend: 'Lade deinen ersten Freund ein — erhalte ein kostenloses Lied 🎁',
+          profileRefNextSong: 'Bis zum nächsten Gratis-Song: noch ', profileRefMore: '',
           quickPickerLabel: '✦ Schnellanfragen',
           forWhoLabel: 'Für wen generieren wir?', nameLbl: 'Name', birthdateLbl: 'Geburtsdatum', birthplaceLbl: 'Geburtsort', birthtimeLbl: 'Geburtszeit',
           payOvCardTitleDefault: 'Zahlung', payOvTrialText: 'Erstes Lied — Geschenk!', payOvFreeClaimBtn: '🎁 Kostenlos erhalten',
@@ -2591,6 +2596,8 @@
           planPlusF1: '✦ 10 titres/mois', planPlusF2: '✦ Soul Chat illimité', planPlusF3: '✦ Traitement prioritaire', planPlusF4: '✦ Historique complet', planPlusSave: '−58% vs séparés',
           planMasterF1: '✦ 30 titres/mois', planMasterF2: '✦ Répertoire de personnes', planMasterF3: '✦ Historique des générations', planMasterF4: '✦ Soul Chat illimité', planMasterSave: '−83% vs séparés',
           refFriend1: 'ami', refFriend2: 'amis', refFriend5: 'amis', refLinkLoading: 'Chargement…',
+          profileRefFirstFriend: 'Invite ton premier ami — reçois une chanson gratuite 🎁',
+          profileRefNextSong: "Jusqu'à la prochaine chanson gratuite : encore ", profileRefMore: '',
           quickPickerLabel: '✦ Demandes rapides',
           forWhoLabel: 'Pour qui générons-nous?', nameLbl: 'Prénom', birthdateLbl: 'Date de naissance', birthplaceLbl: 'Lieu de naissance', birthtimeLbl: 'Heure de naissance',
           payOvCardTitleDefault: 'Paiement', payOvTrialText: 'Première chanson — cadeau!', payOvFreeClaimBtn: '🎁 Obtenir gratuitement',
@@ -3343,7 +3350,7 @@
         var refLinkEl = document.getElementById('profileRefLinkInput');
         var refInvEl = document.getElementById('profileRefInvited');
         var refRewEl = document.getElementById('profileRefRewarded');
-        if (nameEl) nameEl.textContent = 'Загрузка…';
+        if (nameEl) nameEl.textContent = (typeof t === 'function' ? t('refLinkLoading') : 'Загрузка…');
         if (creditsEl) creditsEl.textContent = '—';
         if (refLinkEl) refLinkEl.value = '';
         if (refInvEl) refInvEl.textContent = '0';
@@ -3449,8 +3456,8 @@
           if (hintEl) {
             var rem = nextN - invCount;
             hintEl.textContent = invCount === 0
-              ? 'Пригласи первого друга — получи бесплатную песню 🎁'
-              : 'До следующей бесплатной песни: ещё ' + rem + ' ' + (rem === 1 ? 'друг' : rem < 5 ? 'друга' : 'друзей');
+              ? (typeof t === 'function' ? t('profileRefFirstFriend') : 'Пригласи первого друга — получи бесплатную песню 🎁')
+              : (typeof t === 'function' ? t('profileRefNextSong') + rem + ' ' + t('profileRefMore') + t(rem === 1 ? 'refFriend1' : rem < 5 ? 'refFriend2' : 'refFriend5') : 'До следующей бесплатной песни: ещё ' + rem + ' ' + (rem === 1 ? 'друг' : rem < 5 ? 'друга' : 'друзей'));
           }
 
           // --- Статус подписки (новый API) ---
@@ -5285,7 +5292,10 @@
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
         if (pageId === 'formPage') loadSavedProfileForForm();
         if (pageId === 'homePage' && typeof loadReferralStats === 'function') loadReferralStats();
-        if (pageId === 'profilePage' && typeof loadProfilePage === 'function') loadProfilePage();
+        if (pageId === 'profilePage') {
+          if (typeof applyTranslations === 'function') applyTranslations();
+          if (typeof loadProfilePage === 'function') loadProfilePage();
+        }
         // paymentPage теперь overlay — здесь ничего не делаем
         // Soul Chat блок удалён со successPage — initSoulChat вызывать не нужно
         if (pageId === 'soulChatPage') initSoulChatPage();
