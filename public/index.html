@@ -528,8 +528,13 @@
     #homeHero .home-tagline{font-size:0.72rem;font-weight:400;letter-spacing:0.14em;color:rgba(212,175,55,0.45);margin-top:var(--spacing-md);text-transform:uppercase}
     #homeHero .home-greeting{font-size:0.95rem;color:rgba(255,255,255,0.6);line-height:1.6;max-width:240px;margin:var(--spacing-lg) auto var(--spacing-xl);letter-spacing:0.01em}
     #homeHero #startBtn{margin-top:0;width:auto;max-width:280px;padding:14px 36px;font-weight:600;letter-spacing:0.02em;border-radius:50px;align-self:center}
-    #homeTopBar .lang-switcher-compact{position:relative;display:flex;align-items:center;align-self:stretch;min-height:44px}
-    #homeTopBar #profileIconBtn{align-self:center}
+    /* Шапка главной: строгая симметрия кнопок сверху до низу */
+    #homeTopBar{display:flex;flex-direction:row;align-items:stretch;justify-content:space-between;padding:max(10px,env(safe-area-inset-top)) 20px 10px;min-height:56px;gap:0;box-sizing:border-box}
+    #homeTopBar .home-topbar-slot{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center}
+    #homeTopBar .home-topbar-slot:first-child{justify-content:center}
+    #homeTopBar .home-topbar-slot:last-child{justify-content:center}
+    #homeTopBar .lang-switcher-compact{position:relative;display:flex;align-items:center;justify-content:center;width:44px;height:44px;flex-shrink:0}
+    #homeTopBar .lang-switcher-btn,#homeTopBar #profileIconBtn{width:44px !important;height:44px !important;min-width:44px !important;min-height:44px !important;margin:0 !important;padding:0 !important;box-sizing:border-box !important;display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0}
     .lang-switcher-compact{position:relative}
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* ── СТОРИС-ОНБОРДИНГ ── */
@@ -909,26 +914,30 @@
     <!-- Главная страница -->
     <div class="page" id="homePage">
 
-      <!-- Шапка: язык слева, профиль справа -->
-      <div id="homeTopBar" style="flex-shrink:0;display:grid;grid-template-columns:1fr 1fr;align-items:center;justify-items:center;padding:max(10px,env(safe-area-inset-top)) 16px 10px;min-height:52px;gap:0;">
-        <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
-          <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
-            <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
-            <span id="langSwitcherCurrent">RU</span>
-          </button>
-          <div id="langSwitcherDropdown" class="lang-dropdown" hidden>
-            <button type="button" class="lang-opt" data-lang="ru">RU</button>
-            <button type="button" class="lang-opt" data-lang="en">EN</button>
-            <button type="button" class="lang-opt" data-lang="de">DE</button>
-            <button type="button" class="lang-opt" data-lang="fr">FR</button>
+      <!-- Шапка: язык слева, профиль справа — две одинаковые ячейки, кнопки 44×44 по центру -->
+      <div id="homeTopBar">
+        <div class="home-topbar-slot">
+          <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
+            <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
+              <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
+              <span id="langSwitcherCurrent">RU</span>
+            </button>
+            <div id="langSwitcherDropdown" class="lang-dropdown" hidden>
+              <button type="button" class="lang-opt" data-lang="ru">RU</button>
+              <button type="button" class="lang-opt" data-lang="en">EN</button>
+              <button type="button" class="lang-opt" data-lang="de">DE</button>
+              <button type="button" class="lang-opt" data-lang="fr">FR</button>
+            </div>
           </div>
         </div>
-        <button id="profileIconBtn" onclick="goToProfileFrom('homePage')" aria-label="Профиль" title="Профиль">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="8" r="4" fill="#d4af37" opacity="0.9"/>
-            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#d4af37" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
-          </svg>
-        </button>
+        <div class="home-topbar-slot">
+          <button id="profileIconBtn" onclick="goToProfileFrom('homePage')" aria-label="Профиль" title="Профиль">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="8" r="4" fill="#d4af37" opacity="0.9"/>
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#d4af37" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Лого и приветствие — по центру -->

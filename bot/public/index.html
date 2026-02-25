@@ -137,7 +137,7 @@
     .content-wrapper { max-width: min(600px,100%); margin: 0 auto; padding: var(--spacing-lg); width: 100%; }
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; color: var(--tg-theme-text-color, #fff); font-size: var(--fluid-sm); margin-bottom: 8px; font-weight: 500; }
-    input::placeholder, textarea::placeholder { color: var(--tg-theme-hint-color, rgba(255,255,255,.45)); opacity: .85; }
+    input::placeholder, textarea::placeholder { color: var(--tg-theme-hint-color, rgba(255,255,255,.55)); opacity: 1; }
     .form-group input, .form-group select, .form-group textarea {
       width: 100%; padding: 12px 16px; background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.05));
       border: 1px solid var(--tg-theme-border-color, rgba(255, 255, 255, 0.1)); border-radius: 8px;
@@ -199,7 +199,8 @@
       box-shadow: 0 3px 14px rgba(212,175,55,0.2);
     }
     .mode-icon { display: none; }
-    .mode-label { font-weight: 700; font-size: 0.8rem; line-height: 1.25; }
+    /* Не менее 16px — иначе iOS при тапе по кнопке делает автозум страницы */
+    .mode-label { font-weight: 700; font-size: 1rem; line-height: 1.25; }
     .mode-desc { display: none; }
     /* Аккордеон второго человека */
     #secondPersonAccordion .pfa-header { background: rgba(212,175,55,0.06); border: 1px solid rgba(212,175,55,0.18); }
@@ -450,16 +451,17 @@
     .quick-cat{display:none}
     /* Новый блок ввода запроса */
     .request-input-box{border:1px solid rgba(255,255,255,0.1);border-radius:14px;overflow:visible;background:rgba(255,255,255,0.04);position:relative;}
-    .request-textarea{width:100%;background:transparent;border:none;border-radius:14px 14px 0 0;padding:14px 14px 10px;resize:none;min-height:90px;font-size:16px;color:inherit;font-family:inherit;box-sizing:border-box;outline:none;}
+    .request-textarea{width:100%;background:transparent;border:none;border-radius:14px 14px 0 0;padding:14px 14px 10px;resize:none;min-height:90px;font-size:16px;color:#fff;font-family:inherit;box-sizing:border-box;outline:none;}
+    .request-textarea::placeholder{color:rgba(255,255,255,0.55);opacity:1;}
     .request-textarea:focus{outline:none;box-shadow:none;border:none;}
     .request-quick-bar{border-top:1px solid rgba(255,255,255,0.07);position:relative;}
     .request-quick-toggle{width:100%;background:none;border:none;color:rgba(212,175,55,0.55);font-size:0.72rem;font-weight:600;font-family:inherit;padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:0.03em;transition:color .2s;min-height:unset;box-shadow:none;animation:none;margin:0;border-radius:0 0 14px 14px;justify-content:space-between;}
     /* Soul Chat page */
-    .sc-msg-user{display:flex;justify-content:flex-end;margin-bottom:10px;padding:0 4px;}
-    .sc-msg-soul{display:flex;justify-content:flex-start;margin-bottom:10px;padding:0 4px;}
-    .sc-bubble-user{max-width:80%;padding:11px 15px;border-radius:18px 18px 4px 18px;background:rgba(212,175,55,0.16);border:1px solid rgba(212,175,55,0.3);font-size:0.9rem;line-height:1.65;color:#fff;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word}
-    .sc-bubble-soul{max-width:88%;padding:12px 16px;border-radius:18px 18px 18px 4px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.14);font-size:0.9rem;line-height:1.65;color:#fff;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word}
-    .sc-send-bar{border-top:1px solid rgba(255,255,255,0.07);padding:8px 10px;display:flex;justify-content:flex-end;align-items:center;gap:8px;}
+    .sc-msg-user{display:flex;justify-content:flex-end;margin-bottom:12px;padding:0 4px;}
+    .sc-msg-soul{display:flex;justify-content:flex-start;margin-bottom:12px;padding:0 4px;}
+    .sc-bubble-user{max-width:80%;padding:12px 16px;border-radius:18px 18px 4px 18px;background:rgba(212,175,55,0.14);border:1px solid rgba(212,175,55,0.28);font-size:0.9rem;line-height:1.6;color:#fff;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word}
+    .sc-bubble-soul{max-width:88%;padding:14px 18px;border-radius:18px 18px 18px 4px;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(236,72,153,0.04));border:1px solid rgba(255,255,255,0.12);border-left:3px solid rgba(212,175,55,0.4);font-size:0.92rem;line-height:1.72;color:rgba(255,255,255,0.95);white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+    .sc-send-bar{border-top:1px solid rgba(255,255,255,0.06);padding:10px 12px;display:flex;justify-content:flex-end;align-items:center;gap:8px;}
     .sc-char-hint{font-size:0.7rem;color:rgba(255,255,255,0.25);flex:1;}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(0.88);}}
     @keyframes sc-spin{to{transform:rotate(360deg);}}
@@ -526,7 +528,13 @@
     #homeHero .home-tagline{font-size:0.72rem;font-weight:400;letter-spacing:0.14em;color:rgba(212,175,55,0.45);margin-top:var(--spacing-md);text-transform:uppercase}
     #homeHero .home-greeting{font-size:0.95rem;color:rgba(255,255,255,0.6);line-height:1.6;max-width:240px;margin:var(--spacing-lg) auto var(--spacing-xl);letter-spacing:0.01em}
     #homeHero #startBtn{margin-top:0;width:auto;max-width:280px;padding:14px 36px;font-weight:600;letter-spacing:0.02em;border-radius:50px;align-self:center}
-    #homeTopBar .lang-switcher-compact{position:relative;display:flex;align-items:center;align-self:center;height:36px}
+    /* Шапка главной: строгая симметрия кнопок сверху до низу */
+    #homeTopBar{display:flex;flex-direction:row;align-items:stretch;justify-content:space-between;padding:max(10px,env(safe-area-inset-top)) 20px 10px;min-height:56px;gap:0;box-sizing:border-box}
+    #homeTopBar .home-topbar-slot{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center}
+    #homeTopBar .home-topbar-slot:first-child{justify-content:center}
+    #homeTopBar .home-topbar-slot:last-child{justify-content:center}
+    #homeTopBar .lang-switcher-compact{position:relative;display:flex;align-items:center;justify-content:center;width:44px;height:44px;flex-shrink:0}
+    #homeTopBar .lang-switcher-btn,#homeTopBar #profileIconBtn{width:44px !important;height:44px !important;min-width:44px !important;min-height:44px !important;margin:0 !important;padding:0 !important;box-sizing:border-box !important;display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0}
     .lang-switcher-compact{position:relative}
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* ── СТОРИС-ОНБОРДИНГ ── */
@@ -711,11 +719,11 @@
     .profile-plan-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.28);border-radius:20px;padding:4px 12px;font-size:0.75rem;font-weight:600;color:rgba(212,175,55,0.85);letter-spacing:0.04em;text-transform:uppercase}
     .profile-balance-card{background:linear-gradient(135deg,rgba(212,175,55,0.07),rgba(236,72,153,0.04));border:1px solid rgba(212,175,55,0.2);border-radius:18px;padding:18px 20px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
     .profile-balance-left{}
-    .profile-balance-label{font-size:0.78rem;color:rgba(255,255,255,0.5);margin-bottom:4px;letter-spacing:0.02em}
+    .profile-balance-label{font-size:0.8rem;color:rgba(255,255,255,0.55);margin-bottom:4px;letter-spacing:0.02em}
     .profile-balance-value{font-size:2.2rem;font-weight:800;color:#d4af37;line-height:1}
-    .profile-balance-hint{font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:6px;line-height:1.4}
+    .profile-balance-hint{font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:6px;line-height:1.45}
     .profile-balance-icon{font-size:1.8rem;color:rgba(212,175,55,0.3);line-height:1;font-family:Georgia,serif;font-style:italic}
-    .profile-section-title{font-size:0.68rem;font-weight:700;letter-spacing:0.14em;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+    .profile-section-title{font-size:0.72rem;font-weight:700;letter-spacing:0.12em;color:rgba(255,255,255,0.35);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px}
     .profile-section-title::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.06)}
     /* Сетка планов */
     .profile-plans-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
@@ -726,7 +734,7 @@
     .ppc-badge.hot{color:#ec4899}
     .ppc-name{font-size:1rem;font-weight:700;color:#fff;margin-bottom:8px}
     .ppc-features{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;flex:1}
-    .ppc-feature{font-size:0.75rem;color:rgba(255,255,255,0.55);line-height:1.4}
+    .ppc-feature{font-size:0.78rem;color:rgba(255,255,255,0.6);line-height:1.45}
     .ppc-price-wrap{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
     .ppc-price{font-size:0.85rem;font-weight:700;color:rgba(212,175,55,0.85)}
     .ppc-save{font-size:0.68rem;font-weight:600;color:#ec4899;background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.25);border-radius:10px;padding:2px 6px;white-space:nowrap}
@@ -807,6 +815,11 @@
       button:hover,#payBtn:hover,.example-btn:hover,.onboarding-btn:hover,.preview-nav button:hover{transform:none}
       .keys-composition .key-music:hover{transform:rotate(-10deg)}
       .keys-composition .key-door:hover{transform:rotate(8deg)}
+    }
+    /* iOS/Android: при фокусе на элементе с текстом < 16px браузер делает автозум. Фиксируем минимум 16px у всех кликабельных элементов. */
+    @media (hover:none) and (pointer:coarse){
+      button,a,input,select,textarea,[role="button"],.mode-btn,.mode-info,.form-nav-link,.home-nav-link,.lang-switcher-btn,.lang-opt,.ppc-details-btn,.ppc-btn,.request-quick-toggle,.quick-item,.quick-picker-btn,.onboarding-btn,.hca-btn,.hero-hist-toggle,.stories-close,.profile-back-btn,.preview-nav button,.example-btn,.request-help-toggle{font-size:max(1rem,16px)}
+      .mode-btn .mode-label,.request-quick-dropdown .quick-item{font-size:max(1rem,16px)}
     }
   </style>
 </head>
@@ -901,26 +914,30 @@
     <!-- Главная страница -->
     <div class="page" id="homePage">
 
-      <!-- Шапка: язык слева, профиль справа -->
-      <div id="homeTopBar" style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:max(10px,env(safe-area-inset-top)) 12px 0;min-height:48px;">
-        <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
-          <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
-            <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
-            <span id="langSwitcherCurrent">RU</span>
-          </button>
-          <div id="langSwitcherDropdown" class="lang-dropdown" hidden>
-            <button type="button" class="lang-opt" data-lang="ru">RU</button>
-            <button type="button" class="lang-opt" data-lang="en">EN</button>
-            <button type="button" class="lang-opt" data-lang="de">DE</button>
-            <button type="button" class="lang-opt" data-lang="fr">FR</button>
+      <!-- Шапка: язык слева, профиль справа — две одинаковые ячейки, кнопки 44×44 по центру -->
+      <div id="homeTopBar">
+        <div class="home-topbar-slot">
+          <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
+            <button type="button" id="langSwitcherBtn" class="lang-switcher-btn" title="Язык">
+              <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
+              <span id="langSwitcherCurrent">RU</span>
+            </button>
+            <div id="langSwitcherDropdown" class="lang-dropdown" hidden>
+              <button type="button" class="lang-opt" data-lang="ru">RU</button>
+              <button type="button" class="lang-opt" data-lang="en">EN</button>
+              <button type="button" class="lang-opt" data-lang="de">DE</button>
+              <button type="button" class="lang-opt" data-lang="fr">FR</button>
+            </div>
           </div>
         </div>
-        <button id="profileIconBtn" onclick="goToProfileFrom('homePage')" aria-label="Профиль" title="Профиль">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="8" r="4" fill="#d4af37" opacity="0.9"/>
-            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#d4af37" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
-          </svg>
-        </button>
+        <div class="home-topbar-slot">
+          <button id="profileIconBtn" onclick="goToProfileFrom('homePage')" aria-label="Профиль" title="Профиль">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="8" r="4" fill="#d4af37" opacity="0.9"/>
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#d4af37" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Лого и приветствие — по центру -->
@@ -1081,7 +1098,7 @@
         </div>
         <!-- Идентификация: аватар + имя + план -->
         <div class="profile-identity">
-          <div class="profile-avatar-wrap" id="profileAvatarWrap" title="Изменить фото">
+          <div class="profile-avatar-wrap" id="profileAvatarWrap" title="Изменить фото" role="button" aria-label="Изменить фото" tabindex="0">
             <div id="profileAvatar" class="profile-avatar">
               <span id="profileAvatarInitial">👤</span>
             </div>
@@ -1102,7 +1119,7 @@
             <div id="profileBalanceLabel" class="profile-balance-label">Бесплатных генераций</div>
             <div id="profileCreditsCount" class="profile-balance-value">—</div>
             <div id="profileBalanceHintText" class="profile-balance-hint">Приглашай друзей — получай треки в подарок</div>
-            <div id="profileRenewalDate" class="profile-balance-hint" style="display:none;color:rgba(212,175,55,0.65);margin-top:2px;"></div>
+            <div id="profileRenewalDate" class="profile-balance-hint" style="display:none;color:rgba(212,175,55,0.75);margin-top:4px;font-weight:600;"></div>
           </div>
           <div class="profile-balance-icon"><img src="assets/icons/music.png" style="width:32px;height:32px;object-fit:contain;display:block;opacity:0.85;" alt="" loading="lazy"></div>
         </div>
@@ -1118,7 +1135,7 @@
             <span id="profileDataCitySep" class="pfa-sep" style="display:none;">·</span>
             <span id="profileDataCity" class="pfa-date" style="color:rgba(255,255,255,0.35);"></span>
           </div>
-          <button type="button" id="profileEditBtn" onclick="goToPage('formPage')" style="background:none;border:none;color:rgba(212,175,55,0.65);font-size:0.78rem;font-weight:600;font-family:inherit;padding:0;cursor:pointer;min-height:unset;box-shadow:none;animation:none;white-space:nowrap;flex-shrink:0;letter-spacing:0.02em;">Изменить →</button>
+          <button type="button" id="profileEditBtn" onclick="goToPage('formPage')" style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);border-radius:10px;color:rgba(212,175,55,0.85);font-size:0.8rem;font-weight:600;font-family:inherit;padding:8px 14px;cursor:pointer;min-height:44px;box-shadow:none;animation:none;white-space:nowrap;flex-shrink:0;letter-spacing:0.02em;">Изменить →</button>
         </div>
 
         <!-- Тарифы — Suno-style -->
@@ -1159,6 +1176,7 @@
               <div class="ppc-feature"><span id="planPlusF2">✦ Soul Chat без лимита</span> <i class="ppc-info" data-tip="Soul Chat — живой разговор с твоей душой. В Plus — без ограничений по количеству сессий. Общайся когда угодно.">i</i></div>
               <div class="ppc-feature"><span id="planPlusF3">✦ Приоритет обработки</span> <i class="ppc-info" data-tip="Твои заявки идут в первую очередь — песня готова быстрее, чем у других пользователей.">i</i></div>
               <div class="ppc-feature"><span id="planPlusF4">✦ Полная история треков</span> <i class="ppc-info" data-tip="Все твои песни сохраняются с текстами, аудио и датами создания — всегда доступны в профиле.">i</i></div>
+              <div class="ppc-feature"><span id="planPlusF5">✦ Выбор стилей музыки</span> <i class="ppc-info" data-tip="Укажи желаемый жанр или стиль (поп, соул, джаз, электронная и т.д.) — песня будет создана в этом звучании.">i</i></div>
             </div>
             <div class="ppc-price-wrap">
               <div class="ppc-price">$24.99/мес</div>
@@ -1176,6 +1194,7 @@
               <div class="ppc-feature"><span id="planMasterF2">✦ Картотека людей</span> <i class="ppc-info" data-tip="Добавляй близких в Лабораторию и создавай для них песни в один тап. Данные сохраняются — вводить повторно не нужно.">i</i></div>
               <div class="ppc-feature"><span id="planMasterF3">✦ История генераций</span> <i class="ppc-info" data-tip="Полная история всех созданных песен с текстами, аудио и датами — для тебя и для каждого из твоих людей.">i</i></div>
               <div class="ppc-feature"><span id="planMasterF4">✦ Soul Chat без лимита</span> <i class="ppc-info" data-tip="Неограниченный доступ к Soul Chat — разговаривай с душой столько, сколько нужно.">i</i></div>
+              <div class="ppc-feature"><span id="planMasterF5">✦ Выбор стилей музыки</span> <i class="ppc-info" data-tip="Укажи желаемый жанр или стиль (поп, соул, джаз, электронная и т.д.) — песня будет создана в этом звучании.">i</i></div>
             </div>
             <div class="ppc-price-wrap">
               <div class="ppc-price" id="masterPriceEl">$39.99/мес</div>
@@ -1577,14 +1596,10 @@
                 <label for="transitLocation" data-icon="📍">Город для энергии момента</label>
                 <input type="text" id="transitLocation" class="location-input" placeholder="Москва, Лондон, Нью-Йорк..." maxlength="100" autocomplete="off">
                 <div id="transitLocationSuggestions" class="location-suggestions" aria-live="polite"></div>
-                <div class="checkbox-group" style="margin-top: 10px;">
-                  <input type="checkbox" id="transitLocationConfirmed">
-                  <label for="transitLocationConfirmed">Локация указана верно</label>
-                </div>
               </div>
               <div class="field">
                 <label for="transitIntent" data-icon="💭">Намерение момента (опционально)</label>
-                <textarea id="transitIntent" placeholder="Намерение момента (опционально)" rows="2" maxlength="200" style="min-height:60px"></textarea>
+                <textarea id="transitIntent" placeholder="Намерение момента" rows="2" maxlength="200" style="min-height:60px"></textarea>
               </div>
             </div>
           </div>
@@ -1618,6 +1633,11 @@
               </div>
             </div>
           </div>
+        </div>
+        <!-- Стиль музыки (для подписчиков Plus и Лаборатория) -->
+        <div class="field" style="margin-top:14px;">
+          <label for="requestPreferredStyle" id="requestPreferredStyleLabel" style="font-size:0.82rem;color:rgba(255,255,255,0.5);">Стиль музыки <span style="color:rgba(212,175,55,0.5);">(Plus и Лаборатория)</span></label>
+          <input type="text" id="requestPreferredStyle" placeholder="поп, соул, джаз, электронная…" maxlength="120" autocomplete="off" style="margin-top:6px;font-size:0.9rem;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#fff;width:100%;box-sizing:border-box;">
         </div>
 
         <p id="submitHint" style="display:none"></p>
@@ -1773,11 +1793,11 @@
       </div>
 
       <!-- ЧАТ-ЗОНА: есть доступ — история прокручивается, ввод фиксирован внизу -->
-      <!-- Миниатюрная шапка чата (только кнопка назад + таймер) -->
-      <div id="scChatHeader" style="display:none;flex-shrink:0;display:none;align-items:center;gap:8px;padding:max(10px,env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid rgba(255,255,255,0.06);">
+      <!-- Шапка чата: назад, контекст карточки (имя, дата), таймер доступа -->
+      <div id="scChatHeader" style="display:none;flex-shrink:0;align-items:center;gap:10px;padding:max(10px,env(safe-area-inset-top)) 16px 12px;border-bottom:1px solid rgba(255,255,255,0.08);background:rgba(8,7,26,0.6);">
         <button type="button" class="profile-back-btn" onclick="goBack()" aria-label="Назад" style="margin-right:auto;">←</button>
-        <button id="scCardPickerBtn" type="button" style="display:none;font-size:0.78rem;font-weight:600;color:#d4af37;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.25);border-radius:14px;padding:4px 12px;cursor:pointer;font-family:inherit;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;" onclick="scOpenCardPicker()">— ↓</button>
-        <div id="scPageTimer" style="display:none;font-size:0.72rem;color:rgba(212,175,55,0.6);background:rgba(212,175,55,0.08);padding:4px 11px;border-radius:16px;white-space:nowrap;"></div>
+        <button id="scCardPickerBtn" type="button" title="Контекст чата — сменить карточку" style="display:none;font-size:0.8rem;font-weight:600;color:#d4af37;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.28);border-radius:12px;padding:6px 14px;cursor:pointer;font-family:inherit;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;" onclick="scOpenCardPicker()">— ▾</button>
+        <div id="scPageTimer" style="display:none;font-size:0.72rem;color:rgba(212,175,55,0.65);background:rgba(212,175,55,0.1);padding:5px 12px;border-radius:14px;white-space:nowrap;"></div>
       </div>
 
       <!-- Модальное окно выбора карточек (синастрия) -->
@@ -1813,7 +1833,7 @@
       </div>
 
       <!-- Список сообщений — flex:1 + overflow-y:auto -->
-      <div id="scPageChat" style="display:none;flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
+      <div id="scPageChat" style="display:none;flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,transparent 0%,rgba(8,7,26,0.3) 100%);">
         <!-- Если нет ни заявки, ни профиля -->
         <div id="scPageNoRequest" style="display:none;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(236,72,153,0.05));border:1px solid rgba(212,175,55,0.25);border-radius:16px;padding:18px;text-align:center;">
           <div style="font-size:1.4rem;margin-bottom:8px;">🎵</div>
@@ -1839,7 +1859,7 @@
       </div>
 
       <!-- Поле ввода — прилипает к низу, вне зоны скролла -->
-      <div id="scInputArea" style="display:none;flex-shrink:0;padding:10px 14px calc(env(safe-area-inset-bottom)+10px);border-top:1px solid rgba(255,255,255,0.07);background:#08071a;">
+      <div id="scInputArea" style="display:none;flex-shrink:0;padding:12px 14px calc(env(safe-area-inset-bottom)+12px);border-top:1px solid rgba(212,175,55,0.1);background:linear-gradient(180deg,#0a091e 0%,#08071a 100%);">
         <div class="request-input-box">
           <textarea id="scPageQuestion" class="request-textarea" rows="2"
             placeholder="Задай вопрос своей душе…" aria-label="Вопрос"></textarea>
@@ -1926,7 +1946,7 @@
           birthplace2Ph: 'Место рождения второго', birthtime2Ph: 'Время рождения',
           transitTitle: 'Энергия момента', transitDatePh: 'Дата события', transitTimePh: 'Время события',
           transitLocationPh: 'Город для энергии момента', transitLocationOk: 'Локация указана верно',
-          transitIntentPh: 'Намерение момента (опционально)',
+          transitIntentPh: 'Намерение момента',
           sendRequest: 'Что будешь исследовать сегодня?', quickRequests: 'Быстрые запросы', hide: 'Скрыть',
           requestDesc: 'О чём песня? Любой запрос — от юмора до глубокой темы',
           requestQuickHint: 'Выбери готовый запрос или напиши свой',
@@ -2113,7 +2133,7 @@
           birthplace2Ph: "Second person's place of birth", birthtime2Ph: 'Time of birth',
           transitTitle: 'Energy of the moment', transitDatePh: 'Event date', transitTimePh: 'Event time',
           transitLocationPh: 'City for the moment energy', transitLocationOk: 'Location is correct',
-          transitIntentPh: 'Intention for this moment (optional)',
+          transitIntentPh: 'Intention for this moment',
           sendRequest: 'What will you explore today?', quickRequests: 'Quick requests', hide: 'Hide',
           requestDesc: 'What\'s the song about? Any request — from humor to deep themes.',
           requestQuickHint: 'Pick a ready-made request or write your own',
@@ -2299,7 +2319,7 @@
           birthplace2Ph: 'Geburtsort der zweiten Person', birthtime2Ph: 'Geburtszeit',
           transitTitle: 'Energie des Augenblicks', transitDatePh: 'Ereignisdatum', transitTimePh: 'Ereigniszeit',
           transitLocationPh: 'Stadt für die Momentenergie', transitLocationOk: 'Ort ist korrekt',
-          transitIntentPh: 'Absicht für diesen Moment (optional)',
+          transitIntentPh: 'Absicht für diesen Moment',
           sendRequest: 'Was wirst du heute erkunden?', quickRequests: 'Schnellanfragen', hide: 'Ausblenden',
           requestDesc: 'Worum geht das Lied? Jede Anfrage — von Humor bis tiefe Themen.',
           requestQuickHint: 'Wähle eine Vorlage oder schreib deine eigene',
@@ -2485,7 +2505,7 @@
           birthplace2Ph: "Lieu de naissance de la deuxième personne", birthtime2Ph: 'Heure de naissance',
           transitTitle: "Énergie du moment", transitDatePh: 'Date de l\'événement', transitTimePh: "Heure de l'événement",
           transitLocationPh: 'Ville pour l\'énergie du moment', transitLocationOk: 'Le lieu est correct',
-          transitIntentPh: 'Intention pour ce moment (optionnel)',
+          transitIntentPh: 'Intention pour ce moment',
           sendRequest: 'Que vas-tu explorer aujourd\'hui ?', quickRequests: 'Demandes rapides', hide: 'Masquer',
           requestDesc: 'De quoi parle la chanson ? Toute demande — de l\'humour aux thèmes profonds.',
           requestQuickHint: 'Choisis une demande prête ou écris la tienne',
@@ -2764,7 +2784,6 @@
         var heroFemale = document.querySelector('#heroGender option[value="female"]'); if (heroFemale) heroFemale.textContent = t('female');
         document.getElementById('birthplaceHint') && (document.getElementById('birthplaceHint').textContent = t('birthplaceHint'));
         document.getElementById('birthplace2Hint') && (document.getElementById('birthplace2Hint').textContent = t('birthplaceHint'));
-        document.querySelector('label[for="transitLocationConfirmed"]') && (document.querySelector('label[for="transitLocationConfirmed"]').textContent = t('transitLocationOk'));
         document.querySelector('label[for="unknown"]') && (document.querySelector('label[for="unknown"]').textContent = t('unknownTime'));
         document.querySelector('label[for="unknown2"]') && (document.querySelector('label[for="unknown2"]').textContent = t('unknownTimeShort'));
         var quickBtns = document.querySelectorAll('.example-btn'); var quickK = ['quick1','quick2','quick3','quick4','quick5','quick6','quick7','quick8','quick9','quick10','quick11','quick12']; var quickT = ['quick1t','quick2t','quick3t','quick4t','quick5t','quick6t','quick7t','quick8t','quick9t','quick10t','quick11t','quick12t'];
@@ -3579,6 +3598,7 @@
               planBadgeEl.style.background = pm.bg;
               planBadgeEl.style.borderColor = pm.border;
               planBadgeEl.style.color = pm.color;
+              planBadgeEl.title = (typeof t === 'function' ? t('planCurrentBadge') : 'Текущий тариф');
             }
 
             // Баланс-карточка: счётчик треков
@@ -3601,7 +3621,7 @@
 
           } else {
             // Free план
-            if (planBadgeEl) { planBadgeEl.textContent = '✦ YupSoul Free'; planBadgeEl.style.background = ''; planBadgeEl.style.borderColor = ''; planBadgeEl.style.color = ''; }
+            if (planBadgeEl) { planBadgeEl.textContent = '✦ YupSoul Free'; planBadgeEl.style.background = ''; planBadgeEl.style.borderColor = ''; planBadgeEl.style.color = ''; planBadgeEl.title = (typeof t === 'function' ? t('planCurrentBadge') : 'Текущий тариф'); }
             var credits = (refData && typeof refData.credits === 'number') ? refData.credits : 0;
             if (creditsEl) creditsEl.textContent = credits;
             if (balanceLabelEl) balanceLabelEl.textContent = 'Бесплатных генераций';
@@ -4672,7 +4692,7 @@
           transitLocationInput.addEventListener('input', function() {
             var self = this;
             clearTimeout(debounceTransit);
-            debounceTransit = setTimeout(function() { showLocationSuggestions(self, 'transitLocationSuggestions', 'transitLocationConfirmed'); }, 320);
+            debounceTransit = setTimeout(function() { showLocationSuggestions(self, 'transitLocationSuggestions', null); }, 320);
           });
         }
         var formPage = document.getElementById('formPage');
@@ -4748,7 +4768,7 @@
           if (scHeader)   scHeader.style.display   = 'none';
           if (scChatHdr)  { scChatHdr.style.display = 'flex'; }
           if (promoArea)  promoArea.style.display   = 'none';
-          if (chatEl)     { chatEl.style.display = 'flex'; }
+          if (chatEl)     { chatEl.style.display = 'flex'; chatEl.scrollTop = 0; }
           if (inputArea)  inputArea.style.display   = '';
         }
 
@@ -4946,11 +4966,11 @@
         if (cardA && cardB) {
           var nameA = cardA.name || '?';
           var nameB = cardB.name || '?';
-          btn.textContent = nameA + ' ↔ ' + nameB + ' ↓';
+          btn.textContent = nameA + ' ↔ ' + nameB + ' ▾';
         } else if (cardA) {
-          btn.textContent = scCardLabel(cardA) + ' ↓';
+          btn.textContent = scCardLabel(cardA) + ' ▾';
         } else {
-          btn.textContent = 'Выбрать карточку ↓';
+          btn.textContent = 'Выбрать карточку ▾';
         }
       }
 
@@ -5215,28 +5235,34 @@
         // Всегда проверяем кнопку оплаты при переходах между страницами
         ensurePayButtonText();
         
-        document.querySelectorAll('.page').forEach(function(page) {
-          page.classList.remove('active');
-          page.removeAttribute('role');
-        });
-        // На всякий случай скрываем онбординг если он остался видимым
-        var obp = document.getElementById('onboardingPage');
-        if (obp && obp.style.display !== 'none') obp.style.display = 'none';
-        
         var target = document.getElementById(pageId);
-        
         if (!target) {
           console.warn('[goToPage] Страница не найдена:', pageId, '— переходим на homePage');
           target = document.getElementById('homePage');
           if (!target) return;
         }
+        // Сначала показываем целевую страницу — без кадра «все скрыты» (убирает прыжок при входе в Soul Chat и др.)
         target.classList.add('active');
         target.setAttribute('role', 'main');
-        // Иконка профиля — всегда видима внутри #homeTopBar (не нужно управлять)
-        // Сброс скролла у всех .page-scroll при переходе
+        document.querySelectorAll('.page').forEach(function(page) {
+          if (page !== target) {
+            page.classList.remove('active');
+            page.removeAttribute('role');
+          }
+        });
+        // На всякий случай скрываем онбординг если он остался видимым
+        var obp = document.getElementById('onboardingPage');
+        if (obp && obp.style.display !== 'none') obp.style.display = 'none';
+        // Сброс скролла у .page-scroll целевой страницы (после отрисовки, чтобы не дергало)
         try {
           var scrollArea = document.querySelector('#' + pageId + ' .page-scroll');
-          if (scrollArea) scrollArea.scrollTop = 0;
+          if (scrollArea) {
+            scrollArea.scrollTop = 0;
+          }
+          if (pageId === 'soulChatPage') {
+            var scChat = document.getElementById('scPageChat');
+            if (scChat) scChat.scrollTop = 0;
+          }
         } catch(e) {}
         if (pageId === 'formPage' && userTariff === 'master') loadForWhoSelect();
         if (pageId === 'formPage') loadSavedProfileForForm();
@@ -5789,6 +5815,10 @@
         if (activePromo && activePromo.code) {
           payload.promo_code = activePromo.code;
         }
+        var preferredStyleEl = document.getElementById('requestPreferredStyle');
+        if (preferredStyleEl && preferredStyleEl.value.trim()) {
+          payload.preferred_style = preferredStyleEl.value.trim();
+        }
         var birthplaceField = document.getElementById('birthplace');
         if (birthplaceField && birthplaceField.getAttribute('data-lat') && birthplaceField.getAttribute('data-lon')) {
           payload.person1.birthplaceLat = parseFloat(birthplaceField.getAttribute('data-lat'));
@@ -5825,7 +5855,6 @@
           var transitIntent = (document.getElementById('transitIntent') && document.getElementById('transitIntent').value) ? document.getElementById('transitIntent').value.trim() : null;
           if (!transitDate) { alert(t('alertTransitDate')); return; }
           if (!transitLocation) { alert(t('alertTransitLocation')); return; }
-          if (!(document.getElementById('transitLocationConfirmed') && document.getElementById('transitLocationConfirmed').checked)) { alert(t('alertTransitConfirm')); return; }
           payload.transit = { date: transitDate, time: transitTime || null, location: transitLocation, intent: transitIntent || null };
         }
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
@@ -6525,6 +6554,7 @@
         if (!wrap || !input) return;
 
         wrap.addEventListener('click', function() { input.click(); });
+        wrap.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
 
         input.addEventListener('change', function() {
           var file = input.files && input.files[0];
