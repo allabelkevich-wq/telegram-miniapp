@@ -996,15 +996,22 @@ async function getRequestsForAdmin(limit = 30) {
 
 // Отправляет пользователю сообщение с кнопками "Оплатить" / "Отменить" когда заявка не оплачена.
 async function sendPendingPaymentBotMessage(telegramUserId, requestId) {
-  // Защита от гонок: проверяем, что заявка всё ещё ожидает оплаты
+  // Не слать «Оплатить» для уже оплаченных или применённых по промокоду заявок
   if (supabase && requestId) {
     const { data: reqCheck } = await supabase
       .from("track_requests")
-      .select("generation_status, payment_status")
+      .select("generation_status, payment_status, payment_provider")
       .eq("id", requestId)
       .maybeSingle();
-    if (reqCheck && reqCheck.generation_status !== "pending_payment") {
+    if (!reqCheck) return;
+    if (reqCheck.generation_status !== "pending_payment") {
       console.log(`[PendingPayment] Пропуск — заявка уже в статусе: ${reqCheck.generation_status}`);
+      return;
+    }
+    const status = (reqCheck.payment_status || "").toLowerCase();
+    const provider = (reqCheck.payment_provider || "").toLowerCase();
+    if (status === "paid" || provider === "promo" || status === "promo_applied") {
+      console.log(`[PendingPayment] Пропуск — заявка уже оплачена/промо (${status}, ${provider})`);
       return;
     }
   }
@@ -1557,7 +1564,34 @@ bot.on("message:web_app_data", async (ctx) => {
 
   console.log("[Заявка] Сохранена успешно, ID:", requestId, { name, birthdate, birthplace, gender, language, request: (userRequest || "").slice(0, 50), hasCoords: !!(birthplaceLat && birthplaceLon) });
 
-  const access = await resolveAccessForRequest({ telegramUserId, mode: "single" });
+  const requestMode = payload.mode === "couple" || payload.mode === "transit" ? payload.mode : "single";
+  const promoCodeRaw = String(payload.promo_code || payload.promoCode || "").trim().toUpperCase();
+  let promoGrantsAccess = false;
+  let promoData = null;
+  if (promoCodeRaw && supabase) {
+    const sku = requestMode === "couple" ? "couple_song" : (requestMode === "transit" ? "transit_energy_song" : "single_song");
+    const checked = await validatePromoForOrder({ promoCode: promoCodeRaw, sku, telegramUserId });
+    if (checked.ok && checked.promo) {
+      const skuPrice = await getSkuPrice(sku);
+      const baseAmount = skuPrice ? Number(skuPrice.price) : 0;
+      const applied = applyPromoToAmount(baseAmount, checked.promo);
+      if (applied.finalAmount === 0) {
+        console.log("[Заявка] Промокод", promoCodeRaw, "тип:", checked.promo.type, "— даёт бесплатный доступ");
+        promoGrantsAccess = true;
+        promoData = { code: promoCodeRaw, id: checked.promo.id, discount: applied.discountAmount, finalAmount: 0, used_count: checked.promo.used_count };
+      }
+    } else if (promoCodeRaw) {
+      console.log("[Заявка] Промокод", promoCodeRaw, "отклонён:", checked?.reason);
+    }
+  }
+
+  const access = await resolveAccessForRequest({ telegramUserId, mode: requestMode });
+  if (promoGrantsAccess && promoData) {
+    access.allowed = true;
+    access.source = "promo_free";
+    access.sku = requestMode === "couple" ? "couple_song" : (requestMode === "transit" ? "transit_energy_song" : "single_song");
+    console.log("[Заявка] Промокод", promoData.code, "активирован — доступ разрешён");
+  }
   if (!access.allowed) {
     const skuPrice = await getSkuPrice(access.sku);
     await supabase?.from("track_requests").update({
@@ -1594,11 +1628,25 @@ bot.on("message:web_app_data", async (ctx) => {
       }
     }
   }
-  await supabase?.from("track_requests").update({
-    payment_provider: access.source === "trial" ? "gift" : (access.source === "subscription" ? "subscription" : "hot"),
-    payment_status: access.source === "trial" ? "gift_used" : (access.source === "subscription" ? "subscription_active" : "paid"),
+  const updatePayload = {
+    payment_provider: access.source === "trial" ? "gift" : (access.source === "subscription" ? "subscription" : (access.source === "promo_free" ? "promo" : "hot")),
+    payment_status: access.source === "trial" ? "gift_used" : (access.source === "subscription" ? "subscription_active" : (access.source === "promo_free" ? "paid" : "paid")),
     updated_at: new Date().toISOString(),
-  }).eq("id", requestId);
+  };
+  if (access.source === "promo_free" && promoData) {
+    updatePayload.promo_code = promoData.code;
+    updatePayload.payment_amount = 0;
+    updatePayload.payment_currency = "USDT";
+  }
+  await supabase?.from("track_requests").update(updatePayload).eq("id", requestId);
+  if (access.source === "promo_free" && promoData && supabase) {
+    await supabase.from("promo_redemptions").insert({
+      promo_code_id: promoData.id,
+      telegram_user_id: Number(telegramUserId),
+      request_id: requestId,
+    }).catch((e) => console.warn("[Заявка] promo_redemptions insert:", e?.message));
+    await supabase.from("promo_codes").update({ used_count: (promoData.used_count || 0) + 1, updated_at: new Date().toISOString() }).eq("id", promoData.id).catch((e) => console.warn("[Заявка] promo_codes update:", e?.message));
+  }
 
   if (supabase && birthdate && birthplace) {
     console.log(`[API] ЗАПУСКАЮ ВОРКЕР для ${requestId}`);
@@ -4933,8 +4981,10 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
       generation_status: "pending_payment",
       updated_at: new Date().toISOString(),
     }).eq("id", requestId);
-    // Отправляем пользователю сообщение с кнопками «Оплатить» / «Отменить»
-    await sendPendingPaymentBotMessage(telegramUserId, requestId);
+    // Отложенная отправка «Оплатить сейчас»: если пользователь применит промо в overlay в течение 60 с — сообщение не уйдёт
+    setTimeout(() => {
+      sendPendingPaymentBotMessage(telegramUserId, requestId).catch((e) => console.warn("[PendingPayment] delayed send:", e?.message));
+    }, 60 * 1000);
     return res.status(402).json({
       ok: false,
       payment_required: true,
@@ -4959,10 +5009,12 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
           payment_status: "requires_payment",
           payment_amount: skuPrice ? Number(skuPrice.price) : null,
           payment_currency: skuPrice?.currency || "USDT",
-          generation_status: "pending_payment",
-          updated_at: new Date().toISOString(),
-        }).eq("id", requestId);
-        await sendPendingPaymentBotMessage(telegramUserId, requestId);
+        generation_status: "pending_payment",
+        updated_at: new Date().toISOString(),
+    }).eq("id", requestId);
+        setTimeout(() => {
+          sendPendingPaymentBotMessage(telegramUserId, requestId).catch((e) => console.warn("[PendingPayment] delayed send:", e?.message));
+        }, 60 * 1000);
         return res.status(402).json({
           ok: false,
           payment_required: true,

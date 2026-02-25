@@ -1583,14 +1583,10 @@
                 <label for="transitLocation" data-icon="📍">Город для энергии момента</label>
                 <input type="text" id="transitLocation" class="location-input" placeholder="Москва, Лондон, Нью-Йорк..." maxlength="100" autocomplete="off">
                 <div id="transitLocationSuggestions" class="location-suggestions" aria-live="polite"></div>
-                <div class="checkbox-group" style="margin-top: 10px;">
-                  <input type="checkbox" id="transitLocationConfirmed">
-                  <label for="transitLocationConfirmed">Локация указана верно</label>
-                </div>
               </div>
               <div class="field">
                 <label for="transitIntent" data-icon="💭">Намерение момента (опционально)</label>
-                <textarea id="transitIntent" placeholder="Намерение момента (опционально)" rows="2" maxlength="200" style="min-height:60px"></textarea>
+                <textarea id="transitIntent" placeholder="Намерение момента" rows="2" maxlength="200" style="min-height:60px"></textarea>
               </div>
             </div>
           </div>
@@ -1932,7 +1928,7 @@
           birthplace2Ph: 'Место рождения второго', birthtime2Ph: 'Время рождения',
           transitTitle: 'Энергия момента', transitDatePh: 'Дата события', transitTimePh: 'Время события',
           transitLocationPh: 'Город для энергии момента', transitLocationOk: 'Локация указана верно',
-          transitIntentPh: 'Намерение момента (опционально)',
+          transitIntentPh: 'Намерение момента',
           sendRequest: 'Что будешь исследовать сегодня?', quickRequests: 'Быстрые запросы', hide: 'Скрыть',
           requestDesc: 'О чём песня? Любой запрос — от юмора до глубокой темы',
           requestQuickHint: 'Выбери готовый запрос или напиши свой',
@@ -2119,7 +2115,7 @@
           birthplace2Ph: "Second person's place of birth", birthtime2Ph: 'Time of birth',
           transitTitle: 'Energy of the moment', transitDatePh: 'Event date', transitTimePh: 'Event time',
           transitLocationPh: 'City for the moment energy', transitLocationOk: 'Location is correct',
-          transitIntentPh: 'Intention for this moment (optional)',
+          transitIntentPh: 'Intention for this moment',
           sendRequest: 'What will you explore today?', quickRequests: 'Quick requests', hide: 'Hide',
           requestDesc: 'What\'s the song about? Any request — from humor to deep themes.',
           requestQuickHint: 'Pick a ready-made request or write your own',
@@ -2305,7 +2301,7 @@
           birthplace2Ph: 'Geburtsort der zweiten Person', birthtime2Ph: 'Geburtszeit',
           transitTitle: 'Energie des Augenblicks', transitDatePh: 'Ereignisdatum', transitTimePh: 'Ereigniszeit',
           transitLocationPh: 'Stadt für die Momentenergie', transitLocationOk: 'Ort ist korrekt',
-          transitIntentPh: 'Absicht für diesen Moment (optional)',
+          transitIntentPh: 'Absicht für diesen Moment',
           sendRequest: 'Was wirst du heute erkunden?', quickRequests: 'Schnellanfragen', hide: 'Ausblenden',
           requestDesc: 'Worum geht das Lied? Jede Anfrage — von Humor bis tiefe Themen.',
           requestQuickHint: 'Wähle eine Vorlage oder schreib deine eigene',
@@ -2491,7 +2487,7 @@
           birthplace2Ph: "Lieu de naissance de la deuxième personne", birthtime2Ph: 'Heure de naissance',
           transitTitle: "Énergie du moment", transitDatePh: 'Date de l\'événement', transitTimePh: "Heure de l'événement",
           transitLocationPh: 'Ville pour l\'énergie du moment', transitLocationOk: 'Le lieu est correct',
-          transitIntentPh: 'Intention pour ce moment (optionnel)',
+          transitIntentPh: 'Intention pour ce moment',
           sendRequest: 'Que vas-tu explorer aujourd\'hui ?', quickRequests: 'Demandes rapides', hide: 'Masquer',
           requestDesc: 'De quoi parle la chanson ? Toute demande — de l\'humour aux thèmes profonds.',
           requestQuickHint: 'Choisis une demande prête ou écris la tienne',
@@ -2770,7 +2766,6 @@
         var heroFemale = document.querySelector('#heroGender option[value="female"]'); if (heroFemale) heroFemale.textContent = t('female');
         document.getElementById('birthplaceHint') && (document.getElementById('birthplaceHint').textContent = t('birthplaceHint'));
         document.getElementById('birthplace2Hint') && (document.getElementById('birthplace2Hint').textContent = t('birthplaceHint'));
-        document.querySelector('label[for="transitLocationConfirmed"]') && (document.querySelector('label[for="transitLocationConfirmed"]').textContent = t('transitLocationOk'));
         document.querySelector('label[for="unknown"]') && (document.querySelector('label[for="unknown"]').textContent = t('unknownTime'));
         document.querySelector('label[for="unknown2"]') && (document.querySelector('label[for="unknown2"]').textContent = t('unknownTimeShort'));
         var quickBtns = document.querySelectorAll('.example-btn'); var quickK = ['quick1','quick2','quick3','quick4','quick5','quick6','quick7','quick8','quick9','quick10','quick11','quick12']; var quickT = ['quick1t','quick2t','quick3t','quick4t','quick5t','quick6t','quick7t','quick8t','quick9t','quick10t','quick11t','quick12t'];
@@ -4678,7 +4673,7 @@
           transitLocationInput.addEventListener('input', function() {
             var self = this;
             clearTimeout(debounceTransit);
-            debounceTransit = setTimeout(function() { showLocationSuggestions(self, 'transitLocationSuggestions', 'transitLocationConfirmed'); }, 320);
+            debounceTransit = setTimeout(function() { showLocationSuggestions(self, 'transitLocationSuggestions', null); }, 320);
           });
         }
         var formPage = document.getElementById('formPage');
@@ -5831,7 +5826,6 @@
           var transitIntent = (document.getElementById('transitIntent') && document.getElementById('transitIntent').value) ? document.getElementById('transitIntent').value.trim() : null;
           if (!transitDate) { alert(t('alertTransitDate')); return; }
           if (!transitLocation) { alert(t('alertTransitLocation')); return; }
-          if (!(document.getElementById('transitLocationConfirmed') && document.getElementById('transitLocationConfirmed').checked)) { alert(t('alertTransitConfirm')); return; }
           payload.transit = { date: transitDate, time: transitTime || null, location: transitLocation, intent: transitIntent || null };
         }
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
