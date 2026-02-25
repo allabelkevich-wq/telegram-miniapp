@@ -1385,6 +1385,7 @@ ${extBlock ? "\n" + extBlock : ""}
               inline_keyboard: [
                 [{ text: "📜 Расшифровка запроса", callback_data: "get_analysis" }],
                 [{ text: "🎵 Текст песни", callback_data: "get_lyrics" }],
+                [{ text: "🔔 Песня не пришла?", callback_data: "song_not_arrived" }],
               ],
             },
           })

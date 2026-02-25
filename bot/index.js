@@ -1439,14 +1439,13 @@ bot.command("start", async (ctx) => {
     ? bMsg(ctx, 'startReturning', name)
     : bMsg(ctx, 'startNew', name);
 
-  const startKeyboard = isReturning
-    ? {
-        inline_keyboard: [
-          [{ text: bMsg(ctx, 'btnOpenApp'), web_app: { url: MINI_APP_STABLE_URL } }],
-          [{ text: "🔔 Песня не пришла?", callback_data: "song_not_arrived" }],
-        ],
-      }
-    : { inline_keyboard: [[{ text: bMsg(ctx, 'btnOpenApp'), web_app: { url: MINI_APP_STABLE_URL } }]] };
+  // Всегда две кнопки: открыть приложение и «Песня не пришла» — чтобы все команды были под рукой
+  const startKeyboard = {
+    inline_keyboard: [
+      [{ text: bMsg(ctx, 'btnOpenApp'), web_app: { url: MINI_APP_STABLE_URL } }],
+      [{ text: bMsg(ctx, 'btnSongNotArrived'), callback_data: "song_not_arrived" }],
+    ],
+  };
 
   try {
     await ctx.reply(startText, {
@@ -1915,6 +1914,7 @@ const BOT_MSGS = {
     startNew: (name) => `${name}, привет.\n\nУ каждого человека есть своя музыка — та, что написана по его дате рождения.\n\nYupSoul создаёт её. Первая песня — в подарок.\n\nНажми кнопку ниже, чтобы начать ↓`,
     startReturning: (name) => `${name}, ты вернулся — хорошо.\n\nПесня уже ждёт тебя здесь, в этом чате. Если ещё не пришла — напиши «песня не пришла».\n\nГотов создать ещё одну?`,
     btnOpenApp: "🎵 Создать свою песню",
+    btnSongNotArrived: "🔔 Песня не пришла?",
     requestReceived: "⏳ Получил заявку, сохраняю…",
     requestSaved: (name) => `✅ Заявка принята, ${name}! Песня генерируется — придёт прямо сюда в чат, когда будет готова.`,
     requestError: "Произошла ошибка. Попробуй ещё раз или напиши в поддержку.",
@@ -1931,6 +1931,7 @@ const BOT_MSGS = {
     startNew: (name) => `${name}, привіт.\n\nУ кожної людини є своя музика — та, що написана за датою народження.\n\nYupSoul створює її. Перша пісня — в подарунок.\n\nНатисни кнопку нижче, щоб почати ↓`,
     startReturning: (name) => `${name}, ти повернувся — добре.\n\nПісня вже чекає тебе тут, у цьому чаті. Якщо ще не прийшла — зачекай кілька хвилин.\n\nГотовий створити ще одну?`,
     btnOpenApp: "🎵 Створити свою пісню",
+    btnSongNotArrived: "🔔 Пісня не прийшла?",
     requestReceived: "⏳ Отримав заявку, зберігаю…",
     requestSaved: (name) => `✅ Заявку прийнято, ${name}! Пісня буде готова за кілька хвилин — надійде прямо сюди в чат.`,
     requestError: "Сталася помилка. Спробуй ще раз або напиши у підтримку.",
@@ -1947,6 +1948,7 @@ const BOT_MSGS = {
     startNew: (name) => `${name}, hi.\n\nEvery person has their own music — written from their date of birth.\n\nYupSoul creates it. Your first song is a gift.\n\nTap the button below to start ↓`,
     startReturning: (name) => `${name}, welcome back.\n\nYour song is waiting here in this chat. If it hasn't arrived yet — wait a few minutes.\n\nReady to create another one?`,
     btnOpenApp: "🎵 Create my song",
+    btnSongNotArrived: "🔔 Song didn't arrive?",
     requestReceived: "⏳ Got your request, saving…",
     requestSaved: (name) => `✅ Request accepted, ${name}! Your song is being created — it will arrive right here in chat when ready.`,
     requestError: "An error occurred. Please try again or contact support.",
@@ -1963,6 +1965,7 @@ const BOT_MSGS = {
     startNew: (name) => `${name}, hallo.\n\nJeder Mensch hat seine eigene Musik — geschrieben nach seinem Geburtsdatum.\n\nYupSoul erschafft sie. Das erste Lied ist ein Geschenk.\n\nTippe auf den Button unten, um zu beginnen ↓`,
     startReturning: (name) => `${name}, willkommen zurück.\n\nDein Lied wartet bereits hier in diesem Chat. Falls es noch nicht angekommen ist — warte noch ein paar Minuten.\n\nBereit, ein weiteres zu erstellen?`,
     btnOpenApp: "🎵 Mein Lied erstellen",
+    btnSongNotArrived: "🔔 Lied nicht angekommen?",
     requestReceived: "⏳ Anfrage erhalten, speichere…",
     requestSaved: (name) => `✅ Anfrage angenommen, ${name}! Dein Lied wird in wenigen Minuten fertig sein — es kommt direkt hier in den Chat.`,
     requestError: "Ein Fehler ist aufgetreten. Versuche es erneut oder kontaktiere den Support.",
@@ -1979,6 +1982,7 @@ const BOT_MSGS = {
     startNew: (name) => `${name}, bonjour.\n\nChaque personne a sa propre musique — écrite selon sa date de naissance.\n\nYupSoul la crée. La première chanson est un cadeau.\n\nAppuie sur le bouton ci-dessous pour commencer ↓`,
     startReturning: (name) => `${name}, content de te revoir.\n\nTa chanson t'attend ici dans ce chat. Si elle n'est pas encore arrivée — attends quelques minutes.\n\nPrêt à en créer une autre ?`,
     btnOpenApp: "🎵 Créer ma chanson",
+    btnSongNotArrived: "🔔 Chanson pas arrivée?",
     requestReceived: "⏳ Demande reçue, enregistrement…",
     requestSaved: (name) => `✅ Demande acceptée, ${name} ! Ta chanson est en cours de création — elle arrivera directement ici dans le chat quand elle sera prête.`,
     requestError: "Une erreur s'est produite. Réessaie ou contacte le support.",
@@ -2111,6 +2115,8 @@ async function handleSongNotArrived(ctx) {
     await ctx.reply(bMsg(ctx, 'resendErr'));
   }
 }
+
+bot.command("resend", handleSongNotArrived);
 
 bot.hears(/^(песня не пришла|не пришла песня|не получил песню|не получила песню|повторно отправь|отправь снова|пісня не прийшла|не прийшла пісня|не отримав пісню|не отримала пісню|надішли ще раз|song not arrived|song didn.t arrive|resend song|send again|lied nicht angekommen|lied kam nicht an|sende nochmal|erneut senden|chanson pas arrivée|chanson n.est pas arrivée|renvoyer la chanson|renvoie la chanson)$/i, handleSongNotArrived);
 
@@ -2306,8 +2312,8 @@ bot.on("message:text", async (ctx, next) => {
   const text = (ctx.message?.text || "").trim();
   if (!text.startsWith("/")) return next();
   const cmd = text.split(/\s/)[0].toLowerCase();
-  if (["/start", "/ping", "/get_analysis", "/admin", "/admin_check", "/astro", "/full_analysis", "/soulchat"].includes(cmd)) return next();
-  await ctx.reply("Неизвестная команда. Доступны: /start, /ping, /get_analysis, /soulchat <id>. Админам: /admin, /admin_check, /astro <id>, /full_analysis <id>.");
+  if (["/start", "/ping", "/get_analysis", "/resend", "/admin", "/admin_check", "/astro", "/full_analysis", "/soulchat"].includes(cmd)) return next();
+  await ctx.reply("Неизвестная команда. Доступны: /start, /resend, /get_analysis, /soulchat. Админам: /admin, /admin_check, /astro <id>, /full_analysis <id>.");
 });
 
 // ============================================================================
@@ -2574,6 +2580,7 @@ const userCommands = [
   { command: "start",        description: "🎵 Открыть YupSoul" },
   { command: "soulchat",     description: "💬 Разговор по душам" },
   { command: "get_analysis", description: "🔮 Моя расшифровка" },
+  { command: "resend",       description: "🔔 Песня не пришла" },
 ];
 
 // Полное меню — только для каждого конкретного админа
@@ -2581,6 +2588,7 @@ const adminCommands = [
   { command: "start",        description: "🎵 Открыть YupSoul" },
   { command: "soulchat",     description: "💬 Разговор по душам" },
   { command: "get_analysis", description: "🔮 Моя расшифровка" },
+  { command: "resend",       description: "🔔 Песня не пришла" },
   { command: "admin",        description: "👑 Панель управления" },
   { command: "admin_check",  description: "👑 Проверка базы" },
   { command: "fixurl",       description: "🔧 Обновить ссылки Mini App" },
