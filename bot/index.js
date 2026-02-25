@@ -4631,7 +4631,7 @@ app.get("/api/admin/active-subscriptions", asyncApi(async (req, res) => {
   const search = String(req.query.search || "").trim();
 
   let q = supabase.from("subscriptions")
-    .select("id, telegram_user_id, plan_sku, renew_at, created_at, user_profiles(name, tg_username)")
+    .select("id, telegram_user_id, plan_sku, renew_at, created_at")
     .gt("renew_at", new Date().toISOString())
     .order("renew_at", { ascending: true })
     .limit(200);
@@ -4641,6 +4641,23 @@ app.get("/api/admin/active-subscriptions", asyncApi(async (req, res) => {
   if (error) return res.status(500).json({ success: false, error: error.message });
 
   let rows = data || [];
+  const tgIds = [...new Set((rows || []).map(r => r.telegram_user_id).filter(Boolean))];
+  let profilesByTg = {};
+  if (tgIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("user_profiles")
+      .select("telegram_id, name, tg_username")
+      .in("telegram_id", tgIds);
+    if (profiles && Array.isArray(profiles)) {
+      profiles.forEach(p => { profilesByTg[p.telegram_id] = { name: p.name, tg_username: p.tg_username }; });
+    }
+  }
+
+  rows = rows.map(r => ({
+    ...r,
+    user_profiles: profilesByTg[r.telegram_user_id] || null,
+  }));
+
   if (search) {
     const s = search.toLowerCase();
     rows = rows.filter(r =>
