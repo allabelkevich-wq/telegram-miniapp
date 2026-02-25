@@ -967,8 +967,21 @@ async function getRequestsForAdmin(limit = 30) {
 
 // Отправляет пользователю сообщение с кнопками "Оплатить" / "Отменить" когда заявка не оплачена.
 async function sendPendingPaymentBotMessage(telegramUserId, requestId) {
-  // Используем СТАБИЛЬНЫЙ URL (без timestamp) — кнопки в сообщениях живут дольше одного деплоя
-  const payUrl = MINI_APP_STABLE_URL + "&requestId=" + encodeURIComponent(requestId);
+  // Защита от гонок: проверяем, что заявка всё ещё ожидает оплаты
+  if (supabase && requestId) {
+    const { data: reqCheck } = await supabase
+      .from("track_requests")
+      .select("generation_status, payment_status")
+      .eq("id", requestId)
+      .maybeSingle();
+    if (reqCheck && reqCheck.generation_status !== "pending_payment") {
+      console.log(`[PendingPayment] Пропуск — заявка уже в статусе: ${reqCheck.generation_status}`);
+      return;
+    }
+  }
+
+  // request_id в URL (не requestId) — мини-апп читает именно этот параметр
+  const payUrl = MINI_APP_STABLE_URL + "&request_id=" + encodeURIComponent(requestId);
   const shortId = String(requestId || "").substring(0, 8);
   const trialAvailable = supabase ? await isTrialAvailable(telegramUserId, "first_song_gift") : false;
   const firstSongHint = trialAvailable
@@ -1080,15 +1093,19 @@ bot.on(":successful_payment", async (ctx) => {
         .eq("id", requestId);
     }
 
-    const grantResult = await grantPurchaseBySku({ telegramUserId: userId, sku, source: "stars_payment", orderId: telegramChargeId });
-    if (!grantResult?.ok) {
-      console.error(`[Stars] grantPurchaseBySku failed: sku=${sku}, userId=${userId}, error=${grantResult?.error}`);
-    } else {
-      console.log(`[Stars] grantPurchaseBySku ok: sku=${sku}, userId=${userId}`);
+    // Для подписок и soul_chat — grantPurchaseBySku создаёт/активирует подписку (необходимо)
+    // Для song SKU — НЕ грантим доп. entitlement: конкретная заявка обрабатывается через generateSoundKey(requestId)
+    const songSkus = ["single_song", "transit_energy_song", "couple_song", "extra_regeneration"];
+    if (!songSkus.includes(sku)) {
+      const grantResult = await grantPurchaseBySku({ telegramUserId: userId, sku, source: "stars_payment", orderId: telegramChargeId });
+      if (!grantResult?.ok) {
+        console.error(`[Stars] grantPurchaseBySku failed: sku=${sku}, userId=${userId}, error=${grantResult?.error}`);
+      } else {
+        console.log(`[Stars] grantPurchaseBySku ok: sku=${sku}, userId=${userId}`);
+      }
     }
 
     // Запускаем воркер для SKU-песен
-    const songSkus = ["single_song", "transit_energy_song", "couple_song", "extra_regeneration"];
     if (songSkus.includes(sku) && requestId) {
       try {
         const { generateSoundKey } = await import("./workerSoundKey.js");
@@ -1098,6 +1115,34 @@ bot.on(":successful_payment", async (ctx) => {
       } catch (e) {
         console.warn("[Stars] Не удалось запустить воркер:", e?.message);
       }
+      // Подтверждение пользователю после оплаты звёздами
+      const shortId = String(requestId || "").slice(0, 8);
+      bot.api.sendMessage(
+        userId,
+        `✅ *Оплата звёздами получена!*\n\nЗаявка ID: \`${shortId}\` принята в работу.\n🎵 Твой звуковой ключ создаётся — отправлю, как только будет готово!`,
+        { parse_mode: "Markdown" }
+      ).catch((e) => console.warn("[Stars] notify user paid:", e?.message));
+    } else if (sku === "soul_chat_1day") {
+      bot.api.sendMessage(
+        userId,
+        `✅ *Soul Chat активирован!*\n\n💬 24 часа общения с душой открыты.\n\nОткрой YupSoul и задавай вопросы — я здесь ✨`,
+        { parse_mode: "Markdown" }
+      ).catch((e) => console.warn("[Stars] notify soul_chat user:", e?.message));
+    } else if (["soul_basic_sub", "soul_plus_sub", "master_monthly"].includes(sku)) {
+      const subPlanInfo = PLAN_META[sku] || { name: sku, tracks: 0 };
+      const renewAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      const renewStr = renewAt.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+      bot.api.sendMessage(
+        userId,
+        `✨ *Подписка ${subPlanInfo.name} активирована!*\n\n` +
+        `Твои *${subPlanInfo.tracks} треков в месяц* ждут тебя.\n` +
+        `Подписка действует до: *${renewStr}*\n\n` +
+        `Открой YupSoul и создай свою первую песню этого месяца ↓`,
+        {
+          parse_mode: "Markdown",
+          reply_markup: { inline_keyboard: [[{ text: "🎵 Открыть YupSoul", web_app: { url: MINI_APP_STABLE_URL } }]] },
+        }
+      ).catch((e) => console.warn("[Stars] notify subscription user:", e?.message));
     }
   } catch (e) {
     console.error("[Stars] Ошибка обработки successful_payment:", e?.message);
@@ -1456,17 +1501,24 @@ bot.on("message:web_app_data", async (ctx) => {
   if (access.source === "trial") {
     const consumed = await consumeTrial(telegramUserId, "first_song_gift");
     if (!consumed.ok) {
-      const skuPrice = await getSkuPrice(access.sku);
-      await supabase?.from("track_requests").update({
-        payment_provider: "hot",
-        payment_status: "requires_payment",
-        payment_amount: skuPrice ? Number(skuPrice.price) : null,
-        payment_currency: skuPrice?.currency || "USDT",
-        generation_status: "pending_payment",
-        updated_at: new Date().toISOString(),
-      }).eq("id", requestId);
-      await sendPendingPaymentBotMessage(telegramUserId, requestId);
-      return;
+      // Трайал уже использован — перепроверяем подписку (защита от race при временной ошибке DB)
+      const hasSubNow = await hasActiveSubscription(telegramUserId);
+      if (hasSubNow) {
+        access.source = "subscription";
+        console.log("[Заявка] consumeTrial failed, но подписка активна — продолжаем как subscription");
+      } else {
+        const skuPrice = await getSkuPrice(access.sku);
+        await supabase?.from("track_requests").update({
+          payment_provider: "hot",
+          payment_status: "requires_payment",
+          payment_amount: skuPrice ? Number(skuPrice.price) : null,
+          payment_currency: skuPrice?.currency || "USDT",
+          generation_status: "pending_payment",
+          updated_at: new Date().toISOString(),
+        }).eq("id", requestId);
+        await sendPendingPaymentBotMessage(telegramUserId, requestId);
+        return;
+      }
     }
   }
   await supabase?.from("track_requests").update({
@@ -4771,24 +4823,31 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   if (access.source === "trial") {
     const consumed = await consumeTrial(telegramUserId, "first_song_gift");
     if (!consumed.ok) {
-      const skuPrice = await getSkuPrice(access.sku);
-      await supabase.from("track_requests").update({
-        payment_provider: "hot",
-        payment_status: "requires_payment",
-        payment_amount: skuPrice ? Number(skuPrice.price) : null,
-        payment_currency: skuPrice?.currency || "USDT",
-        generation_status: "pending_payment",
-        updated_at: new Date().toISOString(),
-      }).eq("id", requestId);
-      await sendPendingPaymentBotMessage(telegramUserId, requestId);
-      return res.status(402).json({
-        ok: false,
-        payment_required: true,
-        requestId,
-        sku: access.sku,
-        price: skuPrice || null,
-        message: "Подарочный продукт уже использован. Перейдите к оплате.",
-      });
+      // Трайал уже использован — перепроверяем подписку (защита от race при временной ошибке DB)
+      const hasSubNow = await hasActiveSubscription(telegramUserId);
+      if (hasSubNow) {
+        access.source = "subscription";
+        console.log("[submit-request] consumeTrial failed, но подписка активна — продолжаем как subscription");
+      } else {
+        const skuPrice = await getSkuPrice(access.sku);
+        await supabase.from("track_requests").update({
+          payment_provider: "hot",
+          payment_status: "requires_payment",
+          payment_amount: skuPrice ? Number(skuPrice.price) : null,
+          payment_currency: skuPrice?.currency || "USDT",
+          generation_status: "pending_payment",
+          updated_at: new Date().toISOString(),
+        }).eq("id", requestId);
+        await sendPendingPaymentBotMessage(telegramUserId, requestId);
+        return res.status(402).json({
+          ok: false,
+          payment_required: true,
+          requestId,
+          sku: access.sku,
+          price: skuPrice || null,
+          message: "Подарочный продукт уже использован. Перейдите к оплате.",
+        });
+      }
     }
   }
   // Обновляем статус оплаты в зависимости от источника доступа
@@ -4824,9 +4883,15 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   await supabase.from("track_requests").update(updateData).eq("id", requestId);
   const mode = body.person1 && body.mode === "couple" ? "couple" : "single";
   console.log(`[API] Заявка ${requestId} сохранена — ГЕНЕРИРУЕМ ПЕСНЮ (источник: ${access.source}, режим: ${mode})`);
-  const successText = access.source === "subscription"
-    ? "✨ Твой звуковой ключ создаётся!\n\nПесня придёт в этот чат, когда будет готова. Можешь закрыть приложение — ничего не пропадёт 🎵"
-    : "✨ Твой звуковой ключ создаётся! Первый трек — в подарок 🎁\n\nОн придёт в этот чат, когда будет готов.";
+  const successTextMap = {
+    subscription: "✨ Твой звуковой ключ создаётся!\n\nПесня придёт в этот чат, когда будет готова. Можешь закрыть приложение — ничего не пропадёт 🎵",
+    trial:        "✨ Твой звуковой ключ создаётся! Первый трек — в подарок 🎁\n\nОн придёт в этот чат, когда будет готов.",
+    promo_free:   "✨ Твой звуковой ключ создаётся! Промокод активирован 🎁\n\nПесня придёт в этот чат, когда будет готова.",
+    referral_credit: "✨ Твой звуковой ключ создаётся! Трек по реферальной программе 🎁\n\nОн придёт в этот чат, когда будет готов.",
+    entitlement:  "✨ Твой звуковой ключ создаётся!\n\nПесня придёт в этот чат, когда будет готова. Ничего не пропадёт 🎵",
+  };
+  const successText = successTextMap[access.source]
+    || "✨ Твой звуковой ключ создаётся!\n\nПесня придёт в этот чат, когда будет готова. Ничего не пропадёт 🎵";
   bot.api.sendMessage(telegramUserId, successText).catch((e) => console.warn("[submit-request] sendMessage:", e?.message));
   if (ADMIN_IDS.length) {
     const requestPreview = (userRequest || "").trim().slice(0, 150);
@@ -4863,9 +4928,7 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
   return res.status(200).json({
     ok: true,
     requestId,
-    message: access.source === "subscription"
-      ? "✨ Твой звуковой ключ создаётся!\nПесня генерируется на сервере и придёт в этот чат. Можно закрыть окно — ничего не пропадёт. Спасибо ❤️"
-      : "✨ Твой звуковой ключ создаётся! Первый трек — в подарок 🎁\nПесня генерируется на сервере и придёт в этот чат. Можно закрыть окно — ничего не пропадёт. Спасибо ❤️",
+    message: "✨ Твой звуковой ключ создаётся!\nПесня генерируется на сервере и придёт в этот чат. Можно закрыть окно — ничего не пропадёт. Спасибо ❤️",
   });
 });
 

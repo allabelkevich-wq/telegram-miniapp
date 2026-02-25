@@ -5481,6 +5481,43 @@
         goToPage('formPage');
       });
 
+      // Открытие через кнопку «Оплатить сейчас» из бота: ?request_id=X без payment=success
+      // Проверяем статус заявки и автоматически показываем нужный экран
+      if (search.indexOf('payment=success') === -1) {
+        var botRidMatch = search.match(/request_id=([^&\s]+)/);
+        var botRequestId = botRidMatch ? decodeURIComponent(botRidMatch[1]) : null;
+        if (botRequestId) {
+          (async function checkBotPendingRequest() {
+            try {
+              var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+              var initData = (tg && tg.initData) ? tg.initData : '';
+              if (!apiBase || !initData) return;
+              var resp = await fetch(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(botRequestId), {
+                headers: { 'X-Telegram-Init': initData }
+              });
+              var json = await resp.json().catch(function() { return {}; });
+              var gs = json && json.data ? String(json.data.generation_status || '').toLowerCase() : '';
+              var ps = json && json.data ? String(json.data.payment_status || '').toLowerCase() : '';
+              if (gs === 'pending_payment' || ps === 'requires_payment') {
+                // Заявка ещё не оплачена — показываем оверлей оплаты
+                pendingPaymentRequestId = botRequestId;
+                var mode = json.data && json.data.mode ? String(json.data.mode) : 'single';
+                if (mode === 'couple') pendingPaymentSku = 'couple_song';
+                else if (mode === 'transit') pendingPaymentSku = 'transit_energy_song';
+                else pendingPaymentSku = 'single_song';
+                showPaymentOverlay();
+              } else if (['completed', 'processing', 'suno_processing', 'lyrics_generated', 'astro_calculated'].includes(gs)
+                         || ['paid', 'subscription_active', 'gift_used', 'promo_applied'].includes(ps)) {
+                // Заявка уже в работе — ничего делать не нужно, остаёмся на главном экране
+                console.log('[BotLink] Заявка уже оплачена/в работе:', gs, ps);
+              }
+            } catch (e) {
+              console.warn('[BotLink] Ошибка проверки заявки:', e.message);
+            }
+          })();
+        }
+      }
+
       // Кнопки навигации
       var startBtn = document.getElementById('startBtn');
       if (startBtn) startBtn.addEventListener('click', function() {
