@@ -5427,11 +5427,9 @@ function registerMasterRoutes(expressApp) {
     const sku = "master_monthly";
     const orderId = `master_${telegramUserId}_${Date.now()}`;
 
-    let amount = 299, currency = "RUB";
-    if (supabase) {
-      const { data: cat } = await supabase.from("pricing_catalog").select("price,currency").eq("sku", sku).maybeSingle();
-      if (cat) { amount = Number(cat.price); currency = cat.currency || "RUB"; }
-    }
+    const priceData = await getSkuPrice(sku);
+    const amount = priceData ? Number(priceData.price) : 39.99;
+    const currency = priceData?.currency || "USDT";
 
     const url = buildHotCheckoutUrl({ orderId, amount, currency, requestId: orderId, sku });
     return res.json({ ok: true, payment_url: url });
