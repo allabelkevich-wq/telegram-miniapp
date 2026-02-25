@@ -178,67 +178,52 @@
     }
     .example-btn:hover { opacity: 0.95; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(212, 175, 55, 0.5); background: linear-gradient(135deg, #e0b83a, #f0d050, #e0b83a); }
     .example-btn.special { background: linear-gradient(135deg, #d4af37, #e8c547); border-color: rgba(212, 175, 55, 0.7); }
-    /* ===== MODE SELECTOR — чистый стиль ===== */
+    /* ===== MODE SELECTOR — компактные кнопки с яркой подсветкой ===== */
     .mode-selector {
       background: rgba(255, 255, 255, 0.03);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(212, 175, 55, 0.1);
-      border-radius: 20px;
-      padding: 20px;
-      margin: 16px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      border-radius: 16px;
+      padding: 16px;
+      margin: 12px;
     }
     .mode-selector h3 {
       color: #ffffff;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
-      margin: 0 0 6px;
+      margin-bottom: 4px;
       text-align: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
     }
     .mode-subtitle {
       color: rgba(255, 255, 255, 0.6);
-      font-size: 13px;
+      font-size: 12px;
       text-align: center;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
     .mode-buttons {
       display: flex;
       gap: 8px;
       justify-content: center;
-      flex-wrap: nowrap;
     }
     .mode-btn {
       position: relative;
       flex: 1;
-      min-width: 0;
-      padding: 10px 6px;
+      padding: 10px 8px;
       background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(212, 175, 55, 0.2);
-      border-radius: 12px;
+      border: 1px solid rgba(212, 175, 55, 0.15);
+      border-radius: 10px;
       color: rgba(255, 255, 255, 0.7);
       font-family: 'Comfortaa', sans-serif;
       font-size: 11px;
-      font-weight: 600;
-      line-height: 1.2;
+      font-weight: 500;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      overflow: hidden;
+      transition: all 0.3s ease;
       text-align: center;
+      line-height: 1.2;
+      min-width: 0;
       white-space: nowrap;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-      box-sizing: border-box;
-      min-height: 44px;
-      -webkit-animation: modeFadeIn 0.4s ease-out both;
-      animation: modeFadeIn 0.4s ease-out both;
+      overflow: hidden;
     }
     .mode-btn .mode-label {
       white-space: nowrap !important;
@@ -248,61 +233,85 @@
       width: 100%;
       font-size: inherit;
       line-height: inherit;
+      font-weight: 500;
     }
-    .mode-btn::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      border-radius: inherit;
-    }
-    .mode-btn:hover::before { opacity: 1; }
+    .mode-btn.active .mode-label { font-weight: 600; }
     .mode-btn:hover {
-      border-color: rgba(212, 175, 55, 0.4);
+      background: rgba(212, 175, 55, 0.1);
+      border-color: rgba(212, 175, 55, 0.3);
       color: #ffffff;
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.15);
     }
     .mode-btn.active {
-      background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(212, 175, 55, 0.1) 100%);
-      border-color: #D4AF37;
-      color: #F5E6A3;
-      box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
-      transform: translateY(0);
+      background: linear-gradient(135deg,
+        rgba(212, 175, 55, 0.3) 0%,
+        rgba(212, 175, 55, 0.15) 100%);
+      border: 2px solid #D4AF37;
+      color: #FFE55C;
+      font-weight: 600;
+      box-shadow:
+        0 0 20px rgba(212, 175, 55, 0.6),
+        0 0 40px rgba(212, 175, 55, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      transform: scale(1.02);
+      text-shadow: 0 0 10px rgba(212, 175, 55, 0.8);
+    }
+    .mode-btn.active::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(135deg,
+        rgba(212, 175, 55, 0.8),
+        rgba(236, 72, 153, 0.4));
+      border-radius: 10px;
+      opacity: 0.3;
+      z-index: -1;
+      filter: blur(8px);
     }
     .mode-btn.active::after {
       content: '';
       position: absolute;
-      top: -50%; left: -50%;
-      width: 200%; height: 200%;
-      background: radial-gradient(circle, rgba(212, 175, 55, 0.2), transparent 70%);
-      -webkit-animation: gentlePulse 4s ease-in-out infinite;
-      animation: gentlePulse 4s ease-in-out infinite;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 150%;
+      height: 150%;
+      background: radial-gradient(circle,
+        rgba(212, 175, 55, 0.4),
+        transparent 70%);
+      -webkit-animation: activePulse 2s ease-in-out infinite;
+      animation: activePulse 2s ease-in-out infinite;
       pointer-events: none;
       border-radius: 50%;
     }
-    @-webkit-keyframes gentlePulse {
-      0%, 100% { -webkit-transform: scale(1); transform: scale(1); opacity: 0.5; }
-      50% { -webkit-transform: scale(1.05); transform: scale(1.05); opacity: 0.8; }
+    @-webkit-keyframes activePulse {
+      0%, 100% { -webkit-transform: translate(-50%, -50%) scale(1); transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+      50% { -webkit-transform: translate(-50%, -50%) scale(1.1); transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; }
     }
-    @keyframes gentlePulse {
-      0%, 100% { transform: scale(1); opacity: 0.5; }
-      50% { transform: scale(1.05); opacity: 0.8; }
-    }
-    @-webkit-keyframes modeFadeIn {
-      from { opacity: 0; -webkit-transform: translateY(10px); transform: translateY(10px); }
-      to { opacity: 1; -webkit-transform: translateY(0); transform: translateY(0); }
-    }
-    @keyframes modeFadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes activePulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+      50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; }
     }
     .mode-btn:active { transform: scale(0.98); transition: transform 0.1s; }
-    @media (max-width: 400px) {
-      .mode-btn { padding: 8px 4px; font-size: 10px; min-height: 40px; }
-      .mode-selector { padding: 16px; margin: 12px; }
+    @media (max-width: 380px) {
+      .mode-btn {
+        padding: 8px 6px;
+        font-size: 10px;
+        border-radius: 8px;
+      }
+      .mode-selector {
+        padding: 14px 12px;
+        margin: 10px;
+      }
+      .mode-selector h3 {
+        font-size: 14px;
+      }
+      .mode-subtitle {
+        font-size: 11px;
+      }
     }
     .mode-icon { display: none; }
     .mode-label { font-weight: 700; font-size: max(1rem, 16px); line-height: 1.25; }
