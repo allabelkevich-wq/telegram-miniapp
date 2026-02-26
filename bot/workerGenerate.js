@@ -49,8 +49,8 @@ function parseSongFromResponse(text) {
   const styleMatch = text.match(/\[style:\s*([^\]]+)\]/i);
   if (styleMatch) style = styleMatch[1].trim().slice(0, 500);
 
-  // ── Конец лирики: любой из этих маркеров ──────────────────────────────────
-  const LYRICS_END_RE = /\n\s*(?:---|MUSIC PROMPT|ПИСЬМО\s*:|КЛЮЧЕВЫЕ ПРИНЦИПЫ|\[style:)/i;
+  // ── Конец лирики: разделитель ---, рекомендации и письмо не входят в текст песни ──
+  const LYRICS_END_RE = /\n\s*(?:---+\s*|MUSIC PROMPT|ПИСЬМО\s*:|КЛЮЧЕВЫЕ ПРИНЦИПЫ|Рекомендация по (?:выслушиванию|прослушиванию)|🎧\s*Рекомендация|\[style:)/i;
 
   const lyricsStart = text.search(/\b(ЛИРИКА|LYRICS)\s*:\s*/i);
   if (lyricsStart >= 0) {
@@ -109,6 +109,12 @@ function parseSongFromResponse(text) {
     const prefix = lyrics.slice(0, firstTag).trim();
     if (prefix.length > 0) lyrics = lyrics.slice(firstTag);
   }
+
+  // Убрать блок рекомендаций по прослушиванию, если попал в лирику
+  const recStart = lyrics.search(/\n\s*(?:🎧\s*)?Рекомендация по (?:выслушиванию|прослушиванию)\s*[:\s]*/i);
+  if (recStart >= 0) lyrics = lyrics.slice(0, recStart).trim();
+  const numberedTail = lyrics.match(/\n\s*(\d\.\s+[^\n]+(?:\n\s*\d\.\s+[^\n]+){2,})\s*$/);
+  if (numberedTail && numberedTail[1].length > 80) lyrics = lyrics.slice(0, lyrics.length - numberedTail[0].length).trim();
 
   if (!title && lyrics) title = "Sound Key";
 
