@@ -409,8 +409,8 @@
           <h3>Последние оплаты</h3>
           <div class="mono-table-wrap">
             <table class="mono-table" id="paymentsTable">
-              <thead><tr><th>Дата</th><th>Request ID</th><th>Имя</th><th>SKU/Mode</th><th>Провайдер</th><th>Статус</th><th>Сумма</th><th>Order</th><th>TX</th><th>Промо</th></tr></thead>
-              <tbody id="paymentsTableBody"><tr><td colspan="10" class="mono-muted">Загрузка…</td></tr></tbody>
+              <thead><tr><th>Дата оплаты</th><th>Request ID</th><th>User ID</th><th>Имя</th><th>SKU/Mode</th><th>Провайдер</th><th>Статус</th><th>Сумма</th><th>Order</th><th>TX</th><th>Промо</th></tr></thead>
+              <tbody id="paymentsTableBody"><tr><td colspan="11" class="mono-muted">Загрузка…</td></tr></tbody>
             </table>
           </div>
           <div id="paymentsMsg" class="mono-msg"></div>
@@ -2005,25 +2005,25 @@
       const body = document.getElementById('paymentsTableBody');
       if (!body) return;
       if (!rows.length) {
-        body.innerHTML = '<tr><td colspan="10" class="mono-muted">Оплаты не найдены.</td></tr>';
+        body.innerHTML = '<tr><td colspan="11" class="mono-muted">Оплаты не найдены.</td></tr>';
         return;
       }
       body.innerHTML = rows.map(function(item) {
-        const created = item.created_at ? new Date(item.created_at).toLocaleString('ru-RU') : '—';
+        const paidAt = item.paid_at ? new Date(item.paid_at).toLocaleString('ru-RU') : (item.created_at ? new Date(item.created_at).toLocaleString('ru-RU') : '—');
         const reqId = String(item.id || '');
         const orderId = String(item.payment_order_id || '');
         const txId = String(item.payment_tx_id || '');
         const amount = item.payment_amount != null ? (String(item.payment_amount) + ' ' + (item.payment_currency || 'USDT')) : '—';
-        // Способ оплаты — понятный бейдж
         const methodBadge = paymentMethodBadge(item);
-        // Статус оплаты — понятный
         const ps = String(item.payment_status || '').toLowerCase();
         const statusColor = ['paid','gift_used','subscription_active'].includes(ps) ? '#22c55e' : (ps === 'requires_payment' ? '#f59e0b' : '#94a3b8');
         const statusHuman = ps === 'paid' ? '✓ Оплачено' : ps === 'gift_used' ? '🎁 Подарок' : ps === 'subscription_active' ? '📋 Подписка' : ps === 'requires_payment' ? '⏳ Ожидает' : escapeHtml(ps || '—');
         const promo = item.promo_code ? '<span style="color:#d4af37;font-weight:600;">' + escapeHtml(item.promo_code) + '</span>' + (item.promo_discount_amount ? ' <span style="color:#94a3b8;">(-' + escapeHtml(String(item.promo_discount_amount)) + ')</span>' : '') : '—';
+        const userId = item.telegram_user_id != null ? String(item.telegram_user_id) : '—';
         return '<tr>' +
-          '<td style="font-size:11px;">' + escapeHtml(created) + '</td>' +
+          '<td style="font-size:11px;">' + escapeHtml(paidAt) + '</td>' +
           '<td><code title="' + escapeAttr(reqId) + '">' + escapeHtml(reqId.slice(0, 8)) + '</code></td>' +
+          '<td><code title="' + escapeAttr(userId) + '">' + escapeHtml(userId !== '—' ? userId.slice(0, 10) + (userId.length > 10 ? '…' : '') : '—') + '</code></td>' +
           '<td>' + escapeHtml(item.name || '—') + '</td>' +
           '<td>' + escapeHtml(item.mode || '—') + '</td>' +
           '<td>' + methodBadge + '</td>' +

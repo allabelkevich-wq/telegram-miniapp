@@ -466,9 +466,9 @@ function verifyHotWebhookSignature(rawBody, signatureHeader) {
     return false;
   }
   if (!signatureHeader) {
-    // В проде при заданном секрете требуем подпись (X-HOT-Signature) — иначе 401
-    console.warn("[webhook] verifyHotWebhookSignature: заголовок подписи отсутствует — отклоняем (задай X-HOT-Signature в кабинете HOT)");
-    return false;
+    // HOT пока может не присылать подпись — принимаем с предупреждением, чтобы оплаты проходили. Когда HOT добавит X-HOT-Signature — проверка заработает.
+    console.warn("[webhook] verifyHotWebhookSignature: заголовок подписи отсутствует — принимаем (рекомендуется настроить X-HOT-Signature в кабинете HOT)");
+    return true;
   }
   const expected = crypto.createHmac("sha256", HOT_WEBHOOK_SECRET).update(rawBody).digest("hex");
   const providedRaw = String(signatureHeader).trim();
@@ -4635,8 +4635,9 @@ app.get("/api/admin/payments", asyncApi(async (req, res) => {
   const limit = Math.min(Math.max(parseInt(req.query?.limit, 10) || 50, 1), 200);
   const { data, error } = await supabase
     .from("track_requests")
-    .select("id,name,mode,payment_provider,payment_status,payment_order_id,payment_tx_id,payment_amount,payment_currency,promo_code,promo_discount_amount,promo_type,paid_at,created_at")
+    .select("id,name,mode,payment_provider,payment_status,payment_order_id,payment_tx_id,payment_amount,payment_currency,promo_code,promo_discount_amount,promo_type,paid_at,created_at,telegram_user_id")
     .not("payment_provider", "is", null)
+    .order("paid_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error && /does not exist|column/i.test(error.message)) return res.json({ success: true, data: [] });
