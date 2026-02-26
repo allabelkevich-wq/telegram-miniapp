@@ -52,9 +52,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
     /* АДАПТИВНЫЕ СТИЛИ С ПОДДЕРЖКОЙ ТЕМЫ ТЕЛЕГРАМ */
+    /* Палитра: настоящее золото + тёплый янтарь (без розового) */
     :root {
-      --primary-color: #d4af37;
-      --secondary-color: #ec4899;
+      --primary-color: #B8860B;
+      --primary-light: #D4A017;
+      --secondary-color: #B45309;
+      --primary-rgb: 184, 134, 11;
+      --secondary-rgb: 180, 83, 9;
       --success-color: #10b981;
       --subtitle-readable: rgba(255,255,255,0.92);
       /* Fluid scaling — пропорции Apple: уменьшается пропорционально экрану */
@@ -78,8 +82,8 @@
       --tg-theme-secondary-bg-color: rgba(255,255,255,0.08);
       --tg-theme-text-color: #ffffff;
       --tg-theme-hint-color: rgba(224, 224, 240, 0.7);
-      --tg-theme-border-color: rgba(212, 175, 55, 0.3);
-      --tg-theme-button-color: #d4af37;
+      --tg-theme-border-color: rgba(var(--primary-rgb), 0.3);
+      --tg-theme-button-color: var(--primary-color);
       --tg-theme-button-text-color: #0A0A1A;
     }
     .theme-light {
@@ -87,8 +91,8 @@
       --tg-theme-secondary-bg-color: rgba(255,255,255,0.92);
       --tg-theme-text-color: #1f2937;
       --tg-theme-hint-color: rgba(31, 41, 55, 0.6);
-      --tg-theme-border-color: rgba(212,175,55,0.35);
-      --tg-theme-button-color: #d4af37;
+      --tg-theme-border-color: rgba(var(--primary-rgb), 0.35);
+      --tg-theme-button-color: var(--primary-color);
       --tg-theme-button-text-color: #1f2937;
       --subtitle-readable: rgba(31,41,55,0.88);
     }
@@ -97,8 +101,8 @@
       --tg-theme-secondary-bg-color: rgba(255,255,255,0.08);
       --tg-theme-text-color: #ffffff;
       --tg-theme-hint-color: rgba(224,224,240,0.7);
-      --tg-theme-border-color: rgba(212,175,55,0.3);
-      --tg-theme-button-color: #d4af37;
+      --tg-theme-border-color: rgba(var(--primary-rgb), 0.3);
+      --tg-theme-button-color: var(--primary-color);
       --tg-theme-button-text-color: #0A0A1A;
       --subtitle-readable: rgba(255,255,255,0.92);
     }
@@ -147,7 +151,7 @@
       color: var(--tg-theme-text-color, #fff); font-size: var(--fluid-base); box-sizing: border-box;
     }
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-      outline: none; border-color: rgba(212,175,55,0.6); box-shadow: 0 0 0 2px rgba(212,175,55,0.12);
+      outline: none; border-color: rgba(var(--primary-rgb),0.6); box-shadow: 0 0 0 2px rgba(var(--primary-rgb),0.12);
     }
     .checkbox-group { display: flex; align-items: center; margin-top: 8px; }
     .checkbox-group input[type="checkbox"] { width: 18px; height: 18px; margin-right: 8px; cursor: pointer; }
@@ -155,9 +159,9 @@
     small { color: var(--tg-theme-hint-color, rgba(255, 255, 255, 0.6)); font-size: var(--fluid-xs); }
     h3 { color: var(--tg-theme-text-color, #fff); font-size: var(--fluid-md); margin: 0 0 15px 0; font-weight: 600; }
     #payBtn {
-      width: 100%; padding: 13px 24px; background: linear-gradient(135deg, #d4af37, #ec4899);
+      width: 100%; padding: 13px 24px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
       border: none; border-radius: 14px; color: var(--tg-theme-button-text-color, #fff); font-size: 1rem; font-weight: 600;
-      cursor: pointer; transition: all 0.3s; margin-top: 16px; box-shadow: 0 4px 15px rgba(212,175,55,0.3);
+      cursor: pointer; transition: all 0.3s; margin-top: 16px; box-shadow: 0 4px 15px rgba(var(--primary-rgb),0.3);
     }
     #payBtn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4); }
     #payBtn:active { transform: translateY(0); }
@@ -172,21 +176,21 @@
     .request-examples h3 { font-size: var(--fluid-md); color: var(--tg-theme-text-color, #fff); margin: 0 0 12px 0; font-weight: 500; }
     .examples-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
     .example-btn {
-      background: linear-gradient(135deg, #d4af37, #e8c547, #d4af37);
-      border: 1px solid rgba(212, 175, 55, 0.7); color: #0A0A1A;
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-light), var(--primary-color));
+      border: 1px solid rgba(var(--primary-rgb), 0.7); color: #0A0A1A;
       padding: 10px 12px; border-radius: 8px; font-size: var(--fluid-xs); font-weight: 600;
       cursor: pointer; text-align: left; transition: all 0.2s; width: 100%;
       white-space: normal; word-wrap: break-word; word-break: break-word;
-      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+      box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.4);
     }
-    .example-btn:hover { opacity: 0.95; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(212, 175, 55, 0.5); background: linear-gradient(135deg, #e0b83a, #f0d050, #e0b83a); }
-    .example-btn.special { background: linear-gradient(135deg, #d4af37, #e8c547); border-color: rgba(212, 175, 55, 0.7); }
+    .example-btn:hover { opacity: 0.95; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(var(--primary-rgb), 0.5); background: linear-gradient(135deg, var(--primary-light), var(--primary-color), var(--primary-light)); }
+    .example-btn.special { background: linear-gradient(135deg, var(--primary-color), var(--primary-light)); border-color: rgba(var(--primary-rgb), 0.7); }
     /* ===== MODE SELECTOR — компактные кнопки с яркой подсветкой ===== */
     .mode-selector {
       background: rgba(255, 255, 255, 0.03);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(212, 175, 55, 0.1);
+      border: 1px solid rgba(var(--primary-rgb), 0.1);
       border-radius: 16px;
       padding: 16px;
       margin: 12px;
@@ -221,7 +225,7 @@
       max-height: 64px !important;
       padding: 8px 6px !important;
       background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(212, 175, 55, 0.15);
+      border: 1px solid rgba(var(--primary-rgb), 0.15);
       border-radius: 10px;
       color: #ffffff !important;
       font-family: 'Comfortaa', sans-serif;
@@ -253,26 +257,26 @@
     }
     .mode-btn.active .mode-label { font-weight: 600; }
     .mode-btn:hover {
-      background: rgba(212, 175, 55, 0.1);
-      border-color: rgba(212, 175, 55, 0.3);
+      background: rgba(var(--primary-rgb), 0.1);
+      border-color: rgba(var(--primary-rgb), 0.3);
       color: #ffffff;
       transform: translateY(-1px);
     }
     .mode-btn.active {
       background: linear-gradient(135deg,
-        rgba(212, 175, 55, 0.3) 0%,
-        rgba(212, 175, 55, 0.15) 100%);
+        rgba(var(--primary-rgb), 0.3) 0%,
+        rgba(var(--primary-rgb), 0.15) 100%);
       border: 2px solid #D4AF37;
       color: #FFE55C !important;
       font-weight: 600;
       box-shadow:
-        0 0 20px rgba(212, 175, 55, 0.6),
-        0 0 40px rgba(212, 175, 55, 0.3),
+        0 0 20px rgba(var(--primary-rgb), 0.6),
+        0 0 40px rgba(var(--primary-rgb), 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
       transform: scale(1.02);
       text-shadow:
-        0 0 10px rgba(212, 175, 55, 0.8),
-        0 0 20px rgba(212, 175, 55, 0.5) !important;
+        0 0 10px rgba(var(--primary-rgb), 0.8),
+        0 0 20px rgba(var(--primary-rgb), 0.5) !important;
     }
     .mode-btn.active::before {
       content: '';
@@ -282,8 +286,8 @@
       right: -2px;
       bottom: -2px;
       background: linear-gradient(135deg,
-        rgba(212, 175, 55, 0.8),
-        rgba(236, 72, 153, 0.4));
+        rgba(var(--primary-rgb), 0.8),
+        rgba(var(--secondary-rgb), 0.4));
       border-radius: 10px;
       opacity: 0.3;
       z-index: -1;
@@ -298,7 +302,7 @@
       width: 150%;
       height: 150%;
       background: radial-gradient(circle,
-        rgba(212, 175, 55, 0.4),
+        rgba(var(--primary-rgb), 0.4),
         transparent 70%);
       -webkit-animation: activePulse 2s ease-in-out infinite;
       animation: activePulse 2s ease-in-out infinite;
@@ -342,22 +346,22 @@
     .mode-label { font-weight: 700; font-size: inherit; line-height: 1.25; }
     .mode-desc { display: none; }
     /* Аккордеон второго человека */
-    #secondPersonAccordion .pfa-header { background: rgba(212,175,55,0.06); border: 1px solid rgba(212,175,55,0.18); }
-    #secondPersonAccordion .pfa-header:hover { background: rgba(212,175,55,0.1); }
+    #secondPersonAccordion .pfa-header { background: rgba(var(--primary-rgb),0.06); border: 1px solid rgba(var(--primary-rgb),0.18); }
+    #secondPersonAccordion .pfa-header:hover { background: rgba(var(--primary-rgb),0.1); }
     #secondPersonFormWrap { overflow: hidden; transition: max-height .38s cubic-bezier(.4,0,.2,1), opacity .3s ease; max-height: 0; opacity: 0; }
     #transitFormWrap { overflow: hidden; transition: max-height .38s cubic-bezier(.4,0,.2,1), opacity .3s ease; max-height: 0; opacity: 0; }
     .mode-info {
-      min-width: 44px; min-height: 44px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(212,175,55,0.4);
-      color: rgba(212,175,55,0.7); font-size: 0.7rem; font-weight: 700;
+      min-width: 44px; min-height: 44px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(var(--primary-rgb),0.4);
+      color: rgba(var(--primary-rgb),0.7); font-size: 0.7rem; font-weight: 700;
       display: inline-flex; align-items: center; justify-content: center;
       flex-shrink: 0; cursor: pointer; line-height: 1; transition: border-color 0.2s, color 0.2s;
       font-style: normal; user-select: none;
     }
-    .mode-info:active { color: #d4af37; border-color: #d4af37; }
+    .mode-info:active { color: var(--primary-color); border-color: var(--primary-color); }
     /* Тултип подсказки */
     #modeTooltip {
       display: none; position: fixed; z-index: 9999;
-      background: rgba(25,25,35,0.97); border: 1px solid rgba(212,175,55,0.3);
+      background: rgba(25,25,35,0.97); border: 1px solid rgba(var(--primary-rgb),0.3);
       color: rgba(255,255,255,0.88); font-size: 0.8rem; line-height: 1.45;
       padding: 9px 13px; border-radius: 10px; max-width: 220px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.4); pointer-events: none;
@@ -369,7 +373,7 @@
       color: var(--tg-theme-text-color, #fff); font-size: var(--fluid-base); box-sizing: border-box;
     }
     .location-input:focus {
-      outline: none; border-color: rgba(212,175,55,0.6); box-shadow: 0 0 0 2px rgba(212,175,55,0.12);
+      outline: none; border-color: rgba(var(--primary-rgb),0.6); box-shadow: 0 0 0 2px rgba(var(--primary-rgb),0.12);
     }
     .location-suggestions {
       position: absolute; z-index: 1000; background: var(--tg-theme-bg-color, #1a1a1a);
@@ -395,8 +399,8 @@
       flex: 1; text-align: center;
     }
     .step-indicator.active {
-      border-color: var(--tg-theme-button-color); background: linear-gradient(135deg, var(--tg-theme-button-color), #ec4899);
-      color: var(--tg-theme-button-text-color); box-shadow: 0 6px 18px rgba(212,175,55,0.25);
+      border-color: var(--tg-theme-button-color); background: linear-gradient(135deg, var(--tg-theme-button-color), var(--secondary-color));
+      color: var(--tg-theme-button-text-color); box-shadow: 0 6px 18px rgba(var(--primary-rgb),0.25);
     }
     .step-panel { margin-top: 20px; }
     .step-nav { display: flex; gap: 12px; margin-top: 16px; }
@@ -404,8 +408,8 @@
     .form-submit-sticky { position: sticky; bottom: 0; background: none; padding: 14px 0 6px; margin: 0; z-index: 5; display: flex; flex-direction: column; align-items: stretch; gap: 0; }
     .form-submit-sticky button#stepNext { flex: none; width: 100%; }
     .form-nav-links{display:flex;justify-content:center;gap:14px;margin-top:18px;padding:10px 0}
-    .form-nav-link{background:none;border:none;color:rgba(212,175,55,0.55);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;animation:none;font-weight:500}
-    .form-nav-link:hover{color:rgba(212,175,55,0.8)}
+    .form-nav-link{background:none;border:none;color:rgba(var(--primary-rgb),0.55);font-size:0.8rem;cursor:pointer;font-family:inherit;padding:0;min-height:unset;box-shadow:none;animation:none;font-weight:500}
+    .form-nav-link:hover{color:rgba(var(--primary-rgb),0.8)}
     @media (max-width: 600px) {
       .examples-grid { grid-template-columns: 1fr; }
       .content-wrapper { padding: 15px; }
@@ -421,18 +425,18 @@
     .page-footer{flex-shrink:0;padding:var(--spacing-md);padding-bottom:max(var(--spacing-md),env(safe-area-inset-bottom))}
     header{text-align:center;margin:var(--spacing-xl) 0 var(--spacing-lg);position:relative}
     .lang-switcher-compact{position:relative;z-index:1}
-    .lang-switcher-btn{display:inline-flex !important;align-items:center;justify-content:center;gap:2px;min-width:44px !important;min-height:44px !important;width:44px !important;height:44px !important;padding:0 !important;font-size:9px;line-height:1;background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(236,72,153,0.14)) !important;border:1.5px solid rgba(212,175,55,0.4) !important;border-radius:50% !important;color:rgba(212,175,55,0.9);cursor:pointer;font-family:inherit;font-weight:600;letter-spacing:0;transition:background .2s, border-color .2s, color .2s;box-shadow:0 2px 12px rgba(0,0,0,0.3) !important;animation:none !important;transform:none !important}
-    .lang-switcher-btn:hover{background:rgba(212,175,55,0.28) !important;border-color:rgba(212,175,55,0.6) !important;color:#d4af37}
+    .lang-switcher-btn{display:inline-flex !important;align-items:center;justify-content:center;gap:2px;min-width:44px !important;min-height:44px !important;width:44px !important;height:44px !important;padding:0 !important;font-size:9px;line-height:1;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.18),rgba(var(--secondary-rgb),0.14)) !important;border:1.5px solid rgba(var(--primary-rgb),0.4) !important;border-radius:50% !important;color:rgba(var(--primary-rgb),0.9);cursor:pointer;font-family:inherit;font-weight:600;letter-spacing:0;transition:background .2s, border-color .2s, color .2s;box-shadow:0 2px 12px rgba(0,0,0,0.3) !important;animation:none !important;transform:none !important}
+    .lang-switcher-btn:hover{background:rgba(var(--primary-rgb),0.28) !important;border-color:rgba(var(--primary-rgb),0.6) !important;color:var(--primary-color)}
     #langSwitcherIcon{font-size:10px;opacity:0.6;line-height:1}
     #langSwitcherCurrent{text-align:center;font-size:9px;font-weight:600}
-    .lang-dropdown{position:absolute;top:calc(100% + 4px);right:0;left:auto;margin-top:0;width:40px;padding:2px;background:rgba(18,15,40,0.97);border:1px solid rgba(212,175,55,0.18);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,0.55);overflow:hidden;z-index:9999}
+    .lang-dropdown{position:absolute;top:calc(100% + 4px);right:0;left:auto;margin-top:0;width:40px;padding:2px;background:rgba(18,15,40,0.97);border:1px solid rgba(var(--primary-rgb),0.18);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,0.55);overflow:hidden;z-index:9999}
     .lang-dropdown[hidden]{display:none !important}
     .lang-opt{display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;padding:8px 0;text-align:center;background:transparent;border:none;border-radius:4px;color:rgba(255,255,255,0.55);font-size:9px;font-weight:600;letter-spacing:0.04em;cursor:pointer;font-family:inherit;transition:color .15s,background .15s;animation:none;box-shadow:none;margin:0}
-    .lang-opt:hover,.lang-opt:active{background:rgba(212,175,55,0.12);color:#d4af37}
-    h1{font-size:var(--fluid-2xl);background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300% 300%;animation:gradientShift 4s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:700;letter-spacing:-1px;line-height:1.2;padding-bottom:4px}
+    .lang-opt:hover,.lang-opt:active{background:rgba(var(--primary-rgb),0.12);color:var(--primary-color)}
+    h1{font-size:var(--fluid-2xl);background:linear-gradient(135deg,var(--primary-color),var(--secondary-color),var(--primary-color));background-size:300% 300%;animation:gradientShift 4s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:700;letter-spacing:-1px;line-height:1.2;padding-bottom:4px}
     .subtitle{color:var(--subtitle-readable,var(--tg-theme-text-color));font-size:var(--fluid-base);margin-top:8px;font-weight:400}
-    .tagline{color:#d4af37;font-size:var(--fluid-sm);font-weight:400;margin:6px 0 0;letter-spacing:0.1px;opacity:0.75}
-    .section{background:var(--tg-theme-secondary-bg-color);border-radius:var(--radius-lg);padding:var(--spacing-lg) var(--spacing-lg);box-shadow:0 4px 18px rgba(212,175,55,0.08);border:1px solid rgba(255,255,255,0.06);position:relative;overflow:hidden;margin-bottom:var(--spacing-lg);overflow-wrap:break-word;word-break:break-word}
+    .tagline{color:var(--primary-color);font-size:var(--fluid-sm);font-weight:400;margin:6px 0 0;letter-spacing:0.1px;opacity:0.75}
+    .section{background:var(--tg-theme-secondary-bg-color);border-radius:var(--radius-lg);padding:var(--spacing-lg) var(--spacing-lg);box-shadow:0 4px 18px rgba(var(--primary-rgb),0.08);border:1px solid rgba(255,255,255,0.06);position:relative;overflow:hidden;margin-bottom:var(--spacing-lg);overflow-wrap:break-word;word-break:break-word}
     #paymentPage .section{background:rgba(20,18,45,0.98);min-height:300px;color:#fff}
     body.theme-light #paymentPage .section{background:rgba(250,248,255,0.98);color:#1f2937}
     .section::before{display:none}
@@ -442,7 +446,7 @@
     label{display:block;margin-bottom:10px;color:var(--tg-theme-text-color,#2d2d2d);font-weight:500;font-size:1.05rem;display:flex;align-items:center;gap:10px}
     label::before{content:attr(data-icon);font-size:1.25rem}
     input,textarea,select{width:100%;padding:var(--spacing-md);border-radius:var(--radius-md);border:1px solid var(--tg-theme-border-color,#e5e7eb);background:var(--tg-theme-secondary-bg-color,#fff);color:var(--tg-theme-text-color,#2d2d2d);font-size:var(--fluid-base);transition:all .3s ease;font-family:'Comfortaa',sans-serif}
-    input:focus,textarea:focus,select:focus{outline:none;border-color:rgba(212,175,55,0.6);box-shadow:0 0 0 3px rgba(212,175,55,.12)}
+    input:focus,textarea:focus,select:focus{outline:none;border-color:rgba(var(--primary-rgb),0.6);box-shadow:0 0 0 3px rgba(var(--primary-rgb),.12)}
     input.valid,textarea.valid{border-color:#4ade80}
     /* Улучшения для date/time inputs на Android */
     input[type="date"],input[type="time"]{
@@ -457,16 +461,16 @@
       -moz-appearance:none;
       appearance:none;
       background:rgba(255,255,255,0.12);
-      border:2px solid rgba(212,175,55,0.4);
+      border:2px solid rgba(var(--primary-rgb),0.4);
       color:#fff;
       border-radius:12px;
       transition:all 0.2s ease;
     }
     input[type="date"]:focus,input[type="time"]:focus{
-      border-color:rgba(212,175,55,0.8);
+      border-color:rgba(var(--primary-rgb),0.8);
       background:rgba(255,255,255,0.16);
       outline:none;
-      box-shadow:0 0 0 3px rgba(212,175,55,0.15);
+      box-shadow:0 0 0 3px rgba(var(--primary-rgb),0.15);
     }
     input[type="date"]::-webkit-calendar-picker-indicator,
     input[type="time"]::-webkit-calendar-picker-indicator{
@@ -484,7 +488,7 @@
     input[type="date"]::-webkit-calendar-picker-indicator:hover,
     input[type="time"]::-webkit-calendar-picker-indicator:hover{
       opacity:1;
-      background:rgba(212,175,55,0.2);
+      background:rgba(var(--primary-rgb),0.2);
     }
     /* Placeholder для пустых date/time inputs */
     input[type="date"]:not(:focus):invalid,
@@ -545,7 +549,7 @@
     .birthdate-wrap .date-group + input[type="date"]{position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);opacity:0;pointer-events:none;overflow:hidden}
     @media (max-width:480px){
       .date-group{flex-direction:column;align-items:stretch;gap:12px}
-      .date-group select{width:100%;max-width:none;min-width:0;min-height:48px;font-size:1rem;-webkit-tap-highlight-color:rgba(212,175,55,0.15)}
+      .date-group select{width:100%;max-width:none;min-width:0;min-height:48px;font-size:1rem;-webkit-tap-highlight-color:rgba(var(--primary-rgb),0.15)}
     }
     .time-group{display:flex;flex-direction:row;align-items:center;gap:var(--spacing-sm);flex-wrap:wrap;margin:0}
     .time-group-input{flex:0 0 auto;min-width:0;width:140px;max-width:160px}
@@ -556,37 +560,37 @@
       .time-group-checkbox{justify-content:flex-start}
     }
     .checkbox{display:flex;align-items:center;gap:10px;margin-top:0}
-    .checkbox input{width:22px;height:22px;min-width:22px;accent-color:#d4af37;opacity:.65}
+    .checkbox input{width:22px;height:22px;min-width:22px;accent-color:var(--primary-color);opacity:.65}
     .time-group .checkbox input{opacity:.45}
     .checkbox label{margin-bottom:0;font-weight:500;color:var(--tg-theme-text-color,#fff);font-size:1rem;display:flex;align-items:center;gap:6px;opacity:.88}
-    select{appearance:none;background:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23d4af37' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 16px center;background-size:20px;padding-right:48px}
+    select{appearance:none;background:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23B8860B' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 16px center;background-size:20px;padding-right:48px}
     textarea:not(.request-textarea){min-height:140px;line-height:1.6;resize:vertical}
     textarea.request-textarea{line-height:1.6;}
-    .request-label{font-size:var(--fluid-md);text-align:center;margin-bottom:var(--spacing-sm);color:#d4af37;font-weight:700;letter-spacing:-0.5px}
+    .request-label{font-size:var(--fluid-md);text-align:center;margin-bottom:var(--spacing-sm);color:var(--primary-color);font-weight:700;letter-spacing:-0.5px}
     .request-help-row{display:flex;align-items:center;justify-content:space-between;gap:var(--spacing-sm);margin-bottom:var(--spacing-sm)}
     .request-help-row .request-label{margin-bottom:0;text-align:left;font-size:var(--fluid-base);letter-spacing:-0.2px;line-height:1.2;flex:1;min-width:0}
     /* Apple-style quick picker */
     /* Referral card */
-    .referral-card{background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.05));border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:18px;margin:0 0 16px}
+    .referral-card{background:linear-gradient(135deg,rgba(var(--primary-rgb),0.1),rgba(var(--primary-rgb),0.05));border:1px solid rgba(var(--primary-rgb),0.3);border-radius:16px;padding:18px;margin:0 0 16px}
     .referral-link-row{display:flex;gap:8px;align-items:center;margin:12px 0;min-width:0;flex-wrap:wrap}
     .referral-link-input{flex:1;min-width:120px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.78rem;padding:10px 12px;font-family:monospace;outline:none;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-    .referral-share-btn{padding:10px 14px !important;border-radius:10px !important;background:rgba(212,175,55,0.12) !important;border:1px solid rgba(212,175,55,0.45) !important;color:#d4af37 !important;font-weight:700 !important;font-size:0.8rem !important;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;box-shadow:none !important;animation:none !important;transition:background .2s;letter-spacing:0 !important}
-    .referral-share-btn:active{background:rgba(212,175,55,0.22) !important}
+    .referral-share-btn{padding:10px 14px !important;border-radius:10px !important;background:rgba(var(--primary-rgb),0.12) !important;border:1px solid rgba(var(--primary-rgb),0.45) !important;color:var(--primary-color) !important;font-weight:700 !important;font-size:0.8rem !important;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;box-shadow:none !important;animation:none !important;transition:background .2s;letter-spacing:0 !important}
+    .referral-share-btn:active{background:rgba(var(--primary-rgb),0.22) !important}
     .referral-stats{display:flex;gap:10px;margin-top:12px}
     .referral-stat-box{flex:1;background:rgba(255,255,255,0.05);border-radius:10px;padding:10px;text-align:center}
-    .referral-stat-num{font-size:1.4rem;font-weight:700;color:#d4af37}
+    .referral-stat-num{font-size:1.4rem;font-weight:700;color:var(--primary-color)}
     .referral-stat-label{font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:2px}
     .quick-picker{position:relative;margin-bottom:12px}
-    .quick-picker-btn{width:100%;padding:12px 16px;border-radius:12px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.35);color:#d4af37;font-size:0.95rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:space-between;transition:background .2s}
-    .quick-picker-btn:hover{background:rgba(212,175,55,0.16)}
+    .quick-picker-btn{width:100%;padding:12px 16px;border-radius:12px;background:rgba(var(--primary-rgb),0.1);border:1px solid rgba(var(--primary-rgb),0.35);color:var(--primary-color);font-size:0.95rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:space-between;transition:background .2s}
+    .quick-picker-btn:hover{background:rgba(var(--primary-rgb),0.16)}
     .quick-picker-btn .qa{transition:transform .25s ease;font-size:0.75rem;opacity:0.7}
     .quick-picker-btn.open .qa{transform:rotate(180deg)}
-    .quick-picker-sheet{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:200;background:#1a1730;border:1px solid rgba(212,175,55,0.25);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.8);overflow:hidden;animation:sheetIn .2s ease}
+    .quick-picker-sheet{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:200;background:#1a1730;border:1px solid rgba(var(--primary-rgb),0.25);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.8);overflow:hidden;animation:sheetIn .2s ease}
     @keyframes sheetIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
     .quick-picker-scroll{max-height:260px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 0}
     .quick-picker-scroll::-webkit-scrollbar{width:3px}
     .quick-picker-scroll::-webkit-scrollbar-track{background:transparent}
-    .quick-picker-scroll::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.3);border-radius:2px}
+    .quick-picker-scroll::-webkit-scrollbar-thumb{background:rgba(var(--primary-rgb),0.3);border-radius:2px}
     .quick-cat{display:none}
     /* Новый блок ввода запроса */
     .request-input-box{border:1px solid rgba(255,255,255,0.1);border-radius:14px;overflow:visible;background:rgba(255,255,255,0.04);position:relative;}
@@ -594,28 +598,28 @@
     .request-textarea::placeholder{color:rgba(255,255,255,0.55);opacity:1;}
     .request-textarea:focus{outline:none;box-shadow:none;border:none;}
     .request-quick-bar{border-top:1px solid rgba(255,255,255,0.07);position:relative;}
-    .request-quick-toggle{width:100%;background:none;border:none;color:rgba(212,175,55,0.55);font-size:0.72rem;font-weight:600;font-family:inherit;padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:0.03em;transition:color .2s;min-height:unset;box-shadow:none;animation:none;margin:0;border-radius:0 0 14px 14px;justify-content:space-between;}
+    .request-quick-toggle{width:100%;background:none;border:none;color:rgba(var(--primary-rgb),0.55);font-size:0.72rem;font-weight:600;font-family:inherit;padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:0.03em;transition:color .2s;min-height:unset;box-shadow:none;animation:none;margin:0;border-radius:0 0 14px 14px;justify-content:space-between;}
     /* Soul Chat page */
     .sc-msg-user{display:flex;justify-content:flex-end;margin-bottom:12px;padding:0 4px;}
     .sc-msg-soul{display:flex;justify-content:flex-start;margin-bottom:12px;padding:0 4px;}
-    .sc-bubble-user{max-width:80%;padding:12px 16px;border-radius:18px 18px 4px 18px;background:rgba(212,175,55,0.14);border:1px solid rgba(212,175,55,0.28);font-size:0.9rem;line-height:1.6;color:#fff;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word}
-    .sc-bubble-soul{max-width:88%;padding:14px 18px;border-radius:18px 18px 18px 4px;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(236,72,153,0.04));border:1px solid rgba(255,255,255,0.12);border-left:3px solid rgba(212,175,55,0.4);font-size:0.92rem;line-height:1.72;color:rgba(255,255,255,0.95);white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+    .sc-bubble-user{max-width:80%;padding:12px 16px;border-radius:18px 18px 4px 18px;background:rgba(var(--primary-rgb),0.14);border:1px solid rgba(var(--primary-rgb),0.28);font-size:0.9rem;line-height:1.6;color:#fff;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word}
+    .sc-bubble-soul{max-width:88%;padding:14px 18px;border-radius:18px 18px 18px 4px;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.08),rgba(var(--secondary-rgb),0.04));border:1px solid rgba(255,255,255,0.12);border-left:3px solid rgba(var(--primary-rgb),0.4);font-size:0.92rem;line-height:1.72;color:rgba(255,255,255,0.95);white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
     .sc-send-bar{border-top:1px solid rgba(255,255,255,0.06);padding:10px 12px;display:flex;justify-content:flex-end;align-items:center;gap:8px;}
     .sc-char-hint{font-size:0.7rem;color:rgba(255,255,255,0.25);flex:1;}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(0.88);}}
     @keyframes sc-spin{to{transform:rotate(360deg);}}
-    .request-quick-toggle:hover{color:rgba(212,175,55,0.85);}
-    .request-quick-toggle.open{color:rgba(212,175,55,0.9);}
-    .request-quick-dropdown{position:absolute;left:0;right:0;bottom:calc(100% + 4px);z-index:200;background:#1c1930;border:1px solid rgba(212,175,55,0.2);border-radius:14px;box-shadow:0 -8px 32px rgba(0,0,0,.75);max-height:240px;overflow-y:auto;}
+    .request-quick-toggle:hover{color:rgba(var(--primary-rgb),0.85);}
+    .request-quick-toggle.open{color:rgba(var(--primary-rgb),0.9);}
+    .request-quick-dropdown{position:absolute;left:0;right:0;bottom:calc(100% + 4px);z-index:200;background:#1c1930;border:1px solid rgba(var(--primary-rgb),0.2);border-radius:14px;box-shadow:0 -8px 32px rgba(0,0,0,.75);max-height:240px;overflow-y:auto;}
     .request-quick-dropdown::-webkit-scrollbar{width:3px}
-    .request-quick-dropdown::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.25);border-radius:2px}
+    .request-quick-dropdown::-webkit-scrollbar-thumb{background:rgba(var(--primary-rgb),0.25);border-radius:2px}
     .request-quick-dropdown .quick-item{display:block;width:100%;padding:10px 14px;background:none;border:none;color:rgba(255,255,255,0.8);font-size:0.82rem;font-weight:500;cursor:pointer;font-family:inherit;text-align:left;border-bottom:1px solid rgba(255,255,255,0.04);transition:background .15s;min-height:unset;box-shadow:none;animation:none;margin:0;border-radius:0;}
     .request-quick-dropdown .quick-item:last-child{border-bottom:none;border-radius:0 0 14px 14px;}
     .request-quick-dropdown .quick-item:first-child{border-radius:14px 14px 0 0;}
-    .request-quick-dropdown .quick-item:hover,.request-quick-dropdown .quick-item:active{background:rgba(212,175,55,0.09);color:#fff;}
+    .request-quick-dropdown .quick-item:hover,.request-quick-dropdown .quick-item:active{background:rgba(var(--primary-rgb),0.09);color:#fff;}
     .quick-item{display:block;width:100%;padding:11px 16px;background:none;border:none;color:rgba(255,255,255,0.85);font-size:0.9rem;font-weight:500;cursor:pointer;font-family:inherit;text-align:left;transition:background .15s;border-bottom:1px solid rgba(255,255,255,0.04)}
     .quick-item:last-child{border-bottom:none}
-    .quick-item:hover,.quick-item:active{background:rgba(212,175,55,0.1);color:#d4af37}
+    .quick-item:hover,.quick-item:active{background:rgba(var(--primary-rgb),0.1);color:var(--primary-color)}
     /* Старые стили (оставляем для совместимости) */
     .quick-dropdown{position:relative;flex:1 1 auto;min-width:0;margin-bottom:var(--spacing-sm);min-width:120px}
     @media (max-width: 380px){
@@ -623,38 +627,38 @@
       .request-help-row .request-label{flex:1 1 100%;margin-bottom:var(--spacing-xs)}
       .quick-dropdown{flex:1 1 100%}
     }
-    .request-help-toggle{width:100%;min-height:auto;margin:0;padding:var(--spacing-sm) var(--spacing-md);border-radius:var(--radius-md);background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.12));color:#d4af37;border:1px solid rgba(212,175,55,0.5);box-shadow:none;text-transform:none;letter-spacing:0;font-size:var(--fluid-sm);font-weight:600;flex:0 0 auto;white-space:nowrap;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all .2s}
+    .request-help-toggle{width:100%;min-height:auto;margin:0;padding:var(--spacing-sm) var(--spacing-md);border-radius:var(--radius-md);background:linear-gradient(135deg,rgba(var(--primary-rgb),0.2),rgba(var(--primary-rgb),0.12));color:var(--primary-color);border:1px solid rgba(var(--primary-rgb),0.5);box-shadow:none;text-transform:none;letter-spacing:0;font-size:var(--fluid-sm);font-weight:600;flex:0 0 auto;white-space:nowrap;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all .2s}
     .request-help-toggle::after{content:'';width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid currentColor;margin-left:6px;opacity:.8;transition:transform .2s}
     .request-help-toggle.open::after{transform:rotate(180deg)}
-    .request-help-toggle:hover{background:rgba(212,175,55,.25)}
+    .request-help-toggle:hover{background:rgba(var(--primary-rgb),.25)}
     .request-examples{display:none;position:absolute;top:100%;left:0;right:0;margin-top:4px;padding:var(--spacing-md);background:rgba(255,255,255,0.08);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.18);border-radius:var(--radius-md);box-shadow:0 8px 24px rgba(0,0,0,.5);max-height:min(45vh,220px);overflow-y:auto;z-index:100;-webkit-overflow-scrolling:touch}
     .request-examples.open{display:block}
-    body.theme-light .request-examples{background:rgba(255,255,255,0.95);border-color:rgba(212,175,55,0.4);box-shadow:0 8px 24px rgba(0,0,0,0.12)}
+    body.theme-light .request-examples{background:rgba(255,255,255,0.95);border-color:rgba(var(--primary-rgb),0.4);box-shadow:0 8px 24px rgba(0,0,0,0.12)}
     .quick-list{display:flex;flex-direction:column;gap:0;width:100%}
     .quick-list .example-btn{width:100% !important;padding:14px 18px !important;font-size:1.05rem !important;line-height:1.4 !important;min-height:auto !important;border-radius:0 !important;white-space:normal !important;overflow:visible !important;text-overflow:clip !important;box-sizing:border-box;background:transparent !important;border:none !important;border-bottom:1px solid rgba(255,255,255,0.1) !important;color:var(--tg-theme-text-color,#fff) !important;box-shadow:none !important;font-weight:500 !important;text-align:left !important;transition:all .2s !important}
     .quick-list .example-btn:last-child{border-bottom:none !important}
-    .quick-list .example-btn:hover{background:rgba(212,175,55,.2) !important;color:#fbbf24 !important;transform:none !important}
+    .quick-list .example-btn:hover{background:rgba(var(--primary-rgb),.2) !important;color:var(--primary-light) !important;transform:none !important}
     body.theme-light .quick-list .example-btn{color:#1f2937 !important;border-bottom-color:rgba(31,41,55,0.1) !important}
-    body.theme-light .quick-list .example-btn:hover{background:rgba(212,175,55,.15) !important;color:#d4af37 !important}
+    body.theme-light .quick-list .example-btn:hover{background:rgba(var(--primary-rgb),.15) !important;color:var(--primary-color) !important}
     .example-btn{width:auto;min-width:0;max-width:none;flex-shrink:0;white-space:normal;text-transform:none;letter-spacing:0;font-size:.95rem;font-weight:600;padding:12px 16px;margin:0;min-height:auto;border-radius:12px;box-shadow:none;word-wrap:break-word;word-break:break-word;overflow:visible}
     .example-btn::after{display:none}
-    .example-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(212,175,55,0.45)}
-    button{background:linear-gradient(135deg, #d4af37, #ec4899, #d4af37);background-size:300% 300%;animation:gradientShift 4s ease infinite;color:var(--tg-theme-button-text-color);border:none;padding:13px 24px;font-size:1rem;border-radius:14px;width:100%;font-weight:600;cursor:pointer;transition:all .25s ease;box-shadow:0 8px 22px rgba(212,175,55,0.4);margin-top:8px;letter-spacing:0;text-transform:none;min-height:48px;position:relative;overflow:hidden}
+    .example-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(var(--primary-rgb),0.45)}
+    button{background:linear-gradient(135deg, var(--primary-color), var(--secondary-color), var(--primary-color));background-size:300% 300%;animation:gradientShift 4s ease infinite;color:var(--tg-theme-button-text-color);border:none;padding:13px 24px;font-size:1rem;border-radius:14px;width:100%;font-weight:600;cursor:pointer;transition:all .25s ease;box-shadow:0 8px 22px rgba(var(--primary-rgb),0.4);margin-top:8px;letter-spacing:0;text-transform:none;min-height:48px;position:relative;overflow:hidden}
     button::after{display:none}
-    button:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(212,175,55,0.5)}
-    button:active{transform:translateY(1px);box-shadow:0 4px 12px rgba(212,175,55,0.3)}
+    button:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(var(--primary-rgb),0.5)}
+    button:active{transform:translateY(1px);box-shadow:0 4px 12px rgba(var(--primary-rgb),0.3)}
     button:disabled{background:rgba(255,255,255,0.15);cursor:not-allowed;transform:none;box-shadow:none;opacity:.6;animation:none}
     button.secondary{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.75);border:1px solid rgba(255,255,255,0.12);box-shadow:none;text-transform:none;letter-spacing:0;font-weight:500;min-height:42px;animation:none;font-size:0.92rem}
     button.secondary:hover{background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9)}
     button:focus-visible,.home-nav-link:focus-visible,[role="button"]:focus-visible,a:focus-visible,.lang-switcher-btn:focus-visible,#profileIconBtn:focus-visible,.profile-back-btn:focus-visible,.stories-close:focus-visible,.mode-info:focus-visible,.ppc-details-btn:focus-visible{outline:2px solid var(--tg-theme-button-color);outline-offset:2px}
     .btn-group{display:flex;gap:15px;margin-top:25px}
     .btn-group button{flex:1}
-    .price-tag{background:linear-gradient(90deg,#d4af37,#ec4899);color:white;padding:10px 18px;border-radius:12px;font-size:1.3rem;font-weight:700;text-align:center;margin:16px 0;box-shadow:0 4px 15px rgba(212,175,55,.3);letter-spacing:0.5px}
-    .payment-info{background:rgba(212,175,55,.05);border-left:3px solid rgba(212,175,55,0.5);padding:14px;border-radius:0 12px 12px 0;margin:12px 0;font-size:.92rem;line-height:1.6}
+    .price-tag{background:linear-gradient(90deg,var(--primary-color),var(--secondary-color));color:white;padding:10px 18px;border-radius:12px;font-size:1.3rem;font-weight:700;text-align:center;margin:16px 0;box-shadow:0 4px 15px rgba(var(--primary-rgb),.3);letter-spacing:0.5px}
+    .payment-info{background:rgba(var(--primary-rgb),.05);border-left:3px solid rgba(var(--primary-rgb),0.5);padding:14px;border-radius:0 12px 12px 0;margin:12px 0;font-size:.92rem;line-height:1.6}
     .payment-info::before{content:"💎 ";font-size:1.3rem}
-    .success-icon{font-size:5rem;text-align:center;margin:20px 0;background:linear-gradient(90deg,#d4af37,#ec4899);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .success-icon{font-size:5rem;text-align:center;margin:20px 0;background:linear-gradient(90deg,var(--primary-color),var(--secondary-color));-webkit-background-clip:text;background-clip:text;color:transparent}
     .keys-composition{display:flex;align-items:center;justify-content:center;gap:20px;margin:25px 0;flex-wrap:wrap}
-    .keys-composition svg{filter:drop-shadow(0 4px 12px rgba(212,175,55,.2));transition:transform .3s ease}
+    .keys-composition svg{filter:drop-shadow(0 4px 12px rgba(var(--primary-rgb),.2));transition:transform .3s ease}
     .keys-composition .key-music{transform:rotate(-10deg);width:56px;height:80px}
     .keys-composition .key-door{transform:rotate(8deg);width:52px;height:80px}
     .keys-composition .key-music:hover,.keys-composition .key-door:hover{transform:rotate(0) scale(1.05)}
@@ -664,7 +668,7 @@
     .app-logo{display:block;margin:0 auto;max-width:140px;width:100%;height:auto;border-radius:0;box-shadow:none;opacity:0.94}
     /* Главная — минимализм: контент по центру, забота о взгляде */
     #homeHero{position:relative;text-align:center;background:linear-gradient(180deg,rgba(1,6,26,0.4) 0%,transparent 100%);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:max(56px,calc(env(safe-area-inset-top)+50px)) var(--spacing-lg) var(--spacing-xl);gap:0;box-sizing:border-box;min-height:0}
-    #homeHero .home-tagline{font-size:0.72rem;font-weight:400;letter-spacing:0.14em;color:rgba(212,175,55,0.45);margin-top:var(--spacing-md);text-transform:uppercase}
+    #homeHero .home-tagline{font-size:0.72rem;font-weight:400;letter-spacing:0.14em;color:rgba(var(--primary-rgb),0.45);margin-top:var(--spacing-md);text-transform:uppercase}
     #homeHero .home-greeting{font-size:0.95rem;color:rgba(255,255,255,0.6);line-height:1.6;max-width:240px;margin:var(--spacing-lg) auto var(--spacing-xl);letter-spacing:0.01em}
     #homeHero #startBtn{margin-top:0;width:auto;max-width:280px;padding:14px 36px;font-weight:600;letter-spacing:0.02em;border-radius:50px;align-self:center}
     /* Главная: только кнопки (язык слева, профиль справа), без панели */
@@ -672,18 +676,18 @@
     #homeTopBar .home-topbar-slot{display:flex;align-items:center;justify-content:center;box-sizing:border-box}
     #homeTopBar .lang-switcher-compact{position:relative;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
     /* Унификация кнопок topbar: 44×44, шрифт 9px Comfortaa, SVG 18×18 — перебивают все глобальные и медиаправила */
-    #homeTopBar .home-topbar-btn,#homeTopBar #profileIconBtn,#homeTopBar .lang-switcher-btn{box-sizing:border-box !important;width:40px !important;height:40px !important;min-width:40px !important;min-height:40px !important;max-width:40px !important;max-height:40px !important;margin:0 !important;padding:0 !important;border:1.5px solid rgba(212,175,55,0.4) !important;border-radius:50% !important;display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;line-height:0 !important;font-size:9px !important;font-family:'Comfortaa',sans-serif !important;font-weight:600 !important;color:rgba(212,175,55,0.9) !important;overflow:hidden !important;vertical-align:middle !important;background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(236,72,153,0.14)) !important;cursor:pointer !important;box-shadow:0 2px 12px rgba(0,0,0,0.3) !important;position:relative !important;top:auto !important;right:auto !important;bottom:auto !important;left:auto;aspect-ratio:1/1 !important}
-    #homeTopBar .home-topbar-btn svg,#homeTopBar #profileIconBtn svg{display:block !important;vertical-align:middle !important;width:18px !important;height:18px !important;min-width:18px !important;min-height:18px !important;flex-shrink:0 !important;fill:rgba(212,175,55,0.9) !important}
-    #homeTopBar .home-topbar-btn span,#homeTopBar .lang-switcher-btn span{line-height:0 !important;vertical-align:middle !important;font-size:9px !important;font-family:'Comfortaa',sans-serif !important;font-weight:600 !important;color:rgba(212,175,55,0.9) !important}
-    #homeTopBar .home-topbar-btn:active,#homeTopBar #profileIconBtn:active{background:rgba(212,175,55,0.28) !important}
+    #homeTopBar .home-topbar-btn,#homeTopBar #profileIconBtn,#homeTopBar .lang-switcher-btn{box-sizing:border-box !important;width:40px !important;height:40px !important;min-width:40px !important;min-height:40px !important;max-width:40px !important;max-height:40px !important;margin:0 !important;padding:0 !important;border:1.5px solid rgba(var(--primary-rgb),0.4) !important;border-radius:50% !important;display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;line-height:0 !important;font-size:9px !important;font-family:'Comfortaa',sans-serif !important;font-weight:600 !important;color:rgba(var(--primary-rgb),0.9) !important;overflow:hidden !important;vertical-align:middle !important;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.18),rgba(var(--secondary-rgb),0.14)) !important;cursor:pointer !important;box-shadow:0 2px 12px rgba(0,0,0,0.3) !important;position:relative !important;top:auto !important;right:auto !important;bottom:auto !important;left:auto;aspect-ratio:1/1 !important}
+    #homeTopBar .home-topbar-btn svg,#homeTopBar #profileIconBtn svg{display:block !important;vertical-align:middle !important;width:18px !important;height:18px !important;min-width:18px !important;min-height:18px !important;flex-shrink:0 !important;fill:rgba(var(--primary-rgb),0.9) !important}
+    #homeTopBar .home-topbar-btn span,#homeTopBar .lang-switcher-btn span{line-height:0 !important;vertical-align:middle !important;font-size:9px !important;font-family:'Comfortaa',sans-serif !important;font-weight:600 !important;color:rgba(var(--primary-rgb),0.9) !important}
+    #homeTopBar .home-topbar-btn:active,#homeTopBar #profileIconBtn:active{background:rgba(var(--primary-rgb),0.28) !important}
     #homeTopBar .header-menu-btn,#homeTopBar .btn-info{width:40px !important;height:40px !important;min-width:40px !important;min-height:40px !important;border:1px solid rgba(0,217,255,0.7) !important;box-shadow:0 0 6px rgba(0,217,255,0.5),0 0 12px rgba(0,217,255,0.3),0 0 20px rgba(0,217,255,0.1) !important;color:rgba(255,255,255,0.9) !important;background:rgba(0,217,255,0.1) !important}
     #homeTopBar .header-menu-btn:hover,#homeTopBar .btn-info:hover{box-shadow:0 0 8px rgba(0,217,255,0.6),0 0 16px rgba(0,217,255,0.4),0 0 24px rgba(0,217,255,0.2) !important}
-    #homeTopBar .header-menu-btn svg,#homeTopBar .btn-info svg{fill:#FFD700 !important;stroke:#FFD700 !important}
+    #homeTopBar .header-menu-btn svg,#homeTopBar .btn-info svg{fill:var(--primary-light) !important;stroke:var(--primary-light) !important}
     .lang-switcher-compact{position:relative}
     /* Нижняя зона: три ссылки строго в одну строку без переноса слова */
     .home-lower{display:flex;flex-direction:column;align-items:center;text-align:center}
     .home-nav{display:flex !important;flex-wrap:nowrap !important;justify-content:space-between !important;align-items:center !important;gap:4px !important;width:100%;max-width:100%;padding:8px 6px !important;margin-top:var(--spacing-lg) !important;box-sizing:border-box !important}
-    .home-nav .home-nav-link{flex:1 1 0 !important;min-width:0 !important;max-width:none !important;text-align:center !important;white-space:nowrap !important;word-break:normal !important;overflow:visible !important;font-size:0.7rem !important;line-height:1.2 !important;padding:6px 2px !important;background:none !important;border:none !important;color:rgba(212,175,55,0.65) !important;cursor:pointer !important;font-family:inherit !important;font-weight:600 !important;box-shadow:none !important}
+    .home-nav .home-nav-link{flex:1 1 0 !important;min-width:0 !important;max-width:none !important;text-align:center !important;white-space:nowrap !important;word-break:normal !important;overflow:visible !important;font-size:0.7rem !important;line-height:1.2 !important;padding:6px 2px !important;background:none !important;border:none !important;color:rgba(var(--primary-rgb),0.65) !important;cursor:pointer !important;font-family:inherit !important;font-weight:600 !important;box-shadow:none !important}
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* ── СТОРИС-ОНБОРДИНГ ── */
     #onboardingPage{
@@ -710,45 +714,45 @@
     .stories-tap-next{right:0}
     /* Бренд-блок превью — воздух, без давления */
     .ob-brand{position:relative;z-index:6;text-align:center;padding:clamp(56px,11vh,96px) 28px 0;pointer-events:none;flex-shrink:0}
-    .ob-brand-logo{width:72px;height:72px;margin:0 auto 10px;display:block;opacity:0.95;filter:drop-shadow(0 3px 12px rgba(212,175,55,0.2))}
-    .ob-brand-divider{width:28px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.35),transparent);margin:10px auto}
-    .ob-brand-tag{font-size:0.72rem;color:rgba(212,175,55,0.45);line-height:1.6;max-width:220px;margin:0 auto;letter-spacing:0.03em}
+    .ob-brand-logo{width:72px;height:72px;margin:0 auto 10px;display:block;opacity:0.95;filter:drop-shadow(0 3px 12px rgba(var(--primary-rgb),0.2))}
+    .ob-brand-divider{width:28px;height:1px;background:linear-gradient(90deg,transparent,rgba(var(--primary-rgb),0.35),transparent);margin:10px auto}
+    .ob-brand-tag{font-size:0.72rem;color:rgba(var(--primary-rgb),0.45);line-height:1.6;max-width:220px;margin:0 auto;letter-spacing:0.03em}
     /* Слайды — flex-grow, контент у верхнего края своей зоны */
     .onboarding-slide{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;justify-content:flex-start;flex:1;padding:clamp(24px,7vh,60px) 36px clamp(16px,4vh,32px);text-align:center}
     .onboarding-slide.active{display:flex}
     /* Акцентный декор вместо иконки */
-    .ob-slide-accent{width:32px;height:2px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.7),transparent);border-radius:2px;margin:0 auto 28px;animation:accentFade .5s ease-out}
-    .ob-icon-wrap{width:80px;height:80px;margin:0 auto 24px;flex-shrink:0;filter:drop-shadow(0 4px 18px rgba(212,175,55,0.35));}
+    .ob-slide-accent{width:32px;height:2px;background:linear-gradient(90deg,transparent,rgba(var(--primary-rgb),0.7),transparent);border-radius:2px;margin:0 auto 28px;animation:accentFade .5s ease-out}
+    .ob-icon-wrap{width:80px;height:80px;margin:0 auto 24px;flex-shrink:0;filter:drop-shadow(0 4px 18px rgba(var(--primary-rgb),0.35));}
     .ob-icon-wrap img{width:100%;height:100%;object-fit:contain;display:block;}
-    .ob-icon-sm{width:36px;height:36px;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(212,175,55,0.3));}
+    .ob-icon-sm{width:36px;height:36px;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(var(--primary-rgb),0.3));}
     .ob-icon-sm img{width:100%;height:100%;object-fit:contain;display:block;}
     @keyframes accentFade{from{opacity:0;transform:scaleX(0.4)}to{opacity:1;transform:scaleX(1)}}
     .onboarding-title{font-size:1.25rem !important;font-weight:600 !important;color:rgba(255,248,225,0.96);margin:0 0 16px 0;line-height:1.35;max-width:260px;letter-spacing:-0.01em}
     .onboarding-text{font-size:0.85rem !important;line-height:1.7 !important;color:rgba(255,255,255,0.5);margin:0 0 28px 0;max-width:240px}
-    .onboarding-btn{padding:14px 32px;border-radius:var(--radius-lg);background:linear-gradient(135deg,#d4af37,#c9922e);border:none;color:#0a0810;font-size:0.9rem !important;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(212,175,55,0.3);transition:transform .2s,box-shadow .2s;min-width:180px;width:auto;margin-top:0;min-height:unset;animation:none;letter-spacing:0.03em;text-transform:none}
-    .onboarding-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(212,175,55,0.4)}
+    .onboarding-btn{padding:14px 32px;border-radius:var(--radius-lg);background:linear-gradient(135deg,var(--primary-color),#c9922e);border:none;color:#0a0810;font-size:0.9rem !important;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(var(--primary-rgb),0.3);transition:transform .2s,box-shadow .2s;min-width:180px;width:auto;margin-top:0;min-height:unset;animation:none;letter-spacing:0.03em;text-transform:none}
+    .onboarding-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(var(--primary-rgb),0.4)}
     .onboarding-btn:active{transform:translateY(1px)}
     .onboarding-dots{display:none}
     .onboarding-progress{display:none}
     .onboarding-progress-bar{display:none}
     .onboarding-skip{display:none}
-    .success-title{font-size:2.2rem;font-weight:700;text-align:center;margin:20px 0;background:linear-gradient(90deg,#d4af37,#ec4899);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .success-title{font-size:2.2rem;font-weight:700;text-align:center;margin:20px 0;background:linear-gradient(90deg,var(--primary-color),var(--secondary-color));-webkit-background-clip:text;background-clip:text;color:transparent}
     .success-text{font-size:1.15rem;line-height:1.7;margin:20px 0;text-align:center;padding:0 10px}
     .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px 40px;text-align:center;min-height:70vh}
-    .spinner{width:60px;height:60px;border:4px solid rgba(212,175,55,.15);border-top-color:#d4af37;border-radius:50%;margin:0 auto 25px;animation:spin 1s linear infinite}
+    .spinner{width:60px;height:60px;border:4px solid rgba(var(--primary-rgb),.15);border-top-color:var(--primary-color);border-radius:50%;margin:0 auto 25px;animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
-    .loading-text{font-size:1.5rem;color:#d4af37;font-weight:600;margin-bottom:15px}
-    .song-preview{background:rgba(212,175,55,0.06);border-radius:16px;padding:20px;margin:20px 0;text-align:left;border:1px solid rgba(212,175,55,0.25)}
-    .song-preview h3{color:#d4af37;font-size:1.1rem;margin-bottom:8px;text-align:center}
+    .loading-text{font-size:1.5rem;color:var(--primary-color);font-weight:600;margin-bottom:15px}
+    .song-preview{background:rgba(var(--primary-rgb),0.06);border-radius:16px;padding:20px;margin:20px 0;text-align:left;border:1px solid rgba(var(--primary-rgb),0.25)}
+    .song-preview h3{color:var(--primary-color);font-size:1.1rem;margin-bottom:8px;text-align:center}
     .song-preview p{font-size:0.9rem;line-height:1.65;color:rgba(255,255,255,0.6)}
     footer{text-align:center;padding:20px 0 max(16px,env(safe-area-inset-bottom));color:rgba(255,255,255,0.22);font-size:var(--fluid-xs);margin-top:auto;letter-spacing:0.02em}
-    .footer-help{display:inline-flex !important;align-items:center;justify-content:center;color:rgba(212,175,55,0.4) !important;font-size:.78rem !important;cursor:pointer;border:none !important;background:none !important;font-family:inherit;padding:8px 16px !important;margin:0 !important;border-radius:20px !important;box-shadow:none !important;animation:none !important;min-height:unset !important;width:auto !important;font-weight:400 !important;letter-spacing:0.04em !important;transition:color .2s,background .2s}
-    .footer-help:hover,.footer-help:active{color:rgba(212,175,55,0.75) !important;background:rgba(212,175,55,0.06) !important}
+    .footer-help{display:inline-flex !important;align-items:center;justify-content:center;color:rgba(var(--primary-rgb),0.4) !important;font-size:.78rem !important;cursor:pointer;border:none !important;background:none !important;font-family:inherit;padding:8px 16px !important;margin:0 !important;border-radius:20px !important;box-shadow:none !important;animation:none !important;min-height:unset !important;width:auto !important;font-weight:400 !important;letter-spacing:0.04em !important;transition:color .2s,background .2s}
+    .footer-help:hover,.footer-help:active{color:rgba(var(--primary-rgb),0.75) !important;background:rgba(var(--primary-rgb),0.06) !important}
     /* Карточки героев */
-    .hero-card{background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.12);border-radius:16px;padding:16px;margin-bottom:12px;transition:border-color .2s}
-    .hero-card.expanded{border-color:rgba(212,175,55,0.28)}
+    .hero-card{background:rgba(255,255,255,0.04);border:1px solid rgba(var(--primary-rgb),0.12);border-radius:16px;padding:16px;margin-bottom:12px;transition:border-color .2s}
+    .hero-card.expanded{border-color:rgba(var(--primary-rgb),0.28)}
     .hero-card-head{display:flex;align-items:center;gap:12px;cursor:pointer}
-    .hero-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,rgba(212,175,55,0.3),rgba(212,175,55,0.08));display:flex;align-items:center;justify-content:center;font-size:1.15rem;font-weight:700;color:#d4af37;flex-shrink:0;border:1px solid rgba(212,175,55,0.22)}
+    .hero-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.3),rgba(var(--primary-rgb),0.08));display:flex;align-items:center;justify-content:center;font-size:1.15rem;font-weight:700;color:var(--primary-color);flex-shrink:0;border:1px solid rgba(var(--primary-rgb),0.22)}
     .hero-card-name{font-size:1rem;font-weight:600;color:#fff;line-height:1.25}
     .hero-card-meta{font-size:0.77rem;color:rgba(255,255,255,0.4);margin-top:3px;line-height:1.4}
     .hero-card-chevron{margin-left:auto;font-size:0.72rem;color:rgba(255,255,255,0.3);transition:transform .25s;flex-shrink:0}
@@ -756,8 +760,8 @@
     .hero-card-body{display:none;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07)}
     .hero-card.expanded .hero-card-body{display:block}
     .hca-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-    .hca-btn{padding:8px 13px;border-radius:10px;border:1px solid rgba(212,175,55,0.28);background:rgba(212,175,55,0.07);color:#d4af37;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;transition:background .2s;letter-spacing:0;line-height:1.3}
-    .hca-btn:active{background:rgba(212,175,55,0.18)}
+    .hca-btn{padding:8px 13px;border-radius:10px;border:1px solid rgba(var(--primary-rgb),0.28);background:rgba(var(--primary-rgb),0.07);color:var(--primary-color);font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;transition:background .2s;letter-spacing:0;line-height:1.3}
+    .hca-btn:active{background:rgba(var(--primary-rgb),0.18)}
     .hca-btn.hca-danger{border-color:rgba(239,68,68,0.28);color:rgba(239,68,68,0.7);background:rgba(239,68,68,0.06)}
     .hca-btn.hca-secondary{border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.55);background:rgba(255,255,255,0.04)}
     /* История генераций в карточке героя */
@@ -767,23 +771,23 @@
     .hero-hist-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px 14px;margin-bottom:8px}
     .hero-hist-title{font-size:0.88rem;font-weight:600;color:rgba(255,255,255,0.88);margin-bottom:4px}
     .hero-hist-meta{font-size:0.74rem;color:rgba(255,255,255,0.35);margin-bottom:10px}
-    .hero-hist-block-label{font-size:0.74rem;font-weight:600;color:rgba(212,175,55,0.6);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px}
+    .hero-hist-block-label{font-size:0.74rem;font-weight:600;color:rgba(var(--primary-rgb),0.6);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px}
     .hero-hist-text{font-size:0.8rem;color:rgba(255,255,255,0.55);line-height:1.55;white-space:pre-wrap;max-height:160px;overflow-y:auto;margin-bottom:10px}
-    .hero-hist-audio{display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;color:#d4af37;text-decoration:none;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);border-radius:8px;padding:6px 12px;margin-top:4px}
+    .hero-hist-audio{display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--primary-color);text-decoration:none;background:rgba(var(--primary-rgb),0.08);border:1px solid rgba(var(--primary-rgb),0.25);border-radius:8px;padding:6px 12px;margin-top:4px}
     .hero-hist-toggle{font-size:0.78rem;color:rgba(255,255,255,0.35);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;margin-bottom:8px;min-height:unset;width:auto;box-shadow:none;animation:none;letter-spacing:0}
-    .hero-style-badge{display:inline-block;font-size:0.72rem;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.22);color:rgba(212,175,55,0.75);border-radius:6px;padding:2px 8px;margin-top:5px}
+    .hero-style-badge{display:inline-block;font-size:0.72rem;background:rgba(var(--primary-rgb),0.1);border:1px solid rgba(var(--primary-rgb),0.22);color:rgba(var(--primary-rgb),0.75);border-radius:6px;padding:2px 8px;margin-top:5px}
     /* Страница помощи */
     #helpPage .help-header{padding:max(20px,calc(env(safe-area-inset-top)+12px)) 20px 16px 20px}
     #loadingPage{align-items:center;justify-content:center}
     #successPage,.page#paymentThanksPage{flex-direction:column}
     .ppc-feature{display:flex;align-items:center;gap:4px}
-    .ppc-info{width:14px;height:14px;border-radius:50%;border:1px solid rgba(212,175,55,0.35);color:rgba(212,175,55,0.6);font-size:0.6rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;line-height:1;font-style:normal;user-select:none;margin-left:2px}
-    .ppc-info:active{color:#d4af37;border-color:#d4af37}
+    .ppc-info{width:14px;height:14px;border-radius:50%;border:1px solid rgba(var(--primary-rgb),0.35);color:rgba(var(--primary-rgb),0.6);font-size:0.6rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;line-height:1;font-style:normal;user-select:none;margin-left:2px}
+    .ppc-info:active{color:var(--primary-color);border-color:var(--primary-color)}
     #helpPage .help-back-row{display:flex;align-items:center;margin-bottom:12px}
     #helpPage .help-back-btn{background:none;border:1px solid #FF0055;border-radius:50%;width:44px;height:44px;color:#fff;font-size:1.2rem;cursor:pointer;padding:0;line-height:1;min-height:unset;box-shadow:0 0 8px #FF0055;animation:none;margin:0;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
     #helpPage .help-back-btn:hover{box-shadow:0 0 12px #FF0055}
     #helpPage .help-title-wrap{text-align:center;padding:0 40px}
-    #helpPage .help-title{font-size:1.35rem;font-weight:700;color:#d4af37;margin-bottom:4px}
+    #helpPage .help-title{font-size:1.35rem;font-weight:700;color:var(--primary-color);margin-bottom:4px}
     #helpPage .help-subtitle{font-size:0.85rem;color:rgba(255,255,255,0.45);line-height:1.5}
     .help-section{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;margin:0 0 12px;overflow:hidden}
     .help-section-title{width:100%;background:none;border:none;color:rgba(255,255,255,0.85);font-size:0.95rem;font-weight:600;padding:15px 16px;text-align:left;cursor:pointer;font-family:inherit;display:flex;justify-content:space-between;align-items:center;gap:8px;line-height:1.35}
@@ -797,19 +801,19 @@
     .help-section-body ul{margin:6px 0 8px;padding-left:18px}
     .help-section-body ul li{margin-bottom:4px}
     .help-section-body strong{color:rgba(255,255,255,0.82)}
-    .help-support-btn{width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08)) !important;border:1px solid rgba(212,175,55,0.35);color:#d4af37 !important;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-top:16px;transition:background .2s;animation:none !important;box-shadow:none !important;min-height:48px}
-    .help-support-btn:hover{background:rgba(212,175,55,0.22) !important}
-    .help-support-btn:active{background:rgba(212,175,55,0.28) !important}
+    .help-support-btn{width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.18),rgba(var(--primary-rgb),0.08)) !important;border:1px solid rgba(var(--primary-rgb),0.35);color:var(--primary-color) !important;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-top:16px;transition:background .2s;animation:none !important;box-shadow:none !important;min-height:48px}
+    .help-support-btn:hover{background:rgba(var(--primary-rgb),0.22) !important}
+    .help-support-btn:active{background:rgba(var(--primary-rgb),0.28) !important}
     .birthplace-wrap{position:relative}
-    .birthplace-suggestions{display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--tg-theme-bg-color,rgba(15,12,40,0.98));border:2px solid rgba(212,175,55,0.5);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.3);max-height:280px;overflow-y:auto;z-index:50;list-style:none;padding:6px 0}
+    .birthplace-suggestions{display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--tg-theme-bg-color,rgba(15,12,40,0.98));border:2px solid rgba(var(--primary-rgb),0.5);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.3);max-height:280px;overflow-y:auto;z-index:50;list-style:none;padding:6px 0}
     .birthplace-suggestions li{padding:14px 18px;cursor:pointer;font-size:1.05rem;color:var(--tg-theme-text-color,#fff);border-bottom:1px solid rgba(255,255,255,0.1);transition:all .2s;font-weight:400}
     .birthplace-suggestions li:last-child{border-bottom:none}
-    .birthplace-suggestions li:hover,.birthplace-suggestions li.selected{background:rgba(212,175,55,.2);color:#fbbf24}
+    .birthplace-suggestions li:hover,.birthplace-suggestions li.selected{background:rgba(var(--primary-rgb),.2);color:var(--primary-light)}
     .birthplace-suggestions .place-type{font-size:.9rem;color:rgba(255,255,255,0.6);margin-top:3px;font-weight:400}
     #birthplace,#birthplace2,#heroBirthplace{padding-right:3rem;text-overflow:ellipsis;min-width:0;font-size:1.05rem;font-weight:500}
     .birthplace-check{position:absolute;right:16px;top:50%;transform:translateY(-50%);pointer-events:none;color:#4ade80;font-size:1.15rem;display:none;font-weight:700;flex-shrink:0}
     .birthplace-wrap.has-place .birthplace-check{display:block}
-    .birthplace-hint{margin-top:8px;font-size:.95rem;color:rgba(212,175,55,0.9);line-height:1.6;font-weight:500;background:rgba(212,175,55,0.08);padding:10px 14px;border-radius:10px;border:1px solid rgba(212,175,55,0.25)}
+    .birthplace-hint{margin-top:8px;font-size:.95rem;color:rgba(var(--primary-rgb),0.9);line-height:1.6;font-weight:500;background:rgba(var(--primary-rgb),0.08);padding:10px 14px;border-radius:10px;border:1px solid rgba(var(--primary-rgb),0.25)}
     @media (max-width: 600px) {
       .birthplace-suggestions{max-height:240px;border-width:2.5px}
       .birthplace-suggestions li{padding:16px 20px;font-size:1.2rem;font-weight:400;letter-spacing:0}
@@ -832,12 +836,12 @@
     #secondPersonForm{padding-top:8px;}
     
     /* Панель навигации для превью в браузере */
-    .preview-nav{background:white;border-radius:16px;padding:12px;margin-bottom:25px;box-shadow:0 4px 20px rgba(212,175,55,.12);text-align:center;border:1px solid #e5e7eb;display:none}
+    .preview-nav{background:white;border-radius:16px;padding:12px;margin-bottom:25px;box-shadow:0 4px 20px rgba(var(--primary-rgb),.12);text-align:center;border:1px solid #e5e7eb;display:none}
     .preview-nav.show{display:block}
     .preview-nav-buttons{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
-    .preview-nav button{background:rgba(212,175,55,0.1);color:#d4af37;border:1px solid rgba(212,175,55,0.35);padding:6px 14px;margin:0 4px;border-radius:20px;cursor:pointer;font-weight:600;transition:all .2s;font-size:.9rem;min-width:90px;min-height:auto;animation:none}
-    .preview-nav button:hover{background:rgba(212,175,55,0.2);color:#d4af37;transform:translateY(-1px)}
-    .preview-nav button.active{background:linear-gradient(90deg,#d4af37,#ec4899);color:white;border-color:transparent;box-shadow:0 4px 15px rgba(212,175,55,.3)}
+    .preview-nav button{background:rgba(var(--primary-rgb),0.1);color:var(--primary-color);border:1px solid rgba(var(--primary-rgb),0.35);padding:6px 14px;margin:0 4px;border-radius:20px;cursor:pointer;font-weight:600;transition:all .2s;font-size:.9rem;min-width:90px;min-height:auto;animation:none}
+    .preview-nav button:hover{background:rgba(var(--primary-rgb),0.2);color:var(--primary-color);transform:translateY(-1px)}
+    .preview-nav button.active{background:linear-gradient(90deg,var(--primary-color),var(--secondary-color));color:white;border-color:transparent;box-shadow:0 4px 15px rgba(var(--primary-rgb),.3)}
     
     @media (max-width:480px){.container{padding:0 var(--spacing-sm)}h1{font-size:var(--fluid-2xl)}.subtitle{font-size:var(--fluid-base)}.tagline{font-size:var(--fluid-md)}.section{padding:var(--spacing-lg) var(--spacing-md)}.btn-group{flex-direction:column}.btn-group button{width:100%}button{font-size:1rem;padding:13px 20px;min-height:48px}.price-tag{font-size:1.25rem;padding:10px 15px}.success-icon{font-size:4rem}.success-title{font-size:1.9rem}.success-text{font-size:1.05rem}.preview-nav-buttons{flex-direction:column;align-items:center}.preview-nav button{width:100%;max-width:200px}}
     @media (max-width:360px){.container{padding:0 var(--spacing-xs)}.section{padding:var(--spacing-md) var(--spacing-sm)}.content-wrapper{padding:12px}.profile-header{padding:max(16px,calc(env(safe-area-inset-top)+10px)) 14px 12px}.profile-scroll{padding:6px 14px calc(env(safe-area-inset-bottom)+120px)}}
@@ -849,8 +853,8 @@
     }
 
     /* ── ИКОНКА ПРОФИЛЯ (в шапке главной страницы) ── */
-    #profileIconBtn{min-width:44px;min-height:44px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(236,72,153,0.14));border:1.5px solid rgba(212,175,55,0.4);cursor:pointer;padding:0;margin:0;box-shadow:0 2px 12px rgba(0,0,0,0.3);animation:none;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;color:#d4af37;font-family:inherit;letter-spacing:0;line-height:1;transition:background .2s,border-color .2s;flex-shrink:0}
-    #profileIconBtn:active{background:rgba(212,175,55,0.28)}
+    #profileIconBtn{min-width:44px;min-height:44px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.18),rgba(var(--secondary-rgb),0.14));border:1.5px solid rgba(var(--primary-rgb),0.4);cursor:pointer;padding:0;margin:0;box-shadow:0 2px 12px rgba(0,0,0,0.3);animation:none;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;color:var(--primary-color);font-family:inherit;letter-spacing:0;line-height:1;transition:background .2s,border-color .2s;flex-shrink:0}
+    #profileIconBtn:active{background:rgba(var(--primary-rgb),0.28)}
 
     /* ── ПРОФИЛЬ ── */
     .profile-header{display:flex;justify-content:space-between;align-items:center;padding:max(20px,calc(env(safe-area-inset-top)+12px)) 16px 16px;flex-shrink:0;background:#08071a;z-index:10;margin-bottom:0}
@@ -876,48 +880,48 @@
     .header-menu-btn:hover,.btn-info:hover{box-shadow:0 0 8px rgba(0,217,255,0.6),0 0 16px rgba(0,217,255,0.4),0 0 24px rgba(0,217,255,0.2) !important;backdrop-filter:blur(6px)}
     .profile-back-btn svg,.header-back-btn svg,.btn-nav svg,.header-menu-btn svg,.btn-info svg{width:18px !important;height:18px !important;flex-shrink:0 !important}
     .profile-back-btn svg,.header-back-btn svg,.btn-nav svg{fill:rgba(255,255,255,0.95) !important;stroke:rgba(255,255,255,0.95) !important;filter:drop-shadow(0 0 2px rgba(255,255,255,0.5))}
-    .header-menu-btn svg,.btn-info svg{fill:#FFD700 !important;stroke:#FFD700 !important;filter:drop-shadow(0 0 3px rgba(255,215,0,0.6)) !important}
-    .header-menu-btn img,.btn-info img{width:18px !important;height:18px !important;filter:drop-shadow(0 0 3px rgba(255,215,0,0.6))}
+    .header-menu-btn svg,.btn-info svg{fill:var(--primary-light) !important;stroke:var(--primary-light) !important;filter:drop-shadow(0 0 3px rgba(var(--primary-rgb),0.6)) !important}
+    .header-menu-btn img,.btn-info img{width:18px !important;height:18px !important;filter:drop-shadow(0 0 3px rgba(var(--primary-rgb),0.6))}
     /* Перебиваем inline width/height только у кнопок хедера */
     button.profile-back-btn,button.header-back-btn,button.btn-nav,button.header-menu-btn,button.btn-info{width:40px !important;height:40px !important;min-width:40px !important;max-width:40px !important;min-height:40px !important;max-height:40px !important;border-radius:50% !important}
     .form-header-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top));position:relative;flex-shrink:0;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;z-index:100}
     .profile-scroll{padding:24px 20px calc(env(safe-area-inset-bottom)+120px)}
     .profile-identity{text-align:center;margin-bottom:28px;padding-top:8px}
     .profile-avatar-wrap{position:relative;width:72px;height:72px;margin:0 auto 14px;cursor:pointer}
-    .profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#d4af37,#ec4899);display:flex;align-items:center;justify-content:center;font-size:2rem;color:#fff;font-weight:700;letter-spacing:0;box-shadow:0 0 0 4px rgba(212,175,55,0.12),0 4px 24px rgba(212,175,55,0.18);overflow:hidden;transition:filter .2s}
+    .profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));display:flex;align-items:center;justify-content:center;font-size:2rem;color:#fff;font-weight:700;letter-spacing:0;box-shadow:0 0 0 4px rgba(var(--primary-rgb),0.12),0 4px 24px rgba(var(--primary-rgb),0.18);overflow:hidden;transition:filter .2s}
     .profile-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
     .profile-avatar-wrap:active .profile-avatar{filter:brightness(0.75)}
-    .profile-avatar-edit{position:absolute;bottom:-4px;right:-4px;min-width:44px;min-height:44px;width:44px;height:44px;border-radius:50%;background:#1a1628;border:1.5px solid rgba(212,175,55,0.5);display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:rgba(212,175,55,0.85);pointer-events:none}
-    .profile-avatar-spinner{position:absolute;inset:0;border-radius:50%;background:rgba(10,8,25,0.6);display:none;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(212,175,55,0.8)}
+    .profile-avatar-edit{position:absolute;bottom:-4px;right:-4px;min-width:44px;min-height:44px;width:44px;height:44px;border-radius:50%;background:#1a1628;border:1.5px solid rgba(var(--primary-rgb),0.5);display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:rgba(var(--primary-rgb),0.85);pointer-events:none}
+    .profile-avatar-spinner{position:absolute;inset:0;border-radius:50%;background:rgba(10,8,25,0.6);display:none;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(var(--primary-rgb),0.8)}
     .profile-name{font-size:1.3rem;font-weight:700;color:#fff;letter-spacing:0.01em;margin-bottom:8px}
-    .profile-plan-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.28);border-radius:20px;padding:4px 12px;font-size:0.75rem;font-weight:600;color:rgba(212,175,55,0.85);letter-spacing:0.04em;text-transform:uppercase}
-    .profile-balance-card{background:linear-gradient(135deg,rgba(212,175,55,0.07),rgba(236,72,153,0.04));border:1px solid rgba(212,175,55,0.2);border-radius:18px;padding:18px 20px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .profile-plan-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(var(--primary-rgb),0.1);border:1px solid rgba(var(--primary-rgb),0.28);border-radius:20px;padding:4px 12px;font-size:0.75rem;font-weight:600;color:rgba(var(--primary-rgb),0.85);letter-spacing:0.04em;text-transform:uppercase}
+    .profile-balance-card{background:linear-gradient(135deg,rgba(var(--primary-rgb),0.07),rgba(var(--secondary-rgb),0.04));border:1px solid rgba(var(--primary-rgb),0.2);border-radius:18px;padding:18px 20px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
     .profile-balance-left{}
     .profile-balance-label{font-size:0.8rem;color:rgba(255,255,255,0.55);margin-bottom:4px;letter-spacing:0.02em}
-    .profile-balance-value{font-size:2.2rem;font-weight:800;color:#d4af37;line-height:1}
+    .profile-balance-value{font-size:2.2rem;font-weight:800;color:var(--primary-color);line-height:1}
     .profile-balance-hint{font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:6px;line-height:1.45}
-    .profile-balance-icon{font-size:1.8rem;color:rgba(212,175,55,0.3);line-height:1;font-family:Georgia,serif;font-style:italic}
+    .profile-balance-icon{font-size:1.8rem;color:rgba(var(--primary-rgb),0.3);line-height:1;font-family:Georgia,serif;font-style:italic}
     .profile-section-title{font-size:0.72rem;font-weight:700;letter-spacing:0.12em;color:rgba(255,255,255,0.35);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px}
     .profile-section-title::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.06)}
     /* Карточка «Мои данные» — glassmorphism + glow */
-    #profileSectionMyData.profile-section-title{color:rgba(212,175,55,0.9);font-size:0.75rem;letter-spacing:0.1em;margin-bottom:16px;padding-left:4px;position:relative}
-    #profileSectionMyData.profile-section-title::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:12px;background:linear-gradient(180deg,#D4AF37,rgba(212,175,55,0.3));border-radius:2px}
-    #profileDataCard{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(135deg,rgba(212,175,55,0.08) 0%,rgba(212,175,55,0.02) 100%);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(212,175,55,0.2);border-radius:20px;padding:20px 18px;margin-bottom:24px;overflow:hidden;transition:all 0.4s cubic-bezier(0.4,0,0.2,1);box-shadow:0 8px 32px rgba(212,175,55,0.1),inset 0 1px 0 rgba(255,255,255,0.05);box-sizing:border-box}
-    #profileDataCard::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(212,175,55,0.15) 0%,transparent 70%);animation:profileDataCardPulse 8s ease-in-out infinite;pointer-events:none;opacity:0.5}
+    #profileSectionMyData.profile-section-title{color:rgba(var(--primary-rgb),0.9);font-size:0.75rem;letter-spacing:0.1em;margin-bottom:16px;padding-left:4px;position:relative}
+    #profileSectionMyData.profile-section-title::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:12px;background:linear-gradient(180deg,#D4AF37,rgba(var(--primary-rgb),0.3));border-radius:2px}
+    #profileDataCard{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.08) 0%,rgba(var(--primary-rgb),0.02) 100%);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(var(--primary-rgb),0.2);border-radius:20px;padding:20px 18px;margin-bottom:24px;overflow:hidden;transition:all 0.4s cubic-bezier(0.4,0,0.2,1);box-shadow:0 8px 32px rgba(var(--primary-rgb),0.1),inset 0 1px 0 rgba(255,255,255,0.05);box-sizing:border-box}
+    #profileDataCard::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(var(--primary-rgb),0.15) 0%,transparent 70%);animation:profileDataCardPulse 8s ease-in-out infinite;pointer-events:none;opacity:0.5}
     @keyframes profileDataCardPulse{0%,100%{transform:scale(1);opacity:0.5}50%{transform:scale(1.1);opacity:0.8}}
-    #profileDataCard:hover{transform:translateY(-2px);border-color:rgba(212,175,55,0.4);box-shadow:0 12px 40px rgba(212,175,55,0.2),inset 0 1px 0 rgba(255,255,255,0.1)}
+    #profileDataCard:hover{transform:translateY(-2px);border-color:rgba(var(--primary-rgb),0.4);box-shadow:0 12px 40px rgba(var(--primary-rgb),0.2),inset 0 1px 0 rgba(255,255,255,0.1)}
     #profileDataCard .pfa-info{flex:1;min-width:0}
-    #profileDataCard #profileEditBtn{position:relative;padding:16px 20px;background:linear-gradient(135deg,rgba(212,175,55,0.15) 0%,rgba(212,175,55,0.05) 100%);border:1px solid rgba(212,175,55,0.3);border-radius:14px;color:#D4AF37;font-family:'Comfortaa',sans-serif;font-size:0.95rem;font-weight:600;letter-spacing:0.02em;cursor:pointer;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);overflow:hidden;display:flex;align-items:center;justify-content:center;gap:10px;min-height:44px;box-shadow:none;animation:none;white-space:nowrap;flex-shrink:0}
-    #profileDataCard #profileEditBtn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);transition:left 0.6s ease}
+    #profileDataCard #profileEditBtn{position:relative;padding:16px 20px;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.15) 0%,rgba(var(--primary-rgb),0.05) 100%);border:1px solid rgba(var(--primary-rgb),0.3);border-radius:14px;color:#D4AF37;font-family:'Comfortaa',sans-serif;font-size:0.95rem;font-weight:600;letter-spacing:0.02em;cursor:pointer;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);overflow:hidden;display:flex;align-items:center;justify-content:center;gap:10px;min-height:44px;box-shadow:none;animation:none;white-space:nowrap;flex-shrink:0}
+    #profileDataCard #profileEditBtn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(var(--primary-rgb),0.3),transparent);transition:left 0.6s ease}
     #profileDataCard #profileEditBtn:hover::before{left:100%}
-    #profileDataCard #profileEditBtn:hover{background:linear-gradient(135deg,rgba(212,175,55,0.25) 0%,rgba(212,175,55,0.1) 100%);border-color:rgba(212,175,55,0.5);transform:translateY(-1px);box-shadow:0 8px 24px rgba(212,175,55,0.3),inset 0 1px 0 rgba(255,255,255,0.1)}
+    #profileDataCard #profileEditBtn:hover{background:linear-gradient(135deg,rgba(var(--primary-rgb),0.25) 0%,rgba(var(--primary-rgb),0.1) 100%);border-color:rgba(var(--primary-rgb),0.5);transform:translateY(-1px);box-shadow:0 8px 24px rgba(var(--primary-rgb),0.3),inset 0 1px 0 rgba(255,255,255,0.1)}
     #profileDataCard #profileEditBtn:active{transform:scale(0.98);transition:transform 0.1s ease}
     /* YupSoul — компактная кнопка «Изменить» в профиле */
     #profileSectionMyData.profile-section-title{margin-bottom:12px}
     #profileDataCard{padding:12px 16px !important;margin-bottom:16px !important}
-    #profileDataCard #profileEditBtn{padding:8px 16px !important;font-size:0.9rem !important;font-weight:500 !important;border-radius:20px !important;border:1px solid rgba(212,175,55,0.6) !important;background:rgba(212,175,55,0.1) !important;color:#D4AF37 !important;box-shadow:0 0 8px rgba(212,175,55,0.3) !important;backdrop-filter:blur(4px);min-height:unset !important;gap:6px !important}
+    #profileDataCard #profileEditBtn{padding:8px 16px !important;font-size:0.9rem !important;font-weight:500 !important;border-radius:20px !important;border:1px solid rgba(var(--primary-rgb),0.6) !important;background:rgba(var(--primary-rgb),0.1) !important;color:#D4AF37 !important;box-shadow:0 0 8px rgba(var(--primary-rgb),0.3) !important;backdrop-filter:blur(4px);min-height:unset !important;gap:6px !important}
     #profileDataCard #profileEditBtn::before{display:none}
-    #profileDataCard #profileEditBtn:hover{background:rgba(212,175,55,0.2) !important;box-shadow:0 0 12px rgba(212,175,55,0.5) !important;transform:translateY(-1px)}
+    #profileDataCard #profileEditBtn:hover{background:rgba(var(--primary-rgb),0.2) !important;box-shadow:0 0 12px rgba(var(--primary-rgb),0.5) !important;transform:translateY(-1px)}
     #profileDataCard #profileEditBtn svg{width:14px !important;height:14px !important;fill:#D4AF37 !important;stroke:#D4AF37 !important}
     /* YupSoul — воздух в профиле: отступы и структура */
     #profilePage .profile-header{margin-bottom:24px !important}
@@ -937,23 +941,23 @@
     #profileSectionPlans.profile-section-title{margin-top:24px}
     .profile-plans-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
     .profile-plan-card{background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px 14px;position:relative;display:flex;flex-direction:column;gap:4px;transition:border-color .2s,background .2s}
-    .profile-plan-card.current{background:rgba(212,175,55,0.07);border-color:rgba(212,175,55,0.38)}
-    .profile-plan-card.popular{background:linear-gradient(135deg,rgba(236,72,153,0.08),rgba(212,175,55,0.06));border-color:rgba(236,72,153,0.35);grid-column:1 / -1}
-    .ppc-badge{font-size:0.62rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(212,175,55,0.7);margin-bottom:4px}
-    .ppc-badge.hot{color:#ec4899}
+    .profile-plan-card.current{background:rgba(var(--primary-rgb),0.07);border-color:rgba(var(--primary-rgb),0.38)}
+    .profile-plan-card.popular{background:linear-gradient(135deg,rgba(var(--secondary-rgb),0.08),rgba(var(--primary-rgb),0.06));border-color:rgba(var(--secondary-rgb),0.35);grid-column:1 / -1}
+    .ppc-badge{font-size:0.62rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(var(--primary-rgb),0.7);margin-bottom:4px}
+    .ppc-badge.hot{color:var(--secondary-color)}
     .ppc-name{font-size:1rem;font-weight:700;color:#fff;margin-bottom:8px}
     .ppc-features{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;flex:1}
     .ppc-feature{font-size:0.78rem;color:rgba(255,255,255,0.6);line-height:1.45}
     .ppc-price-wrap{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
-    .ppc-price{font-size:0.85rem;font-weight:700;color:rgba(212,175,55,0.85)}
-    .ppc-save{font-size:0.68rem;font-weight:600;color:#ec4899;background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.25);border-radius:10px;padding:2px 6px;white-space:nowrap}
+    .ppc-price{font-size:0.85rem;font-weight:700;color:rgba(var(--primary-rgb),0.85)}
+    .ppc-save{font-size:0.68rem;font-weight:600;color:var(--secondary-color);background:rgba(var(--secondary-rgb),0.1);border:1px solid rgba(var(--secondary-rgb),0.25);border-radius:10px;padding:2px 6px;white-space:nowrap}
     .profile-plan-card.current .ppc-price{color:rgba(255,255,255,0.4);font-size:0.75rem;font-weight:400}
-    .profile-plan-card.master{background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(236,72,153,0.07));border-color:rgba(212,175,55,0.5);grid-column:1 / -1}
-    .ppc-badge.master-badge{color:#d4af37}
-    .ppc-btn.master-btn{background:linear-gradient(135deg,rgba(212,175,55,0.3),rgba(236,72,153,0.25));border:1px solid rgba(212,175,55,0.5);color:#d4af37}
-    .ppc-btn{padding:8px 14px;border-radius:10px;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.35);color:#d4af37;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;margin:0;letter-spacing:0.02em;width:100%}
-    .ppc-btn:active{background:rgba(212,175,55,0.25)}
-    .ppc-btn.popular-btn{background:linear-gradient(135deg,rgba(236,72,153,0.25),rgba(212,175,55,0.18));border-color:rgba(236,72,153,0.45);color:#ec4899}
+    .profile-plan-card.master{background:linear-gradient(135deg,rgba(var(--primary-rgb),0.1),rgba(var(--secondary-rgb),0.07));border-color:rgba(var(--primary-rgb),0.5);grid-column:1 / -1}
+    .ppc-badge.master-badge{color:var(--primary-color)}
+    .ppc-btn.master-btn{background:linear-gradient(135deg,rgba(var(--primary-rgb),0.3),rgba(var(--secondary-rgb),0.25));border:1px solid rgba(var(--primary-rgb),0.5);color:var(--primary-color)}
+    .ppc-btn{padding:8px 14px;border-radius:10px;background:rgba(var(--primary-rgb),0.15);border:1px solid rgba(var(--primary-rgb),0.35);color:var(--primary-color);font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;margin:0;letter-spacing:0.02em;width:100%}
+    .ppc-btn:active{background:rgba(var(--primary-rgb),0.25)}
+    .ppc-btn.popular-btn{background:linear-gradient(135deg,rgba(var(--secondary-rgb),0.25),rgba(var(--primary-rgb),0.18));border-color:rgba(var(--secondary-rgb),0.45);color:var(--secondary-color)}
     /* Кнопка «Подробнее» под тарифной карточкой */
     .ppc-details-btn{width:100%;background:none;border:none;color:rgba(255,255,255,0.28);font-size:0.7rem;font-weight:500;font-family:inherit;min-height:44px;padding:12px 0;cursor:pointer;text-align:center;letter-spacing:0.03em;box-shadow:none;animation:none;margin:0;transition:color .2s;text-decoration:underline;text-underline-offset:3px;display:inline-flex;align-items:center;justify-content:center;}
     .ppc-details-btn:hover{color:rgba(255,255,255,0.55);}
@@ -961,57 +965,57 @@
     .plan-modal-overlay{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;}
     .plan-modal-sheet{background:linear-gradient(165deg,#130826 0%,#0d1830 100%);border-radius:22px 22px 0 0;padding:28px 22px 36px;max-height:85vh;overflow-y:auto;width:100%;max-width:520px;box-sizing:border-box;}
     .plan-modal-sheet::-webkit-scrollbar{width:3px}
-    .plan-modal-sheet::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.2);border-radius:2px}
+    .plan-modal-sheet::-webkit-scrollbar-thumb{background:rgba(var(--primary-rgb),0.2);border-radius:2px}
     .plan-modal-handle{width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,0.15);margin:0 auto 24px;}
-    .plan-modal-title{font-size:1.3rem;font-weight:700;color:#d4af37;margin-bottom:4px;}
+    .plan-modal-title{font-size:1.3rem;font-weight:700;color:var(--primary-color);margin-bottom:4px;}
     .plan-modal-price{font-size:0.9rem;color:rgba(255,255,255,0.5);margin-bottom:20px;}
-    .plan-modal-section{font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(212,175,55,0.55);margin:18px 0 10px;}
+    .plan-modal-section{font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(var(--primary-rgb),0.55);margin:18px 0 10px;}
     .plan-modal-feature{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;}
-    .plan-modal-feature-icon{flex-shrink:0;width:28px;height:28px;border-radius:8px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.2);display:flex;align-items:center;justify-content:center;font-size:0.85rem;}
+    .plan-modal-feature-icon{flex-shrink:0;width:28px;height:28px;border-radius:8px;background:rgba(var(--primary-rgb),0.1);border:1px solid rgba(var(--primary-rgb),0.2);display:flex;align-items:center;justify-content:center;font-size:0.85rem;}
     .plan-modal-feature-text{font-size:0.84rem;color:rgba(255,255,255,0.75);line-height:1.5;}
     .plan-modal-feature-text strong{color:#fff;font-weight:600;}
     .plan-modal-cta{width:100%;margin-top:24px;padding:14px;border-radius:14px;font-size:0.95rem;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:0.02em;box-shadow:none;animation:none;}
-    .plan-modal-cta.gold{background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(212,175,55,0.15));border:1px solid rgba(212,175,55,0.5);color:#d4af37;}
-    .plan-modal-cta.pink{background:linear-gradient(135deg,rgba(236,72,153,0.3),rgba(212,175,55,0.15));border:1px solid rgba(236,72,153,0.5);color:#ec4899;}
+    .plan-modal-cta.gold{background:linear-gradient(135deg,rgba(var(--primary-rgb),0.25),rgba(var(--primary-rgb),0.15));border:1px solid rgba(var(--primary-rgb),0.5);color:var(--primary-color);}
+    .plan-modal-cta.pink{background:linear-gradient(135deg,rgba(var(--secondary-rgb),0.3),rgba(var(--primary-rgb),0.15));border:1px solid rgba(var(--secondary-rgb),0.5);color:var(--secondary-color);}
     .plan-modal-close{width:100%;margin-top:10px;padding:12px;border-radius:14px;font-size:0.85rem;font-weight:500;font-family:inherit;cursor:pointer;background:none;border:none;color:rgba(255,255,255,0.3);min-height:unset;box-shadow:none;animation:none;}
     /* Разовые треки */
     .profile-track-list{display:flex;flex-direction:column;gap:6px;margin-bottom:28px}
     .profile-track-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:13px;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .15s,border-color .15s}
-    .profile-track-item:active{background:rgba(255,255,255,0.06);border-color:rgba(212,175,55,0.25)}
+    .profile-track-item:active{background:rgba(255,255,255,0.06);border-color:rgba(var(--primary-rgb),0.25)}
     .pti-name{font-size:0.88rem;font-weight:600;color:rgba(255,255,255,0.75)}
     .pti-desc{font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:3px}
     .pti-right{display:flex;align-items:center;gap:8px}
-    .pti-price{font-size:0.88rem;font-weight:700;color:rgba(212,175,55,0.85)}
+    .pti-price{font-size:0.88rem;font-weight:700;color:rgba(var(--primary-rgb),0.85)}
     .pti-arrow{font-size:0.8rem;color:rgba(255,255,255,0.2);line-height:1}
     /* Реферал */
-    .profile-referral-section{margin-bottom:28px;background:linear-gradient(135deg,rgba(212,175,55,0.06),rgba(212,175,55,0.02));border:1px solid rgba(212,175,55,0.15);border-radius:18px;padding:18px 16px}
+    .profile-referral-section{margin-bottom:28px;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.06),rgba(var(--primary-rgb),0.02));border:1px solid rgba(var(--primary-rgb),0.15);border-radius:18px;padding:18px 16px}
     .profile-referral-section .profile-section-title{margin-bottom:8px}
     .profile-ref-tagline{font-size:0.82rem;color:rgba(255,255,255,0.5);margin-bottom:16px;line-height:1.5}
     .profile-ref-link-row{display:none}
-    .profile-ref-share-btn{width:100%;padding:13px 20px;border-radius:13px;background:rgba(212,175,55,0.14);border:1.5px solid rgba(212,175,55,0.38);color:#d4af37;font-weight:700;font-size:0.92rem;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;margin:0 0 14px;letter-spacing:0.02em;transition:background .2s}
-    .profile-ref-share-btn:active{background:rgba(212,175,55,0.25)}
+    .profile-ref-share-btn{width:100%;padding:13px 20px;border-radius:13px;background:rgba(var(--primary-rgb),0.14);border:1.5px solid rgba(var(--primary-rgb),0.38);color:var(--primary-color);font-weight:700;font-size:0.92rem;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;margin:0 0 14px;letter-spacing:0.02em;transition:background .2s}
+    .profile-ref-share-btn:active{background:rgba(var(--primary-rgb),0.25)}
     .profile-ref-milestones{display:flex;align-items:center;justify-content:center;gap:4px;margin:10px 0 14px;flex-wrap:wrap}
-    .ref-milestone{display:flex;flex-direction:column;align-items:center;gap:1px;background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.15);border-radius:10px;padding:6px 8px;min-width:36px;transition:background .2s,border-color .2s}
-    .ref-milestone.reached{background:rgba(212,175,55,0.18);border-color:rgba(212,175,55,0.5)}
-    .ref-milestone.next{border-color:rgba(212,175,55,0.4);box-shadow:0 0 8px rgba(212,175,55,0.15)}
-    .ref-mi-num{font-size:0.9rem;font-weight:800;color:#d4af37;line-height:1}
+    .ref-milestone{display:flex;flex-direction:column;align-items:center;gap:1px;background:rgba(var(--primary-rgb),0.07);border:1px solid rgba(var(--primary-rgb),0.15);border-radius:10px;padding:6px 8px;min-width:36px;transition:background .2s,border-color .2s}
+    .ref-milestone.reached{background:rgba(var(--primary-rgb),0.18);border-color:rgba(var(--primary-rgb),0.5)}
+    .ref-milestone.next{border-color:rgba(var(--primary-rgb),0.4);box-shadow:0 0 8px rgba(var(--primary-rgb),0.15)}
+    .ref-mi-num{font-size:0.9rem;font-weight:800;color:var(--primary-color);line-height:1}
     .ref-mi-label{font-size:0.55rem;color:rgba(255,255,255,0.35);line-height:1}
-    .ref-milestone-arrow{font-size:0.65rem;color:rgba(212,175,55,0.3);flex-shrink:0}
+    .ref-milestone-arrow{font-size:0.65rem;color:rgba(var(--primary-rgb),0.3);flex-shrink:0}
     .profile-ref-stats{display:flex;gap:10px}
     .profile-ref-stats span{flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;align-items:center;gap:2px}
-    .profile-ref-stats strong{font-size:1.4rem;font-weight:800;color:#d4af37;line-height:1}
+    .profile-ref-stats strong{font-size:1.4rem;font-weight:800;color:var(--primary-color);line-height:1}
     .profile-ref-stats-label{font-size:0.68rem;color:rgba(255,255,255,0.38);margin-top:2px;text-align:center}
-    .profile-create-btn{width:100%;padding:15px 24px;border-radius:16px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;letter-spacing:0.02em;box-shadow:0 4px 20px rgba(212,175,55,0.2);transition:transform .15s,box-shadow .15s}
+    .profile-create-btn{width:100%;padding:15px 24px;border-radius:16px;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;letter-spacing:0.02em;box-shadow:0 4px 20px rgba(var(--primary-rgb),0.2);transition:transform .15s,box-shadow .15s}
     .profile-create-btn:active{transform:scale(0.98)}
     /* ── ФОРМА: АККОРДЕОН ПРОФИЛЯ ── */
-    .pfa-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.2);border-radius:14px;cursor:pointer;font-family:'Comfortaa',sans-serif;transition:background .2s,border-color .2s;user-select:none;-webkit-user-select:none;box-sizing:border-box;}
-    .pfa-header:active{background:rgba(212,175,55,0.12);border-color:rgba(212,175,55,0.38);}
+    .pfa-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(var(--primary-rgb),0.05);border:1px solid rgba(var(--primary-rgb),0.2);border-radius:14px;cursor:pointer;font-family:'Comfortaa',sans-serif;transition:background .2s,border-color .2s;user-select:none;-webkit-user-select:none;box-sizing:border-box;}
+    .pfa-header:active{background:rgba(var(--primary-rgb),0.12);border-color:rgba(var(--primary-rgb),0.38);}
     .pfa-info{display:flex;align-items:center;gap:8px;min-width:0;flex:1;overflow:hidden;}
-    .pfa-icon{color:rgba(212,175,55,0.7);flex-shrink:0;}
+    .pfa-icon{color:rgba(var(--primary-rgb),0.7);flex-shrink:0;}
     .pfa-name{font-size:0.95rem;font-weight:700;color:rgba(255,255,255,0.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Comfortaa',sans-serif;}
-    .pfa-sep{color:rgba(212,175,55,0.4);font-size:0.85rem;flex-shrink:0;}
-    .pfa-date{font-size:0.85rem;color:rgba(212,175,55,0.82);white-space:nowrap;flex-shrink:0;font-family:'Comfortaa',sans-serif;}
-    .pfa-chevron{color:rgba(212,175,55,0.65);flex-shrink:0;margin-left:12px;transition:transform .28s ease;display:flex;align-items:center;}
+    .pfa-sep{color:rgba(var(--primary-rgb),0.4);font-size:0.85rem;flex-shrink:0;}
+    .pfa-date{font-size:0.85rem;color:rgba(var(--primary-rgb),0.82);white-space:nowrap;flex-shrink:0;font-family:'Comfortaa',sans-serif;}
+    .pfa-chevron{color:rgba(var(--primary-rgb),0.65);flex-shrink:0;margin-left:12px;transition:transform .28s ease;display:flex;align-items:center;}
     .pfa-chevron.open{transform:rotate(180deg);}
     #formFieldsWrap{overflow:hidden;transition:max-height .38s cubic-bezier(.4,0,.2,1),opacity .3s ease;max-height:2400px;}
     #formFieldsWrap.pfw-collapsed{max-height:0!important;opacity:0;pointer-events:none;}
@@ -1446,7 +1450,7 @@
   <!-- Панель навигации для превью (показывается только в браузере) -->
   <div class="container">
     <div class="preview-nav" id="previewNav">
-      <div style="font-weight:600;color:#d4af37;margin-bottom:8px">🎨 Режим превью</div>
+      <div style="font-weight:600;color:var(--primary-color);margin-bottom:8px">🎨 Режим превью</div>
       <div class="preview-nav-buttons">
         <button class="active" data-page="home">Главная</button>
         <button data-page="form">Форма</button>
@@ -1460,14 +1464,14 @@
   <!-- Онбординг — формат сторис -->
   <!-- ── Гейт-экран: пользователь ещё не нажал /start в боте ─────────────── -->
   <div id="botGatePage" style="display:none;position:fixed;inset:0;z-index:9999;background:linear-gradient(165deg,#0a0818 0%,#130826 50%,#0d1525 100%);flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center;font-family:'Comfortaa',sans-serif;">
-    <img src="assets/logo-yupsoul.png" alt="YupSoul" style="width:80px;height:80px;object-fit:contain;border-radius:50%;border:2px solid rgba(212,175,55,0.25);margin-bottom:28px;">
-    <div style="font-size:1.4rem;font-weight:700;color:#d4af37;margin-bottom:12px;line-height:1.3;">Один шаг до твоей песни</div>
+    <img src="assets/logo-yupsoul.png" alt="YupSoul" style="width:80px;height:80px;object-fit:contain;border-radius:50%;border:2px solid rgba(var(--primary-rgb),0.25);margin-bottom:28px;">
+    <div style="font-size:1.4rem;font-weight:700;color:var(--primary-color);margin-bottom:12px;line-height:1.3;">Один шаг до твоей песни</div>
     <div style="font-size:0.92rem;color:rgba(255,255,255,0.6);line-height:1.8;max-width:290px;margin-bottom:8px;">Готовую песню мы отправим тебе прямо в Telegram.</div>
     <div style="font-size:0.92rem;color:rgba(255,255,255,0.45);line-height:1.8;max-width:290px;margin-bottom:32px;">Чтобы бот мог написать тебе — нажми «Старт» в чате с ботом. Один раз, навсегда.</div>
-    <button id="gateOpenBotBtn" type="button" style="width:100%;max-width:300px;padding:15px 24px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 6px 24px rgba(212,175,55,0.3);letter-spacing:0;margin-bottom:16px;">
+    <button id="gateOpenBotBtn" type="button" style="width:100%;max-width:300px;padding:15px 24px;border-radius:14px;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 6px 24px rgba(var(--primary-rgb),0.3);letter-spacing:0;margin-bottom:16px;">
       Перейти в бота и нажать Старт
     </button>
-    <button id="gateCheckBtn" type="button" style="background:none;border:none;color:rgba(212,175,55,0.5);font-size:0.82rem;cursor:pointer;font-family:inherit;padding:8px 0;min-height:unset;box-shadow:none;animation:none;text-decoration:underline;text-underline-offset:3px;">
+    <button id="gateCheckBtn" type="button" style="background:none;border:none;color:rgba(var(--primary-rgb),0.5);font-size:0.82rem;cursor:pointer;font-family:inherit;padding:8px 0;min-height:unset;box-shadow:none;animation:none;text-decoration:underline;text-underline-offset:3px;">
       Уже нажал Старт → войти
     </button>
   </div>
@@ -1583,7 +1587,7 @@
 
       <!-- Админка — только для админов, ненавязчиво -->
       <div id="adminLinkWrap" style="display:none;margin-top:var(--spacing-lg);text-align:center">
-        <button type="button" id="adminLinkBtn" onclick="goToPage('adminPage')" style="background:none;border:none;color:rgba(212,175,55,0.35);font-size:0.72rem;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;padding:6px 12px;margin:0;font-weight:400;letter-spacing:0.03em">👑 Админка</button>
+        <button type="button" id="adminLinkBtn" onclick="goToPage('adminPage')" style="background:none;border:none;color:rgba(var(--primary-rgb),0.35);font-size:0.72rem;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;padding:6px 12px;margin:0;font-weight:400;letter-spacing:0.03em">👑 Админка</button>
       </div>
 
       <!-- Профиль, Помощь, Лаборатория — без переносов, стили в CSS -->
@@ -1703,16 +1707,16 @@
 
     <!-- Страница «Профиль» -->
     <div class="page" id="profilePage">
-      <!-- Шапка с кнопкой Назад -->
+      <!-- Шапка: Назад, заголовок «Профиль», справа — Помощь (иконка ?) -->
       <div class="profile-header">
         <button type="button" class="profile-back-btn header-back-btn btn-nav" onclick="goBack()" aria-label="Назад">←</button>
         <div id="profilePageTitle" class="profile-header-title">Профиль</div>
-        <button type="button" class="header-menu-btn btn-info" onclick="goToHelpFrom('profilePage')" aria-label="Помощь"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="currentColor" opacity="0.9"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.9"/></svg></button>
+        <button type="button" class="header-menu-btn btn-info" onclick="goToHelpFrom('profilePage')" aria-label="Помощь" title="Помощь">?</button>
       </div>
 
       <div class="profile-scroll page-scroll">
         <!-- Ошибка загрузки профиля / подписки -->
-        <div id="profileLoadErrorWrap" style="display:none;margin-bottom:16px;padding:14px 16px;background:rgba(236,72,153,0.08);border:1px solid rgba(236,72,153,0.25);border-radius:14px;">
+        <div id="profileLoadErrorWrap" style="display:none;margin-bottom:16px;padding:14px 16px;background:rgba(var(--secondary-rgb),0.08);border:1px solid rgba(var(--secondary-rgb),0.25);border-radius:14px;">
           <div id="profileLoadErrorText" style="font-size:0.88rem;color:rgba(255,255,255,0.75);line-height:1.5;margin-bottom:12px;">Не удалось загрузить подписку. Проверьте интернет.</div>
           <button type="button" id="profileLoadRetryBtn" style="width:100%;padding:10px 16px;border-radius:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.9);font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;">Повторить</button>
         </div>
@@ -1739,7 +1743,7 @@
             <div id="profileBalanceLabel" class="profile-balance-label">Бесплатных генераций</div>
             <div id="profileCreditsCount" class="profile-balance-value">—</div>
             <div id="profileBalanceHintText" class="profile-balance-hint">Приглашай друзей — получай треки в подарок</div>
-            <div id="profileRenewalDate" class="profile-balance-hint" style="display:none;color:rgba(212,175,55,0.75);margin-top:4px;font-weight:600;"></div>
+            <div id="profileRenewalDate" class="profile-balance-hint" style="display:none;color:rgba(var(--primary-rgb),0.75);margin-top:4px;font-weight:600;"></div>
           </div>
           <div class="profile-balance-icon"><img src="assets/icons/music.png" style="width:32px;height:32px;object-fit:contain;display:block;opacity:0.85;" alt="" loading="lazy"></div>
         </div>
@@ -1877,7 +1881,7 @@
             <span><strong id="profileRefInvited">0</strong><span id="profileRefInvitedLabel" class="profile-ref-stats-label">Приглашено</span></span>
             <span><strong id="profileRefRewarded">0</strong><span id="profileRefActivatedLabel" class="profile-ref-stats-label">Активировано</span></span>
           </div>
-          <div id="profileRefNextHint" style="font-size:0.72rem;color:rgba(212,175,55,0.6);text-align:center;margin-top:6px;"></div>
+          <div id="profileRefNextHint" style="font-size:0.72rem;color:rgba(var(--primary-rgb),0.6);text-align:center;margin-top:6px;"></div>
         </div>
 
         <!-- Действия -->
@@ -1895,26 +1899,26 @@
         <button type="button" id="heroesBackBtn" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.4rem;cursor:pointer;padding:4px 8px;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;line-height:1">←</button>
         <div style="flex:1">
           <div id="heroesPageTitle" style="font-size:1.15rem;font-weight:700;color:#fff;line-height:1.2">Лаборатория</div>
-          <div style="font-size:0.75rem;color:rgba(212,175,55,0.65);margin-top:2px" id="masterAccessBadge"></div>
+          <div style="font-size:0.75rem;color:rgba(var(--primary-rgb),0.65);margin-top:2px" id="masterAccessBadge"></div>
         </div>
       </div>
 
       <!-- Paywall (показывается если нет доступа) -->
       <div id="masterPaywall" class="page-scroll" style="display:none; padding-top:28px;">
         <div style="text-align:center; margin-bottom:20px">
-          <div style="font-size:2rem;margin-bottom:12px;color:#d4af37;letter-spacing:0.1em">✦</div>
-          <div id="heroesPromoHeading" style="font-size:1.2rem;font-weight:700;color:#d4af37;margin-bottom:8px">Личный кабинет для мастеров</div>
+          <div style="font-size:2rem;margin-bottom:12px;color:var(--primary-color);letter-spacing:0.1em">✦</div>
+          <div id="heroesPromoHeading" style="font-size:1.2rem;font-weight:700;color:var(--primary-color);margin-bottom:8px">Личный кабинет для мастеров</div>
           <div id="heroesPromoDesc" style="font-size:0.85rem;color:rgba(255,255,255,0.5);line-height:1.6">Добавляй людей один раз — и генерируй для них<br>песни в один тап. Полная история с текстами.</div>
         </div>
-        <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.18);border-radius:14px;padding:16px;margin-bottom:22px;font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.65">
-          <div id="heroesPromoFeaturesTitle" style="color:#d4af37;font-weight:600;margin-bottom:8px">Что входит в тариф:</div>
+        <div style="background:rgba(var(--primary-rgb),0.06);border:1px solid rgba(var(--primary-rgb),0.18);border-radius:14px;padding:16px;margin-bottom:22px;font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.65">
+          <div id="heroesPromoFeaturesTitle" style="color:var(--primary-color);font-weight:600;margin-bottom:8px">Что входит в тариф:</div>
           <div id="heroesF1">✦ Неограниченное число героев</div>
           <div id="heroesF2">✦ Быстрый запуск соло и совместных песен</div>
           <div id="heroesF3">✦ Предпочтения по стилю музыки</div>
           <div id="heroesF4">✦ Полная история генераций с текстами и анализом</div>
           <div id="heroesF5">✦ Аудио прямо из карточки героя</div>
         </div>
-        <button type="button" id="masterTrialBtn" style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.08));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">1 день бесплатно — попробовать</button>
+        <button type="button" id="masterTrialBtn" style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.2),rgba(var(--primary-rgb),0.08));border:1px solid rgba(var(--primary-rgb),0.4);color:var(--primary-color);font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">1 день бесплатно — попробовать</button>
         <button type="button" id="masterSubBtn" onclick="showPlanConfirm('plan_master','Лаборатория')" style="width:100%;padding:14px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(167,139,250,0.15),rgba(167,139,250,0.06));border:1.5px solid rgba(167,139,250,0.35);color:rgba(167,139,250,0.9);font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">Оформить Лабораторию — $39.99/мес</button>
         <div id="heroesSubNote" style="font-size:0.7rem;color:rgba(255,255,255,0.22);text-align:center;margin-top:12px">30 треков в месяц · Оплата через HOT Pay</div>
       </div>
@@ -1924,10 +1928,10 @@
         <!-- Строка поиска + кнопка добавить -->
         <div style="display:flex;gap:10px;margin-bottom:16px">
           <input type="text" id="heroesSearch" placeholder="Поиск по имени…" style="flex:1;margin:0;padding:11px 14px;font-size:0.88rem">
-          <button type="button" id="heroesSearchBtn" style="width:auto;padding:11px 14px;font-size:0.88rem;min-height:44px;box-shadow:none;animation:none;letter-spacing:0;background:rgba(212,175,55,0.12);border-color:rgba(212,175,55,0.3);color:#d4af37;flex-shrink:0">Найти</button>
+          <button type="button" id="heroesSearchBtn" style="width:auto;padding:11px 14px;font-size:0.88rem;min-height:44px;box-shadow:none;animation:none;letter-spacing:0;background:rgba(var(--primary-rgb),0.12);border-color:rgba(var(--primary-rgb),0.3);color:var(--primary-color);flex-shrink:0">Найти</button>
         </div>
         <div id="heroesList"></div>
-        <button type="button" id="addHeroBtn" style="margin-top:12px;width:100%;background:rgba(212,175,55,0.08);border:1px dashed rgba(212,175,55,0.35);color:rgba(212,175,55,0.8);font-size:0.9rem;padding:13px 24px;border-radius:14px;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">+ Добавить героя</button>
+        <button type="button" id="addHeroBtn" style="margin-top:12px;width:100%;background:rgba(var(--primary-rgb),0.08);border:1px dashed rgba(var(--primary-rgb),0.35);color:rgba(var(--primary-rgb),0.8);font-size:0.9rem;padding:13px 24px;border-radius:14px;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">+ Добавить героя</button>
       </div>
 
       <!-- Форма добавления/редактирования героя -->
@@ -1977,7 +1981,7 @@
             <span id="heroBirthplaceCheck" class="birthplace-check" aria-hidden="true">✓</span>
             <ul id="heroBirthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true" aria-live="polite"></ul>
           </div>
-          <div id="heroBirthplaceHint" class="birthplace-hint" style="display:block;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">Начни вводить город и выбери из выпавшего списка.</div>
+          <div id="heroBirthplaceHint" class="birthplace-hint" style="display:block;font-size:0.9rem;color:rgba(var(--primary-rgb),0.85);margin-top:8px;line-height:1.5;">Начни вводить город и выбери из выпавшего списка.</div>
         </div>
         <div class="field">
           <label id="heroTimeBirthLabel" for="heroBirthtime" data-icon="🕐">Время рождения</label>
@@ -2089,7 +2093,7 @@
               <span id="birthplaceCheck" class="birthplace-check" aria-hidden="true">✓</span>
             <ul id="birthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true" aria-live="polite"></ul>
           </div>
-          <div id="birthplaceHint" class="birthplace-hint" style="display:none;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">Начни вводить город и выбери из выпавшего списка.</div>
+          <div id="birthplaceHint" class="birthplace-hint" style="display:none;font-size:0.9rem;color:rgba(var(--primary-rgb),0.85);margin-top:8px;line-height:1.5;">Начни вводить город и выбери из выпавшего списка.</div>
         </div>
         
         <div class="field">
@@ -2163,7 +2167,7 @@
                   <span id="birthplace2Check" class="birthplace-check" aria-hidden="true">✓</span>
                   <ul id="birthplaceSuggestions2" class="birthplace-suggestions" aria-hidden="true" aria-live="polite"></ul>
                 </div>
-                <div id="birthplace2Hint" class="birthplace-hint" style="display:none;font-size:0.9rem;color:rgba(212,175,55,0.85);margin-top:8px;line-height:1.5;">Начни вводить город и выбери из выпавшего списка.</div>
+                <div id="birthplace2Hint" class="birthplace-hint" style="display:none;font-size:0.9rem;color:rgba(var(--primary-rgb),0.85);margin-top:8px;line-height:1.5;">Начни вводить город и выбери из выпавшего списка.</div>
               </div>
               <div class="field">
                 <label data-icon="🕐">Время рождения</label>
@@ -2251,7 +2255,7 @@
         </div>
         <!-- Стиль музыки (для подписчиков Plus и Лаборатория) -->
         <div class="field" style="margin-top:14px;">
-          <label for="requestPreferredStyle" id="requestPreferredStyleLabel" style="font-size:0.82rem;color:rgba(255,255,255,0.5);">Стиль музыки <span style="color:rgba(212,175,55,0.5);">(Plus и Лаборатория)</span></label>
+          <label for="requestPreferredStyle" id="requestPreferredStyleLabel" style="font-size:0.82rem;color:rgba(255,255,255,0.5);">Стиль музыки <span style="color:rgba(var(--primary-rgb),0.5);">(Plus и Лаборатория)</span></label>
           <input type="text" id="requestPreferredStyle" placeholder="поп, соул, джаз, электронная…" maxlength="120" autocomplete="off" style="margin-top:6px;font-size:0.9rem;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#fff;width:100%;box-sizing:border-box;">
         </div>
 
@@ -2277,7 +2281,7 @@
         <div id="loadingDesc" style="color:rgba(255,255,255,0.55);font-size:0.92rem;text-align:center;max-width:320px;line-height:1.7;margin-top:12px;">
           Песня создаётся. Придёт в чат с ботом.<br>Можно закрыть окно.
         </div>
-        <div id="loadingCountdown" style="margin-top:20px;color:rgba(212,175,55,0.65);font-size:0.9rem;"></div>
+        <div id="loadingCountdown" style="margin-top:20px;color:rgba(var(--primary-rgb),0.65);font-size:0.9rem;"></div>
       </div>
     </div>
     
@@ -2285,12 +2289,12 @@
     <div class="page" id="successPage">
       <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px calc(env(safe-area-inset-bottom)+24px);text-align:center;">
         <div style="font-size:3rem;margin-bottom:20px;">✉️</div>
-        <div id="successTitle" style="font-size:1.45rem;font-weight:800;color:#d4af37;margin-bottom:14px;line-height:1.3;">Заявка принята!</div>
+        <div id="successTitle" style="font-size:1.45rem;font-weight:800;color:var(--primary-color);margin-bottom:14px;line-height:1.3;">Заявка принята!</div>
         <p id="successDesc" style="font-size:0.95rem;color:rgba(255,255,255,0.65);line-height:1.75;max-width:280px;margin:0 0 32px;">
           Твоя песня генерируется.<br>Как только будет готова — придёт в бот.<br>
           <span style="color:rgba(255,255,255,0.4);font-size:0.85rem;">Обычно 10–20 минут.</span>
         </p>
-        <button id="openBotBtn" type="button" style="width:100%;max-width:320px;padding:14px 24px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;letter-spacing:0;">
+        <button id="openBotBtn" type="button" style="width:100%;max-width:320px;padding:14px 24px;border-radius:14px;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;letter-spacing:0;">
           💬 Перейти в бот
         </button>
         <p id="successHint" style="font-size:0.78rem;color:rgba(255,255,255,0.35);line-height:1.6;max-width:290px;margin:0 0 28px;">
@@ -2318,7 +2322,7 @@
       <div id="scPromoArea" class="page-scroll" style="padding:16px 20px calc(env(safe-area-inset-bottom)+32px);">
 
         <!-- Сообщение при временной ошибке загрузки (сеть/таймаут) -->
-        <div id="scPromoErrorWrap" style="display:none;margin-bottom:16px;padding:14px 16px;background:rgba(236,72,153,0.08);border:1px solid rgba(236,72,153,0.25);border-radius:14px;">
+        <div id="scPromoErrorWrap" style="display:none;margin-bottom:16px;padding:14px 16px;background:rgba(var(--secondary-rgb),0.08);border:1px solid rgba(var(--secondary-rgb),0.25);border-radius:14px;">
           <div id="scPromoErrorText" style="font-size:0.88rem;color:rgba(255,255,255,0.75);line-height:1.5;margin-bottom:12px;">Временная ошибка загрузки. Можно выбрать тариф или купить сутки.</div>
           <button type="button" id="scPromoRetryBtn" style="width:100%;padding:10px 16px;border-radius:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.9);font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;">Повторить</button>
         </div>
@@ -2328,7 +2332,7 @@
           <div id="scPromoIntro" style="font-size:0.9rem;color:rgba(255,255,255,0.65);line-height:1.65;margin-bottom:10px;">
             Soul Chat — твой ИИ-ассистент, который понимает тебя словно лучший друг или Высшее Я. Отвечает на вопросы о характере, предназначении и пути.
           </div>
-          <button type="button" id="scMoreBtn" style="background:none;border:none;color:rgba(212,175,55,0.7);font-size:0.82rem;cursor:pointer;padding:0;font-family:inherit;box-shadow:none;animation:none;min-height:unset;">
+          <button type="button" id="scMoreBtn" style="background:none;border:none;color:rgba(var(--primary-rgb),0.7);font-size:0.82rem;cursor:pointer;padding:0;font-family:inherit;box-shadow:none;animation:none;min-height:unset;">
             <span id="scMoreBtnText">Подробнее ↓</span>
           </button>
         </div>
@@ -2336,28 +2340,28 @@
         <!-- Расширенная инфо (статистика + примеры) — скрыта по умолчанию -->
         <div id="scMoreContent" style="display:none;margin-bottom:18px;">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
-            <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.14);border-radius:14px;padding:12px;text-align:center;">
-              <div style="font-size:1.4rem;font-weight:700;color:#d4af37;line-height:1;">78%</div>
+            <div style="background:rgba(var(--primary-rgb),0.06);border:1px solid rgba(var(--primary-rgb),0.14);border-radius:14px;padding:12px;text-align:center;">
+              <div style="font-size:1.4rem;font-weight:700;color:var(--primary-color);line-height:1;">78%</div>
               <div id="scStat1" style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">отмечают снижение тревоги</div>
             </div>
-            <div style="background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.14);border-radius:14px;padding:12px;text-align:center;">
-              <div style="font-size:1.4rem;font-weight:700;color:#ec4899;line-height:1;">91%</div>
+            <div style="background:rgba(var(--secondary-rgb),0.06);border:1px solid rgba(var(--secondary-rgb),0.14);border-radius:14px;padding:12px;text-align:center;">
+              <div style="font-size:1.4rem;font-weight:700;color:var(--secondary-color);line-height:1;">91%</div>
               <div id="scStat2" style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">чувствуют себя понятыми</div>
             </div>
-            <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.14);border-radius:14px;padding:12px;text-align:center;">
-              <div style="font-size:1.4rem;font-weight:700;color:#d4af37;line-height:1;">3×</div>
+            <div style="background:rgba(var(--primary-rgb),0.06);border:1px solid rgba(var(--primary-rgb),0.14);border-radius:14px;padding:12px;text-align:center;">
+              <div style="font-size:1.4rem;font-weight:700;color:var(--primary-color);line-height:1;">3×</div>
               <div id="scStat3" style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">быстрее находят ответ</div>
             </div>
-            <div style="background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.14);border-radius:14px;padding:12px;text-align:center;">
-              <div style="font-size:1.4rem;font-weight:700;color:#ec4899;line-height:1;">84%</div>
+            <div style="background:rgba(var(--secondary-rgb),0.06);border:1px solid rgba(var(--secondary-rgb),0.14);border-radius:14px;padding:12px;text-align:center;">
+              <div style="font-size:1.4rem;font-weight:700;color:var(--secondary-color);line-height:1;">84%</div>
               <div id="scStat4" style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">возвращаются снова</div>
             </div>
           </div>
           <div id="scExamplesTitle" style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:8px;">Примеры вопросов</div>
           <div style="display:flex;flex-direction:column;gap:6px;">
-            <div id="scEx1" style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.12);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;">«Почему мне так сложно говорить о своих чувствах?»</div>
-            <div id="scEx2" style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.12);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;">«Какой мой главный страх и как с ним работать?»</div>
-            <div id="scEx3" style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.12);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;">«В чём моё предназначение и как к нему прийти?»</div>
+            <div id="scEx1" style="background:rgba(var(--primary-rgb),0.05);border:1px solid rgba(var(--primary-rgb),0.12);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;">«Почему мне так сложно говорить о своих чувствах?»</div>
+            <div id="scEx2" style="background:rgba(var(--primary-rgb),0.05);border:1px solid rgba(var(--primary-rgb),0.12);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;">«Какой мой главный страх и как с ним работать?»</div>
+            <div id="scEx3" style="background:rgba(var(--primary-rgb),0.05);border:1px solid rgba(var(--primary-rgb),0.12);border-radius:10px;padding:10px 12px;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;">«В чём моё предназначение и как к нему прийти?»</div>
           </div>
         </div>
 
@@ -2366,33 +2370,33 @@
 
         <!-- Тарифы -->
         <div id="scPagePromo">
-          <div style="background:rgba(15,12,40,0.8);border:1px solid rgba(212,175,55,0.2);border-radius:18px;padding:16px;margin-bottom:12px;">
-            <div id="scSubIncluded" style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:10px;">Soul Chat включён в подписку</div>
+          <div style="background:rgba(15,12,40,0.8);border:1px solid rgba(var(--primary-rgb),0.2);border-radius:18px;padding:16px;margin-bottom:12px;">
+            <div id="scSubIncluded" style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(var(--primary-rgb),0.5);margin-bottom:10px;">Soul Chat включён в подписку</div>
             <div style="display:flex;flex-direction:column;gap:7px;">
               <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:rgba(255,255,255,0.04);border-radius:10px;">
                 <div><div style="font-size:0.85rem;font-weight:600;color:#fff;">Basic</div><div style="font-size:0.7rem;color:rgba(255,255,255,0.38);">5 треков/мес + Soul Chat</div></div>
-                <div style="font-size:0.85rem;font-weight:700;color:#d4af37;">$14.99/мес</div>
+                <div style="font-size:0.85rem;font-weight:700;color:var(--primary-color);">$14.99/мес</div>
               </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:linear-gradient(135deg,rgba(236,72,153,0.07),rgba(212,175,55,0.04));border:1px solid rgba(236,72,153,0.18);border-radius:10px;">
-                <div><div style="font-size:0.85rem;font-weight:600;color:#fff;">Plus <span style="font-size:0.68rem;color:rgba(212,175,55,0.6);font-weight:400;">✦ Популярный</span></div><div style="font-size:0.7rem;color:rgba(255,255,255,0.38);">10 треков/мес + Chat без лимита</div></div>
-                <div style="font-size:0.85rem;font-weight:700;color:#ec4899;">$24.99/мес</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:linear-gradient(135deg,rgba(var(--secondary-rgb),0.07),rgba(var(--primary-rgb),0.04));border:1px solid rgba(var(--secondary-rgb),0.18);border-radius:10px;">
+                <div><div style="font-size:0.85rem;font-weight:600;color:#fff;">Plus <span style="font-size:0.68rem;color:rgba(var(--primary-rgb),0.6);font-weight:400;">✦ Популярный</span></div><div style="font-size:0.7rem;color:rgba(255,255,255,0.38);">10 треков/мес + Chat без лимита</div></div>
+                <div style="font-size:0.85rem;font-weight:700;color:var(--secondary-color);">$24.99/мес</div>
               </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.12);border-radius:10px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:rgba(var(--primary-rgb),0.04);border:1px solid rgba(var(--primary-rgb),0.12);border-radius:10px;">
                 <div><div style="font-size:0.85rem;font-weight:600;color:#fff;">Лаборатория</div><div style="font-size:0.7rem;color:rgba(255,255,255,0.38);">30 треков/мес + Chat без лимита</div></div>
-                <div style="font-size:0.85rem;font-weight:700;color:#d4af37;">$39.99/мес</div>
+                <div style="font-size:0.85rem;font-weight:700;color:var(--primary-color);">$39.99/мес</div>
               </div>
             </div>
-            <button id="scChoosePlanBtn" onclick="goToProfileFrom('soulChatPage')" style="width:100%;margin-top:12px;padding:12px;border-radius:13px;background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(236,72,153,0.2));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:none;animation:none;">
+            <button id="scChoosePlanBtn" onclick="goToProfileFrom('soulChatPage')" style="width:100%;margin-top:12px;padding:12px;border-radius:13px;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.25),rgba(var(--secondary-rgb),0.2));border:1px solid rgba(var(--primary-rgb),0.4);color:var(--primary-color);font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:none;animation:none;">
               Выбрать тариф →
             </button>
           </div>
 
           <!-- Подарочные 24ч -->
-          <div id="scPageGiftWrap" style="display:none;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(236,72,153,0.06));border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:16px;text-align:center;margin-bottom:10px;">
+          <div id="scPageGiftWrap" style="display:none;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.08),rgba(var(--secondary-rgb),0.06));border:1px solid rgba(var(--primary-rgb),0.3);border-radius:16px;padding:16px;text-align:center;margin-bottom:10px;">
             <div style="font-size:1.6rem;margin-bottom:6px;">🎁</div>
-            <div id="scGiftHeading" style="font-weight:700;color:#d4af37;margin-bottom:4px;">Попробуй бесплатно — 24 часа</div>
+            <div id="scGiftHeading" style="font-weight:700;color:var(--primary-color);margin-bottom:4px;">Попробуй бесплатно — 24 часа</div>
             <div id="scGiftNote" style="font-size:0.83rem;color:rgba(255,255,255,0.6);line-height:1.5;margin-bottom:12px;">Один раз для каждого пользователя</div>
-            <button id="scPageGiftBtn" type="button" style="padding:12px 24px;border-radius:13px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">
+            <button id="scPageGiftBtn" type="button" style="padding:12px 24px;border-radius:13px;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;color:#fff;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">
               🎁 Получить 24 часа бесплатно
             </button>
           </div>
@@ -2403,7 +2407,7 @@
             <button id="scPageBuyDayBtn" type="button" style="width:100%;padding:11px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
               ⚡ Открыть Soul Chat на 24ч — $2.99
             </button>
-            <div id="scPageBuyDayStatus" style="display:none;font-size:0.78rem;color:rgba(212,175,55,0.7);margin-top:7px;"></div>
+            <div id="scPageBuyDayStatus" style="display:none;font-size:0.78rem;color:rgba(var(--primary-rgb),0.7);margin-top:7px;"></div>
           </div>
         </div>
       </div>
@@ -2412,20 +2416,20 @@
       <!-- Шапка чата: назад, контекст карточки (имя, дата), таймер доступа -->
       <div id="scChatHeader" style="display:none;flex-shrink:0;align-items:center;gap:10px;padding:max(10px,env(safe-area-inset-top)) 16px 12px;border-bottom:1px solid rgba(255,255,255,0.08);background:rgba(8,7,26,0.6);">
         <button type="button" class="profile-back-btn" onclick="goBack()" aria-label="Назад" style="margin-right:auto;">←</button>
-        <button id="scCardPickerBtn" type="button" title="Контекст чата — сменить карточку" style="display:none;font-size:0.8rem;font-weight:600;color:#d4af37;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.28);border-radius:12px;padding:6px 14px;cursor:pointer;font-family:inherit;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;" onclick="scOpenCardPicker()">— ▾</button>
-        <div id="scPageTimer" style="display:none;font-size:0.72rem;color:rgba(212,175,55,0.65);background:rgba(212,175,55,0.1);padding:5px 12px;border-radius:14px;white-space:nowrap;"></div>
+        <button id="scCardPickerBtn" type="button" title="Контекст чата — сменить карточку" style="display:none;font-size:0.8rem;font-weight:600;color:var(--primary-color);background:rgba(var(--primary-rgb),0.12);border:1px solid rgba(var(--primary-rgb),0.28);border-radius:12px;padding:6px 14px;cursor:pointer;font-family:inherit;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;" onclick="scOpenCardPicker()">— ▾</button>
+        <div id="scPageTimer" style="display:none;font-size:0.72rem;color:rgba(var(--primary-rgb),0.65);background:rgba(var(--primary-rgb),0.1);padding:5px 12px;border-radius:14px;white-space:nowrap;"></div>
       </div>
 
       <!-- Модальное окно выбора карточек (синастрия) -->
       <div id="scCardPickerModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.65);" onclick="if(event.target===this)scCloseCardPicker()">
         <div style="position:absolute;bottom:0;left:0;right:0;background:#0f0e24;border-radius:20px 20px 0 0;padding:20px 16px calc(env(safe-area-inset-bottom)+20px);max-height:82vh;display:flex;flex-direction:column;">
           <div style="display:flex;align-items:center;margin-bottom:16px;">
-            <div style="font-size:1rem;font-weight:700;color:#d4af37;flex:1;">Контекст чата</div>
+            <div style="font-size:1rem;font-weight:700;color:var(--primary-color);flex:1;">Контекст чата</div>
             <button type="button" onclick="scCloseCardPicker()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.3rem;cursor:pointer;padding:0;line-height:1;">×</button>
           </div>
           <!-- Переключатель режима -->
           <div id="scPickerModeTabs" style="display:flex;gap:8px;margin-bottom:16px;">
-            <button id="scPickerTabSingle" type="button" class="btn-magic" onclick="scSetPickerMode('single')" style="flex:1;padding:8px;border-radius:10px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;background:rgba(212,175,55,0.18);color:#d4af37;">Одна карточка</button>
+            <button id="scPickerTabSingle" type="button" class="btn-magic" onclick="scSetPickerMode('single')" style="flex:1;padding:8px;border-radius:10px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;background:rgba(var(--primary-rgb),0.18);color:var(--primary-color);">Одна карточка</button>
             <button id="scPickerTabSynastry" type="button" class="btn-magic" onclick="scSetPickerMode('synastry')" style="flex:1;padding:8px;border-radius:10px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);">Синастрия (2 карточки)</button>
           </div>
           <!-- Режим: одна карточка -->
@@ -2451,12 +2455,12 @@
       <!-- Список сообщений — flex:1 + overflow-y:auto -->
       <div id="scPageChat" style="display:none;flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,transparent 0%,rgba(8,7,26,0.3) 100%);">
         <!-- Если нет ни заявки, ни профиля -->
-        <div id="scPageNoRequest" style="display:none;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(236,72,153,0.05));border:1px solid rgba(212,175,55,0.25);border-radius:16px;padding:18px;text-align:center;">
+        <div id="scPageNoRequest" style="display:none;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.08),rgba(var(--secondary-rgb),0.05));border:1px solid rgba(var(--primary-rgb),0.25);border-radius:16px;padding:18px;text-align:center;">
           <div style="font-size:1.4rem;margin-bottom:8px;">🎵</div>
-          <div style="font-weight:700;color:#d4af37;margin-bottom:6px;font-size:0.92rem;">Нужны твои данные</div>
+          <div style="font-weight:700;color:var(--primary-color);margin-bottom:6px;font-size:0.92rem;">Нужны твои данные</div>
           <div style="font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:14px;">Soul Chat строит персональный разговор на основе имени и даты рождения. Заполни профиль или создай первую заявку на песню.</div>
           <div style="display:flex;flex-direction:column;gap:9px;">
-            <button type="button" onclick="goToPage('profilePage')" style="width:100%;padding:11px;border-radius:12px;background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(236,72,153,0.2));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
+            <button type="button" onclick="goToPage('profilePage')" style="width:100%;padding:11px;border-radius:12px;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.25),rgba(var(--secondary-rgb),0.2));border:1px solid rgba(var(--primary-rgb),0.4);color:var(--primary-color);font-size:0.9rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
               Заполнить профиль →
             </button>
             <button type="button" onclick="goToPage('formPage')" style="width:100%;padding:11px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);font-size:0.86rem;font-weight:500;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
@@ -2467,21 +2471,21 @@
         <!-- История сообщений -->
         <div id="scPageHistory" aria-live="polite" aria-label="История диалога Soul Chat"></div>
         <!-- Тизер синастрии для Basic/Plus (не Master) -->
-        <div id="scSynastryTeaser" style="display:none;margin-top:12px;padding:12px 14px;border-radius:14px;background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.18);font-size:0.82rem;color:rgba(255,255,255,0.6);line-height:1.5;">
-          <span style="color:rgba(212,175,55,0.8);">✦</span> Синастрия — глубокий диалог на любые темы на основе двух карт сразу — доступна в тарифе Лаборатория
-          <button type="button" onclick="goToMasterPlanFrom('soulChatPage')" style="display:inline-block;margin-left:8px;padding:3px 10px;border-radius:8px;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.3);color:#d4af37;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;min-height:unset;">Открыть тариф →</button>
+        <div id="scSynastryTeaser" style="display:none;margin-top:12px;padding:12px 14px;border-radius:14px;background:rgba(var(--primary-rgb),0.07);border:1px solid rgba(var(--primary-rgb),0.18);font-size:0.82rem;color:rgba(255,255,255,0.6);line-height:1.5;">
+          <span style="color:rgba(var(--primary-rgb),0.8);">✦</span> Синастрия — глубокий диалог на любые темы на основе двух карт сразу — доступна в тарифе Лаборатория
+          <button type="button" onclick="goToMasterPlanFrom('soulChatPage')" style="display:inline-block;margin-left:8px;padding:3px 10px;border-radius:8px;background:rgba(var(--primary-rgb),0.15);border:1px solid rgba(var(--primary-rgb),0.3);color:var(--primary-color);font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;min-height:unset;">Открыть тариф →</button>
         </div>
         <div id="scPageStatus" style="display:none;text-align:center;font-size:0.8rem;color:rgba(255,255,255,0.45);padding:8px 0;"></div>
       </div>
 
       <!-- Поле ввода — прилипает к низу, вне зоны скролла -->
-      <div id="scInputArea" style="display:none;flex-shrink:0;padding:12px 14px calc(env(safe-area-inset-bottom)+12px);border-top:1px solid rgba(212,175,55,0.1);background:linear-gradient(180deg,#0a091e 0%,#08071a 100%);">
+      <div id="scInputArea" style="display:none;flex-shrink:0;padding:12px 14px calc(env(safe-area-inset-bottom)+12px);border-top:1px solid rgba(var(--primary-rgb),0.1);background:linear-gradient(180deg,#0a091e 0%,#08071a 100%);">
         <div class="request-input-box">
           <textarea id="scPageQuestion" class="request-textarea" rows="2"
             placeholder="Задай вопрос своей душе…" aria-label="Вопрос"></textarea>
           <div class="sc-send-bar">
             <span class="sc-char-hint" id="scPageCharHint"></span>
-            <button id="scPageSendBtn" type="button" style="padding:9px 18px;border-radius:10px;background:linear-gradient(135deg,rgba(212,175,55,0.28),rgba(236,72,153,0.18));border:1px solid rgba(212,175,55,0.38);color:#d4af37;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:none;animation:none;min-height:unset;white-space:nowrap;">
+            <button id="scPageSendBtn" type="button" style="padding:9px 18px;border-radius:10px;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.28),rgba(var(--secondary-rgb),0.18));border:1px solid rgba(var(--primary-rgb),0.38);color:var(--primary-color);font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:none;animation:none;min-height:unset;white-space:nowrap;">
               Спросить ✨
             </button>
           </div>
@@ -2494,11 +2498,11 @@
     <!-- Страница «Спасибо за оплату» (редирект с HOT) -->
     <div class="page" id="paymentThanksPage">
       <header class="page-header">
-        <div style="font-size:0.78rem;font-weight:400;letter-spacing:0.12em;color:rgba(212,175,55,0.5);margin:2px 0 0;text-transform:uppercase">Музыка твоей души</div>
+        <div style="font-size:0.78rem;font-weight:400;letter-spacing:0.12em;color:rgba(var(--primary-rgb),0.5);margin:2px 0 0;text-transform:uppercase">Музыка твоей души</div>
         <div id="paymentThanksSubtitle" class="subtitle">заявка принята</div>
       </header>
       <div class="section page-scroll" style="text-align:center; padding-top:40px">
-        <div id="paymentThanksIcon" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.06));border:1.5px solid rgba(212,175,55,0.35);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.8rem;color:#d4af37;font-weight:300">✓</div>
+        <div id="paymentThanksIcon" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.2),rgba(var(--primary-rgb),0.06));border:1.5px solid rgba(var(--primary-rgb),0.35);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.8rem;color:var(--primary-color);font-weight:300">✓</div>
         <h2 id="paymentThanksTitle" class="success-title" style="font-size:1.5rem; margin:0 0 12px 0">Оплата прошла</h2>
         <p class="success-text" id="paymentThanksMessage" style="margin:0 0 24px 0; font-size:0.92rem; color:rgba(255,255,255,0.6); line-height:1.65">
           Песня создаётся. Придёт в чат с ботом. Можно закрыть окно.
@@ -3557,7 +3561,7 @@
         var item = pricingCatalog && pricingCatalog.find(function(x) { return x && x.sku === sku; });
         var priceStr = item ? (String(item.price) + ' ' + (item.currency || 'USDT')) : '';
         payBtn.textContent = priceStr ? ('💳 Оплатить ' + priceStr) : '💳 Оплатить через HOT Pay';
-        payBtn.style.background = 'linear-gradient(135deg,#d4af37,#ec4899)';
+        payBtn.style.background = 'linear-gradient(135deg,var(--primary-color),var(--secondary-color))';
       }
       function isTelegramWebApp() {
         return !!(window.Telegram && window.Telegram.WebApp);
@@ -3899,11 +3903,11 @@
         el.style.display = 'block';
         el.textContent = text;
         el.style.color = 'rgba(255,255,255,.95)';
-        if (tone === 'ok')    { el.style.border = '1px solid rgba(212,175,55,.5)';  el.style.background = 'rgba(212,175,55,.18)'; return; }
-        if (tone === 'warn')  { el.style.border = '1px solid rgba(212,175,55,.45)'; el.style.background = 'rgba(212,175,55,.12)'; return; }
-        if (tone === 'error') { el.style.border = '1px solid rgba(236,72,153,.5)';  el.style.background = 'rgba(236,72,153,.12)'; return; }
-        el.style.border = '1px solid rgba(212,175,55,.35)';
-        el.style.background = 'rgba(212,175,55,.1)';
+        if (tone === 'ok')    { el.style.border = '1px solid rgba(var(--primary-rgb),.5)';  el.style.background = 'rgba(var(--primary-rgb),.18)'; return; }
+        if (tone === 'warn')  { el.style.border = '1px solid rgba(var(--primary-rgb),.45)'; el.style.background = 'rgba(var(--primary-rgb),.12)'; return; }
+        if (tone === 'error') { el.style.border = '1px solid rgba(var(--secondary-rgb),.5)';  el.style.background = 'rgba(var(--secondary-rgb),.12)'; return; }
+        el.style.border = '1px solid rgba(var(--primary-rgb),.35)';
+        el.style.background = 'rgba(var(--primary-rgb),.1)';
       }
       var DEFAULT_PRICES = { single_song: { title: 'Single song', price: '5.99', currency: 'USDT' }, couple_song: { title: 'Couple song', price: '8.99', currency: 'USDT' }, transit_energy_song: { title: 'Transit energy song', price: '6.99', currency: 'USDT' } };
       function updatePaymentUiFromCatalog() {
@@ -3934,8 +3938,8 @@
           if (notice) {
             if (catalogLoadError) {
               notice.textContent = t('catalogLoadFailed');
-              notice.style.borderColor = 'rgba(212,175,55,.4)';
-              notice.style.background = 'rgba(212,175,55,.12)';
+              notice.style.borderColor = 'rgba(var(--primary-rgb),.4)';
+              notice.style.background = 'rgba(var(--primary-rgb),.12)';
               notice.style.color = 'rgba(255,255,255,.95)';
             } else if (hasSubscriptionActive) {
               notice.textContent = t('subscriptionActive');
@@ -3944,13 +3948,13 @@
               notice.style.color = 'rgba(255,255,255,.95)';
             } else if (freeTrialAvailable) {
               notice.textContent = t('firstFree');
-              notice.style.borderColor = 'rgba(212,175,55,.4)';
-              notice.style.background = 'rgba(212,175,55,.12)';
+              notice.style.borderColor = 'rgba(var(--primary-rgb),.4)';
+              notice.style.background = 'rgba(var(--primary-rgb),.12)';
               notice.style.color = 'rgba(255,255,255,.95)';
             } else {
               notice.textContent = t('paymentRequired');
-              notice.style.borderColor = 'rgba(212,175,55,.35)';
-              notice.style.background = 'rgba(212,175,55,.1)';
+              notice.style.borderColor = 'rgba(var(--primary-rgb),.35)';
+              notice.style.background = 'rgba(var(--primary-rgb),.1)';
               notice.style.color = 'rgba(255,255,255,.95)';
             }
           }
@@ -4209,8 +4213,8 @@
 
           // Карта SKU → ID карточки и цвет
           var planCardMap = {
-            soul_basic_sub: { cardId: 'planCardBasic', btnId: 'planBtnBasic', color: '#d4af37', bg: 'rgba(212,175,55,0.12)', border: 'rgba(212,175,55,0.45)' },
-            soul_plus_sub:  { cardId: 'planCardPlus',  btnId: 'planBtnPlus',  color: '#ec4899', bg: 'rgba(236,72,153,0.12)', border: 'rgba(236,72,153,0.45)' },
+            soul_basic_sub: { cardId: 'planCardBasic', btnId: 'planBtnBasic', color: 'var(--primary-color)', bg: 'rgba(var(--primary-rgb),0.12)', border: 'rgba(var(--primary-rgb),0.45)' },
+            soul_plus_sub:  { cardId: 'planCardPlus',  btnId: 'planBtnPlus',  color: 'var(--secondary-color)', bg: 'rgba(var(--secondary-rgb),0.12)', border: 'rgba(var(--secondary-rgb),0.45)' },
             master_monthly: { cardId: 'planCardMaster', btnId: 'planBtnMaster', color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.45)' },
           };
 
@@ -4581,7 +4585,7 @@
           var open = block.style.display !== 'none';
           block.style.display = open ? 'none' : 'flex';
           toggle.textContent = open ? '▸ моя статистика' : '▾ моя статистика';
-          toggle.style.color = open ? 'rgba(212,175,55,0.4)' : 'rgba(212,175,55,0.7)';
+          toggle.style.color = open ? 'rgba(var(--primary-rgb),0.4)' : 'rgba(var(--primary-rgb),0.7)';
           if (!open && typeof loadReferralStats === 'function') loadReferralStats();
         });
       })();
@@ -5625,9 +5629,9 @@
           item.type = 'button';
           item.className = 'btn-secondary';
           item.style.cssText = 'width:100%;text-align:left;padding:9px 12px;border-radius:10px;font-family:inherit;font-size:0.84rem;cursor:pointer;border:1px solid ' +
-            (isSelected ? 'rgba(212,175,55,0.5)' : 'rgba(255,255,255,0.1)') + ';background:' +
-            (isSelected ? 'rgba(212,175,55,0.14)' : 'rgba(255,255,255,0.04)') + ';color:' +
-            (isSelected ? '#d4af37' : 'rgba(255,255,255,0.75)') + ';';
+            (isSelected ? 'rgba(var(--primary-rgb),0.5)' : 'rgba(255,255,255,0.1)') + ';background:' +
+            (isSelected ? 'rgba(var(--primary-rgb),0.14)' : 'rgba(255,255,255,0.04)') + ';color:' +
+            (isSelected ? 'var(--primary-color)' : 'rgba(255,255,255,0.75)') + ';';
           item.textContent = scCardLabel(card);
           item.setAttribute('data-id', card.id);
           item.addEventListener('click', function() { onSelect(card.id); });
@@ -5641,7 +5645,7 @@
         var synPane = document.getElementById('scPickerSynastryPane');
         var tabSingle = document.getElementById('scPickerTabSingle');
         var tabSyn = document.getElementById('scPickerTabSynastry');
-        var activeTab = 'border:1px solid rgba(212,175,55,0.5);background:rgba(212,175,55,0.18);color:#d4af37;';
+        var activeTab = 'border:1px solid rgba(var(--primary-rgb),0.5);background:rgba(var(--primary-rgb),0.18);color:var(--primary-color);';
         var inactiveTab = 'border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);';
         if (mode === 'single') {
           if (singlePane) singlePane.style.display = 'flex';
@@ -5987,7 +5991,10 @@
           if (paymentThanksMsg) paymentThanksMsg.innerHTML =
             t('subscriptionActive').replace('—', '<br>').replace('продолжить', 'продолжить 🎶') ||
             ('Твой план <strong>' + subName + '</strong> активен.<br><span style="opacity:0.7">Треки и Soul Chat доступны.</span>');
-          if (ptHint) ptHint.style.display = 'none';
+          if (ptHint) {
+            ptHint.style.display = '';
+            ptHint.textContent = 'Если тариф не обновился — обнови страницу или закрой и открой приложение.';
+          }
           if (ptBackBtn) {
             ptBackBtn.textContent = t('subBtnProfile');
             ptBackBtn.onclick = function() {
@@ -6061,13 +6068,17 @@
             var maxAttempts = isSubPaymentImmediate ? 20 : 5;
             var delayMs = 3000;
             for (var attempt = 0; attempt < maxAttempts; attempt++) {
-              var statusResp = await fetchWithTimeout(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(thanksRequestId), {
-                headers: { 'X-Telegram-Init': initData }
-              }, 10000);
-              var statusJson = await statusResp.json().catch(function() { return {}; });
-              payStatus = statusJson && statusJson.data && statusJson.data.payment_status ? String(statusJson.data.payment_status).toLowerCase() : '';
-              payMode = statusJson && statusJson.data && statusJson.data.mode ? String(statusJson.data.mode) : '';
-              if (payStatus === 'paid') break;
+              try {
+                var statusResp = await fetchWithTimeout(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(thanksRequestId), {
+                  headers: { 'X-Telegram-Init': initData }
+                }, 10000);
+                var statusJson = await statusResp.json().catch(function() { return {}; });
+                payStatus = statusJson && statusJson.data && statusJson.data.payment_status ? String(statusJson.data.payment_status).toLowerCase() : '';
+                payMode = statusJson && statusJson.data && statusJson.data.mode ? String(statusJson.data.mode) : '';
+                if (payStatus === 'paid') break;
+              } catch (statusErr) {
+                console.warn('[payment/return] status attempt', attempt, statusErr && statusErr.message);
+              }
               if (attempt < maxAttempts - 1) await new Promise(function(r) { setTimeout(r, delayMs); });
             }
             isSub = isSubPaymentImmediate || (payMode && payMode.startsWith('sub_'));
@@ -6143,9 +6154,22 @@
               }
             }
           } catch (e) {
-            if (paymentThanksMsg && !isSubPaymentImmediate) paymentThanksMsg.textContent = t('songInProgress');
+            console.warn('[payment/return] Ошибка проверки оплаты:', e && e.message);
+            if (paymentThanksMsg) {
+              paymentThanksMsg.innerHTML = (isSubPaymentImmediate || (payMode && String(payMode).startsWith('sub_')))
+                ? 'Оплата получена. Если тариф не обновился — <strong>обнови страницу</strong> или закрой и открой приложение.'
+                : t('songInProgress');
+            }
+            var ptHint = document.getElementById('paymentThanksHint');
+            if (ptHint) { ptHint.style.display = ''; ptHint.textContent = 'Деньги списались? Тариф подтянется в течение минуты. Если нет — напиши в поддержку.'; }
           }
-        })();
+        })().catch(function(err) {
+          console.warn('[payment/return] Необработанная ошибка:', err && err.message);
+          var msg = document.getElementById('paymentThanksMessage');
+          var hint = document.getElementById('paymentThanksHint');
+          if (msg) msg.innerHTML = 'Оплата получена. Если тариф не обновился — <strong>обнови страницу</strong> или закрой и открой приложение.';
+          if (hint) { hint.style.display = ''; hint.textContent = 'Деньги списались? Тариф подтянется в течение минуты. Если нет — напиши в поддержку.'; }
+        });
         if (window.history && window.history.replaceState) {
           var cleanUrl = window.location.pathname + (window.location.hash || '');
           window.history.replaceState({}, '', cleanUrl);
@@ -6995,7 +7019,7 @@
           // Текст кнопки: сбрасываем в HOT Pay (активный промокод уже очищен при ошибке промокода)
           var isFreeAfterError = activePromo && Number(activePromo.amount_after) === 0;
           payBtn.textContent = isFreeAfterError ? '🎁 Получить бесплатно' : '💳 Оплатить через HOT Pay';
-          payBtn.style.background = isFreeAfterError ? 'linear-gradient(135deg,#059669,#10b981)' : 'linear-gradient(135deg,#d4af37,#ec4899)';
+          payBtn.style.background = isFreeAfterError ? 'linear-gradient(135deg,#059669,#10b981)' : 'linear-gradient(135deg,var(--primary-color),var(--secondary-color))';
         }
       });
       
@@ -8040,14 +8064,14 @@
     <div style="max-width:520px;margin:0 auto;padding:28px 18px 40px;">
       <!-- Заголовок -->
       <div style="text-align:center;margin-bottom:24px;">
-        <div style="font-size:1.9rem;font-weight:700;background:linear-gradient(135deg,#d4af37,#ec4899,#d4af37);background-size:300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">YupSoul</div>
-        <div style="font-size:0.72rem;font-weight:400;letter-spacing:0.12em;color:rgba(212,175,55,0.5);margin:2px 0 4px;text-transform:uppercase">Музыка твоей души</div>
+        <div style="font-size:1.9rem;font-weight:700;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color),var(--primary-color));background-size:300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">YupSoul</div>
+        <div style="font-size:0.72rem;font-weight:400;letter-spacing:0.12em;color:rgba(var(--primary-rgb),0.5);margin:2px 0 4px;text-transform:uppercase">Музыка твоей души</div>
         <div id="payOvSubtitle" style="color:rgba(255,255,255,0.75);font-size:0.95rem;margin-top:2px;">Твоя песня</div>
       </div>
 
       <!-- Карточка оплаты: один продукт, одна цена, один CTA -->
-      <div style="background:rgba(15,12,40,0.96);border:1px solid rgba(212,175,55,0.3);border-radius:18px;padding:24px 20px;">
-        <div id="payOvCardTitle" style="color:#d4af37;font-weight:700;font-size:1.05rem;margin-bottom:10px;">Оплата заявки</div>
+      <div style="background:rgba(15,12,40,0.96);border:1px solid rgba(var(--primary-rgb),0.3);border-radius:18px;padding:24px 20px;">
+        <div id="payOvCardTitle" style="color:var(--primary-color);font-weight:700;font-size:1.05rem;margin-bottom:10px;">Оплата заявки</div>
 
         <!-- Подсказка для новичков (показывается только если free_trial доступен) -->
         <div id="payOvTrialHint" style="display:none;background:rgba(5,150,105,0.15);border:1.5px solid rgba(16,185,129,0.5);border-radius:14px;padding:16px;margin-bottom:16px;">
@@ -8062,12 +8086,12 @@
 
         <!-- Промокод — раскрываемый блок, чтобы не перегружать экран -->
         <div style="margin-bottom:16px;">
-          <button type="button" id="payOvPromoToggle" style="width:100%;padding:10px 0;background:none;border:none;color:rgba(212,175,55,0.85);font-size:0.9rem;cursor:pointer;font-family:inherit;text-align:left;">▸ Есть промокод?</button>
+          <button type="button" id="payOvPromoToggle" style="width:100%;padding:10px 0;background:none;border:none;color:rgba(var(--primary-rgb),0.85);font-size:0.9rem;cursor:pointer;font-family:inherit;text-align:left;">▸ Есть промокод?</button>
           <div id="payOvPromoSection" style="display:none;margin-top:8px;">
             <input id="payOvPromoInput" type="text" placeholder="Введите промокод"
-              style="display:block;width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(212,175,55,0.65);background:rgba(255,255,255,0.14);color:#fff;font-size:1rem;font-family:inherit;text-transform:uppercase;outline:none;-webkit-appearance:none;margin-bottom:8px;">
+              style="display:block;width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(var(--primary-rgb),0.65);background:rgba(255,255,255,0.14);color:#fff;font-size:1rem;font-family:inherit;text-transform:uppercase;outline:none;-webkit-appearance:none;margin-bottom:8px;">
             <button id="payOvPromoBtn" type="button"
-              style="display:block;width:100%;box-sizing:border-box;padding:11px;border-radius:10px;background:rgba(212,175,55,0.18);border:1.5px solid rgba(212,175,55,0.55);color:#d4af37;font-weight:600;font-size:0.9rem;cursor:pointer;font-family:inherit;">
+              style="display:block;width:100%;box-sizing:border-box;padding:11px;border-radius:10px;background:rgba(var(--primary-rgb),0.18);border:1.5px solid rgba(var(--primary-rgb),0.55);color:var(--primary-color);font-weight:600;font-size:0.9rem;cursor:pointer;font-family:inherit;">
               Применить
             </button>
           </div>
@@ -8091,13 +8115,13 @@
         <!-- Секция оплаты (HOT Pay) -->
         <div id="payOvPaymentSection" style="margin-bottom:16px;">
           <p id="payOvOrPayText" style="color:rgba(255,255,255,0.8);font-size:0.95rem;margin-bottom:10px;">Или оплати:</p>
-          <div style="background:rgba(212,175,55,0.06);border-radius:12px;padding:14px;margin-bottom:12px;text-align:center;">
+          <div style="background:rgba(var(--primary-rgb),0.06);border-radius:12px;padding:14px;margin-bottom:12px;text-align:center;">
             <div id="payOvPriceLabel" style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-bottom:4px;">Цена:</div>
-            <div id="payOvPriceDisplay" style="font-size:1.3rem;font-weight:700;color:#d4af37;">5.99 USDT</div>
+            <div id="payOvPriceDisplay" style="font-size:1.3rem;font-weight:700;color:var(--primary-color);">5.99 USDT</div>
             <div id="payOvPriceHint" style="font-size:0.8rem;color:rgba(16,185,129,0.8);margin-top:6px;"></div>
           </div>
           <button id="payOvPayBtn" type="button"
-            style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;letter-spacing:0;">
+            style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;letter-spacing:0;">
             💳 Оплатить через HOT Pay
           </button>
           <button id="payOvStarsBtn" type="button"
@@ -8132,7 +8156,7 @@
   </div>
 
   <!-- Тост (короткое уведомление) -->
-  <div id="scToast" style="display:none;position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translateX(-50%);z-index:10002;padding:12px 20px;border-radius:14px;background:rgba(15,12,40,0.95);border:1px solid rgba(212,175,55,0.4);color:rgba(255,255,255,0.95);font-size:0.9rem;font-family:'Comfortaa',sans-serif;box-shadow:0 8px 24px rgba(0,0,0,0.4);max-width:90%;text-align:center;"></div>
+  <div id="scToast" style="display:none;position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translateX(-50%);z-index:10002;padding:12px 20px;border-radius:14px;background:rgba(15,12,40,0.95);border:1px solid rgba(var(--primary-rgb),0.4);color:rgba(255,255,255,0.95);font-size:0.9rem;font-family:'Comfortaa',sans-serif;box-shadow:0 8px 24px rgba(0,0,0,0.4);max-width:90%;text-align:center;"></div>
 
   <!-- ЭКРАН ПОДТВЕРЖДЕНИЯ ЗАЯВКИ — position:fixed, z-index выше оплаты, всегда поверх всего -->
   <div id="confirmOverlay" style="
@@ -8144,13 +8168,13 @@
     font-family:'Comfortaa',sans-serif;
   ">
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:40px 24px;text-align:center;background:linear-gradient(180deg,rgba(1,6,26,.7) 0%,rgba(8,10,38,.85) 100%);">
-      <div style="width:64px;height:64px;border:4px solid rgba(212,175,55,.15);border-top-color:#d4af37;border-radius:50%;margin:0 auto 24px;animation:confirmSpin 1s linear infinite;"></div>
-      <div style="font-size:1.5rem;color:#d4af37;font-weight:700;margin-bottom:16px;" id="confirmTitle">✨ Заявка принята!</div>
+      <div style="width:64px;height:64px;border:4px solid rgba(var(--primary-rgb),.15);border-top-color:var(--primary-color);border-radius:50%;margin:0 auto 24px;animation:confirmSpin 1s linear infinite;"></div>
+      <div style="font-size:1.5rem;color:var(--primary-color);font-weight:700;margin-bottom:16px;" id="confirmTitle">✨ Заявка принята!</div>
       <div style="color:rgba(255,255,255,0.8);font-size:1rem;line-height:1.8;max-width:340px;" id="confirmDesc">
         Анализирую твои данные и создаю уникальную песню.<br><br>
         🎵 Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.
       </div>
-      <button id="confirmContinueBtn" type="button" style="margin-top:28px;padding:13px 44px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#ec4899);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 6px 24px rgba(212,175,55,0.35);letter-spacing:0;">
+      <button id="confirmContinueBtn" type="button" style="margin-top:28px;padding:13px 44px;border-radius:14px;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 6px 24px rgba(var(--primary-rgb),0.35);letter-spacing:0;">
         Продолжить →
       </button>
     </div>
@@ -8163,21 +8187,21 @@
   " onclick="if(event.target===this)this.style.display='none'">
     <div style="
       background:linear-gradient(160deg,#1a1030 0%,#0d1830 100%);
-      border:1px solid rgba(212,175,55,0.25);
+      border:1px solid rgba(var(--primary-rgb),0.25);
       border-radius:20px 20px 0 0;
       padding:28px 24px 32px;
       max-width:480px;width:100%;
       text-align:center;
     ">
       <div style="width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,0.15);margin:0 auto 20px;"></div>
-      <div id="planConfirmTitle" style="font-size:1.15rem;font-weight:700;color:#d4af37;margin-bottom:10px;"></div>
+      <div id="planConfirmTitle" style="font-size:1.15rem;font-weight:700;color:var(--primary-color);margin-bottom:10px;"></div>
       <div id="planConfirmDesc" style="font-size:0.88rem;color:rgba(255,255,255,0.65);line-height:1.5;margin-bottom:24px;"></div>
       <button id="planConfirmBtn" type="button" style="
         width:100%;padding:14px;border-radius:14px;
-        background:linear-gradient(135deg,#d4af37,#ec4899);
+        background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));
         border:none;color:#fff;font-size:1rem;font-weight:700;
         cursor:pointer;font-family:inherit;
-        box-shadow:0 6px 20px rgba(212,175,55,0.3);
+        box-shadow:0 6px 20px rgba(var(--primary-rgb),0.3);
         margin-bottom:10px;
       ">Перейти в бот →</button>
       <button id="planConfirmStarsBtn" type="button" style="

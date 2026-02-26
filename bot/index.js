@@ -4620,6 +4620,35 @@ app.get("/api/admin/payments", asyncApi(async (req, res) => {
   return res.json({ success: true, data: data || [] });
 }));
 
+// Сводка по оплатам для админки: оплачено за 24ч/7д, ожидают (checkout открыт)
+app.get("/api/admin/payments/stats", asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const now = new Date().toISOString();
+  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const paidStatuses = ["paid", "gift_used", "subscription_active"];
+  const { data: rows } = await supabase
+    .from("track_requests")
+    .select("payment_status,paid_at,created_at,payment_order_id")
+    .not("payment_provider", "is", null);
+  if (!rows || !rows.length) {
+    return res.json({ success: true, paid_24h: 0, paid_7d: 0, pending_count: 0 });
+  }
+  let paid_24h = 0, paid_7d = 0, pending_count = 0;
+  rows.forEach((r) => {
+    const ps = (r.payment_status || "").toLowerCase();
+    const paidAt = r.paid_at || (ps === "paid" || ps === "gift_used" || ps === "subscription_active" ? r.created_at : null);
+    if (paidStatuses.includes(ps) && paidAt) {
+      if (paidAt >= dayAgo) paid_24h++;
+      if (paidAt >= weekAgo) paid_7d++;
+    }
+    if ((ps === "pending" || ps === "requires_payment") && r.payment_order_id) pending_count++;
+  });
+  return res.json({ success: true, paid_24h, paid_7d, pending_count });
+}));
+
 app.get("/api/admin/promos", asyncApi(async (req, res) => {
   const auth = resolveAdminAuth(req);
   if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });

@@ -350,6 +350,24 @@
           <button type="button" class="btn btn-primary" id="monetization-refresh-btn" style="min-width:180px;">🔄 Обновить монетизацию</button>
         </div>
         <div id="monetizationGlobalMsg" class="mono-msg"></div>
+        <div class="mono-panel" style="margin-bottom:16px;">
+          <h3 style="margin-bottom:10px;">Сводка по оплатам</h3>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+            <div style="background:#1e293b;border-radius:10px;padding:12px;text-align:center;border-left:3px solid #22c55e;">
+              <div id="payStatPaid24" style="font-size:1.5rem;font-weight:700;color:#22c55e;">—</div>
+              <div style="font-size:0.75rem;color:#64748b;margin-top:2px;">Оплачено за 24 ч</div>
+            </div>
+            <div style="background:#1e293b;border-radius:10px;padding:12px;text-align:center;border-left:3px solid #3b82f6;">
+              <div id="payStatPaid7" style="font-size:1.5rem;font-weight:700;color:#3b82f6;">—</div>
+              <div style="font-size:0.75rem;color:#64748b;margin-top:2px;">Оплачено за 7 дн</div>
+            </div>
+            <div style="background:#1e293b;border-radius:10px;padding:12px;text-align:center;border-left:3px solid #f59e0b;">
+              <div id="payStatPending" style="font-size:1.5rem;font-weight:700;color:#f59e0b;">—</div>
+              <div style="font-size:0.75rem;color:#64748b;margin-top:2px;">Ожидают (checkout открыт)</div>
+            </div>
+          </div>
+          <p class="mono-muted" style="font-size:0.75rem;margin-top:8px;margin-bottom:0;">«Ожидают» — пользователь нажал «Оплатить» и перешёл в checkout; оплата ещё не подтверждена вебхуком. Если долго висят — проверь логи вебхука или отметь вручную в карточке заявки.</p>
+        </div>
         <div class="mono-panel">
           <h3>Тарифы (pricing_catalog)</h3>
           <div class="mono-table-wrap">
@@ -1668,14 +1686,22 @@
       if (paymentsBody) paymentsBody.innerHTML = '<tr><td colspan="10" class="mono-muted">Загрузка…</td></tr>';
       setMonoMsg('monetizationGlobalMsg', 'Обновляю данные монетизации…', null);
       try {
-        const [pricingResult, promoResult, paymentsResult] = await Promise.all([
+        const [pricingResult, promoResult, paymentsResult, statsResult] = await Promise.all([
           fetchJson(API_BASE + '/api/admin/pricing' + authQueryFromPath(), { headers: authHeaders() }),
           fetchJson(API_BASE + '/api/admin/promos' + authQueryFromPath(), { headers: authHeaders() }),
           fetchJson(API_BASE + '/api/admin/payments?limit=100' + authQuery(), { headers: authHeaders() }),
+          fetchJson(API_BASE + '/api/admin/payments/stats' + authQuery(), { headers: authHeaders() }),
         ]);
         renderPricingRows((pricingResult.json && pricingResult.json.catalog) || []);
         renderPromoRows((promoResult.json && promoResult.json.data) || []);
         renderPaymentsRows((paymentsResult.json && paymentsResult.json.data) || []);
+        var st = (statsResult.json && statsResult.json.success) ? statsResult.json : {};
+        var el24 = document.getElementById('payStatPaid24');
+        var el7 = document.getElementById('payStatPaid7');
+        var elP = document.getElementById('payStatPending');
+        if (el24) el24.textContent = st.paid_24h != null ? st.paid_24h : '—';
+        if (el7) el7.textContent = st.paid_7d != null ? st.paid_7d : '—';
+        if (elP) elP.textContent = st.pending_count != null ? st.pending_count : '—';
         setMonoMsg('monetizationGlobalMsg', 'Данные монетизации обновлены.', true);
       } catch (e) {
         setMonoMsg('monetizationGlobalMsg', 'Не удалось загрузить монетизацию: ' + ((e && e.message) || String(e)), false);
