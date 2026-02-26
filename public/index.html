@@ -239,7 +239,7 @@
       -webkit-line-clamp: 2 !important;
       overflow: hidden !important;
       word-wrap: break-word !important;
-      white-space: pre-line !important;
+      white-space: normal !important;
       text-overflow: ellipsis;
       min-width: 0;
       width: 100%;
@@ -1579,7 +1579,7 @@
                 <span class="mode-desc" data-i18n="modeCoupleDesc">Песня для двух людей</span>
               </button>
               <button type="button" class="mode-btn" data-mode="transit">
-                <span class="mode-label" data-i18n="modeTransit">Энергия&#8232;момента</span>
+                <span class="mode-label" data-i18n="modeTransit">Энергия<br>момента</span>
                 <span class="mode-desc" data-i18n="modeTransitDesc">Песня о сегодняшнем дне</span>
               </button>
             </div>
@@ -2093,7 +2093,7 @@
           modeType: 'Формат песни', modeSubtitle: 'Для кого создаём?',
           modeSingle: 'Обо мне', modeSingleDesc: 'Песня по твоей дате рождения',
           modeCouple: 'Про двоих', modeCoupleDesc: 'Песня для двух людей',
-          modeTransit: 'Энергия\u2028момента', modeTransitDesc: 'Песня о сегодняшнем дне',
+          modeTransit: 'Энергия<br>момента', modeTransitDesc: 'Песня о сегодняшнем дне',
           namePh: 'Как тебя зовут?', birthdateLabel: 'Дата рождения', birthplacePh: 'Город или страна — выбери из подсказок',
           birthplaceHint: 'Начни вводить город и выбери из выпавшего списка.',
           unknownTimeShort: 'Не знаю', secondPersonTitle: 'Для двоих', name2Ph: 'Имя второго человека',
@@ -2280,7 +2280,7 @@
           modeType: 'Song format', modeSubtitle: 'Who is it for?',
           modeSingle: 'About me', modeSingleDesc: 'A song by your date of birth',
           modeCouple: 'About us', modeCoupleDesc: 'A song for two people',
-          modeTransit: 'This moment', modeTransitDesc: "A song about today",
+          modeTransit: 'This<br>moment', modeTransitDesc: "A song about today",
           namePh: "What's your name?", birthdateLabel: 'Date of birth', birthplacePh: 'City or country — choose from suggestions',
           birthplaceHint: 'Start typing your city and pick from the list.',
           unknownTimeShort: "Don't know", secondPersonTitle: 'For two', name2Ph: "Second person's name",
@@ -2466,7 +2466,7 @@
           modeType: 'Song-Format', modeSubtitle: 'Für wen erstellen wir?',
           modeSingle: 'Über mich', modeSingleDesc: 'Ein Lied nach deinem Geburtsdatum.',
           modeCouple: 'Über uns zwei', modeCoupleDesc: 'Ein Lied für zwei Menschen.',
-          modeTransit: 'Energie des Moments', modeTransitDesc: 'Ein Lied über den heutigen Tag.',
+          modeTransit: 'Energie<br>des Moments', modeTransitDesc: 'Ein Lied über den heutigen Tag.',
           namePh: 'Wie heißt du?', birthdateLabel: 'Geburtsdatum', birthplacePh: 'Stadt oder Land — wähle aus den Vorschlägen',
           birthplaceHint: 'Stadt eintippen und aus der Liste auswählen.',
           unknownTimeShort: 'Unbekannt', secondPersonTitle: 'Zu zweit', name2Ph: 'Name der zweiten Person',
@@ -2652,7 +2652,7 @@
           modeType: "Format de chanson", modeSubtitle: 'Pour qui créons-nous ?',
           modeSingle: 'À mon sujet', modeSingleDesc: 'Une chanson selon ta date de naissance.',
           modeCouple: 'Nous deux', modeCoupleDesc: 'Une chanson pour deux personnes.',
-          modeTransit: "Énergie du moment", modeTransitDesc: "Une chanson sur la journée d'aujourd'hui.",
+          modeTransit: "Énergie<br>du moment", modeTransitDesc: "Une chanson sur la journée d'aujourd'hui.",
           namePh: "Comment tu t'appelles ?", birthdateLabel: 'Date de naissance', birthplacePh: 'Ville ou pays — choisis parmi les suggestions',
           birthplaceHint: 'Tape ta ville et choisis dans la liste.',
           unknownTimeShort: 'Inconnu', secondPersonTitle: 'À deux', name2Ph: "Nom de la deuxième personne",
@@ -2865,7 +2865,7 @@
           ['modeType','.mode-selector h3'], ['modeSubtitle','.mode-subtitle'],
           ['modeSingle','.mode-btn[data-mode="single"] .mode-label'], ['modeSingleDesc','.mode-btn[data-mode="single"] .mode-desc'],
           ['modeCouple','.mode-btn[data-mode="couple"] .mode-label'], ['modeCoupleDesc','.mode-btn[data-mode="couple"] .mode-desc'],
-          ['modeTransit','.mode-btn[data-mode="transit"] .mode-label'], ['modeTransitDesc','.mode-btn[data-mode="transit"] .mode-desc'],
+          ['modeTransitDesc','.mode-btn[data-mode="transit"] .mode-desc'],
           ['secondPersonTitle','#secondPersonForm h3'], ['transitTitle','#transitForm h3'],
           ['sendRequest','.request-label'], ['requestDesc','#requestDesc'], ['requestQuickHint','#requestQuickHint'], ['submitRequest','#stepNext'], ['submitHint','#submitHint'],
           ['paymentSubtitle','#paymentPage .subtitle'], ['paymentPageTagline','#paymentPage .tagline'],
@@ -2885,8 +2885,9 @@
           ['forWhoLabel','#forWhoLabel'], ['nameLbl','#nameLabel'],
           ['birthdateLbl','#birthdateLbl'], ['birthplaceLbl','#birthplaceLbl'], ['birthtimeLbl','#birthtimeLbl']
         ];
-        // innerHTML-ключи для help-контента
+        // innerHTML — для подписей с переносом (напр. «Энергия» + «момента» на двух строках)
         var htmlMap = [
+          ['modeTransit','.mode-btn[data-mode="transit"] .mode-label'],
           ['helpB1','#helpB1'], ['helpB2','#helpB2'], ['helpB3','#helpB3'], ['helpB4','#helpB4'],
           ['helpB5','#helpB5'], ['helpB6','#helpB6'], ['helpB7','#helpB7']
         ];
