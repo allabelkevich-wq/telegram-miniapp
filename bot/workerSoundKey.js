@@ -690,7 +690,7 @@ async function sendRatingRequest(telegramUserId, requestId, trackTitle) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: telegramUserId,
-        text: "Понравилась песня? Оцени трек от 1 до 5 — твой отзыв помогает нам становиться лучше 🙏",
+        text: "Понравилась песня? Оцени трек от 1 до 5.\n\nОценки сохраняются в нашей статистике и помогают улучшать качество песен 🙏",
         reply_markup: {
           inline_keyboard: [[
             { text: "1 ★", callback_data: `rate_song:1:${requestId}` },

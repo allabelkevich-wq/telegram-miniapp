@@ -2,7 +2,9 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#08071a">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -1029,6 +1031,173 @@
       .mode-btn,.mode-btn .mode-label{font-size:8px !important}
       .request-quick-dropdown .quick-item{font-size:max(1rem,16px)}
       #homeTopBar .home-topbar-btn,#homeTopBar #profileIconBtn,#homeTopBar .lang-switcher-btn,#homeTopBar .home-topbar-btn span{font-size:9px !important}
+    }
+
+    /* ============================================
+       YUPSOUL — Адаптивность для маленьких экранов
+       ============================================ */
+    * { box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      min-width: 320px !important;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+    body { font-size: 16px; }
+    #app, .app-container, .main-wrapper {
+      width: 100%;
+      min-width: 320px;
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 0;
+    }
+    @media (max-width: 480px) {
+      .profilePage, #profilePage, .page-content {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+      }
+      .profile-section, .profile-card, .content-block {
+        padding: 14px !important;
+        margin-bottom: 16px !important;
+      }
+    }
+    @media (max-width: 480px) {
+      h1, .header-title { font-size: 1.1rem !important; }
+      h2, .section-title { font-size: 0.95rem !important; }
+      p, .text-content, .profile-field { font-size: 0.85rem !important; }
+      button, .btn { font-size: 0.9rem !important; padding: 10px 16px !important; }
+    }
+    button, .btn, .profile-back-btn, .header-menu-btn, .action-button {
+      min-width: 40px !important;
+      min-height: 40px !important;
+      flex-shrink: 0 !important;
+    }
+    .header, .page-header, #homeTopBar {
+      min-height: 56px !important;
+      flex-shrink: 0 !important;
+      padding: 10px 12px !important;
+    }
+    @media (max-width: 480px) {
+      .header, .page-header { padding: 8px 12px !important; min-height: 50px !important; }
+    }
+    .card, .profile-card, .content-block, .section-container { min-width: 280px !important; }
+    .flex-container, .button-group, .profile-actions { flex-wrap: wrap !important; gap: 8px !important; }
+    @media (max-width: 480px) {
+      .flex-container, .button-group { flex-direction: column !important; width: 100%; }
+      .flex-container > *, .button-group > * { width: 100% !important; flex: 1 1 100% !important; }
+    }
+    img, svg, .icon { max-width: 100%; height: auto; flex-shrink: 0; }
+    .modal, .popup, .dialog-overlay {
+      max-width: 100% !important;
+      min-width: 320px !important;
+      margin: 10px !important;
+    }
+    @media (max-width: 480px) {
+      .modal, .popup { margin: 5px !important; padding: 12px !important; }
+    }
+    input, textarea, select { min-width: 200px !important; font-size: 16px !important; }
+    #startBtn, .main-action-btn, .create-song-btn {
+      min-width: 240px !important;
+      max-width: 90% !important;
+      width: auto !important;
+      padding: 14px 28px !important;
+      font-size: 1rem !important;
+    }
+    @media (max-width: 480px) {
+      #startBtn, .main-action-btn { min-width: 200px !important; padding: 12px 24px !important; font-size: 0.95rem !important; }
+    }
+    .nav-menu, .bottom-nav, .menu-buttons { flex-wrap: wrap !important; justify-content: center !important; }
+    @media (max-width: 480px) {
+      .nav-menu, .bottom-nav { gap: 6px !important; }
+      .nav-menu button, .bottom-nav button { min-width: 80px !important; font-size: 0.8rem !important; padding: 8px 12px !important; }
+    }
+    .logo, .app-logo, .brand-image { max-width: 120px !important; width: 30% !important; min-width: 80px !important; }
+    @media (max-width: 480px) { .logo, .app-logo { max-width: 100px !important; width: 35% !important; } }
+    .greeting, .welcome-text, #homeGreeting { font-size: 0.9rem !important; max-width: 90% !important; word-wrap: break-word; }
+    @media (max-width: 480px) { .greeting { font-size: 0.85rem !important; } }
+    body, html, #app { overflow-x: hidden !important; position: relative; width: 100%; }
+    .grid-container, .cards-grid, .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    @media (max-width: 480px) {
+      .grid-container, .cards-grid { grid-template-columns: 1fr; gap: 8px; }
+    }
+    .card, .button, .profile-block { box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3); min-height: auto; }
+    footer, .app-footer, .footer-info { padding: 12px !important; font-size: 0.75rem !important; }
+    .tg-theme-params { width: 100%; }
+    @supports (padding: max(0px)) {
+      body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+      .header, .page-header { padding-top: max(10px, env(safe-area-inset-top)); padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+    }
+    /* Сетка тарифов на очень узких экранах — одна колонка */
+    @media (max-width: 400px) {
+      .profile-plans-grid { grid-template-columns: 1fr !important; }
+    }
+    /* Модалка планов — вписывается в экран */
+    @media (max-width: 480px) {
+      .plan-modal-sheet { max-width: 100% !important; margin: 0 !important; padding: 20px 16px 28px !important; border-radius: 20px 20px 0 0 !important; }
+    }
+
+    /* ============================================
+       YUPSOUL — Убрать заголовки с названием бота
+       (Telegram уже показывает название в окне)
+       ============================================ */
+    .header-title,
+    .page-header-title,
+    .app-title,
+    .yupsoul-title,
+    span[class*="header-title"],
+    #homeTopBar .header-title,
+    .form-header-bar .header-title,
+    .page-header .header-title {
+      display: none !important;
+    }
+    .header-title-container,
+    .page-header-text,
+    .title-wrapper,
+    .header-center,
+    .header-middle {
+      display: none !important;
+    }
+    [style*="YupSoul Personal Music"] {
+      display: none !important;
+    }
+    .header,
+    .page-header,
+    #homeTopBar,
+    .form-header-bar,
+    .page-header-bar {
+      background: transparent !important;
+      background-color: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      min-height: 0 !important;
+      height: auto !important;
+      margin: 0 !important;
+    }
+    #homeTopBar,
+    .form-header-bar,
+    .page-header {
+      padding-top: max(10px, env(safe-area-inset-top)) !important;
+      padding-left: 16px !important;
+      padding-right: 16px !important;
+      padding-bottom: 0 !important;
+    }
+    .header-back-btn,
+    .header-menu-btn,
+    .profile-back-btn,
+    .profile-icon-btn,
+    .btn-nav,
+    .btn-info {
+      display: inline-flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    #homeTopBar,
+    .form-header-bar {
+      justify-content: space-between !important;
     }
   </style>
 </head>

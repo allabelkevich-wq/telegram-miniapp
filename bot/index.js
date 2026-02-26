@@ -1073,16 +1073,23 @@ bot.on("callback_query:data", async (ctx) => {
     const stars = parseInt(parts[1], 10);
     const requestId = parts[2];
     const callerId = ctx.from?.id;
+    const starLabel = stars >= 1 && stars <= 5 ? `${stars} из 5 ★` : "—";
+    // Сразу даём обратную связь (иначе Telegram может не успеть показать ответ)
+    await ctx.answerCallbackQuery({
+      text: `Спасибо! Оценка ${starLabel} принята 🙏`,
+      show_alert: true,
+    }).catch(() => {});
     if (supabase && stars >= 1 && stars <= 5 && requestId && callerId) {
       await supabase.from("song_ratings").upsert(
         { request_id: requestId, telegram_user_id: callerId, rating: stars },
         { onConflict: "request_id,telegram_user_id" }
       ).catch((e) => console.warn("[rate_song] supabase error:", e?.message));
     }
-    const starLabel = stars + " из 5 ★";
-    await ctx.answerCallbackQuery({ text: `Спасибо! Оценка: ${starLabel} 🙏` }).catch(() => {});
     try {
-      await ctx.editMessageText(`Оценка принята: ${starLabel}\nСпасибо, что помогаешь нам становиться лучше! 🙏`);
+      await ctx.editMessageText(
+        `✅ Оценка принята: ${starLabel}\n\nТвой отзыв сохранён и помогает нам улучшать качество песен. Спасибо! 🙏`,
+        { reply_markup: { inline_keyboard: [] } }
+      );
     } catch (e) {
       console.warn("[rate_song] editMessageText:", e?.message);
     }
