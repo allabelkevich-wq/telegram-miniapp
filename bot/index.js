@@ -3181,6 +3181,31 @@ app.get(["/admin", "/admin/"], (req, res) => {
   });
 });
 
+// Однократный сид промпта в БД (ideally_tuned_system_v1) — после обновления bot/prompts/ideally_tuned_system.txt
+app.get("/api/admin/seed-prompt", asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа (token или initData)" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const promptPath = path.join(__dirname, "prompts", "ideally_tuned_system.txt");
+  let body;
+  try {
+    body = fs.readFileSync(promptPath, "utf8");
+  } catch (e) {
+    return res.status(500).json({ success: false, error: "Не удалось прочитать файл: " + (e?.message || e) });
+  }
+  const name = "ideally_tuned_system_v1";
+  const variables = ["astro_snapshot", "name", "birthdate", "birthplace", "birthtime", "language", "request"];
+  const { data: existing } = await supabase.from("prompt_templates").select("id").eq("name", name).maybeSingle();
+  if (existing) {
+    const { error } = await supabase.from("prompt_templates").update({ body, variables, updated_at: new Date().toISOString() }).eq("name", name);
+    if (error) return res.status(500).json({ success: false, error: error.message });
+    return res.json({ success: true, message: "Промпт ideally_tuned_system_v1 обновлён в prompt_templates." });
+  }
+  const { error } = await supabase.from("prompt_templates").insert({ name, body, variables, is_active: true, version: 1 });
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  return res.json({ success: true, message: "Промпт ideally_tuned_system_v1 добавлен в prompt_templates." });
+}));
+
 app.get("/api/admin/me", (req, res) => {
   const auth = resolveAdminAuth(req);
   if (!auth) return res.status(403).json({ error: "Доступ только для админа", admin: false });
