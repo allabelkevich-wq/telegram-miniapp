@@ -675,6 +675,9 @@
     #homeTopBar .home-topbar-btn svg,#homeTopBar #profileIconBtn svg{display:block !important;vertical-align:middle !important;width:18px !important;height:18px !important;min-width:18px !important;min-height:18px !important;flex-shrink:0 !important;fill:rgba(212,175,55,0.9) !important}
     #homeTopBar .home-topbar-btn span,#homeTopBar .lang-switcher-btn span{line-height:0 !important;vertical-align:middle !important;font-size:9px !important;font-family:'Comfortaa',sans-serif !important;font-weight:600 !important;color:rgba(212,175,55,0.9) !important}
     #homeTopBar .home-topbar-btn:active,#homeTopBar #profileIconBtn:active{background:rgba(212,175,55,0.28) !important}
+    #homeTopBar .header-menu-btn,#homeTopBar .btn-info{border:1px solid #00D9FF !important;box-shadow:0 0 8px #00D9FF !important;color:#00D9FF !important;background:rgba(0,217,255,0.08) !important}
+    #homeTopBar .header-menu-btn:hover,#homeTopBar .btn-info:hover{box-shadow:0 0 12px #00D9FF !important}
+    #homeTopBar .header-menu-btn svg{fill:currentColor !important}
     .lang-switcher-compact{position:relative}
     /* Нижняя зона: три ссылки строго в одну строку без переноса слова */
     .home-lower{display:flex;flex-direction:column;align-items:center;text-align:center}
@@ -776,7 +779,8 @@
     .ppc-info{width:14px;height:14px;border-radius:50%;border:1px solid rgba(212,175,55,0.35);color:rgba(212,175,55,0.6);font-size:0.6rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;line-height:1;font-style:normal;user-select:none;margin-left:2px}
     .ppc-info:active{color:#d4af37;border-color:#d4af37}
     #helpPage .help-back-row{display:flex;align-items:center;margin-bottom:12px}
-    #helpPage .help-back-btn{background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.5rem;cursor:pointer;padding:6px 10px;line-height:1;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;flex-shrink:0}
+    #helpPage .help-back-btn{background:none;border:1px solid #FF0055;border-radius:50%;width:44px;height:44px;color:#fff;font-size:1.2rem;cursor:pointer;padding:0;line-height:1;min-height:unset;box-shadow:0 0 8px #FF0055;animation:none;margin:0;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
+    #helpPage .help-back-btn:hover{box-shadow:0 0 12px #FF0055}
     #helpPage .help-title-wrap{text-align:center;padding:0 40px}
     #helpPage .help-title{font-size:1.35rem;font-weight:700;color:#d4af37;margin-bottom:4px}
     #helpPage .help-subtitle{font-size:0.85rem;color:rgba(255,255,255,0.45);line-height:1.5}
@@ -848,9 +852,27 @@
     #profileIconBtn:active{background:rgba(212,175,55,0.28)}
 
     /* ── ПРОФИЛЬ ── */
-    .profile-header{display:flex;align-items:center;gap:12px;padding:max(20px,calc(env(safe-area-inset-top)+12px)) 20px 16px;flex-shrink:0;background:#08071a;z-index:10}
-    .profile-back-btn{background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.4rem;cursor:pointer;min-width:44px;min-height:44px;padding:10px;box-shadow:none;animation:none;margin:0;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+    .profile-header{display:flex;justify-content:space-between;align-items:center;padding:max(20px,calc(env(safe-area-inset-top)+12px)) 16px 16px;flex-shrink:0;background:#08071a;z-index:10}
+    .profile-header .profile-header-title{flex:1;text-align:center;margin:0}
+    .profile-back-btn,.header-back-btn{background:none;border:1px solid #FF0055;border-radius:50%;width:44px;height:44px;font-size:1.2rem;color:#fff;cursor:pointer;box-shadow:0 0 8px #FF0055;display:inline-flex;align-items:center;justify-content:center;margin:0;padding:0;flex-shrink:0;transition:box-shadow .2s}
+    .profile-back-btn:hover,.header-back-btn:hover{box-shadow:0 0 12px #FF0055}
+    .header-menu-btn{background:none;border:1px solid #00D9FF;border-radius:50%;width:44px;height:44px;font-size:1.2rem;color:#fff;cursor:pointer;box-shadow:0 0 8px #00D9FF;display:inline-flex;align-items:center;justify-content:center;margin:0;padding:0;flex-shrink:0;transition:box-shadow .2s}
+    .header-menu-btn:hover{box-shadow:0 0 12px #00D9FF}
     .profile-header-title{font-size:1.05rem;font-weight:600;color:rgba(255,255,255,0.85);letter-spacing:0.02em}
+    /* Неоновая дизайн-система кнопок */
+    @keyframes neonPulse{0%{box-shadow:0 0 8px currentColor}50%{box-shadow:0 0 15px currentColor}100%{box-shadow:0 0 8px currentColor}}
+    .btn-magic{border:1px solid #D4AF37 !important;box-shadow:0 0 8px #D4AF37 !important}
+    .btn-magic:hover{animation:neonPulse 1.5s infinite;--neon-color:#D4AF37}
+    .btn-pay{border:1px solid #00FFA3 !important;box-shadow:0 0 8px #00FFA3 !important}
+    .btn-pay:hover{animation:neonPulse 1.5s infinite}
+    .btn-nav{border:1px solid #FF0055 !important;box-shadow:0 0 8px #FF0055 !important}
+    .btn-nav:hover{animation:neonPulse 1.5s infinite}
+    .btn-info{border:1px solid #00D9FF !important;box-shadow:0 0 8px #00D9FF !important}
+    .btn-info:hover{animation:neonPulse 1.5s infinite}
+    .btn-secondary{border:1px solid rgba(255,255,255,0.3) !important;box-shadow:0 0 5px rgba(255,255,255,0.1) !important}
+    .btn-secondary:hover{animation:neonPulse 1.5s infinite}
+    .form-header-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top));position:relative;flex-shrink:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(4px);z-index:100}
+    .form-header-bar .header-title{font-size:1rem;font-weight:600;color:rgba(255,255,255,0.9);position:absolute;left:50%;transform:translateX(-50%);margin:0;pointer-events:none}
     .profile-scroll{padding:8px 20px calc(env(safe-area-inset-bottom)+80px)}
     .profile-identity{text-align:center;margin-bottom:28px;padding-top:8px}
     .profile-avatar-wrap{position:relative;width:72px;height:72px;margin:0 auto 14px;cursor:pointer}
@@ -1074,10 +1096,10 @@
     <div class="page" id="homePage">
 
       <!-- Шапка: язык слева, профиль справа — две одинаковые ячейки, кнопки 44×44 по центру -->
-      <div id="homeTopBar">
+      <div id="homeTopBar" style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top));background:rgba(0,0,0,0.72);backdrop-filter:blur(4px);">
         <div class="home-topbar-slot">
           <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
-            <button type="button" id="langSwitcherBtn" class="lang-switcher-btn home-topbar-btn" title="Язык">
+            <button type="button" id="langSwitcherBtn" class="lang-switcher-btn home-topbar-btn btn-info header-menu-btn" title="Язык" style="width:44px;height:44px;">
               <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
               <span id="langSwitcherCurrent">RU</span>
             </button>
@@ -1089,11 +1111,14 @@
             </div>
           </div>
         </div>
+        <div class="home-topbar-slot" style="flex:1;display:flex;justify-content:center;align-items:center;">
+          <span class="header-title" style="font-size:0.95rem;font-weight:600;color:rgba(255,255,255,0.9);">YupSoul Personal Music</span>
+        </div>
         <div class="home-topbar-slot">
-          <button id="profileIconBtn" class="home-topbar-btn" onclick="goToProfileFrom('homePage')" aria-label="Профиль" title="Профиль">
+          <button id="profileIconBtn" class="home-topbar-btn header-menu-btn btn-info" onclick="goToProfileFrom('homePage')" aria-label="Профиль" title="Профиль" style="width:44px;height:44px;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="8" r="4" fill="#d4af37" opacity="0.9"/>
-              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#d4af37" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+              <circle cx="12" cy="8" r="4" fill="currentColor" opacity="0.9"/>
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
             </svg>
           </button>
         </div>
@@ -1245,8 +1270,9 @@
     <div class="page" id="profilePage">
       <!-- Шапка с кнопкой Назад -->
       <div class="profile-header">
-        <button type="button" class="profile-back-btn" onclick="goBack()" aria-label="Назад">←</button>
+        <button type="button" class="profile-back-btn header-back-btn btn-nav" onclick="goBack()" aria-label="Назад">←</button>
         <div id="profilePageTitle" class="profile-header-title">Профиль</div>
+        <button type="button" class="header-menu-btn btn-info" onclick="goToHelpFrom('profilePage')" aria-label="Помощь" style="width:44px;height:44px;">⊕</button>
       </div>
 
       <div class="profile-scroll page-scroll">
@@ -1545,11 +1571,11 @@
     
     <!-- Страница формы -->
     <div class="page" id="formPage">
-      <header class="page-header">
-        <button type="button" onclick="goBack()" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.55);font-size:1.5rem;cursor:pointer;padding:4px 8px;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;line-height:1" aria-label="Назад">‹</button>
-        <h1>YupSoul</h1>
-        <div style="font-size:0.78rem;font-weight:400;letter-spacing:0.12em;color:rgba(212,175,55,0.5);margin:2px 0 0;text-transform:uppercase">Музыка твоей души</div>
-      </header>
+      <div class="form-header-bar page-header">
+        <button type="button" class="profile-back-btn header-back-btn btn-nav" onclick="goBack()" aria-label="Назад">←</button>
+        <span class="header-title">YupSoul Personal Music</span>
+        <button type="button" class="header-menu-btn btn-info" onclick="goToProfileFrom('formPage')" aria-label="Профиль">⊕</button>
+      </div>
 
       <div class="page-scroll">
       <!-- Выбор героя для мастер-пользователей (скрыт у обычных) -->
@@ -1571,15 +1597,15 @@
             </h3>
             <p class="mode-subtitle">Для кого создаём?</p>
             <div class="mode-buttons">
-              <button type="button" class="mode-btn active" data-mode="single">
+              <button type="button" class="mode-btn btn-magic active" data-mode="single">
                 <span class="mode-label" data-i18n="modeSingle">Обо мне</span>
                 <span class="mode-desc" data-i18n="modeSingleDesc">Песня по твоей дате рождения</span>
               </button>
-              <button type="button" class="mode-btn" data-mode="couple">
+              <button type="button" class="mode-btn btn-magic" data-mode="couple">
                 <span class="mode-label" data-i18n="modeCouple">Про двоих</span>
                 <span class="mode-desc" data-i18n="modeCoupleDesc">Песня для двух людей</span>
               </button>
-              <button type="button" class="mode-btn" data-mode="transit">
+              <button type="button" class="mode-btn btn-magic" data-mode="transit">
                 <span class="mode-label" data-i18n="modeTransit">Энергия<br>момента</span>
                 <span class="mode-desc" data-i18n="modeTransitDesc">Песня о сегодняшнем дне</span>
               </button>
@@ -1799,7 +1825,7 @@
 
         <!-- Кнопка отправки — sticky внизу, всегда доступна -->
         <div class="step-nav form-submit-sticky">
-          <button id="stepNext">Отправить заявку</button>
+          <button id="stepNext" class="btn-pay">Отправить заявку</button>
         </div>
       </div>
       
@@ -1846,8 +1872,9 @@
 
       <!-- Шапка — показывается только в промо-режиме -->
       <div id="scHeader" class="profile-header">
-        <button type="button" class="profile-back-btn" onclick="goBack()" aria-label="Назад">←</button>
+        <button type="button" class="profile-back-btn header-back-btn btn-nav" onclick="goBack()" aria-label="Назад">←</button>
         <div class="profile-header-title">Soul Chat</div>
+        <button type="button" class="header-menu-btn btn-info" onclick="goToHelpFrom('soulChatPage')" aria-label="Помощь" style="width:44px;height:44px;">⊕</button>
       </div>
 
       <!-- Полноэкранная загрузка — по умолчанию скрыта; сразу показываем шапку и промо с «Проверяем доступ» -->
@@ -1964,8 +1991,8 @@
           </div>
           <!-- Переключатель режима -->
           <div id="scPickerModeTabs" style="display:flex;gap:8px;margin-bottom:16px;">
-            <button id="scPickerTabSingle" type="button" onclick="scSetPickerMode('single')" style="flex:1;padding:8px;border-radius:10px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid rgba(212,175,55,0.5);background:rgba(212,175,55,0.18);color:#d4af37;">Одна карточка</button>
-            <button id="scPickerTabSynastry" type="button" onclick="scSetPickerMode('synastry')" style="flex:1;padding:8px;border-radius:10px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);">Синастрия (2 карточки)</button>
+            <button id="scPickerTabSingle" type="button" class="btn-magic" onclick="scSetPickerMode('single')" style="flex:1;padding:8px;border-radius:10px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;background:rgba(212,175,55,0.18);color:#d4af37;">Одна карточка</button>
+            <button id="scPickerTabSynastry" type="button" class="btn-magic" onclick="scSetPickerMode('synastry')" style="flex:1;padding:8px;border-radius:10px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);">Синастрия (2 карточки)</button>
           </div>
           <!-- Режим: одна карточка -->
           <div id="scPickerSinglePane" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;min-height:0;">
@@ -1983,7 +2010,7 @@
             </div>
           </div>
           <!-- Кнопка применить -->
-          <button id="scPickerApplyBtn" type="button" onclick="scApplyCardPicker()" style="margin-top:16px;width:100%;padding:13px;border-radius:13px;background:linear-gradient(135deg,rgba(212,175,55,0.28),rgba(236,72,153,0.18));border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">Применить</button>
+          <button id="scPickerApplyBtn" type="button" class="btn-pay" onclick="scApplyCardPicker()" style="margin-top:16px;width:100%;padding:13px;border-radius:13px;background:linear-gradient(135deg,rgba(0,255,163,0.15),rgba(0,255,163,0.08));color:#00FFA3;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit;">Применить</button>
         </div>
       </div>
 
@@ -5155,6 +5182,7 @@
           var isSelected = card.id === selectedId;
           var item = document.createElement('button');
           item.type = 'button';
+          item.className = 'btn-secondary';
           item.style.cssText = 'width:100%;text-align:left;padding:9px 12px;border-radius:10px;font-family:inherit;font-size:0.84rem;cursor:pointer;border:1px solid ' +
             (isSelected ? 'rgba(212,175,55,0.5)' : 'rgba(255,255,255,0.1)') + ';background:' +
             (isSelected ? 'rgba(212,175,55,0.14)' : 'rgba(255,255,255,0.04)') + ';color:' +
