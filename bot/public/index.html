@@ -222,7 +222,7 @@
       border-radius: 10px;
       color: #ffffff !important;
       font-family: 'Comfortaa', sans-serif;
-      font-size: 11px !important;
+      font-size: 8px !important;
       font-weight: 600 !important;
       cursor: pointer;
       transition: all 0.3s ease;
@@ -313,7 +313,7 @@
     .mode-btn:active { transform: scale(0.98); transition: transform 0.1s; }
     @media (max-width: 380px) {
       .mode-btn {
-        font-size: 10px !important;
+        font-size: 7px !important;
         min-height: 60px !important;
         max-height: 60px !important;
         padding: 6px 4px !important;
@@ -336,7 +336,7 @@
       hyphens: auto !important;
     }
     .mode-icon { display: none; }
-    .mode-label { font-weight: 700; font-size: max(1rem, 16px); line-height: 1.25; }
+    .mode-label { font-weight: 700; font-size: inherit; line-height: 1.25; }
     .mode-desc { display: none; }
     /* Аккордеон второго человека */
     #secondPersonAccordion .pfa-header { background: rgba(212,175,55,0.06); border: 1px solid rgba(212,175,55,0.18); }
@@ -973,10 +973,11 @@
       .keys-composition .key-music:hover{transform:rotate(-10deg)}
       .keys-composition .key-door:hover{transform:rotate(8deg)}
     }
-    /* iOS/Android: при фокусе на элементе с текстом < 16px браузер делает автозум. Фиксируем минимум 16px у всех кликабельных элементов. */
+    /* iOS/Android: при фокусе на элементе с текстом < 16px браузер делает автозум. Фиксируем минимум 16px у кликабельных элементов. Кнопки режимов — компактно (8px). */
     @media (hover:none) and (pointer:coarse){
-      button,a,input,select,textarea,[role="button"],.mode-btn,.mode-info,.form-nav-link,.home-nav-link,.lang-switcher-btn,.lang-opt,.ppc-details-btn,.ppc-btn,.request-quick-toggle,.quick-item,.quick-picker-btn,.onboarding-btn,.hca-btn,.hero-hist-toggle,.stories-close,.profile-back-btn,.preview-nav button,.example-btn,.request-help-toggle{font-size:max(1rem,16px)}
-      .mode-btn .mode-label,.request-quick-dropdown .quick-item{font-size:max(1rem,16px)}
+      button,a,input,select,textarea,[role="button"],.mode-info,.form-nav-link,.home-nav-link,.lang-switcher-btn,.lang-opt,.ppc-details-btn,.ppc-btn,.request-quick-toggle,.quick-item,.quick-picker-btn,.onboarding-btn,.hca-btn,.hero-hist-toggle,.stories-close,.profile-back-btn,.preview-nav button,.example-btn,.request-help-toggle{font-size:max(1rem,16px)}
+      .mode-btn,.mode-btn .mode-label{font-size:8px !important}
+      .request-quick-dropdown .quick-item{font-size:max(1rem,16px)}
       #homeTopBar .home-topbar-btn,#homeTopBar #profileIconBtn,#homeTopBar .lang-switcher-btn,#homeTopBar .home-topbar-btn span{font-size:9px !important}
     }
   </style>
