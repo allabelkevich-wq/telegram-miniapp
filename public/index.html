@@ -1444,6 +1444,72 @@
     .form-header-bar > :not(button):not(.home-topbar-slot) {
       display: none !important;
     }
+
+    /* ============================================
+       YUPSOUL — УДАЛИТЬ ЧЁРНУЮ ПАНЕЛЬ И ТЕКСТ
+       ============================================ */
+    .form-header-bar,
+    .page-header,
+    #homeTopBar {
+      background: transparent !important;
+      background-color: transparent !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      box-shadow: none !important;
+      border: none !important;
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+    }
+    .header-title,
+    span.header-title,
+    div.header-title,
+    .page-header-title,
+    .app-title,
+    .form-header-bar .header-title,
+    .page-header .header-title {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+      position: absolute !important;
+      left: -9999px !important;
+    }
+    .form-header-bar > span,
+    .form-header-bar > div:not([class*="btn"]):not([class*="back"]):not([class*="menu"]),
+    .page-header > span,
+    .page-header > div:not([class*="btn"]):not([class*="back"]):not([class*="menu"]) {
+      display: none !important;
+    }
+    .profile-back-btn,
+    .header-back-btn,
+    .btn-nav,
+    .profile-icon-btn,
+    .header-menu-btn,
+    .btn-info,
+    button[class*="back"],
+    button[class*="menu"] {
+      display: flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      position: relative !important;
+    }
+    .form-header-bar,
+    .page-header,
+    #homeTopBar {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      min-height: 44px !important;
+    }
+    .form-header-bar::before,
+    .form-header-bar::after,
+    .page-header::before,
+    .page-header::after {
+      display: none !important;
+      content: none !important;
+    }
   </style>
 </head>
 <body>
@@ -8307,21 +8373,16 @@
     function removePanelClutter() {
       document.querySelectorAll('.header-title, .page-header-title, .app-title').forEach(function(el) { el.remove(); });
       document.querySelectorAll('*').forEach(function(el) {
-        if (el.textContent && el.textContent.indexOf('YupSoul Personal Music') !== -1) {
-          if (!el.classList.contains('app-logo') && !el.classList.contains('logo')) el.style.display = 'none';
+        if (el.textContent && el.textContent.trim() === 'YupSoul Personal Music') {
+          var p = el.parentElement;
+          if (p && (p.classList.contains('form-header-bar') || p.classList.contains('page-header') || el.classList.contains('header-title'))) el.remove();
         }
       });
-      document.querySelectorAll('#homeTopBar, .page-header, .form-header-bar').forEach(function(header) {
-        var children = header.children;
-        for (var i = children.length - 1; i >= 0; i--) {
-          var child = children[i];
-          if (child.classList.contains('home-topbar-slot')) continue;
-          var isButton = child.tagName === 'BUTTON' || child.classList.contains('btn-nav') || child.classList.contains('profile-back-btn') || child.classList.contains('header-back-btn') || child.classList.contains('header-menu-btn') || child.classList.contains('btn-info');
-          if (!isButton) child.style.display = 'none';
-        }
+      document.querySelectorAll('.form-header-bar, .page-header, #homeTopBar').forEach(function(header) {
         header.style.background = 'transparent';
         header.style.backgroundColor = 'transparent';
         header.style.boxShadow = 'none';
+        header.style.backdropFilter = 'none';
       });
     }
     if (document.readyState === 'complete') setTimeout(removePanelClutter, 500);

@@ -466,9 +466,9 @@ function verifyHotWebhookSignature(rawBody, signatureHeader) {
     return false;
   }
   if (!signatureHeader) {
-    // HOT Pay может не присылать подпись — логируем, но пропускаем
-    console.warn("[webhook] verifyHotWebhookSignature: заголовок подписи отсутствует — пропускаем проверку");
-    return true;
+    // В проде при заданном секрете требуем подпись (X-HOT-Signature) — иначе 401
+    console.warn("[webhook] verifyHotWebhookSignature: заголовок подписи отсутствует — отклоняем (задай X-HOT-Signature в кабинете HOT)");
+    return false;
   }
   const expected = crypto.createHmac("sha256", HOT_WEBHOOK_SECRET).update(rawBody).digest("hex");
   const providedRaw = String(signatureHeader).trim();
@@ -2776,31 +2776,55 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
     if (!orderId && !requestId) return res.status(400).json({ success: false, error: "memo/order_id or request_id is required" });
     if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
 
-    // 1) Основной поиск: по payment_order_id (memo). 2) Фолбек: по request_id (если HOT прислал не memo).
-    let row = null;
-    let rowErr = null;
-    if (orderId) {
-      const r1 = await supabase
-        .from("track_requests")
-        .select("id,name,telegram_user_id,payment_status,payment_order_id,mode,payment_raw,payment_tx_id,generation_status,status")
-        .eq("payment_order_id", orderId)
-        .maybeSingle();
-      row = r1.data || null;
-      rowErr = r1.error || null;
+    // Поиск заказа: по payment_order_id (memo), фолбек по request_id. При гонке — повторная проверка с задержкой.
+    async function findOrder() {
+      let r = null;
+      let err = null;
+      if (orderId) {
+        const r1 = await supabase
+          .from("track_requests")
+          .select("id,name,telegram_user_id,payment_status,payment_order_id,mode,payment_raw,payment_tx_id,generation_status,status")
+          .eq("payment_order_id", orderId)
+          .maybeSingle();
+        r = r1.data || null;
+        err = r1.error || null;
+      }
+      if (err) return { row: null, rowErr: err };
+      if (!r && requestId) {
+        const r2 = await supabase
+          .from("track_requests")
+          .select("id,name,telegram_user_id,payment_status,payment_order_id,mode,payment_raw,payment_tx_id,generation_status,status")
+          .eq("id", requestId)
+          .maybeSingle();
+        if (r2.error) return { row: null, rowErr: r2.error };
+        r = r2.data || null;
+      }
+      return { row: r, rowErr: null };
     }
+
+    let { row, rowErr } = await findOrder();
     if (rowErr) return res.status(500).json({ success: false, error: rowErr.message });
-    if (!row && requestId) {
-      const r2 = await supabase
-        .from("track_requests")
-        .select("id,name,telegram_user_id,payment_status,payment_order_id,mode,payment_raw,payment_tx_id,generation_status,status")
-        .eq("id", requestId)
-        .maybeSingle();
-      if (r2.error) return res.status(500).json({ success: false, error: r2.error.message });
-      row = r2.data || null;
+    if (!row) {
+      console.log("[HOT webhook] заказ не найден с первого раза — повтор через 1 с", { orderId: orderId || "(пусто)", requestId: requestId || "(пусто)" });
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      ({ row, rowErr } = await findOrder());
+      if (rowErr) return res.status(500).json({ success: false, error: rowErr.message });
     }
     if (!row) {
-      console.warn("[HOT webhook] заказ не найден в БД", { orderId: orderId || "(пусто)", requestId: requestId || "(пусто)" });
-      return res.status(404).json({ success: false, error: "Order not found" });
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      ({ row, rowErr } = await findOrder());
+      if (rowErr) return res.status(500).json({ success: false, error: rowErr.message });
+    }
+    if (!row) {
+      console.error("[HOT webhook] Критично: заказ не найден после повторной проверки (1с + 2с)", { orderId: orderId || "(пусто)", requestId: requestId || "(пусто)", bodyKeys: Object.keys(body) });
+      const { error: insErr } = await supabase.from("unmatched_payments").insert({
+        memo: orderId || null,
+        request_id: requestId || null,
+        payload: body,
+        received_at: new Date().toISOString(),
+      });
+      if (insErr) console.warn("[HOT webhook] unmatched_payments insert failed (таблица может отсутствовать):", insErr.message);
+      return res.status(200).json({ ok: true, warning: "order_not_found_logged" });
     }
     if ((row.payment_status || "").toLowerCase() === "paid") return res.json({ success: true, message: "Already processed" });
 
