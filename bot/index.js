@@ -4758,6 +4758,62 @@ app.get("/api/admin/user-stats", asyncApi(async (req, res) => {
   });
 }));
 
+// ─── Аналитика (лёгкая): Soul Chat, расшифровки, заявки по периодам ───────────
+app.get("/api/admin/analytics", asyncApi(async (req, res) => {
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Доступ только для админа" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+
+  const now = new Date();
+  const d24 = new Date(now - 24 * 3600 * 1000).toISOString();
+  const d7 = new Date(now - 7 * 86400 * 1000).toISOString();
+  const d30 = new Date(now - 30 * 86400 * 1000).toISOString();
+
+  const [
+    sc24Res, sc7Res, sc30Res,
+    trWithAnalysisRes, trAnalysisPaidRes, upFreeUsedRes,
+    trCreated24Res, trCreated7Res, trCreated30Res,
+    trCompleted24Res, trCompleted7Res, trCompleted30Res,
+  ] = await Promise.allSettled([
+    supabase.from("soul_chat_sessions").select("*", { count: "exact", head: true }).gte("created_at", d24),
+    supabase.from("soul_chat_sessions").select("*", { count: "exact", head: true }).gte("created_at", d7),
+    supabase.from("soul_chat_sessions").select("*", { count: "exact", head: true }).gte("created_at", d30),
+    supabase.from("track_requests").select("*", { count: "exact", head: true }).not("detailed_analysis", "is", null),
+    supabase.from("track_requests").select("*", { count: "exact", head: true }).eq("analysis_paid", true),
+    supabase.from("user_profiles").select("*", { count: "exact", head: true }).not("free_analysis_used_at", "is", null),
+    supabase.from("track_requests").select("*", { count: "exact", head: true }).gte("created_at", d24),
+    supabase.from("track_requests").select("*", { count: "exact", head: true }).gte("created_at", d7),
+    supabase.from("track_requests").select("*", { count: "exact", head: true }).gte("created_at", d30),
+    supabase.from("track_requests").select("*", { count: "exact", head: true }).eq("generation_status", "completed").gte("updated_at", d24),
+    supabase.from("track_requests").select("*", { count: "exact", head: true }).eq("generation_status", "completed").gte("updated_at", d7),
+    supabase.from("track_requests").select("*", { count: "exact", head: true }).eq("generation_status", "completed").gte("updated_at", d30),
+  ]);
+
+  const v = (r) => r.status === "fulfilled" ? r.value?.count ?? 0 : 0;
+
+  return res.json({
+    success: true,
+    soul_chat: {
+      last_24h: v(sc24Res),
+      last_7d: v(sc7Res),
+      last_30d: v(sc30Res),
+    },
+    expansion: {
+      with_analysis: v(trWithAnalysisRes),
+      analysis_paid: v(trAnalysisPaidRes),
+      free_used: v(upFreeUsedRes),
+    },
+    requests: {
+      created_24h: v(trCreated24Res),
+      created_7d: v(trCreated7Res),
+      created_30d: v(trCreated30Res),
+      completed_24h: v(trCompleted24Res),
+      completed_7d: v(trCompleted7Res),
+      completed_30d: v(trCompleted30Res),
+    },
+  });
+}));
+
 // ─── Активные подписки + отзыв ───────────────────────────────────────────────
 app.get("/api/admin/active-subscriptions", asyncApi(async (req, res) => {
   const auth = resolveAdminAuth(req);

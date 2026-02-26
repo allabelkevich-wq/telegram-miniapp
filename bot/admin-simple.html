@@ -214,6 +214,7 @@
       <button class="tab-btn" onclick="switchTab('languages', this)">🌍 Языки</button>
       <button class="tab-btn" onclick="switchTab('settings', this)">⚙️ Настройки</button>
       <button class="tab-btn" onclick="switchTab('referrals', this)">🔗 Рефералы</button>
+      <button class="tab-btn" onclick="switchTab('analytics', this)">📊 Аналитика</button>
     </div>
 
     <!-- Tab: Заявки -->
@@ -396,6 +397,64 @@
           </div>
           <div id="paymentsMsg" class="mono-msg"></div>
         </div>
+      </div>
+    </div>
+
+    <!-- Tab: Аналитика (Soul Chat, расшифровки, заявки) -->
+    <div class="tab-pane" id="tab-analytics">
+      <div class="details-section" style="margin-bottom:20px;">
+        <div class="section-title">📊 Использование</div>
+        <p class="mono-muted" style="margin-bottom:14px;">Минимальная сводка без перегрузки. Обновляется при открытии вкладки.</p>
+        <div class="mono-actions" style="margin-bottom:14px;">
+          <button class="btn btn-primary" onclick="loadAnalytics()">🔄 Обновить</button>
+        </div>
+
+        <div class="section-title" style="font-size:0.85rem;margin-bottom:8px;color:#f472b6;">Soul Chat — сообщений</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+          <div style="background:#1e293b;border-radius:10px;padding:12px;text-align:center;border-left:3px solid #f472b6;">
+            <div id="ax-sc-24" style="font-size:1.75rem;font-weight:700;color:#f472b6;">—</div>
+            <div style="font-size:0.7rem;color:#64748b;margin-top:2px;">24 ч</div>
+          </div>
+          <div style="background:#1e293b;border-radius:10px;padding:12px;text-align:center;border-left:3px solid #f472b6;">
+            <div id="ax-sc-7" style="font-size:1.75rem;font-weight:700;color:#f472b6;">—</div>
+            <div style="font-size:0.7rem;color:#64748b;margin-top:2px;">7 дн</div>
+          </div>
+          <div style="background:#1e293b;border-radius:10px;padding:12px;text-align:center;border-left:3px solid #f472b6;">
+            <div id="ax-sc-30" style="font-size:1.75rem;font-weight:700;color:#f472b6;">—</div>
+            <div style="font-size:0.7rem;color:#64748b;margin-top:2px;">30 дн</div>
+          </div>
+        </div>
+
+        <div class="section-title" style="font-size:0.85rem;margin-bottom:8px;color:#a78bfa;">Расшифровки</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+          <div style="background:#1e293b;border-radius:10px;padding:12px;text-align:center;border-left:3px solid #a78bfa;">
+            <div id="ax-exp-total" style="font-size:1.75rem;font-weight:700;color:#a78bfa;">—</div>
+            <div style="font-size:0.7rem;color:#64748b;margin-top:2px;">Всего с текстом</div>
+          </div>
+          <div style="background:#1e293b;border-radius:10px;padding:12px;text-align:center;border-left:3px solid #34d399;">
+            <div id="ax-exp-paid" style="font-size:1.75rem;font-weight:700;color:#34d399;">—</div>
+            <div style="font-size:0.7rem;color:#64748b;margin-top:2px;">Оплачено</div>
+          </div>
+          <div style="background:#1e293b;border-radius:10px;padding:12px;text-align:center;border-left:3px solid #fbbf24;">
+            <div id="ax-exp-free" style="font-size:1.75rem;font-weight:700;color:#fbbf24;">—</div>
+            <div style="font-size:0.7rem;color:#64748b;margin-top:2px;">Бесплатно использовано</div>
+          </div>
+        </div>
+
+        <div class="section-title" style="font-size:0.85rem;margin-bottom:8px;color:#38bdf8;">Заявки</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:10px;">
+          <div style="background:#1e293b;border-radius:10px;padding:12px;text-align:center;border-left:3px solid #38bdf8;">
+            <div style="font-size:0.7rem;color:#64748b;margin-bottom:4px;">Создано</div>
+            <div><span id="ax-req-c-24" style="font-weight:700;color:#38bdf8;">—</span> / <span id="ax-req-c-7" style="font-weight:700;color:#38bdf8;">—</span> / <span id="ax-req-c-30" style="font-weight:700;color:#38bdf8;">—</span></div>
+            <div style="font-size:0.65rem;color:#64748b;">24ч · 7д · 30д</div>
+          </div>
+          <div style="background:#1e293b;border-radius:10px;padding:12px;text-align:center;border-left:3px solid #34d399;">
+            <div style="font-size:0.7rem;color:#64748b;margin-bottom:4px;">Завершено</div>
+            <div><span id="ax-req-d-24" style="font-weight:700;color:#34d399;">—</span> / <span id="ax-req-d-7" style="font-weight:700;color:#34d399;">—</span> / <span id="ax-req-d-30" style="font-weight:700;color:#34d399;">—</span></div>
+            <div style="font-size:0.65rem;color:#64748b;">24ч · 7д · 30д</div>
+          </div>
+        </div>
+        <div id="analyticsMsg" class="mono-msg"></div>
       </div>
     </div>
 
@@ -622,6 +681,7 @@
       if (btn) btn.classList.add('active');
       if (tabId === 'referrals') { loadReferralData(); loadCampaigns(); }
       if (tabId === 'users') { loadUserStats(); }
+      if (tabId === 'analytics') { loadAnalytics(); }
     }
 
     function toggleRow(id) {
@@ -1664,6 +1724,36 @@
           '<td>' + rewardBadge + '</td>' +
           '</tr>';
       }).join('');
+    }
+
+    // ─── Аналитика (Soul Chat, расшифровки, заявки) ───────────────────────────
+    async function loadAnalytics() {
+      const msgEl = document.getElementById('analyticsMsg');
+      if (msgEl) msgEl.textContent = 'Загрузка…';
+      try {
+        const r = await fetchJson(API_BASE + '/api/admin/analytics' + authQueryFromPath(), { headers: authHeaders() });
+        const d = r.json;
+        if (!d || !d.success) { if (msgEl) msgEl.textContent = 'Ошибка: ' + (d && d.error || 'unknown'); return; }
+        const sc = d.soul_chat || {};
+        const exp = d.expansion || {};
+        const req = d.requests || {};
+        function set(id, v) { const el = document.getElementById(id); if (el) el.textContent = v != null ? v : '—'; }
+        set('ax-sc-24', sc.last_24h);
+        set('ax-sc-7', sc.last_7d);
+        set('ax-sc-30', sc.last_30d);
+        set('ax-exp-total', exp.with_analysis);
+        set('ax-exp-paid', exp.analysis_paid);
+        set('ax-exp-free', exp.free_used);
+        set('ax-req-c-24', req.created_24h);
+        set('ax-req-c-7', req.created_7d);
+        set('ax-req-c-30', req.created_30d);
+        set('ax-req-d-24', req.completed_24h);
+        set('ax-req-d-7', req.completed_7d);
+        set('ax-req-d-30', req.completed_30d);
+        if (msgEl) msgEl.textContent = 'Обновлено ' + new Date().toLocaleTimeString('ru-RU');
+      } catch (e) {
+        if (msgEl) msgEl.textContent = 'Ошибка: ' + (e && e.message || e);
+      }
     }
 
     // ─── Статистика пользователей ────────────────────────────────────────────
