@@ -1,12 +1,8 @@
 /**
  * Загрузка «Идеально отлаженного промпта» из bot/prompts/ideally_tuned_system.txt в таблицу prompt_templates.
- * Запуск: из папки bot выполнить миграцию prompt_templates (если ещё не выполнена), затем:
+ * На Render бот при каждом старте сам подтягивает промпт в БД (переменные Supabase уже в окружении).
+ * Локально: из папки bot при наличии .env с SUPABASE_* запустить:
  *   node seed-ideally-tuned-prompt.js
- * Требуется .env с SUPABASE_URL и SUPABASE_SERVICE_KEY.
- *
- * Альтернатива на проде (Render): после деплоя открыть в браузере:
- *   https://ТВОЙ-СЕРВИС.onrender.com/api/admin/seed-prompt?token=ADMIN_SECRET
- * (ADMIN_SECRET из Environment на Render)
  */
 
 import { createClient } from "@supabase/supabase-js";
