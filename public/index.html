@@ -1378,6 +1378,68 @@
       visibility: visible !important;
       opacity: 1 !important;
     }
+
+    /* ============================================
+       YUPSOUL — ПОЛНОЕ УДАЛЕНИЕ ЧЕРНОЙ ПАНЕЛИ
+       ============================================ */
+    #homeTopBar,
+    .page-header,
+    .form-header-bar,
+    .header-container,
+    .page-header-bar,
+    .header-wrapper {
+      background: transparent !important;
+      background-color: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      min-height: 0 !important;
+      padding-top: max(8px, env(safe-area-inset-top)) !important;
+      padding-bottom: 8px !important;
+    }
+    .page-header > span,
+    .form-header-bar > span,
+    .page-header > div:not([class*="back"]):not([class*="menu"]):not([class*="btn"]):not(.home-topbar-slot),
+    .form-header-bar > div {
+      display: none !important;
+    }
+    .profile-back-btn,
+    .header-back-btn,
+    .btn-nav,
+    .profile-icon-btn,
+    .header-menu-btn,
+    .btn-info {
+      display: flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      position: relative !important;
+      z-index: 100 !important;
+    }
+    #homeTopBar,
+    .page-header,
+    .form-header-bar {
+      font-size: 0 !important;
+    }
+    #homeTopBar > *,
+    .page-header > *,
+    .form-header-bar > * {
+      font-size: 16px !important;
+    }
+    .header-center,
+    .header-middle,
+    .center-slot,
+    .middle-slot,
+    .title-wrapper,
+    .text-container {
+      display: none !important;
+      visibility: hidden !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+    .form-header-bar > :not(button):not(.home-topbar-slot) {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
@@ -8215,6 +8277,32 @@
     }
     window.openPlanDetails = openPlanDetails;
     window.closePlanModal = closePlanModal;
+  </script>
+  <script>
+  (function() {
+    function removePanelClutter() {
+      document.querySelectorAll('.header-title, .page-header-title, .app-title').forEach(function(el) { el.remove(); });
+      document.querySelectorAll('*').forEach(function(el) {
+        if (el.textContent && el.textContent.indexOf('YupSoul Personal Music') !== -1) {
+          if (!el.classList.contains('app-logo') && !el.classList.contains('logo')) el.style.display = 'none';
+        }
+      });
+      document.querySelectorAll('#homeTopBar, .page-header, .form-header-bar').forEach(function(header) {
+        var children = header.children;
+        for (var i = children.length - 1; i >= 0; i--) {
+          var child = children[i];
+          if (child.classList.contains('home-topbar-slot')) continue;
+          var isButton = child.tagName === 'BUTTON' || child.classList.contains('btn-nav') || child.classList.contains('profile-back-btn') || child.classList.contains('header-back-btn') || child.classList.contains('header-menu-btn') || child.classList.contains('btn-info');
+          if (!isButton) child.style.display = 'none';
+        }
+        header.style.background = 'transparent';
+        header.style.backgroundColor = 'transparent';
+        header.style.boxShadow = 'none';
+      });
+    }
+    if (document.readyState === 'complete') setTimeout(removePanelClutter, 500);
+    else window.addEventListener('load', function() { setTimeout(removePanelClutter, 500); });
+  })();
   </script>
 </body>
 </html>
