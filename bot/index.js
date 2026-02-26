@@ -132,18 +132,35 @@ async function getPricingCatalog() {
     .order("sku", { ascending: true });
   if (error && /does not exist|relation/i.test(error.message)) return DEFAULT_PRICING_CATALOG;
   if (error || !Array.isArray(data) || data.length === 0) return DEFAULT_PRICING_CATALOG;
-  return data.map((row) => ({
-    ...row,
-    limits_json: parseJsonSafe(row.limits_json, {}) || {},
-    // Если колонка ещё не добавлена в БД — берём из DEFAULT_PRICING_CATALOG
-    stars_price: row.stars_price ?? (DEFAULT_PRICING_CATALOG.find((d) => d.sku === row.sku)?.stars_price ?? null),
-  }));
+  return data.map((row) => {
+    const out = {
+      ...row,
+      limits_json: parseJsonSafe(row.limits_json, {}) || {},
+      stars_price: row.stars_price ?? (DEFAULT_PRICING_CATALOG.find((d) => d.sku === row.sku)?.stars_price ?? null),
+    };
+    // Исправление ошибочных 299 RUB для master_monthly — в каталоге всегда 39.99 USDT
+    if (row.sku === "master_monthly" && (Number(row.price) === 299 || (row.currency || "").toUpperCase() === "RUB")) {
+      const def = DEFAULT_PRICING_CATALOG.find((d) => d.sku === "master_monthly");
+      if (def) {
+        out.price = def.price;
+        out.currency = def.currency;
+        out.stars_price = out.stars_price ?? def.stars_price;
+      }
+    }
+    return out;
+  });
 }
 
 async function getSkuPrice(sku) {
   const catalog = await getPricingCatalog();
   const found = catalog.find((c) => c.sku === sku && c.active !== false);
-  return found || catalog.find((c) => c.sku === sku) || null;
+  let item = found || catalog.find((c) => c.sku === sku) || null;
+  // Защита от ошибочных 299 RUB в БД для тарифа Лаборатория — всегда отдаём 39.99 USDT
+  if (item && sku === "master_monthly" && (Number(item.price) === 299 || (item.currency || "").toUpperCase() === "RUB")) {
+    const def = DEFAULT_PRICING_CATALOG.find((d) => d.sku === "master_monthly");
+    if (def) item = { ...item, price: def.price, currency: def.currency, stars_price: item.stars_price ?? def.stars_price };
+  }
+  return item;
 }
 
 function normalizePromoCode(raw) {
@@ -3878,6 +3895,35 @@ app.get("/api/config", (req, res) => {
     bot_username: RESOLVED_BOT_USERNAME || "Yup_Soul_bot",
     support_username: SUPPORT_TG_USERNAME || RESOLVED_BOT_USERNAME || "Yup_Soul_bot",
   });
+});
+
+// Прокси поиска городов (Nominatim) — автовыбор города в Mini App без CORS/блокировок
+const NOMINATIM_SEARCH = "https://nominatim.openstreetmap.org/search";
+const NOMINATIM_USER_AGENT = "YupSoulMiniApp/1.0 (contact@yupsoul.com)";
+app.get("/api/places", async (req, res) => {
+  const q = String(req.query.q || "").trim();
+  if (!q || q.length < 2) {
+    return res.status(400).json([]);
+  }
+  try {
+    const url = `${NOMINATIM_SEARCH}?${new URLSearchParams({
+      q,
+      format: "json",
+      limit: "10",
+      addressdetails: "1",
+    })}`;
+    const resp = await fetch(url, {
+      headers: { "Accept": "application/json", "Accept-Language": "ru", "User-Agent": NOMINATIM_USER_AGENT },
+    });
+    if (!resp.ok) {
+      return res.status(resp.status).json([]);
+    }
+    const list = await resp.json();
+    return res.json(Array.isArray(list) ? list : []);
+  } catch (err) {
+    console.warn("[api/places]", err.message);
+    return res.status(502).json([]);
+  }
 });
 
 app.get("/api/pricing/catalog", asyncApi(async (req, res) => {

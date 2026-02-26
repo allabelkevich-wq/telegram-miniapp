@@ -2,13 +2,14 @@
 
 > **Этот файл — источник истины.** Перед каждым коммитом в `public/index.html` — проверить все пункты ниже. Если что-то изменилось — обновить этот документ.
 
-Последнее обновление: v1.2.58
+Последнее обновление: v1.2.59
 
 ---
 
 ## ✅ Чек-лист перед деплоем
 
 **Фронтенд (`public/index.html`):**
+- [ ] Подсказки города идут через `getPlacesSearchUrl(q)` → при наличии бэкенда используется `/api/places`
 - [ ] Пол «Другой» не добавлен ни в один `<select>`
 - [ ] Кнопка Soul Chat открывает `soulChatPage`, а не бота
 - [ ] В чат-режиме Soul Chat нет заголовка/статистики — только диалог
@@ -20,6 +21,7 @@
 - [ ] `.song-preview` — тёмный фон, не `background:white`
 
 **Бэкенд (`bot/index.js`):**
+- [ ] Есть маршрут GET `/api/places?q=...` (прокси Nominatim для автовыбора города)
 - [ ] `validatePromoForOrder` используется везде (не прямые запросы к `promo_codes`)
 - [ ] Промокоды заблокированы для подписных SKU (`SUBSCRIPTION_SKUS`)
 - [ ] Статус `processing` включён в фильтр `/api/admin/requests?status=pending`
@@ -295,10 +297,39 @@ document.getElementById('pending').textContent =
 
 ---
 
+## 12. Автовыбор города (подсказки места рождения и локации)
+
+Подсказки городов (выпадающий список при вводе 2+ символов) **всегда** идут через бэкенд-прокси, а не напрямую к Nominatim из Mini App. Иначе в WebView возможны CORS или блокировки — автовыбор перестаёт работать.
+
+### Правило
+
+| Где | Элементы | Источник подсказок |
+|-----|----------|---------------------|
+| Форма заявки | `#birthplace`, `#birthplaceSuggestions` | `getPlacesSearchUrl(q)` → при наличии `BACKEND_URL`/`HEROES_API_BASE`: `base + '/api/places?q=' + ...` |
+| Второй человек | `#birthplace2`, `#birthplaceSuggestions2` | то же |
+| Форма героя (Лаборатория) | `#heroBirthplace`, `#heroBirthplaceSuggestions` | то же |
+| Энергия момента (транзит) | `#transitLocation`, `#transitLocationSuggestions` | `showLocationSuggestions()` использует `getPlacesSearchUrl(value)` |
+
+### Фронтенд (`public/index.html`)
+
+- Функция **`getPlacesSearchUrl(q)`** — единственное место выбора URL для поиска мест:
+  - если заданы `window.BACKEND_URL` или `window.HEROES_API_BASE` → `base + '/api/places?q=' + encodeURIComponent(q)`;
+  - иначе (локальная отладка) → прямой URL Nominatim с параметрами `format=json&limit=8&addressdetails=1`.
+- Все четыре блока подсказок (birthplace, birthplace2, heroBirthplace, transitLocation) вызывают этот URL; при прямом Nominatim в `fetch` передаётся заголовок `User-Agent: YupSoulMiniApp/1.0`.
+
+### Бэкенд (`bot/index.js`)
+
+- Маршрут **GET `/api/places?q=...`** обязателен. Он проксирует запрос к Nominatim с заголовком `User-Agent: YupSoulMiniApp/1.0 (contact@yupsoul.com)` и возвращает JSON-массив в том же формате (display_name, lat, lon, address). При ошибке или пустом `q` — ответ `[]` или 400/502 с пустым массивом.
+
+**Причина:** в Mini App (Telegram WebView) прямые запросы к nominatim.openstreetmap.org могут блокироваться или не проходить CORS — тогда выпадающий список городов «исчезает». Прокси на своём бэкенде устраняет эту проблему.
+
+---
+
 ## История изменений
 
 | Версия | Что изменилось |
 |--------|---------------|
+| v1.2.59 | Правило 12: автовыбор города — подсказки только через бэкенд `/api/places`, getPlacesSearchUrl в Mini App |
 | v1.2.58 | Правила 10–11: статусы заявок, фильтр processing, tg:// ссылки |
 | v1.2.57 | Бизнес-правило: промокоды только на разовые покупки, не на подписки |
 | v1.2.56 | Безопасность промокодов: validatePromoForOrder везде, расширены тексты ошибок |

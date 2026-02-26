@@ -3247,6 +3247,11 @@
         banner.textContent = t('notFromTelegram');
         document.body.insertBefore(banner, document.body.firstChild);
       }
+      function getPlacesSearchUrl(q) {
+        var base = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        if (base) return base + '/api/places?q=' + encodeURIComponent(q);
+        return 'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=8&addressdetails=1';
+      }
       async function showLocationSuggestions(inputElement, suggestionsContainerId, confirmCheckboxId) {
         var value = inputElement.value.trim();
         var suggestionsContainer = document.getElementById(suggestionsContainerId);
@@ -3255,7 +3260,10 @@
           return;
         }
         try {
-          var response = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(value) + '&addressdetails=1&limit=5', { headers: { 'Accept': 'application/json', 'User-Agent': 'YupSoulMiniApp/1.0' } });
+          var url = getPlacesSearchUrl(value);
+          var headers = { 'Accept': 'application/json' };
+          if (url.indexOf('nominatim') !== -1) { headers['User-Agent'] = 'YupSoulMiniApp/1.0'; }
+          var response = await fetch(url, { headers: headers });
           var locations = await response.json();
           if (locations.length === 0) {
             if (suggestionsContainer) {
@@ -4722,8 +4730,10 @@
           }
           function fetchPlaces(q) {
             if (!q || q.length < 2) { hideSuggestions(); return; }
-            var url = 'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=8&addressdetails=1';
-            fetch(url, { headers: { 'Accept': 'application/json', 'Accept-Language': 'ru', 'User-Agent': 'YupSoulMiniApp/1.0 (contact@yupsoul.com)' } })
+            var url = typeof getPlacesSearchUrl === 'function' ? getPlacesSearchUrl(q) : ('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=8&addressdetails=1');
+            var headers = { 'Accept': 'application/json' };
+            if (url.indexOf('nominatim') !== -1) { headers['Accept-Language'] = 'ru'; headers['User-Agent'] = 'YupSoulMiniApp/1.0 (contact@yupsoul.com)'; }
+            fetch(url, { headers: headers })
               .then(function(r) { return r.json(); })
               .then(function(list) {
                 if (lastSearch !== q) return;
@@ -4803,8 +4813,10 @@
           }
           function fetchPlaces2(q) {
             if (!q || q.length < 2) { hideSuggestions2(); return; }
-            var url = 'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=8&addressdetails=1';
-            fetch(url, { headers: { 'Accept': 'application/json', 'Accept-Language': 'ru', 'User-Agent': 'YupSoulMiniApp/1.0 (contact@yupsoul.com)' } })
+            var url = typeof getPlacesSearchUrl === 'function' ? getPlacesSearchUrl(q) : ('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=8&addressdetails=1');
+            var headers = { 'Accept': 'application/json' };
+            if (url.indexOf('nominatim') !== -1) { headers['Accept-Language'] = 'ru'; headers['User-Agent'] = 'YupSoulMiniApp/1.0 (contact@yupsoul.com)'; }
+            fetch(url, { headers: headers })
               .then(function(r) { return r.json(); })
               .then(function(list) {
                 if (lastSearch2 !== q) return;
@@ -7136,8 +7148,10 @@
         }
         function hFetchPlaces(q) {
           if (!q || q.length < 2) { hHideSuggestions(); return; }
-          var url = 'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=8&addressdetails=1';
-          fetch(url, { headers: { 'Accept':'application/json','Accept-Language':'ru','User-Agent':'YupSoulMiniApp/1.0' } })
+          var url = typeof getPlacesSearchUrl === 'function' ? getPlacesSearchUrl(q) : ('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=8&addressdetails=1');
+          var headers = { 'Accept': 'application/json' };
+          if (url.indexOf('nominatim') !== -1) { headers['Accept-Language'] = 'ru'; headers['User-Agent'] = 'YupSoulMiniApp/1.0'; }
+          fetch(url, { headers: headers })
             .then(function(r){ return r.json(); })
             .then(function(list){
               if (hLastQ !== q || !hSugg) return;
