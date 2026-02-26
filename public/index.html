@@ -852,7 +852,7 @@
     #profileIconBtn:active{background:rgba(212,175,55,0.28)}
 
     /* ── ПРОФИЛЬ ── */
-    .profile-header{display:flex;justify-content:space-between;align-items:center;padding:max(20px,calc(env(safe-area-inset-top)+12px)) 16px 16px;flex-shrink:0;background:#08071a;z-index:10}
+    .profile-header{display:flex;justify-content:space-between;align-items:center;padding:max(20px,calc(env(safe-area-inset-top)+12px)) 16px 16px;flex-shrink:0;background:#08071a;z-index:10;margin-bottom:0}
     .profile-header .profile-header-title{flex:1;text-align:center;margin:0}
     .profile-header-title{font-size:1.05rem;font-weight:600;color:rgba(255,255,255,0.85);letter-spacing:0.02em}
     /* Неоновая дизайн-система кнопок */
@@ -877,7 +877,7 @@
     .header-menu-btn img,.btn-info img{width:20px !important;height:20px !important;filter:drop-shadow(0 0 3px rgba(255,215,0,0.6))}
     .form-header-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top));position:relative;flex-shrink:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(4px);z-index:100}
     .form-header-bar .header-title{font-size:1rem;font-weight:600;color:rgba(255,255,255,0.9);position:absolute;left:50%;transform:translateX(-50%);margin:0;pointer-events:none}
-    .profile-scroll{padding:8px 20px calc(env(safe-area-inset-bottom)+120px)}
+    .profile-scroll{padding:24px 20px calc(env(safe-area-inset-bottom)+120px)}
     .profile-identity{text-align:center;margin-bottom:28px;padding-top:8px}
     .profile-avatar-wrap{position:relative;width:72px;height:72px;margin:0 auto 14px;cursor:pointer}
     .profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#d4af37,#ec4899);display:flex;align-items:center;justify-content:center;font-size:2rem;color:#fff;font-weight:700;letter-spacing:0;box-shadow:0 0 0 4px rgba(212,175,55,0.12),0 4px 24px rgba(212,175,55,0.18);overflow:hidden;transition:filter .2s}
@@ -915,6 +915,20 @@
     #profileDataCard #profileEditBtn::before{display:none}
     #profileDataCard #profileEditBtn:hover{background:rgba(212,175,55,0.2) !important;box-shadow:0 0 12px rgba(212,175,55,0.5) !important;transform:translateY(-1px)}
     #profileDataCard #profileEditBtn svg{width:14px !important;height:14px !important;fill:#D4AF37 !important;stroke:#D4AF37 !important}
+    /* YupSoul — воздух в профиле: отступы и структура */
+    #profilePage .profile-header{margin-bottom:24px !important}
+    #profilePage .profile-section-title{margin-top:0 !important;margin-bottom:16px !important;padding-top:8px !important}
+    #profilePage .profile-balance-card{margin-bottom:24px !important;padding:20px !important;border-radius:16px !important;box-shadow:0 4px 20px rgba(0,0,0,0.3) !important}
+    #profilePage #profileDataCard{margin-bottom:24px !important;border-radius:16px !important;box-shadow:0 4px 20px rgba(0,0,0,0.3) !important}
+    #profilePage .profile-plans-grid{margin-bottom:24px !important}
+    #profilePage .profile-track-list{margin-bottom:24px !important}
+    #profilePage .profile-referral-section{margin-bottom:24px !important;padding:20px !important;border-radius:16px !important;box-shadow:0 4px 20px rgba(0,0,0,0.2) !important}
+    #profilePage .profile-create-btn{margin-top:24px !important;margin-bottom:12px !important}
+    #profilePage .profile-create-btn + button{margin-top:0 !important}
+    @media (max-width:480px){
+      #profilePage .profile-scroll{padding:16px 12px calc(env(safe-area-inset-bottom)+120px) !important}
+      #profilePage .profile-balance-card,#profilePage #profileDataCard,#profilePage .profile-referral-section{padding:16px !important;margin-bottom:20px !important}
+    }
     /* Сетка планов */
     #profileSectionPlans.profile-section-title{margin-top:24px}
     .profile-plans-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
