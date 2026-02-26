@@ -2,9 +2,10 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#08071a">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -1140,51 +1141,232 @@
     }
 
     /* ============================================
-       YUPSOUL — Убрать заголовки с названием бота
+       YUPSOUL — Запрет сжатия на маленьких экранах
+       ============================================ */
+    html, body {
+      min-width: 360px !important;
+      width: 100%;
+      overflow-x: hidden;
+      font-size: 16px !important;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+    * {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+    #app, .app-container, .main-wrapper, .page-content, #homePage, #profilePage {
+      min-width: 360px !important;
+      width: 100% !important;
+      max-width: 100vw !important;
+      margin: 0 auto !important;
+      padding: 12px !important;
+      box-sizing: border-box !important;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      font-size: clamp(1rem, 2.5vw, 1.5rem) !important;
+    }
+    p, span, div, label, input, textarea, button {
+      font-size: clamp(0.875rem, 2vw, 1rem) !important;
+    }
+    button, .btn, .action-button, .card-button {
+      min-width: 120px !important;
+      min-height: 44px !important;
+      padding: 12px 20px !important;
+      font-size: 0.95rem !important;
+      white-space: nowrap !important;
+      flex-shrink: 0 !important;
+    }
+    .card, .profile-card, .content-block, .section-container, .format-song-block {
+      min-width: 320px !important;
+      width: 100% !important;
+      padding: 16px !important;
+      margin-bottom: 16px !important;
+      box-sizing: border-box !important;
+    }
+    input, textarea, select, .text-input, .query-input {
+      min-width: 280px !important;
+      width: 100% !important;
+      font-size: 16px !important;
+      padding: 12px !important;
+    }
+    .birthdate-block, .user-info-block, .profile-field {
+      min-width: 300px !important;
+      width: 100% !important;
+      padding: 14px 16px !important;
+      font-size: 1rem !important;
+    }
+    .section-title, .block-title, h2 {
+      min-width: 280px !important;
+      font-size: 1.1rem !important;
+      margin-bottom: 12px !important;
+    }
+    .format-buttons, .mode-buttons, .song-format-buttons {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      gap: 10px !important;
+      justify-content: center !important;
+      min-width: 320px !important;
+    }
+    .format-buttons button, .mode-buttons button, .song-format-buttons button {
+      min-width: 100px !important;
+      flex: 1 1 100px !important;
+      padding: 14px 16px !important;
+      font-size: 0.9rem !important;
+    }
+    #startBtn, .main-action-btn, .create-song-btn {
+      min-width: 280px !important;
+      max-width: 95% !important;
+      width: auto !important;
+      padding: 16px 32px !important;
+      font-size: 1.05rem !important;
+      margin: 16px auto !important;
+      display: block !important;
+    }
+    .nav-buttons, .bottom-menu, .quick-actions, .home-nav {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      gap: 8px !important;
+      justify-content: center !important;
+      min-width: 300px !important;
+    }
+    .nav-buttons button, .bottom-menu button, .quick-actions button {
+      min-width: 80px !important;
+      padding: 10px 14px !important;
+      font-size: 0.85rem !important;
+      white-space: nowrap !important;
+    }
+    .header, .page-header, #homeTopBar {
+      min-height: 56px !important;
+      height: auto !important;
+      padding: 10px 12px !important;
+      flex-shrink: 0 !important;
+    }
+    @media (max-width: 360px) {
+      html, body { font-size: 15px !important; }
+      #app, .app-container { padding: 10px !important; min-width: 320px !important; }
+      .card, .profile-card { min-width: 300px !important; padding: 14px !important; }
+      button, .btn { min-width: 100px !important; min-height: 42px !important; font-size: 0.9rem !important; }
+      #startBtn, .main-action-btn { min-width: 260px !important; font-size: 1rem !important; }
+    }
+    @media (min-width: 361px) and (max-width: 375px) {
+      #app, .app-container { padding: 12px !important; }
+      .card, .profile-card { min-width: 310px !important; }
+      .format-buttons button, .mode-buttons button { min-width: 95px !important; font-size: 0.85rem !important; }
+    }
+    body, html, #app {
+      overflow-x: hidden !important;
+      position: relative !important;
+      max-width: 100vw !important;
+    }
+    .flex-container, .flex-box {
+      flex-shrink: 0 !important;
+      min-width: 0 !important;
+    }
+    .flex-container > *, .flex-box > * {
+      flex-shrink: 0 !important;
+    }
+    .grid-container, .cards-grid {
+      grid-template-columns: 1fr !important;
+      min-width: 300px !important;
+    }
+    .logo, .app-logo, .brand-image {
+      min-width: 100px !important;
+      max-width: 140px !important;
+      width: 35% !important;
+      flex-shrink: 0 !important;
+    }
+    .greeting, .welcome-text, #homeGreeting {
+      min-width: 260px !important;
+      font-size: 1rem !important;
+      line-height: 1.4 !important;
+    }
+    footer, .app-footer {
+      min-width: 300px !important;
+      padding: 12px !important;
+      font-size: 0.8rem !important;
+    }
+
+    /* ============================================
+       YUPSOUL — ПОЛНОЕ удаление заголовка с названием бота
        (Telegram уже показывает название в окне)
        ============================================ */
     .header-title,
     .page-header-title,
     .app-title,
     .yupsoul-title,
+    span.header-title,
+    div.header-title,
+    .text-title,
+    .title-text,
+    .header-text,
+    .app-name,
+    .brand-title,
     span[class*="header-title"],
     #homeTopBar .header-title,
     .form-header-bar .header-title,
-    .page-header .header-title {
+    .page-header .header-title,
+    header.page-header > h1 {
       display: none !important;
+      visibility: hidden !important;
+      position: absolute !important;
+      left: -9999px !important;
+      overflow: hidden !important;
+      width: 0 !important;
+      height: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      opacity: 0 !important;
     }
     .header-title-container,
     .page-header-text,
     .title-wrapper,
     .header-center,
-    .header-middle {
+    .header-middle,
+    .title-container,
+    .header-text-wrapper,
+    .center-slot,
+    .middle-section {
       display: none !important;
     }
     [style*="YupSoul Personal Music"] {
+      display: none !important;
+    }
+    .form-header-bar > *:not(button) {
       display: none !important;
     }
     .header,
     .page-header,
     #homeTopBar,
     .form-header-bar,
-    .page-header-bar {
+    .page-header-bar,
+    .header-container {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
       background: transparent !important;
       background-color: transparent !important;
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
       border: none !important;
       box-shadow: none !important;
-      min-height: 0 !important;
+      min-height: 56px !important;
       height: auto !important;
       margin: 0 !important;
     }
     #homeTopBar,
     .form-header-bar,
     .page-header {
-      padding-top: max(10px, env(safe-area-inset-top)) !important;
-      padding-left: 16px !important;
-      padding-right: 16px !important;
-      padding-bottom: 0 !important;
+      padding: max(10px, env(safe-area-inset-top)) 16px 0 !important;
+    }
+    #homeTopBar::before,
+    #homeTopBar::after,
+    .form-header-bar::before,
+    .form-header-bar::after,
+    .page-header::before,
+    .page-header::after {
+      display: none !important;
+      content: none !important;
     }
     .header-back-btn,
     .header-menu-btn,
@@ -1195,10 +1377,6 @@
       display: inline-flex !important;
       visibility: visible !important;
       opacity: 1 !important;
-    }
-    #homeTopBar,
-    .form-header-bar {
-      justify-content: space-between !important;
     }
   </style>
 </head>
@@ -2254,7 +2432,6 @@
     <!-- Страница «Спасибо за оплату» (редирект с HOT) -->
     <div class="page" id="paymentThanksPage">
       <header class="page-header">
-        <h1>YupSoul</h1>
         <div style="font-size:0.78rem;font-weight:400;letter-spacing:0.12em;color:rgba(212,175,55,0.5);margin:2px 0 0;text-transform:uppercase">Музыка твоей души</div>
         <div id="paymentThanksSubtitle" class="subtitle">заявка принята</div>
       </header>
@@ -2295,6 +2472,14 @@
       });
     })();
     document.addEventListener('DOMContentLoaded', function() {
+      (function removeBotNameHeaders() {
+        document.querySelectorAll('.header-title, .page-header-title, .app-title').forEach(function(el) { el.remove(); });
+        document.querySelectorAll('#homeTopBar, .page-header, .form-header-bar').forEach(function(header) {
+          [].slice.call(header.childNodes).forEach(function(node) {
+            if (node.nodeType === 1 && node.textContent && node.textContent.trim() === 'YupSoul Personal Music') node.remove();
+          });
+        });
+      })();
       var tg = null;
       var INIT_DATA_STORAGE_KEY = 'tg_init_data';
       var LANG_STORAGE_KEY = 'yupsoul_lang';
