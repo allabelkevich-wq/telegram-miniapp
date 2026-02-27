@@ -64,11 +64,13 @@ export async function computeAndSaveAstroSnapshot(supabase, trackRequestId, prov
     if (!coords) {
       return { ok: false, error: "Не удалось определить координаты места рождения: " + (req.birthplace || "") };
     }
+    // Для астрологии допускаем только точные координаты.
+    // Если geocode пометил результат как approximate — считаем это ошибкой.
     if (coords.approximate) {
-      console.warn("[workerAstro] Используем приближённые координаты для:", req.birthplace, "→", coords.lat, coords.lon);
-    } else {
-      console.log("[workerAstro] Координаты получены через геокодинг:", coords);
+      console.warn("[workerAstro] Отклоняем приближённые координаты для:", req.birthplace, "→", coords.lat, coords.lon);
+      return { ok: false, error: "Не удалось точно определить координаты места рождения: " + (req.birthplace || "") };
     }
+    console.log("[workerAstro] Координаты получены через геокодинг:", coords);
   }
 
   const dt = parseBirthDateTime(req.birthdate, req.birthtime, req.birthtime_unknown);

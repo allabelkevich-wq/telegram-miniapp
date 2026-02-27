@@ -264,14 +264,9 @@ function guessRegionCoords(fullAddress) {
   for (const [key, coords] of Object.entries(RUSSIA_REGIONS_COORDS)) {
     if (s.includes(key)) return coords;
   }
-  // Для любого адреса в России → центр России
-  if (/россия|russia|рф\b/i.test(fullAddress)) {
-    return { lat: 55.75, lon: 37.62 }; // Москва как центральный fallback
-  }
-  // Для любого адреса в Беларуси → центр Беларуси (Минск) как мягкий fallback
-  if (/беларусь|belarus|белорусси(я|и)/i.test(fullAddress)) {
-    return { lat: 53.9, lon: 27.5667 };
-  }
+  // Раньше здесь были приближённые центры стран (Россия, Беларусь и др.).
+  // Для точной астрологии мы не используем такие фолбэки:
+  // если не нашли конкретный город — вызывающий код (workerAstro) вернёт ошибку.
   return null;
 }
 
