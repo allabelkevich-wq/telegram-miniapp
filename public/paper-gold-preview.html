@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YupSoul — Paper & Gold Foil Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- ============================================
+       YUPSOUL — PAPER & GOLD FOIL PREVIEW
+       Тестовый блок для проверки стиля
+       ============================================ -->
+  <style>
+  :root {
+    --gold-light: #F4E5A3;
+    --gold-base: #D4AF37;
+    --gold-dark: #B8860B;
+    --gold-shadow: #8B6914;
+    --paper-white: #FAF9F6;
+    --paper-cream: #F5F3ED;
+    --paper-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+    --shadow-emboss: 0 1px 2px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+    --shadow-foil: 0 2px 8px rgba(212, 175, 55, 0.15);
+    --font-elegant: 'Playfair Display', 'Georgia', serif;
+    --font-clean: 'Inter', -apple-system, system-ui, sans-serif;
+  }
+  .theme-dark {
+    --bg-primary: #0D0D0D;
+    --bg-secondary: #141414;
+    --bg-paper: #1A1A1A;
+    --text-primary: #F5F5F5;
+    --text-secondary: #A0A0A0;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+  }
+  .theme-light {
+    --bg-primary: #FAF9F6;
+    --bg-secondary: #F5F3ED;
+    --bg-paper: #FFFFFF;
+    --text-primary: #1A1A1A;
+    --text-secondary: #6B6B6B;
+    --border-subtle: rgba(0, 0, 0, 0.08);
+  }
+  .foil-gold {
+    background: linear-gradient(135deg,var(--gold-light),var(--gold-base),var(--gold-dark),var(--gold-base),var(--gold-light));
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: foilShimmer 8s ease-in-out infinite;
+  }
+  .foil-gold-solid {
+    background: linear-gradient(135deg,var(--gold-light),var(--gold-base),var(--gold-dark),var(--gold-shadow));
+    background-size: 150% 150%;
+    animation: foilShimmer 6s ease-in-out infinite;
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  @keyframes foilShimmer {
+    0%,100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  .preview-home-page {
+    min-height: 100vh;
+    background-color: var(--bg-primary);
+    background-image: var(--paper-texture);
+    background-blend-mode: multiply;
+    padding: 24px 20px 40px;
+    font-family: var(--font-clean);
+    box-sizing: border-box;
+  }
+  .preview-header {
+    display:flex;justify-content:space-between;align-items:center;padding:12px 0;margin-bottom:32px;
+  }
+  .preview-logo{display:flex;align-items:center;gap:12px;}
+  .preview-logo-icon{width:40px;height:40px;}
+  .preview-logo-text{font-family:var(--font-elegant);font-size:1.5rem;font-weight:600;letter-spacing:0.05em;}
+  .preview-profile-btn{
+    width:44px;height:44px;border-radius:50%;border:1px solid rgba(212,175,55,0.3);
+    background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;
+    transition:all .3s ease;
+  }
+  .preview-profile-btn:hover{border-color:rgba(212,175,55,0.6);box-shadow:var(--shadow-foil);}
+  .preview-hero{text-align:center;padding:48px 0 32px;}
+  .preview-hero-logo{width:120px;height:120px;margin:0 auto 24px;}
+  .preview-hero-tagline{
+    font-family:var(--font-elegant);font-size:0.75rem;font-weight:400;letter-spacing:0.2em;
+    text-transform:uppercase;color:var(--text-secondary);margin-bottom:8px;
+  }
+  .preview-hero-greeting{font-size:1.1rem;color:var(--text-secondary);margin-bottom:40px;font-weight:400;}
+  .preview-main-btn{
+    display:inline-block;padding:18px 48px;font-family:var(--font-elegant);font-size:1rem;
+    font-weight:600;letter-spacing:0.1em;text-transform:uppercase;border:none;border-radius:2px;
+    cursor:pointer;transition:all .4s ease;position:relative;overflow:hidden;color:#0D0D0D;
+  }
+  .preview-main-btn::before{
+    content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent);
+    transition:left .6s ease;
+  }
+  .preview-main-btn:hover::before{left:100%;}
+  .preview-main-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 24px rgba(212,175,55,0.25),0 4px 12px rgba(212,175,55,0.15);
+  }
+  .preview-nav{
+    display:flex;justify-content:center;gap:32px;margin-top:48px;padding-top:24px;
+    border-top:1px solid var(--border-subtle);flex-wrap:wrap;
+  }
+  .preview-nav-item{
+    font-size:0.75rem;font-weight:500;letter-spacing:0.15em;text-transform:uppercase;
+    color:var(--text-secondary);cursor:pointer;transition:color .3s ease;background:none;
+    border:none;padding:8px 0;
+  }
+  .preview-nav-item:hover{color:var(--gold-base);}
+  .preview-footer{text-align:center;margin-top:40px;font-size:0.7rem;color:var(--text-secondary);letter-spacing:0.1em;}
+  .theme-switcher{
+    position:fixed;top:20px;right:20px;z-index:9999;padding:10px 14px;background:var(--bg-paper);
+    border:1px solid var(--border-subtle);border-radius:8px;box-shadow:var(--shadow-emboss);
+    cursor:pointer;font-size:0.8rem;font-weight:500;
+  }
+  </style>
+</head>
+<body class="theme-dark">
+  <div class="preview-home-page" id="previewHomePage">
+    <header class="preview-header">
+      <div class="preview-logo">
+        <img src="assets/logo-yupsoul.png" alt="YupSoul" class="preview-logo-icon">
+        <span class="preview-logo-text foil-gold">YupSoul</span>
+      </div>
+      <button class="preview-profile-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="8" r="4" class="foil-gold-solid" style="border-radius:50%;"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#D4AF37" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </header>
+
+    <section class="preview-hero">
+      <img src="assets/logo-yupsoul.png" alt="YupSoul" class="preview-hero-logo">
+      <div class="preview-hero-tagline foil-gold">Музыка твоей души</div>
+      <p class="preview-hero-greeting">Привет, Алла</p>
+      <button class="preview-main-btn foil-gold-solid">
+        Создать свою песню
+      </button>
+    </section>
+
+    <nav class="preview-nav">
+      <button class="preview-nav-item">Soul Chat</button>
+      <button class="preview-nav-item">Помощь</button>
+      <button class="preview-nav-item">Лаборатория</button>
+    </nav>
+
+    <footer class="preview-footer">
+      YupSoul © 2026
+    </footer>
+  </div>
+
+  <button class="theme-switcher" onclick="toggleTheme()">🌓 Сменить тему</button>
+
+  <script>
+  function toggleTheme() {
+    var body = document.body;
+    var isDark = body.classList.contains('theme-dark');
+    body.classList.remove('theme-dark', 'theme-light');
+    body.classList.add(isDark ? 'theme-light' : 'theme-dark');
+    try { localStorage.setItem('yupsoul_theme_preview', isDark ? 'light' : 'dark'); } catch(e) {}
+  }
+  (function initTheme() {
+    var saved = null;
+    try { saved = localStorage.getItem('yupsoul_theme_preview'); } catch(e) {}
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = saved || (prefersDark ? 'dark' : 'light');
+    document.body.classList.add('theme-' + theme);
+  })();
+  </script>
+</body>
+</html>
+

@@ -268,6 +268,10 @@ function guessRegionCoords(fullAddress) {
   if (/россия|russia|рф\b/i.test(fullAddress)) {
     return { lat: 55.75, lon: 37.62 }; // Москва как центральный fallback
   }
+  // Для любого адреса в Беларуси → центр Беларуси (Минск) как мягкий fallback
+  if (/беларусь|belarus|белорусси(я|и)/i.test(fullAddress)) {
+    return { lat: 53.9, lon: 27.5667 };
+  }
   return null;
 }
 
