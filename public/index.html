@@ -14,6 +14,22 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <!-- Принудительный редирект от старых кешированных URL (v=22) на свежий timestamp -->
   <script>
+    // Быстрый выбор стиля песни (чипсы под полем)
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest('.style-quick');
+      if (!btn) return;
+      var input = document.getElementById('requestPreferredStyle');
+      if (!input) return;
+      var val = (btn.getAttribute('data-style') || btn.textContent || '').trim();
+      if (!val) return;
+      var current = (input.value || '').trim();
+      if (!current) {
+        input.value = val;
+      } else if (!current.toLowerCase().includes(val.toLowerCase())) {
+        input.value = current + ', ' + val;
+      }
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
     (function(){
       try {
         var APP_VERSION = '1.2.77';
@@ -3341,10 +3357,19 @@
             </div>
           </div>
         </div>
-        <!-- Стиль музыки (для всех тарифов) -->
+        <!-- Стиль песни (для всех тарифов) -->
         <div class="field" style="margin-top:14px;">
-          <label for="requestPreferredStyle" id="requestPreferredStyleLabel" style="font-size:0.82rem;color:rgba(255,255,255,0.5);">Стиль музыки</label>
-          <input type="text" id="requestPreferredStyle" placeholder="Стиль моей души: поп, r&b, рэп, хип‑хоп, техно, house, ambient…" maxlength="120" autocomplete="off" style="margin-top:6px;font-size:0.9rem;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#fff;width:100%;box-sizing:border-box;">
+          <label for="requestPreferredStyle" id="requestPreferredStyleLabel" style="font-size:0.82rem;color:rgba(255,255,255,0.5);">Стиль песни</label>
+          <input type="text" id="requestPreferredStyle" placeholder="Стиль песни: поп, r&b, рэп, хип‑хоп, техно, house, ambient…" maxlength="120" autocomplete="off" style="margin-top:6px;font-size:0.9rem;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#fff;width:100%;box-sizing:border-box;">
+          <div class="quick-list" id="styleQuickList" style="margin-top:10px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.18);">
+            <button type="button" class="quick-item example-btn style-quick" data-style="поп">Поп</button>
+            <button type="button" class="quick-item example-btn style-quick" data-style="soul">Soul</button>
+            <button type="button" class="quick-item example-btn style-quick" data-style="r&b">R&B</button>
+            <button type="button" class="quick-item example-btn style-quick" data-style="рэп / hip‑hop">Рэп / hip‑hop</button>
+            <button type="button" class="quick-item example-btn style-quick" data-style="электронная / techno / house">Электронная / techno / house</button>
+            <button type="button" class="quick-item example-btn style-quick" data-style="ambient / медитативная">Ambient / медитативная</button>
+            <button type="button" class="quick-item example-btn style-quick" data-style="акустика / piano / ballad">Акустика / piano / ballad</button>
+          </div>
         </div>
 
         <p id="submitHint" style="display:none"></p>
@@ -3787,8 +3812,8 @@
           heroesSubNote: '30 треков в месяц · Оплата через HOT Pay',
           heroFormTitle: 'Добавить героя', heroRelLabel: 'Кто для тебя', heroBirthdateHint: 'Выбери день, месяц и год',
           heroTimeBirthLabel: 'Время рождения', heroStyleLabel: 'Любимые стили музыки', heroStylePh: 'поп, джаз, электронная…',
-          requestPreferredStyleLabel: 'Стиль моей души',
-          requestPreferredStylePh: 'Стиль моей души: поп, r&b, рэп, хип‑хоп, техно, house, ambient…',
+          requestPreferredStyleLabel: 'Стиль песни',
+          requestPreferredStylePh: 'Стиль песни: поп, r&b, рэп, хип‑хоп, техно, house, ambient…',
           heroRelOpt0: '— выбери —', heroRelOpt1: 'Мать', heroRelOpt2: 'Отец', heroRelOpt3: 'Дочь', heroRelOpt4: 'Сын',
           heroRelOpt5: 'Сестра', heroRelOpt6: 'Брат', heroRelOpt7: 'Бабушка', heroRelOpt8: 'Дедушка',
           heroRelOpt9: 'Муж', heroRelOpt10: 'Жена', heroRelOpt11: 'Любимый человек',
@@ -3975,8 +4000,8 @@
           heroesSubNote: '30 tracks/month · Payment via HOT Pay',
           heroFormTitle: 'Add person', heroRelLabel: 'Relationship', heroBirthdateHint: 'Select day, month and year',
           heroTimeBirthLabel: 'Time of birth', heroStyleLabel: 'Favourite music styles', heroStylePh: 'pop, jazz, electronic…',
-          requestPreferredStyleLabel: 'Style of my soul',
-          requestPreferredStylePh: 'Style of my soul: pop, R&B, hip‑hop, techno, house, ambient…',
+          requestPreferredStyleLabel: 'Song style',
+          requestPreferredStylePh: 'Song style: pop, R&B, hip‑hop, techno, house, ambient…',
           heroRelOpt0: '— select —', heroRelOpt1: 'Mother', heroRelOpt2: 'Father', heroRelOpt3: 'Daughter', heroRelOpt4: 'Son',
           heroRelOpt5: 'Sister', heroRelOpt6: 'Brother', heroRelOpt7: 'Grandmother', heroRelOpt8: 'Grandfather',
           heroRelOpt9: 'Husband', heroRelOpt10: 'Wife', heroRelOpt11: 'Loved one',
@@ -4163,8 +4188,8 @@
           heroesSubNote: '30 Tracks/Monat · Zahlung via HOT Pay',
           heroFormTitle: 'Person hinzufügen', heroRelLabel: 'Beziehung', heroBirthdateHint: 'Tag, Monat und Jahr wählen',
           heroTimeBirthLabel: 'Geburtszeit', heroStyleLabel: 'Lieblingsmusikstile', heroStylePh: 'Pop, Jazz, Elektronisch…',
-          requestPreferredStyleLabel: 'Stil meiner Seele',
-          requestPreferredStylePh: 'Stil meiner Seele: Pop, Soul, R&B, Hip‑Hop, Techno, House, Ambient…',
+          requestPreferredStyleLabel: 'Song-Stil',
+          requestPreferredStylePh: 'Song-Stil: Pop, Soul, R&B, Hip‑Hop, Techno, House, Ambient…',
           heroRelOpt0: '— auswählen —', heroRelOpt1: 'Mutter', heroRelOpt2: 'Vater', heroRelOpt3: 'Tochter', heroRelOpt4: 'Sohn',
           heroRelOpt5: 'Schwester', heroRelOpt6: 'Bruder', heroRelOpt7: 'Großmutter', heroRelOpt8: 'Großvater',
           heroRelOpt9: 'Ehemann', heroRelOpt10: 'Ehefrau', heroRelOpt11: 'Geliebte Person',
@@ -4351,8 +4376,8 @@
           heroesSubNote: '30 titres/mois · Paiement via HOT Pay',
           heroFormTitle: 'Ajouter une personne', heroRelLabel: 'Relation', heroBirthdateHint: 'Sélectionne jour, mois et année',
           heroTimeBirthLabel: 'Heure de naissance', heroStyleLabel: 'Styles musicaux préférés', heroStylePh: 'pop, jazz, électronique…',
-          requestPreferredStyleLabel: 'Style de mon âme',
-          requestPreferredStylePh: "Style de mon âme : pop, soul, R&B, hip‑hop, techno, house, ambient…",
+          requestPreferredStyleLabel: 'Style de la chanson',
+          requestPreferredStylePh: "Style de la chanson : pop, soul, R&B, hip‑hop, techno, house, ambient…",
           heroRelOpt0: '— choisir —', heroRelOpt1: 'Mère', heroRelOpt2: 'Père', heroRelOpt3: 'Fille', heroRelOpt4: 'Fils',
           heroRelOpt5: 'Sœur', heroRelOpt6: 'Frère', heroRelOpt7: 'Grand-mère', heroRelOpt8: 'Grand-père',
           heroRelOpt9: 'Mari', heroRelOpt10: 'Femme', heroRelOpt11: 'Être aimé',
@@ -4512,7 +4537,7 @@
         document.querySelector('label[for="unknown"]') && (document.querySelector('label[for="unknown"]').textContent = t('unknownTime'));
         document.querySelector('label[for="unknown2"]') && (document.querySelector('label[for="unknown2"]').textContent = t('unknownTimeShort'));
         var quickBtns = document.querySelectorAll('.example-btn'); var quickK = ['quick1','quick2','quick3','quick4','quick5','quick6','quick7','quick8','quick9','quick10','quick11','quick12']; var quickT = ['quick1t','quick2t','quick3t','quick4t','quick5t','quick6t','quick7t','quick8t','quick9t','quick10t','quick11t','quick12t'];
-        quickBtns.forEach(function(btn, i) { if (btn) { btn.textContent = t(quickK[i]); btn.setAttribute('data-text', t(quickT[i])); } });
+        quickBtns.forEach(function(btn, i) { if (btn && i < quickK.length) { btn.textContent = t(quickK[i]); btn.setAttribute('data-text', t(quickT[i])); } });
         var gh = document.getElementById('homeGreeting');
         if (gh) gh.textContent = (userProfile && userProfile.name) ? t('greeting', { name: userProfile.name }) : t('greetingDefault');
         var langCurrentEl = document.getElementById('langSwitcherCurrent');
