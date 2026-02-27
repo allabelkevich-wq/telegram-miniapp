@@ -27,6 +27,13 @@ const BIRTHPLACE_ALIASES = [
   [/^\s*Львів\s*,\s*Україн[аи]\s*$/i,             "Lviv, Ukraine"],
   [/^\s*Дніпр[оа]\s*,\s*Украин[ае]\s*$/i,        "Dnipro, Ukraine"],
   [/^\s*Днепр\s*,\s*Украин[ае]\s*$/i,             "Dnipro, Ukraine"],
+  // Беларусь: Солигорск / Салігорск → Salihorsk, Belarus (точные координаты города)
+  [/^\s*Солигорск\s*,\s*Солигорский район\s*,\s*Минская область\s*,\s*Беларусь\s*$/i, "Salihorsk, Belarus"],
+  [/^\s*Солигорск\s*,\s*Минская область\s*,\s*Беларусь\s*$/i,                        "Salihorsk, Belarus"],
+  [/^\s*Солигорск\s*,\s*Беларусь\s*$/i,                                              "Salihorsk, Belarus"],
+  [/^\s*Солигорск\s*$/i,                                                             "Salihorsk, Belarus"],
+  [/^\s*Салігорск\s*,\s*Беларусь\s*$/i,                                              "Salihorsk, Belarus"],
+  [/^\s*Салігорск\s*$/i,                                                             "Salihorsk, Belarus"],
 ];
 
 function aliasForNominatim(s) {
@@ -181,6 +188,18 @@ function toLatinRussiaQuery(q) {
   const lat = transliterate(city);
   if (!lat) return null;
   return lat[0].toUpperCase() + lat.slice(1).toLowerCase() + ", Russia";
+}
+
+/** Для "Город, Беларусь" → "Gorod, Belarus" (латиница для Nominatim). */
+function toLatinBelarusQuery(q) {
+  const s = String(q || "").trim();
+  if (!s || !/беларусь|belarus/i.test(s)) return null;
+  const idx = s.lastIndexOf(",");
+  const city = (idx >= 0 ? s.slice(0, idx).trim() : s);
+  if (!city) return null;
+  const lat = transliterate(city);
+  if (!lat) return null;
+  return lat[0].toUpperCase() + lat.slice(1).toLowerCase() + ", Belarus";
 }
 
 // ─── Регионы России: приближённые координаты для last-resort fallback ─────────
@@ -344,6 +363,14 @@ export async function geocode(birthplace) {
         result = await tryQuery("latin-ru", latinRu);
         if (result) return result;
       }
+
+      // 3в. Транслитерация для городов Беларуси
+      const latinBy = toLatinBelarusQuery(short);
+      if (latinBy) {
+        await sleep(DELAY);
+        result = await tryQuery("latin-by", latinBy);
+        if (result) return result;
+      }
     }
 
     // 4. Только название нас.пункта (без региона и страны)
@@ -360,6 +387,14 @@ export async function geocode(birthplace) {
         if (latinCity) {
           await sleep(DELAY);
           result = await tryQuery("city-latin", latinCity);
+          if (result) return result;
+        }
+
+        // 4б. Транслитерация просто города + Belarus
+        const latinCityBy = toLatinBelarusQuery(`${justCity}, Беларусь`);
+        if (latinCityBy) {
+          await sleep(DELAY);
+          result = await tryQuery("city-latin-by", latinCityBy);
           if (result) return result;
         }
       }
@@ -379,10 +414,16 @@ export async function geocode(birthplace) {
       if (normParts.length > 0) {
         const normCity = normParts[0];
         if (normCity !== q && normCity !== (parts[0] || "")) {
-          const latinNorm = toLatinRussiaQuery(`${normCity}, Россия`);
-          if (latinNorm) {
+          const latinNormRu = toLatinRussiaQuery(`${normCity}, Россия`);
+          if (latinNormRu) {
             await sleep(DELAY);
-            result = await tryQuery("norm-city-latin", latinNorm);
+            result = await tryQuery("norm-city-latin-ru", latinNormRu);
+            if (result) return result;
+          }
+          const latinNormBy = toLatinBelarusQuery(`${normCity}, Беларусь`);
+          if (latinNormBy) {
+            await sleep(DELAY);
+            result = await tryQuery("norm-city-latin-by", latinNormBy);
             if (result) return result;
           }
         }
