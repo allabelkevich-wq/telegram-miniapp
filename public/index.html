@@ -61,6 +61,18 @@
       --secondary-rgb: 180, 83, 9;
       --success-color: #10b981;
       --subtitle-readable: rgba(255,255,255,0.92);
+      /* YupSoul Premium Design System */
+      --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-7: 28px; --space-8: 32px; --space-9: 40px; --space-10: 48px; --space-11: 56px; --space-12: 64px;
+      --gold-primary: #D4AF37; --gold-light: #E5C156; --gold-dark: #B8860B; --gold-muted: rgba(212, 175, 55, 0.15);
+      --bg-primary: #0A0A1A; --bg-secondary: rgba(255, 255, 255, 0.03); --bg-tertiary: rgba(255, 255, 255, 0.05);
+      --text-primary: rgba(255, 255, 255, 0.95); --text-secondary: rgba(255, 255, 255, 0.75); --text-tertiary: rgba(255, 255, 255, 0.55); --text-muted: rgba(255, 255, 255, 0.35);
+      --border-subtle: rgba(255, 255, 255, 0.08); --border-default: rgba(255, 255, 255, 0.12); --border-accent: rgba(212, 175, 55, 0.35);
+      --font-size-xs: 0.75rem; --font-size-sm: 0.875rem; --font-size-base: 1rem; --font-size-lg: 1.125rem; --font-size-xl: 1.25rem; --font-size-2xl: 1.5rem; --font-size-3xl: 1.875rem;
+      --font-weight-normal: 400; --font-weight-medium: 500; --font-weight-semibold: 600; --font-weight-bold: 700;
+      --line-height-tight: 1.25; --line-height-normal: 1.5; --line-height-relaxed: 1.75;
+      --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px; --radius-2xl: 24px; --radius-full: 9999px;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3); --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3); --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.3); --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.35); --shadow-glow: 0 0 20px rgba(212, 175, 55, 0.15);
+      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1); --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1); --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
       /* Fluid scaling — пропорции Apple: уменьшается пропорционально экрану */
       --fluid-xs: clamp(0.7rem, 1.8vw, 0.8rem);
       --fluid-sm: clamp(0.8rem, 2.2vw, 0.95rem);
@@ -655,7 +667,7 @@
     .btn-group button{flex:1}
     .price-tag{background:linear-gradient(90deg,var(--primary-color),var(--secondary-color));color:white;padding:10px 18px;border-radius:12px;font-size:1.3rem;font-weight:700;text-align:center;margin:16px 0;box-shadow:0 4px 15px rgba(var(--primary-rgb),.3);letter-spacing:0.5px}
     .payment-info{background:rgba(var(--primary-rgb),.05);border-left:3px solid rgba(var(--primary-rgb),0.5);padding:14px;border-radius:0 12px 12px 0;margin:12px 0;font-size:.92rem;line-height:1.6}
-    .payment-info::before{content:"💎 ";font-size:1.3rem}
+    .payment-info::before{content:"";font-size:1.3rem}
     .success-icon{font-size:5rem;text-align:center;margin:20px 0;background:linear-gradient(90deg,var(--primary-color),var(--secondary-color));-webkit-background-clip:text;background-clip:text;color:transparent}
     .keys-composition{display:flex;align-items:center;justify-content:center;gap:20px;margin:25px 0;flex-wrap:wrap}
     .keys-composition svg{filter:drop-shadow(0 4px 12px rgba(var(--primary-rgb),.2));transition:transform .3s ease}
@@ -1530,6 +1542,921 @@
       visibility: visible !important;
       opacity: 1 !important;
     }
+
+    /* ========== YupSoul ТЗ: полная прозрачность хедеров, скрытие текста ========== */
+    #homeTopBar,
+    .form-header-bar,
+    .page-header,
+    .header-container,
+    .page-header-bar {
+      background: transparent !important;
+      background-color: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      min-height: 44px !important;
+      padding: 8px 12px !important;
+    }
+    .header-title,
+    .page-header-title,
+    .app-title,
+    span.header-title,
+    div.header-title,
+    .form-header-bar .header-title,
+    .page-header .header-title,
+    [style*="YupSoul Personal Music"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+      position: absolute !important;
+      left: -9999px !important;
+    }
+    #homeTopBar > :not(button):not(.home-topbar-slot),
+    .form-header-bar > :not(button):not(.home-topbar-slot),
+    .page-header > :not(button):not(.home-topbar-slot) {
+      display: none !important;
+    }
+    .profile-back-btn,
+    .header-back-btn,
+    .btn-nav,
+    .profile-icon-btn,
+    .header-menu-btn,
+    .btn-info,
+    .home-topbar-btn {
+      display: flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      position: relative !important;
+      z-index: 100 !important;
+    }
+    #homeTopBar,
+    .form-header-bar,
+    .page-header {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+    }
+    #homeTopBar::before,
+    #homeTopBar::after,
+    .form-header-bar::before,
+    .form-header-bar::after,
+    .page-header::before,
+    .page-header::after {
+      display: none !important;
+      content: none !important;
+    }
+
+    /* ========== YupSoul ТЗ: кнопки навигации круглые 40x40, неон ========== */
+    #homeTopBar .home-topbar-btn,
+    #homeTopBar #profileIconBtn,
+    #homeTopBar .lang-switcher-btn,
+    .profile-back-btn,
+    .header-back-btn,
+    .btn-nav,
+    .header-menu-btn,
+    .btn-info {
+      width: 40px !important;
+      height: 40px !important;
+      min-width: 40px !important;
+      max-width: 40px !important;
+      min-height: 40px !important;
+      max-height: 40px !important;
+      border-radius: 50% !important;
+      aspect-ratio: 1 / 1 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    #homeTopBar .home-topbar-btn svg,
+    #homeTopBar #profileIconBtn svg,
+    .profile-back-btn svg,
+    .header-back-btn svg,
+    .btn-nav svg,
+    .header-menu-btn svg,
+    .btn-info svg {
+      width: 18px !important;
+      height: 18px !important;
+      flex-shrink: 0 !important;
+    }
+    .profile-back-btn,
+    .header-back-btn,
+    .btn-nav {
+      border: 1px solid rgba(255, 0, 85, 0.7) !important;
+      background: rgba(255, 0, 85, 0.1) !important;
+      box-shadow:
+        0 0 6px rgba(255, 0, 85, 0.5),
+        0 0 12px rgba(255, 0, 85, 0.3),
+        0 0 20px rgba(255, 0, 85, 0.1) !important;
+      backdrop-filter: blur(4px) !important;
+    }
+    .header-menu-btn,
+    .btn-info,
+    #profileIconBtn {
+      border: 1px solid rgba(0, 217, 255, 0.7) !important;
+      background: rgba(0, 217, 255, 0.1) !important;
+      box-shadow:
+        0 0 6px rgba(0, 217, 255, 0.5),
+        0 0 12px rgba(0, 217, 255, 0.3),
+        0 0 20px rgba(0, 217, 255, 0.1) !important;
+      backdrop-filter: blur(4px) !important;
+    }
+    .header-menu-btn svg,
+    .btn-info svg,
+    #profileIconBtn svg {
+      fill: #FFD700 !important;
+      stroke: #FFD700 !important;
+      filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.6)) !important;
+    }
+    .profile-back-btn svg,
+    .header-back-btn svg,
+    .btn-nav svg {
+      fill: rgba(255, 255, 255, 0.95) !important;
+      stroke: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    /* На странице профиля — кнопки без неона, нейтральные */
+    #profilePage .profile-back-btn,
+    #profilePage .header-back-btn,
+    #profilePage .btn-nav,
+    #profilePage .header-menu-btn,
+    #profilePage .btn-info {
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      background: rgba(255, 255, 255, 0.06) !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+    }
+    #profilePage .profile-back-btn svg,
+    #profilePage .header-back-btn svg,
+    #profilePage .btn-nav svg {
+      fill: rgba(255, 255, 255, 0.85) !important;
+      stroke: rgba(255, 255, 255, 0.85) !important;
+    }
+    #profilePage .header-menu-btn svg,
+    #profilePage .btn-info svg {
+      fill: rgba(255, 255, 255, 0.8) !important;
+      stroke: rgba(255, 255, 255, 0.8) !important;
+      filter: none !important;
+    }
+
+    /* ========== YupSoul ТЗ: запрет сжатия на малых экранах ========== */
+    html, body {
+      min-width: 360px !important;
+      width: 100%;
+      overflow-x: hidden;
+      font-size: 16px !important;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+    #app, .app-container, .main-wrapper, .page-content, #homePage, #profilePage {
+      min-width: 360px !important;
+      width: 100% !important;
+      max-width: 100vw !important;
+      margin: 0 auto !important;
+      padding: 12px !important;
+      box-sizing: border-box !important;
+    }
+    button, .btn, .profile-back-btn, .header-menu-btn, .action-button {
+      min-width: 40px !important;
+      min-height: 40px !important;
+      flex-shrink: 0 !important;
+    }
+    .card, .profile-card, .content-block, .section-container {
+      min-width: 280px !important;
+    }
+    @media (max-width: 360px) {
+      html, body { font-size: 15px !important; }
+      #app, .app-container { padding: 10px !important; min-width: 320px !important; }
+      .card, .profile-card { min-width: 300px !important; padding: 14px !important; }
+      button, .btn { min-width: 100px !important; min-height: 42px !important; }
+    }
+
+    /* ============================================
+       YUPSOUL — ПРЕМИАЛЬНЫЙ ДИЗАЙН КНОПОК
+       Элегантность, глубина, дорогая простота
+       ============================================ */
+
+    /* --- БАЗОВЫЕ СТИЛИ ВСЕХ КНОПОК --- */
+    button,
+    .btn,
+    [role="button"] {
+      border-radius: 14px !important;
+      padding: 14px 28px !important;
+      min-height: 52px !important;
+      font-family: 'Comfortaa', sans-serif !important;
+      font-size: 0.95rem !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.02em !important;
+      line-height: 1.4 !important;
+      background: linear-gradient(135deg, #D4AF37 0%, #B8860B 50%, #A67308 100%) !important;
+      border: 1px solid rgba(212, 175, 55, 0.4) !important;
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.2),
+        0 1px 3px rgba(212, 175, 55, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+      color: #0A0A1A !important;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      cursor: pointer !important;
+      position: relative !important;
+      overflow: hidden !important;
+    }
+    button:hover,
+    .btn:hover,
+    [role="button"]:hover {
+      background: linear-gradient(135deg, #E5C156 0%, #C99B1F 50%, #B8860B 100%) !important;
+      box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.3),
+        0 2px 6px rgba(212, 175, 55, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+      transform: translateY(-2px) !important;
+      border-color: rgba(212, 175, 55, 0.6) !important;
+    }
+    button:active,
+    .btn:active,
+    [role="button"]:active {
+      transform: translateY(0) scale(0.98) !important;
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.2),
+        0 1px 2px rgba(212, 175, 55, 0.1),
+        inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+    button:disabled,
+    .btn:disabled,
+    [role="button"]:disabled {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(184, 134, 11, 0.2) 100%) !important;
+      border-color: rgba(212, 175, 55, 0.2) !important;
+      box-shadow: none !important;
+      color: rgba(255, 255, 255, 0.4) !important;
+      cursor: not-allowed !important;
+      transform: none !important;
+    }
+
+    /* --- КНОПКИ ХЕДЕРА --- */
+    .profile-back-btn,
+    .header-back-btn,
+    .btn-nav {
+      width: 44px !important;
+      height: 44px !important;
+      min-width: 44px !important;
+      min-height: 44px !important;
+      border-radius: 50% !important;
+      padding: 0 !important;
+      background: rgba(255, 255, 255, 0.03) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+      color: rgba(255, 255, 255, 0.7) !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .profile-back-btn:hover,
+    .header-back-btn:hover,
+    .btn-nav:hover {
+      background: rgba(255, 255, 255, 0.06) !important;
+      border-color: rgba(255, 255, 255, 0.15) !important;
+      color: rgba(255, 255, 255, 0.9) !important;
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    }
+    .header-menu-btn,
+    .btn-info,
+    #profileIconBtn {
+      width: 44px !important;
+      height: 44px !important;
+      min-width: 44px !important;
+      min-height: 44px !important;
+      border-radius: 50% !important;
+      padding: 0 !important;
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(184, 134, 11, 0.05) 100%) !important;
+      border: 1px solid rgba(212, 175, 55, 0.3) !important;
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.15),
+        0 1px 2px rgba(212, 175, 55, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+      color: #D4AF37 !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .header-menu-btn:hover,
+    .btn-info:hover,
+    #profileIconBtn:hover {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(184, 134, 11, 0.1) 100%) !important;
+      border-color: rgba(212, 175, 55, 0.5) !important;
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.2),
+        0 2px 4px rgba(212, 175, 55, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    }
+    .profile-back-btn svg,
+    .header-back-btn svg,
+    .btn-nav svg,
+    .header-menu-btn svg,
+    .btn-info svg,
+    #profileIconBtn svg {
+      width: 20px !important;
+      height: 20px !important;
+      flex-shrink: 0 !important;
+      fill: currentColor !important;
+      stroke: currentColor !important;
+    }
+
+    /* --- КНОПКИ РЕЖИМОВ --- */
+    .mode-btn {
+      min-height: 72px !important;
+      padding: 12px 16px !important;
+      border-radius: 12px !important;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.02) 100%) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+      color: rgba(255, 255, 255, 0.75) !important;
+      font-size: 0.85rem !important;
+      font-weight: 600 !important;
+      text-align: center !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .mode-btn:hover {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.04) 100%) !important;
+      border-color: rgba(255, 255, 255, 0.15) !important;
+      color: rgba(255, 255, 255, 0.9) !important;
+      transform: translateY(-1px) !important;
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+    }
+    .mode-btn.active {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(184, 134, 11, 0.08) 100%) !important;
+      border: 1.5px solid rgba(212, 175, 55, 0.5) !important;
+      color: #FFD76E !important;
+      box-shadow:
+        0 4px 16px rgba(212, 175, 55, 0.15),
+        0 2px 6px rgba(212, 175, 55, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+      transform: translateY(-1px) !important;
+    }
+    .mode-btn.active .mode-label {
+      font-weight: 700 !important;
+      text-shadow: 0 1px 2px rgba(212, 175, 55, 0.3) !important;
+    }
+
+    /* --- ВТОРИЧНЫЕ КНОПКИ --- */
+    button.secondary,
+    .btn-secondary,
+    .form-nav-link,
+    .help-support-btn {
+      background: rgba(255, 255, 255, 0.03) !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+      color: rgba(255, 255, 255, 0.65) !important;
+      text-shadow: none !important;
+    }
+    button.secondary:hover,
+    .btn-secondary:hover,
+    .form-nav-link:hover,
+    .help-support-btn:hover {
+      background: rgba(255, 255, 255, 0.06) !important;
+      border-color: rgba(255, 255, 255, 0.2) !important;
+      color: rgba(255, 255, 255, 0.85) !important;
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+    }
+
+    /* --- КНОПКИ ОПЛАТЫ --- */
+    #payOvPayBtn {
+      background: linear-gradient(135deg, #D4AF37 0%, #B8860B 50%, #A67308 100%) !important;
+      border: 1px solid rgba(212, 175, 55, 0.4) !important;
+      box-shadow:
+        0 4px 16px rgba(212, 175, 55, 0.2),
+        0 2px 6px rgba(212, 175, 55, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+      color: #0A0A1A !important;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    }
+    #payOvPayBtn:hover {
+      background: linear-gradient(135deg, #E5C156 0%, #C99B1F 50%, #B8860B 100%) !important;
+      border-color: rgba(212, 175, 55, 0.6) !important;
+      box-shadow:
+        0 8px 24px rgba(212, 175, 55, 0.3),
+        0 4px 10px rgba(212, 175, 55, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+      transform: translateY(-2px) !important;
+    }
+    #payOvStarsBtn {
+      background: linear-gradient(135deg, #9B7DE8 0%, #7C5AE8 50%, #6B4BD6 100%) !important;
+      border: 1px solid rgba(156, 125, 232, 0.4) !important;
+      box-shadow:
+        0 4px 16px rgba(156, 125, 232, 0.2),
+        0 2px 6px rgba(156, 125, 232, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+      color: #FFFFFF !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+    }
+    #payOvStarsBtn:hover {
+      background: linear-gradient(135deg, #AB8FF5 0%, #8C6BF5 50%, #7B5AE3 100%) !important;
+      border-color: rgba(156, 125, 232, 0.6) !important;
+      box-shadow:
+        0 8px 24px rgba(156, 125, 232, 0.3),
+        0 4px 10px rgba(156, 125, 232, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+      transform: translateY(-2px) !important;
+    }
+
+    /* --- КНОПКА ИЗМЕНИТЬ В ПРОФИЛЕ --- */
+    #profileEditBtn {
+      padding: 10px 20px !important;
+      min-height: 44px !important;
+      border-radius: 22px !important;
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(184, 134, 11, 0.05) 100%) !important;
+      border: 1px solid rgba(212, 175, 55, 0.4) !important;
+      box-shadow:
+        0 2px 8px rgba(212, 175, 55, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+      color: #D4AF37 !important;
+      font-size: 0.9rem !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.01em !important;
+    }
+    #profileEditBtn:hover {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.18) 0%, rgba(184, 134, 11, 0.1) 100%) !important;
+      border-color: rgba(212, 175, 55, 0.6) !important;
+      box-shadow:
+        0 4px 12px rgba(212, 175, 55, 0.15),
+        0 2px 4px rgba(212, 175, 55, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+      transform: translateY(-1px) !important;
+    }
+
+    /* --- ЛАБОРАТОРИЯ (Герои) --- */
+    .hca-btn {
+      padding: 10px 16px !important;
+      min-height: 42px !important;
+      border-radius: 10px !important;
+      font-size: 0.85rem !important;
+      font-weight: 600 !important;
+    }
+    .hca-btn.hero-solo-btn,
+    .hca-btn.hero-duo-btn {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(184, 134, 11, 0.05) 100%) !important;
+      border: 1px solid rgba(212, 175, 55, 0.3) !important;
+      color: #D4AF37 !important;
+      box-shadow: 0 2px 8px rgba(212, 175, 55, 0.1) !important;
+    }
+    .hca-btn.hero-solo-btn:hover,
+    .hca-btn.hero-duo-btn:hover {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(184, 134, 11, 0.1) 100%) !important;
+      border-color: rgba(212, 175, 55, 0.5) !important;
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.15) !important;
+      transform: translateY(-1px) !important;
+    }
+    .hca-btn.hca-danger {
+      background: rgba(239, 68, 68, 0.06) !important;
+      border: 1px solid rgba(239, 68, 68, 0.25) !important;
+      color: rgba(239, 68, 68, 0.65) !important;
+    }
+    .hca-btn.hca-danger:hover {
+      background: rgba(239, 68, 68, 0.12) !important;
+      border-color: rgba(239, 68, 68, 0.4) !important;
+      color: rgba(239, 68, 68, 0.85) !important;
+    }
+
+    /* --- БЫСТРЫЕ ЗАПРОСЫ --- */
+    .quick-item,
+    .example-btn {
+      padding: 12px 16px !important;
+      border-radius: 10px !important;
+      font-size: 0.85rem !important;
+      font-weight: 500 !important;
+      background: rgba(255, 255, 255, 0.02) !important;
+      border: 1px solid rgba(255, 255, 255, 0.06) !important;
+      color: rgba(255, 255, 255, 0.75) !important;
+      text-align: left !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .quick-item:hover,
+    .example-btn:hover {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border-color: rgba(255, 255, 255, 0.12) !important;
+      color: rgba(255, 255, 255, 0.9) !important;
+      transform: translateX(2px) !important;
+    }
+
+    /* --- ГЛАВНАЯ КНОПКА СОЗДАТЬ СВОЮ ПЕСНЮ --- */
+    #startBtn,
+    .profile-create-btn,
+    .onboarding-btn {
+      padding: 16px 40px !important;
+      min-height: 56px !important;
+      border-radius: 28px !important;
+      background: linear-gradient(135deg, #D4AF37 0%, #B8860B 45%, #A67308 100%) !important;
+      border: 1px solid rgba(212, 175, 55, 0.4) !important;
+      box-shadow:
+        0 8px 24px rgba(212, 175, 55, 0.25),
+        0 4px 10px rgba(212, 175, 55, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+      color: #0A0A1A !important;
+      font-size: 1rem !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.02em !important;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    #startBtn:hover,
+    .profile-create-btn:hover,
+    .onboarding-btn:hover {
+      background: linear-gradient(135deg, #E5C156 0%, #C99B1F 45%, #B8860B 100%) !important;
+      border-color: rgba(212, 175, 55, 0.6) !important;
+      box-shadow:
+        0 12px 32px rgba(212, 175, 55, 0.35),
+        0 6px 14px rgba(212, 175, 55, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+      transform: translateY(-3px) !important;
+    }
+    #startBtn:active,
+    .profile-create-btn:active,
+    .onboarding-btn:active {
+      transform: translateY(-1px) scale(0.98) !important;
+      box-shadow:
+        0 4px 12px rgba(212, 175, 55, 0.2),
+        0 2px 4px rgba(212, 175, 55, 0.1),
+        inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* --- КНОПКИ ТАРИФОВ --- */
+    .ppc-btn,
+    .plan-modal-cta {
+      padding: 12px 20px !important;
+      min-height: 46px !important;
+      border-radius: 12px !important;
+      font-size: 0.88rem !important;
+      font-weight: 600 !important;
+    }
+    .ppc-btn.master-btn {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(184, 134, 11, 0.1) 100%) !important;
+      border: 1px solid rgba(212, 175, 55, 0.4) !important;
+      color: #D4AF37 !important;
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.15) !important;
+    }
+    .ppc-btn.master-btn:hover {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(184, 134, 11, 0.18) 100%) !important;
+      border-color: rgba(212, 175, 55, 0.6) !important;
+      box-shadow: 0 6px 16px rgba(212, 175, 55, 0.2) !important;
+      transform: translateY(-2px) !important;
+    }
+
+    /* --- АДАПТИВНОСТЬ ПРЕМИУМ --- */
+    @media (max-width: 480px) {
+      button,
+      .btn,
+      [role="button"] {
+        padding: 13px 24px !important;
+        min-height: 50px !important;
+        font-size: 0.9rem !important;
+      }
+      #startBtn,
+      .profile-create-btn,
+      .onboarding-btn {
+        padding: 15px 32px !important;
+        min-height: 54px !important;
+        font-size: 0.95rem !important;
+      }
+      .mode-btn {
+        min-height: 68px !important;
+        padding: 10px 14px !important;
+        font-size: 0.8rem !important;
+      }
+    }
+
+    /* --- ПРЕМИУМ БЛИКИ И ГЛУБИНА --- */
+    button::before,
+    .btn::before,
+    [role="button"]::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+      );
+      transition: left 0.5s ease;
+      pointer-events: none;
+    }
+    button:hover::before,
+    .btn:hover::before,
+    [role="button"]:hover::before {
+      left: 100%;
+    }
+    .mode-btn.active::after,
+    #startBtn::after,
+    .profile-create-btn::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: inherit;
+      background: radial-gradient(
+        circle at 50% 0%,
+        rgba(255, 255, 255, 0.08),
+        transparent 70%
+      );
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .mode-btn.active:hover::after,
+    #startBtn:hover::after,
+    .profile-create-btn:hover::after {
+      opacity: 1;
+    }
+
+    /* --- УБРАТЬ ДЕШЁВЫЕ АНИМАЦИИ --- */
+    button,
+    .btn,
+    [role="button"],
+    #startBtn,
+    .profile-create-btn,
+    .onboarding-btn {
+      animation: none !important;
+      background-size: 100% 100% !important;
+    }
+
+    /* ============================================
+       YUPSOUL — ФИНАЛЬНЫЙ CSS (ЗАМЕНЯЕТ ВСЁ)
+       ============================================ */
+    #homeTopBar,
+    .page-header,
+    .form-header-bar,
+    .header-container,
+    .profile-header {
+      background: transparent !important;
+      background-color: transparent !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 8px 12px !important;
+      min-height: 44px !important;
+    }
+    .header-title,
+    .page-header-title,
+    .app-title,
+    .profile-header-title,
+    span.header-title,
+    div.header-title,
+    .form-header-bar .header-title,
+    .page-header .header-title,
+    .profile-header .profile-header-title,
+    [style*="YupSoul Personal Music"],
+    [style*="Personal Music"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+      position: absolute !important;
+      left: -9999px !important;
+    }
+    #homeTopBar > :not(button):not(.home-topbar-slot),
+    .form-header-bar > :not(button):not(.home-topbar-slot),
+    .page-header > :not(button):not(.home-topbar-slot),
+    .profile-header > :not(button):not(.profile-header-title) {
+      display: none !important;
+    }
+    .profile-back-btn,
+    .header-back-btn,
+    .btn-nav,
+    .header-menu-btn,
+    .btn-info,
+    #profileIconBtn,
+    .lang-switcher-btn,
+    .home-topbar-btn {
+      width: 40px !important;
+      height: 40px !important;
+      min-width: 40px !important;
+      min-height: 40px !important;
+      max-width: 40px !important;
+      max-height: 40px !important;
+      border-radius: 50% !important;
+      border: 1px solid rgba(212, 175, 55, 0.4) !important;
+      background: rgba(212, 175, 55, 0.08) !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      animation: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    .profile-back-btn:hover,
+    .header-back-btn:hover,
+    .btn-nav:hover,
+    .header-menu-btn:hover,
+    .btn-info:hover,
+    #profileIconBtn:hover,
+    .lang-switcher-btn:hover,
+    .home-topbar-btn:hover {
+      background: rgba(212, 175, 55, 0.15) !important;
+      border-color: rgba(212, 175, 55, 0.6) !important;
+      transform: translateY(-1px) !important;
+    }
+    .profile-back-btn svg,
+    .header-back-btn svg,
+    .btn-nav svg,
+    .header-menu-btn svg,
+    .btn-info svg,
+    #profileIconBtn svg,
+    .lang-switcher-btn svg,
+    .home-topbar-btn svg {
+      width: 18px !important;
+      height: 18px !important;
+      fill: #D4AF37 !important;
+      stroke: #D4AF37 !important;
+      filter: none !important;
+    }
+    button,
+    .btn,
+    [role="button"],
+    #startBtn,
+    #stepNext,
+    #payBtn,
+    #payOvPayBtn,
+    .profile-create-btn,
+    .onboarding-btn,
+    .hca-btn,
+    .ppc-btn,
+    .mode-btn,
+    .example-btn,
+    .quick-item,
+    .help-support-btn,
+    .profile-ref-share-btn,
+    .plan-modal-cta {
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
+      animation: none !important;
+      background-size: 100% 100% !important;
+      border: 1px solid rgba(212, 175, 55, 0.3) !important;
+    }
+    #startBtn,
+    #stepNext,
+    #payBtn,
+    #payOvPayBtn,
+    .profile-create-btn,
+    .onboarding-btn {
+      background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%) !important;
+      border: 1px solid rgba(212, 175, 55, 0.4) !important;
+      color: #0A0A1A !important;
+    }
+    #startBtn:hover,
+    #stepNext:hover,
+    #payBtn:hover,
+    #payOvPayBtn:hover,
+    .profile-create-btn:hover,
+    .onboarding-btn:hover {
+      background: linear-gradient(135deg, #E5C156 0%, #C99B1F 100%) !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4) !important;
+    }
+    button.secondary,
+    .btn-secondary,
+    .form-nav-link,
+    .help-support-btn,
+    .profile-ref-share-btn,
+    #payOvBackBtn {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      color: rgba(255, 255, 255, 0.7) !important;
+      box-shadow: none !important;
+    }
+    button.secondary:hover,
+    .btn-secondary:hover,
+    .form-nav-link:hover,
+    .help-support-btn:hover,
+    .profile-ref-share-btn:hover,
+    #payOvBackBtn:hover {
+      background: rgba(255, 255, 255, 0.1) !important;
+      border-color: rgba(255, 255, 255, 0.25) !important;
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
+    .mode-btn {
+      background: rgba(255, 255, 255, 0.03) !important;
+      border: 1px solid rgba(212, 175, 55, 0.2) !important;
+      box-shadow: none !important;
+      animation: none !important;
+    }
+    .mode-btn.active {
+      background: rgba(212, 175, 55, 0.12) !important;
+      border: 1.5px solid rgba(212, 175, 55, 0.5) !important;
+      color: #FFD76E !important;
+      box-shadow: 0 0 12px rgba(212, 175, 55, 0.2) !important;
+    }
+    .mode-btn.active::before,
+    .mode-btn.active::after {
+      display: none !important;
+    }
+    html, body {
+      min-width: 360px !important;
+      width: 100%;
+      overflow-x: hidden;
+      font-size: 16px !important;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+    #app, .app-container, .main-wrapper, .page-content, #homePage, #profilePage, #formPage {
+      min-width: 360px !important;
+      width: 100% !important;
+      max-width: 100vw !important;
+      margin: 0 auto !important;
+      padding: 12px !important;
+      box-sizing: border-box !important;
+    }
+    button, .btn, .profile-back-btn, .header-menu-btn, .action-button {
+      min-width: 40px !important;
+      min-height: 40px !important;
+      flex-shrink: 0 !important;
+    }
+    .card, .profile-card, .content-block, .section-container {
+      min-width: 280px !important;
+    }
+    @media (max-width: 360px) {
+      html, body { font-size: 15px !important; }
+      #app, .app-container { padding: 10px !important; min-width: 320px !important; }
+      .card, .profile-card { min-width: 300px !important; padding: 14px !important; }
+      button, .btn { min-width: 100px !important; min-height: 42px !important; font-size: 0.9rem !important; }
+    }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.2s !important;
+    }
+    button, .btn, [role="button"], #startBtn, .profile-create-btn, .onboarding-btn {
+      animation: none !important;
+      background-size: 100% 100% !important;
+    }
+    #profileEditBtn {
+      padding: 8px 16px !important;
+      font-size: 0.9rem !important;
+      font-weight: 500 !important;
+      border-radius: 20px !important;
+      border: 1px solid rgba(212, 175, 55, 0.6) !important;
+      background: rgba(212, 175, 55, 0.1) !important;
+      color: #D4AF37 !important;
+      box-shadow: none !important;
+      backdrop-filter: blur(4px);
+      min-height: unset !important;
+      gap: 6px !important;
+      width: auto !important;
+      max-width: fit-content !important;
+    }
+    #profileEditBtn:hover {
+      background: rgba(212, 175, 55, 0.2) !important;
+      border-color: rgba(212, 175, 55, 0.8) !important;
+      transform: translateY(-1px) !important;
+    }
+    #profileEditBtn::before {
+      display: none !important;
+    }
+    #profilePage .profile-header {
+      margin-bottom: 24px !important;
+    }
+    #profilePage .profile-section-title {
+      margin-top: 0 !important;
+      margin-bottom: 16px !important;
+      padding-top: 8px !important;
+    }
+    #profilePage .profile-balance-card,
+    #profilePage #profileDataCard,
+    #profilePage .profile-referral-section {
+      padding: 16px !important;
+      margin-bottom: 20px !important;
+      border-radius: 16px !important;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+    }
+    #profilePage .profile-create-btn {
+      margin-top: 24px !important;
+      margin-bottom: 12px !important;
+    }
+    @media (max-width: 480px) {
+      #profilePage .profile-scroll {
+        padding: 16px 12px calc(env(safe-area-inset-bottom) + 120px) !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1628,7 +2555,7 @@
         <div class="home-topbar-slot" style="pointer-events:auto;">
           <div id="langSwitcher" class="lang-switcher-compact" aria-label="Язык интерфейса">
             <button type="button" id="langSwitcherBtn" class="lang-switcher-btn home-topbar-btn btn-info header-menu-btn" title="Язык">
-              <span id="langSwitcherIcon" aria-hidden="true">🌐</span>
+              <span id="langSwitcherIcon" aria-hidden="true"></span>
               <span id="langSwitcherCurrent">RU</span>
             </button>
             <div id="langSwitcherDropdown" class="lang-dropdown" hidden>
@@ -1654,7 +2581,7 @@
         <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="140" height="140">
         <div id="homeTagline" class="home-tagline">Музыка твоей души</div>
         <p id="homeGreeting" class="home-greeting">Привет</p>
-        <button id="startBtn">Создать свою песню</button>
+        <button id="startBtn" class="btn-primary">Создать свою песню</button>
       </div>
 
       <!-- Нижняя зона — тихо, когда пусто -->
@@ -1664,16 +2591,16 @@
       <div id="recoveryBanner" style="display:none;margin:0 0 var(--spacing-md) 0;background:rgba(5,150,105,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius-md);padding:var(--spacing-md) var(--spacing-lg);position:relative;">
         <button id="recoveryDismissBtn" style="position:absolute;top:8px;right:10px;background:none;border:none;color:rgba(255,255,255,0.3);font-size:1rem;line-height:1;cursor:pointer;padding:2px 4px;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;font-weight:400;" title="Закрыть">✕</button>
         <div id="recoveryBannerText" style="font-size:0.88rem;color:rgba(209,250,229,0.85);line-height:1.5;margin-bottom:10px;padding-right:20px;">
-          🎁 <strong style="color:#6ee7b7;">Твоя заявка ждёт!</strong> Получи первую песню бесплатно.
+          <strong style="color:#6ee7b7;">Твоя заявка ждёт!</strong> Получи первую песню бесплатно.
         </div>
         <button id="recoveryClaimBtn" style="width:100%;padding:12px 24px;border-radius:12px;background:linear-gradient(135deg,#059669,#10b981);border:none;color:#fff;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;">
-          🎁 Получить бесплатно
+          Получить бесплатно
         </button>
       </div>
 
       <!-- Админка — только для админов, ненавязчиво -->
       <div id="adminLinkWrap" style="display:none;margin-top:var(--spacing-lg);text-align:center">
-        <button type="button" id="adminLinkBtn" onclick="goToPage('adminPage')" style="background:none;border:none;color:rgba(var(--primary-rgb),0.35);font-size:0.72rem;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;padding:6px 12px;margin:0;font-weight:400;letter-spacing:0.03em">👑 Админка</button>
+        <button type="button" id="adminLinkBtn" onclick="goToPage('adminPage')" style="background:none;border:none;color:rgba(var(--primary-rgb),0.35);font-size:0.72rem;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;padding:6px 12px;margin:0;font-weight:400;letter-spacing:0.03em">Админка</button>
       </div>
 
       <!-- Профиль, Помощь, Лаборатория — без переносов, стили в CSS -->
@@ -1706,7 +2633,7 @@
         <!-- Что такое YupSoul -->
         <div class="help-section open">
           <button type="button" class="help-section-title" onclick="this.closest('.help-section').classList.toggle('open')">
-            <span class="hst-icon">🌟</span><span id="helpT1" style="flex:1">Что такое YupSoul</span><span class="hst-chevron">▼</span>
+            <span class="hst-icon"></span><span id="helpT1" style="flex:1">Что такое YupSoul</span><span class="hst-chevron">▼</span>
           </button>
           <div id="helpB1" class="help-section-body">
             <p>YupSoul создаёт <strong>персональную песню именно для тебя</strong> — на основе даты, времени и места рождения. Система анализирует твою личность и пишет песню о твоих реальных качествах, пути и силе.</p>
@@ -1717,7 +2644,7 @@
         <!-- Что можно создать -->
         <div class="help-section">
           <button type="button" class="help-section-title" onclick="this.closest('.help-section').classList.toggle('open')">
-            <span class="hst-icon">🎵</span><span id="helpT2" style="flex:1">Что можно создать</span><span class="hst-chevron">▼</span>
+            <span class="hst-icon"></span><span id="helpT2" style="flex:1">Что можно создать</span><span class="hst-chevron">▼</span>
           </button>
           <div id="helpB2" class="help-section-body">
             <ul>
@@ -1753,7 +2680,7 @@
         <!-- Бесплатные генерации -->
         <div class="help-section">
           <button type="button" class="help-section-title" onclick="this.closest('.help-section').classList.toggle('open')">
-            <span class="hst-icon">🎁</span><span id="helpT5" style="flex:1">Бесплатные генерации</span><span class="hst-chevron">▼</span>
+            <span class="hst-icon"></span><span id="helpT5" style="flex:1">Бесплатные генерации</span><span class="hst-chevron">▼</span>
           </button>
           <div id="helpB5" class="help-section-body">
             <p><strong>Первая генерация — бесплатно.</strong></p>
@@ -1765,7 +2692,7 @@
         <!-- Оплата -->
         <div class="help-section">
           <button type="button" class="help-section-title" onclick="this.closest('.help-section').classList.toggle('open')">
-            <span class="hst-icon">💳</span><span id="helpT6" style="flex:1">Оплата и промокоды</span><span class="hst-chevron">▼</span>
+            <span class="hst-icon"></span><span id="helpT6" style="flex:1">Оплата и промокоды</span><span class="hst-chevron">▼</span>
           </button>
           <div id="helpB6" class="help-section-body">
             <p>Дополнительные генерации оплачиваются по тарифу. Способы оплаты отображаются на экране при оформлении заявки.</p>
@@ -1786,7 +2713,7 @@
         </div>
 
         <!-- Кнопка поддержки -->
-        <button type="button" class="help-support-btn" id="helpSupportBtn">💬 Написать в поддержку</button>
+        <button type="button" class="help-support-btn" id="helpSupportBtn">Написать в поддержку</button>
 
       </div>
     </div>
@@ -1810,7 +2737,7 @@
         <div class="profile-identity">
           <div class="profile-avatar-wrap" id="profileAvatarWrap" title="Изменить фото" role="button" aria-label="Изменить фото" tabindex="0">
             <div id="profileAvatar" class="profile-avatar">
-              <span id="profileAvatarInitial">👤</span>
+              <span id="profileAvatarInitial"></span>
             </div>
             <div class="profile-avatar-edit">✎</div>
             <div class="profile-avatar-spinner" id="profileAvatarSpinner">…</div>
@@ -2064,7 +2991,7 @@
           <label for="heroBirthplace" data-icon="📍">Место рождения</label>
           <div id="heroBirthplaceWrap" class="birthplace-wrap">
             <input type="text" id="heroBirthplace" placeholder="Москва, Лондон, Нью-Йорк…" autocomplete="off">
-            <span id="heroBirthplaceCheck" class="birthplace-check" aria-hidden="true">✓</span>
+            <span id="heroBirthplaceCheck" class="birthplace-check" aria-hidden="true"></span>
             <ul id="heroBirthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true" aria-live="polite"></ul>
           </div>
           <div id="heroBirthplaceHint" class="birthplace-hint" style="display:block;font-size:0.9rem;color:rgba(var(--primary-rgb),0.85);margin-top:8px;line-height:1.5;">Начни вводить город и выбери из выпавшего списка.</div>
@@ -2150,7 +3077,7 @@
         <div id="formFieldsWrap">
         <div class="step-panel" data-step="2">
         <div class="field">
-          <label id="nameLabel" for="name" data-icon="👤">Имя</label>
+          <label id="nameLabel" for="name" data-icon="">Имя</label>
             <input type="text" id="name" placeholder="Как тебя зовут?" required aria-label="Имя">
         </div>
         
@@ -2163,7 +3090,7 @@
               <select id="birthdateYear" class="date-group-year" aria-label="Год"><option value="">Год</option></select>
             </div>
             <input type="date" id="birthdate" required aria-label="Дата рождения" tabindex="-1">
-            <span id="birthdateCheck" class="birthdate-check" aria-hidden="true">✓</span>
+            <span id="birthdateCheck" class="birthdate-check" aria-hidden="true"></span>
           </div>
         </div>
         
@@ -2171,7 +3098,7 @@
           <label id="birthplaceLbl" for="birthplace" data-icon="📍">Место рождения</label>
           <div id="birthplaceWrap" class="birthplace-wrap">
               <input type="text" id="birthplace" placeholder="Москва, Лондон, Нью-Йорк..." required autocomplete="off" aria-label="Локация рождения">
-              <span id="birthplaceCheck" class="birthplace-check" aria-hidden="true">✓</span>
+              <span id="birthplaceCheck" class="birthplace-check" aria-hidden="true"></span>
             <ul id="birthplaceSuggestions" class="birthplace-suggestions" aria-hidden="true" aria-live="polite"></ul>
           </div>
           <div id="birthplaceHint" class="birthplace-hint" style="display:none;font-size:0.9rem;color:rgba(var(--primary-rgb),0.85);margin-top:8px;line-height:1.5;">Начни вводить город и выбери из выпавшего списка.</div>
@@ -2227,7 +3154,7 @@
           <div id="secondPersonFormWrap">
             <div id="secondPersonForm" style="padding-top:8px;">
               <div class="field">
-                <label for="name2" data-icon="👤">Имя</label>
+                <label for="name2" data-icon="">Имя</label>
                 <input type="text" id="name2" placeholder="Имя второго человека" maxlength="50">
               </div>
               <div class="field">
@@ -2245,7 +3172,7 @@
                 <label for="birthplace2" data-icon="📍">Место рождения</label>
                 <div id="birthplace2Wrap" class="birthplace-wrap">
                   <input type="text" id="birthplace2" placeholder="Москва, Лондон, Нью-Йорк..." maxlength="100" autocomplete="off" aria-label="Локация рождения второго">
-                  <span id="birthplace2Check" class="birthplace-check" aria-hidden="true">✓</span>
+                  <span id="birthplace2Check" class="birthplace-check" aria-hidden="true"></span>
                   <ul id="birthplaceSuggestions2" class="birthplace-suggestions" aria-hidden="true" aria-live="polite"></ul>
                 </div>
                 <div id="birthplace2Hint" class="birthplace-hint" style="display:none;font-size:0.9rem;color:rgba(var(--primary-rgb),0.85);margin-top:8px;line-height:1.5;">Начни вводить город и выбери из выпавшего списка.</div>
@@ -2318,18 +3245,18 @@
                 <svg id="quickPickerArrow" width="12" height="12" viewBox="0 0 24 24" fill="none" style="transition:transform .2s;flex-shrink:0;"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
               <div id="quickPickerSheet" class="request-quick-dropdown" style="display:none;">
-                <button type="button" class="quick-item example-btn" data-text="Весёлая песня с самоиронией про мои слабости и привычки">😄 Весёлая про слабости</button>
-                <button type="button" class="quick-item example-btn" data-text="Юмор и лёгкость — добрый взгляд на себя">😊 Юмор и лёгкость</button>
-                <button type="button" class="quick-item example-btn" data-text="Режим юмор 100% — весёлая песня с максимальным юмором и лёгкостью">😂 Режим: юмор 100%</button>
-                <button type="button" class="quick-item example-btn" data-text="Трогательное поздравление с днём рождения — душевная песня-подарок">🎂 Трогательное поздравление</button>
-                <button type="button" class="quick-item example-btn" data-text="Забавное поздравление с днём рождения — тепло и с улыбкой">🥳 Забавное поздравление</button>
-                <button type="button" class="quick-item example-btn" data-text="Мощная песня о моей силе и преодолении трудностей">💪 Сила и преодоление</button>
-                <button type="button" class="quick-item example-btn" data-text="Уверенность, предназначение и опора на себя">✨ Уверенность и путь</button>
-                <button type="button" class="quick-item example-btn" data-text="Яркая самопрезентация — кто я и что несу в мир">🌟 Кто я и моя миссия</button>
-                <button type="button" class="quick-item example-btn" data-text="Гармония в отношениях и любовь к себе">🌿 Гармония и любовь к себе</button>
-                <button type="button" class="quick-item example-btn" data-text="Отпустить прошлое и открыть новые возможности">🌱 Отпустить прошлое</button>
-                <button type="button" class="quick-item example-btn" data-text="Исцелить детские травмы и обрести свободу">💫 Исцеление и свобода</button>
-                <button type="button" class="quick-item example-btn" data-text="Медитативная песня для практики и тишины">🧘 Тишина и медитация</button>
+                <button type="button" class="quick-item example-btn" data-text="Весёлая песня с самоиронией про мои слабости и привычки">Весёлая про слабости</button>
+                <button type="button" class="quick-item example-btn" data-text="Юмор и лёгкость — добрый взгляд на себя">Юмор и лёгкость</button>
+                <button type="button" class="quick-item example-btn" data-text="Режим юмор 100% — весёлая песня с максимальным юмором и лёгкостью">Режим: юмор 100%</button>
+                <button type="button" class="quick-item example-btn" data-text="Трогательное поздравление с днём рождения — душевная песня-подарок">Трогательное поздравление</button>
+                <button type="button" class="quick-item example-btn" data-text="Забавное поздравление с днём рождения — тепло и с улыбкой">Забавное поздравление</button>
+                <button type="button" class="quick-item example-btn" data-text="Мощная песня о моей силе и преодолении трудностей">Сила и преодоление</button>
+                <button type="button" class="quick-item example-btn" data-text="Уверенность, предназначение и опора на себя">Уверенность и путь</button>
+                <button type="button" class="quick-item example-btn" data-text="Яркая самопрезентация — кто я и что несу в мир">Кто я и моя миссия</button>
+                <button type="button" class="quick-item example-btn" data-text="Гармония в отношениях и любовь к себе">Гармония и любовь к себе</button>
+                <button type="button" class="quick-item example-btn" data-text="Отпустить прошлое и открыть новые возможности">Отпустить прошлое</button>
+                <button type="button" class="quick-item example-btn" data-text="Исцелить детские травмы и обрести свободу">Исцеление и свобода</button>
+                <button type="button" class="quick-item example-btn" data-text="Медитативная песня для практики и тишины">Тишина и медитация</button>
               </div>
             </div>
           </div>
@@ -2376,7 +3303,7 @@
           <span style="color:rgba(255,255,255,0.4);font-size:0.85rem;">Обычно 10–20 минут.</span>
         </p>
         <button id="openBotBtn" type="button" style="width:100%;max-width:320px;padding:14px 24px;border-radius:14px;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;letter-spacing:0;">
-          💬 Перейти в бот
+          Перейти в бот
         </button>
         <p id="successHint" style="font-size:0.78rem;color:rgba(255,255,255,0.35);line-height:1.6;max-width:290px;margin:0 0 28px;">
           Не пришла через 20 мин? Напиши боту «песня не пришла».
@@ -2397,7 +3324,7 @@
       </div>
 
       <!-- Полноэкранная загрузка — по умолчанию скрыта; сразу показываем шапку и промо с «Проверяем доступ» -->
-      <div id="scGlobalLoading" style="flex:1;display:none;align-items:center;justify-content:center;color:rgba(255,255,255,0.35);font-size:0.9rem;"><span id="scGlobalLoadingText">✨ Загружаю…</span></div>
+      <div id="scGlobalLoading" style="flex:1;display:none;align-items:center;justify-content:center;color:rgba(255,255,255,0.35);font-size:0.9rem;"><span id="scGlobalLoadingText">Загружаю…</span></div>
 
       <!-- ПРОМО-ЗОНА: по умолчанию видна (шапка + «Проверяем доступ»), при ответе API — тарифы/подарок или чат -->
       <div id="scPromoArea" class="page-scroll" style="padding:16px 20px calc(env(safe-area-inset-bottom)+32px);">
@@ -2474,11 +3401,11 @@
 
           <!-- Подарочные 24ч -->
           <div id="scPageGiftWrap" style="display:none;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.08),rgba(var(--secondary-rgb),0.06));border:1px solid rgba(var(--primary-rgb),0.3);border-radius:16px;padding:16px;text-align:center;margin-bottom:10px;">
-            <div style="font-size:1.6rem;margin-bottom:6px;">🎁</div>
+            <div style="font-size:1.6rem;margin-bottom:6px;"></div>
             <div id="scGiftHeading" style="font-weight:700;color:var(--primary-color);margin-bottom:4px;">Попробуй бесплатно — 24 часа</div>
             <div id="scGiftNote" style="font-size:0.83rem;color:rgba(255,255,255,0.6);line-height:1.5;margin-bottom:12px;">Один раз для каждого пользователя</div>
             <button id="scPageGiftBtn" type="button" style="padding:12px 24px;border-radius:13px;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;color:#fff;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">
-              🎁 Получить 24 часа бесплатно
+              Получить 24 часа бесплатно
             </button>
           </div>
 
@@ -2486,7 +3413,7 @@
           <div id="scPageBuyDayWrap" style="display:none;border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px;text-align:center;">
             <div id="scBuyDayNote" style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-bottom:9px;line-height:1.5;">Не готов к подписке? Попробуй разовый доступ</div>
             <button id="scPageBuyDayBtn" type="button" style="width:100%;padding:11px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
-              ⚡ Открыть Soul Chat на 24ч — $2.99
+              Открыть Soul Chat на 24ч — $2.99
             </button>
             <div id="scPageBuyDayStatus" style="display:none;font-size:0.78rem;color:rgba(var(--primary-rgb),0.7);margin-top:7px;"></div>
           </div>
@@ -2537,7 +3464,7 @@
       <div id="scPageChat" style="display:none;flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,transparent 0%,rgba(8,7,26,0.3) 100%);">
         <!-- Если нет ни заявки, ни профиля -->
         <div id="scPageNoRequest" style="display:none;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.08),rgba(var(--secondary-rgb),0.05));border:1px solid rgba(var(--primary-rgb),0.25);border-radius:16px;padding:18px;text-align:center;">
-          <div style="font-size:1.4rem;margin-bottom:8px;">🎵</div>
+          <div style="font-size:1.4rem;margin-bottom:8px;"></div>
           <div style="font-weight:700;color:var(--primary-color);margin-bottom:6px;font-size:0.92rem;">Нужны твои данные</div>
           <div style="font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:14px;">Soul Chat строит персональный разговор на основе имени и даты рождения. Заполни профиль или создай первую заявку на песню.</div>
           <div style="display:flex;flex-direction:column;gap:9px;">
@@ -2567,7 +3494,7 @@
           <div class="sc-send-bar">
             <span class="sc-char-hint" id="scPageCharHint"></span>
             <button id="scPageSendBtn" type="button" style="padding:9px 18px;border-radius:10px;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.28),rgba(var(--secondary-rgb),0.18));border:1px solid rgba(var(--primary-rgb),0.38);color:var(--primary-color);font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:none;animation:none;min-height:unset;white-space:nowrap;">
-              Спросить ✨
+              Спросить
             </button>
           </div>
         </div>
@@ -2583,7 +3510,7 @@
         <div id="paymentThanksSubtitle" class="subtitle">заявка принята</div>
       </header>
       <div class="section page-scroll" style="text-align:center; padding-top:40px">
-        <div id="paymentThanksIcon" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.2),rgba(var(--primary-rgb),0.06));border:1.5px solid rgba(var(--primary-rgb),0.35);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.8rem;color:var(--primary-color);font-weight:300">✓</div>
+        <div id="paymentThanksIcon" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.2),rgba(var(--primary-rgb),0.06));border:1.5px solid rgba(var(--primary-rgb),0.35);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.8rem;color:var(--primary-color);font-weight:300"></div>
         <h2 id="paymentThanksTitle" class="success-title" style="font-size:1.5rem; margin:0 0 12px 0">Оплата прошла</h2>
         <p class="success-text" id="paymentThanksMessage" style="margin:0 0 24px 0; font-size:0.92rem; color:rgba(255,255,255,0.6); line-height:1.65">
           Песня создаётся. Придёт в чат с ботом. Можно закрыть окно.
@@ -2634,7 +3561,7 @@
       var LANG = {
         ru: {
           tagline: 'Музыка твоей души',
-          startBtn: 'Создать свою песню', myProfile: '👤 Профиль', myHeroes: 'Лаборатория', myHelp: 'Помощь', admin: '👑 Админка',
+          startBtn: 'Создать свою песню', myProfile: 'Профиль', myHeroes: 'Лаборатория', myHelp: 'Помощь', admin: 'Админка',
           profileTitle: 'Профиль', profileSubtitle: 'Твои данные и бесплатные генерации',
           profileFreeCredits: 'Бесплатных генераций', profileInviteFriend: 'Пригласи друга', profileShare: 'Поделиться',
           profileInvited: 'Приглашено', profileActivated: 'Активировано', profileCreateSong: 'Создать песню',
@@ -2678,14 +3605,14 @@
           creatingKeyDesc: 'Магия творится в реальном времени. Твоя персональная песня формируется на основе твоих данных.',
           keyActivated: 'Песня создана!', done: 'Готово!',
           successText: 'Твоя персональная песня создана! Уникальный трек по твоим данным — слушай когда захочешь.',
-          yourSong: '🎵 Твоя песня',
+          yourSong: 'Твоя песня',
           songPreviewText: 'Твоя уникальная аудиокомпозиция уже ждёт тебя в боте. Слушай её каждое утро, чтобы настроиться на волну успеха.',
           whatNext: 'Что дальше:', openBot: 'Открой бота',
           soulChat: 'Поговорить с душой', soulChatPay: 'К оплате — Soul Basic / Soul Plus',
           newKey: 'Создать ещё одну песню',
           paymentThanks: 'Спасибо за оплату', thanksSubtitle: 'заявка принята', paymentThanksBackToForm: 'Создать свою песню',
-          songInProgress: 'Песня генерируется на сервере и придёт в этот чат с ботом. Можно закрыть окно — ничего не пропадёт. Спасибо ❤️',
-          songInProgressConfirmed: 'Заявка принята. Песня генерируется на нашем сервере — когда будет готова, придёт сюда в чат с ботом. Можно закрыть окно — ничего не пропадёт. Спасибо, что остаёшься с нами ❤️',
+          songInProgress: 'Песня генерируется на сервере и придёт в этот чат с ботом. Можно закрыть окно — ничего не пропадёт. Спасибо',
+          songInProgressConfirmed: 'Заявка принята. Песня генерируется на нашем сервере — когда будет готова, придёт сюда в чат с ботом. Можно закрыть окно — ничего не пропадёт. Спасибо, что остаёшься с нами',
           thanksDone: 'Готово',
           notFromTelegram: 'Открой приложение из чата с ботом в Telegram (кнопка меню) — иначе заявка не отправится.',
           notFound: 'Не найдено', searchError: 'Ошибка поиска',
@@ -2714,9 +3641,9 @@
           alertYourPath: 'Выбери свой путь', alertNoApi: 'Не настроен адрес API.', alertOpenFromBot: 'Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.',
           alertServerSleep: 'Сервер проснулся не сразу. Подожди около минуты и нажми «Отправить заявку» снова.',
           sending: 'Отправляю…',
-          universeHeard: '✨ {name}, Вселенная услышала твой запрос.\n\nТвоя песня формируется и придёт в этот чат, когда будет готова.',
-          universeHeardCouple: '✨ {name} и {name2}, Вселенная услышала ваш запрос.\n\nВаша песня формируется и придёт в этот чат, когда будет готова.',
-          universeHeardTransit: '✨ {name}, Вселенная услышала твой запрос.\n\nПесня «Энергия Дня» формируется и придёт в этот чат, когда будет готова.',
+          universeHeard: '{name}, Вселенная услышала твой запрос.\n\nТвоя песня формируется и придёт в этот чат, когда будет готова.',
+          universeHeardCouple: '{name} и {name2}, Вселенная услышала ваш запрос.\n\nВаша песня формируется и придёт в этот чат, когда будет готова.',
+          universeHeardTransit: '{name}, Вселенная услышала твой запрос.\n\nПесня «Энергия Дня» формируется и придёт в этот чат, когда будет готова.',
           langSong: 'Язык песни', langRu: 'Русский', langEn: 'English', langDe: 'Deutsch', langFr: 'Français', langUk: 'Українська',
           quick1: 'Гармония и любовь к себе', quick2: 'Уверенность и предназначение', quick3: 'Творческий потенциал', quick4: 'Отпустить прошлое',
           quick5: 'Баланс жизни', quick6: 'Доверие и принятие', quick7: 'Исцеление и свобода', quick8: 'Путь к счастью',
@@ -2742,7 +3669,7 @@
           alertNoApi: 'Не настроен адрес API.', alertOpenFromBot: 'Открой приложение из чата с ботом в Telegram — иначе заявку нельзя принять.',
           alertOpenFromBotShort: 'Открой приложение из чата с ботом в Telegram.',
           alertPaymentFirst: 'Сначала нажмите «Отправить заявку» на предыдущем шаге.',
-          alertLinkCopied: '✓ Ссылка скопирована. Вставьте её в Safari или Chrome и откройте.',
+          alertLinkCopied: 'Ссылка скопирована. Вставьте её в Safari или Chrome и откройте.',
           alertHeroName: 'Введите имя', alertError: 'Ошибка', alertDeleteConfirm: 'Удалить «{name}»? Это действие нельзя отменить.',
           alertSubmitError: 'Ошибка при отправке',
           copyLinkPrompt: 'Скопируйте эту ссылку и откройте в браузере:',
@@ -2752,8 +3679,8 @@
           loading: 'Загрузка…', noCardsYet: 'Нет завершённых карточек', heroHistLoading: 'Загрузка истории…', heroHistEmpty: 'Генераций пока нет', heroHistLoadError: 'Не удалось загрузить историю', heroesPageLoadError: 'Не удалось загрузить героев', retry: 'Повторить',
           forMyself: 'Для себя', forHero: 'Для: {name}',
           previewHome: 'Главная', previewForm: 'Форма', previewPayment: 'Оплата', previewLoading: 'Загрузка', previewSuccess: 'Успех',
-          supportBtn: '💬 Написать в поддержку',
-          subActivated: '🎉 Подписка активирована!', subBtnProfile: '👤 Мой профиль',
+          supportBtn: 'Написать в поддержку',
+          subActivated: 'Подписка активирована!', subBtnProfile: 'Мой профиль',
           helpPageTitle: 'Помощь и поддержка', helpPageSubtitle: 'Всё о YupSoul — просто и по делу',
           profileHelpBtn: 'Помощь и поддержка',
           profilePageTitle: 'Профиль', profileSectionMyData: 'Мои данные', profileSectionPlans: 'Тарифы',
@@ -2785,7 +3712,7 @@
           heroRelOpt9: 'Муж', heroRelOpt10: 'Жена', heroRelOpt11: 'Любимый человек',
           heroRelOpt12: 'Друг', heroRelOpt13: 'Подруга', heroRelOpt14: 'Коллега', heroRelOpt15: 'Наставник', heroRelOpt16: 'Другое',
           dateDay: 'День', dateMonth: 'Месяц', dateYear: 'Год',
-          scLoading: '✨ Загружаю…', scPromoIntro: 'Soul Chat — твой ИИ-ассистент, который понимает тебя словно лучший друг или Высшее Я. Отвечает на вопросы о характере, предназначении и пути.',
+          scLoading: 'Загружаю…', scPromoIntro: 'Soul Chat — твой ИИ-ассистент, который понимает тебя словно лучший друг или Высшее Я. Отвечает на вопросы о характере, предназначении и пути.',
           scPromoErrorText: 'Временная ошибка загрузки. Можно выбрать тариф или купить сутки.', scPromoRetryBtn: 'Повторить',
           scMoreBtnText: 'Подробнее ↓', scMoreBtnCollapse: 'Свернуть ↑', scStat1: 'отмечают снижение тревоги', scStat2: 'чувствуют себя понятыми',
           scStat3: 'быстрее находят ответ', scStat4: 'возвращаются снова',
@@ -2794,8 +3721,8 @@
           scEx3: '«В чём моё предназначение и как к нему прийти?»',
           scSubIncluded: 'Soul Chat включён в подписку', scChoosePlanBtn: 'Выбрать тариф →',
           scGiftHeading: 'Попробуй бесплатно — 24 часа', scGiftNote: 'Один раз для каждого пользователя',
-          scGiftBtnText: '🎁 Получить 24 часа бесплатно', scBuyDayNote: 'Не готов к подписке? Попробуй разовый доступ',
-          scBuyDayBtnText: '⚡ Открыть Soul Chat на 24ч — $2.99', scToastPaymentReceived: 'Оплата получена, доступ открыт',
+          scGiftBtnText: 'Получить 24 часа бесплатно', scBuyDayNote: 'Не готов к подписке? Попробуй разовый доступ',
+          scBuyDayBtnText: 'Открыть Soul Chat на 24ч — $2.99', scToastPaymentReceived: 'Оплата получена, доступ открыт',
           helpT1: 'Что такое YupSoul', helpB1: '<p>YupSoul создаёт <strong>персональную песню именно для тебя</strong> — на основе даты, времени и места рождения. Система анализирует твою личность и пишет песню о твоих реальных качествах, пути и силе.</p><p>Это не шаблон и не случайный текст — каждая песня уникальна и принадлежит только тебе.</p>',
           helpT2: 'Что можно создать', helpB2: '<ul><li><strong>Песня о себе</strong> — твой личный звуковой портрет: кто ты, твоя сила и внутренний путь</li><li><strong>Песня для пары</strong> — для двоих (влюблённых, друзей, подруг). Анализирует обе карты и отражает союз</li><li><strong>Энергия дня</strong> — песня под конкретную дату и место. Какие возможности открываются прямо сейчас</li></ul><p>Также есть <strong>быстрые запросы</strong> — готовые идеи: песня силы, поздравление с днём рождения, медитативная, про отпускание прошлого и другие.</p>',
           helpT3: 'Сколько ждать песню', helpB3: '<p>Обычно <strong>5–15 минут</strong>. Бот пришлёт уведомление в чат, как только песня будет готова.</p><p>Можно закрыть приложение — результат придёт сам, ты ничего не потеряешь.</p>',
@@ -2811,17 +3738,17 @@
           refFriend1: 'друг', refFriend2: 'друга', refFriend5: 'друзей', refLinkLoading: 'Загрузка…',
           quickPickerLabel: '✦ Быстрые запросы',
           forWhoLabel: 'Для кого генерируем?', nameLbl: 'Имя', birthdateLbl: 'Дата рождения', birthplaceLbl: 'Место рождения', birthtimeLbl: 'Время рождения',
-          payOvCardTitleDefault: 'Оплата заявки', payOvTrialText: 'Первая песня — в подарок!', payOvFreeClaimBtn: '🎁 Получить бесплатно',
+          payOvCardTitleDefault: 'Оплата заявки', payOvTrialText: 'Первая песня — в подарок!', payOvFreeClaimBtn: 'Получить бесплатно',
           payOvPromoToggle: '▸ Есть промокод?', orPay: 'Или оплати:', priceLabel: 'Цена:',
           payOvLinkHint: 'Если окно не открылось — скопируйте ссылку и вставьте в браузер:',
-          payOvCopyBtn: '📋 Скопировать ссылку оплаты', payOvCheckBtn: '✅ Я уже оплатил — проверить',
-          payOvPromoConfirmBtn: '🎁 Подтвердить и отправить',
+          payOvCopyBtn: 'Скопировать ссылку оплаты', payOvCheckBtn: 'Я уже оплатил — проверить',
+          payOvPromoConfirmBtn: 'Подтвердить и отправить',
           paymentThanksTitle: 'Оплата прошла', paymentThanksMsg: 'Песня создаётся. Придёт в чат с ботом. Можно закрыть окно.',
           paymentThanksHintText: 'Не пришла за 20 минут? Напиши боту «песня не пришла»'
         },
         en: {
           tagline: 'Music of your soul',
-          startBtn: 'Create My Song', myProfile: '👤 Profile', myHeroes: 'Lab', myHelp: 'Help', admin: '👑 Admin',
+          startBtn: 'Create My Song', myProfile: 'Profile', myHeroes: 'Lab', myHelp: 'Help', admin: 'Admin',
           profileTitle: 'Profile', profileSubtitle: 'Your data and free generations',
           profileFreeCredits: 'Free generations', profileInviteFriend: 'Invite a friend', profileShare: 'Share',
           profileInvited: 'Invited', profileActivated: 'Activated', profileCreateSong: 'Create song',
@@ -2864,7 +3791,7 @@
           creatingKeyDesc: 'Magic happens in real time. Your personal sound key is being formed from your unique data.',
           keyActivated: 'Key activated!', done: 'Done!',
           successText: 'Your personal sound key is created! Your unique artifact of strength for the game of life.',
-          yourSong: '🎵 Your song',
+          yourSong: 'Your song',
           songPreviewText: 'Your unique audio piece is waiting for you in the bot. Listen every morning to tune into success.',
           whatNext: 'What next:', openBot: 'Open the bot',
           soulChat: 'Talk to your soul', soulChatPay: 'To payment — Soul Basic / Soul Plus',
@@ -2900,9 +3827,9 @@
           alertYourPath: 'Choose your path', alertNoApi: 'API address not configured.', alertOpenFromBot: 'Open the app from the bot chat in Telegram — otherwise the request cannot be accepted.',
           alertServerSleep: 'Server was slow to wake up. Wait about a minute and tap «Submit request» again.',
           sending: 'Sending…',
-          universeHeard: '✨ {name}, the Universe heard your request.\n\nYour sound key is being created and will arrive in this chat when ready.',
-          universeHeardCouple: '✨ {name} and {name2}, the Universe heard your request.\n\nYour sound key is being created and will arrive in this chat when ready.',
-          universeHeardTransit: '✨ {name}, the Universe heard your request.\n\nYour Day Energy sound key is being created and will arrive in this chat when ready.',
+          universeHeard: '{name}, the Universe heard your request.\n\nYour sound key is being created and will arrive in this chat when ready.',
+          universeHeardCouple: '{name} and {name2}, the Universe heard your request.\n\nYour sound key is being created and will arrive in this chat when ready.',
+          universeHeardTransit: '{name}, the Universe heard your request.\n\nYour Day Energy sound key is being created and will arrive in this chat when ready.',
           langSong: 'Song language', langRu: 'Russian', langEn: 'English', langDe: 'German', langFr: 'French', langUk: 'Ukrainian',
           quick1: 'Harmony and self-love', quick2: 'Confidence and purpose', quick3: 'Creative potential', quick4: 'Let go of the past',
           quick5: 'Life balance', quick6: 'Trust and acceptance', quick7: 'Healing and freedom', quick8: 'Path to happiness',
@@ -2928,7 +3855,7 @@
           alertNoApi: 'API address not configured.', alertOpenFromBot: 'Open the app from the bot chat in Telegram — otherwise the request cannot be accepted.',
           alertOpenFromBotShort: 'Open the app from the bot chat in Telegram.',
           alertPaymentFirst: 'First tap «Submit request» on the previous step.',
-          alertLinkCopied: '✓ Link copied. Paste it in Safari or Chrome and open.',
+          alertLinkCopied: 'Link copied. Paste it in Safari or Chrome and open.',
           alertHeroName: 'Enter name', alertError: 'Error', alertDeleteConfirm: 'Delete «{name}»? This action cannot be undone.',
           alertSubmitError: 'Submit error',
           copyLinkPrompt: 'Copy this link and open it in browser:',
@@ -2938,8 +3865,8 @@
           loading: 'Loading…', noCardsYet: 'No completed cards yet', heroHistLoading: 'Loading history…', heroHistEmpty: 'No generations yet', heroHistLoadError: 'Could not load history', heroesPageLoadError: 'Could not load heroes', retry: 'Retry',
           forMyself: 'For myself', forHero: 'For: {name}',
           previewHome: 'Home', previewForm: 'Form', previewPayment: 'Payment', previewLoading: 'Loading', previewSuccess: 'Success',
-          supportBtn: '💬 Contact support',
-          subActivated: '🎉 Subscription activated!', subBtnProfile: '👤 My profile',
+          supportBtn: 'Contact support',
+          subActivated: 'Subscription activated!', subBtnProfile: 'My profile',
           helpPageTitle: 'Help & Support', helpPageSubtitle: 'Everything about YupSoul — clear and simple',
           profileHelpBtn: 'Help & support',
           profilePageTitle: 'Profile', profileSectionMyData: 'My data', profileSectionPlans: 'Plans',
@@ -2971,7 +3898,7 @@
           heroRelOpt9: 'Husband', heroRelOpt10: 'Wife', heroRelOpt11: 'Loved one',
           heroRelOpt12: 'Friend', heroRelOpt13: 'Girlfriend', heroRelOpt14: 'Colleague', heroRelOpt15: 'Mentor', heroRelOpt16: 'Other',
           dateDay: 'Day', dateMonth: 'Month', dateYear: 'Year',
-          scLoading: '✨ Loading…', scPromoIntro: 'Soul Chat is your AI assistant that understands you like a best friend or your Higher Self. Answers questions about your character, purpose and path.',
+          scLoading: 'Loading…', scPromoIntro: 'Soul Chat is your AI assistant that understands you like a best friend or your Higher Self. Answers questions about your character, purpose and path.',
           scPromoErrorText: 'Temporary loading error. You can choose a plan or buy 24h access.', scPromoRetryBtn: 'Retry',
           scMoreBtnText: 'More ↓', scMoreBtnCollapse: 'Collapse ↑', scStat1: 'report reduced anxiety', scStat2: 'feel understood',
           scStat3: 'find answers faster', scStat4: 'come back again',
@@ -2980,8 +3907,8 @@
           scEx3: '"What is my purpose and how do I get there?"',
           scSubIncluded: 'Soul Chat included in subscription', scChoosePlanBtn: 'Choose a plan →',
           scGiftHeading: 'Try free — 24 hours', scGiftNote: 'One time per user',
-          scGiftBtnText: '🎁 Get 24 hours free', scBuyDayNote: 'Not ready for a subscription? Try single access',
-          scBuyDayBtnText: '⚡ Open Soul Chat for 24h — $2.99', scToastPaymentReceived: 'Payment received, access granted',
+          scGiftBtnText: 'Get 24 hours free', scBuyDayNote: 'Not ready for a subscription? Try single access',
+          scBuyDayBtnText: 'Open Soul Chat for 24h — $2.99', scToastPaymentReceived: 'Payment received, access granted',
           helpT1: 'What is YupSoul', helpB1: '<p>YupSoul creates a <strong>personal song just for you</strong> — based on your date, time and place of birth. The system analyses your personality and writes a song about your real qualities, path and strength.</p><p>This is not a template — each song is unique and belongs only to you.</p>',
           helpT2: 'What can be created', helpB2: '<ul><li><strong>Song about me</strong> — your personal sonic portrait: who you are, your strength and inner path</li><li><strong>Song for two</strong> — for a couple (lovers, friends). Analyses both charts and reflects the union</li><li><strong>Day energy</strong> — a song for a specific date and place. What opportunities are opening right now</li></ul><p>There are also <strong>quick requests</strong> — ready-made ideas: power song, birthday song, meditative, about letting go of the past, and more.</p>',
           helpT3: 'How long to wait', helpB3: '<p>Usually <strong>5–15 minutes</strong>. The bot will send a notification when your song is ready.</p><p>You can close the app — the result will arrive on its own, nothing will be lost.</p>',
@@ -2997,17 +3924,17 @@
           refFriend1: 'friend', refFriend2: 'friends', refFriend5: 'friends', refLinkLoading: 'Loading…',
           quickPickerLabel: '✦ Quick requests',
           forWhoLabel: 'Who are we generating for?', nameLbl: 'Name', birthdateLbl: 'Date of birth', birthplaceLbl: 'Place of birth', birthtimeLbl: 'Time of birth',
-          payOvCardTitleDefault: 'Payment', payOvTrialText: 'First song — free gift!', payOvFreeClaimBtn: '🎁 Get for free',
+          payOvCardTitleDefault: 'Payment', payOvTrialText: 'First song — free gift!', payOvFreeClaimBtn: 'Get for free',
           payOvPromoToggle: '▸ Have a promo code?', orPay: 'Or pay:', priceLabel: 'Price:',
           payOvLinkHint: "If the window didn't open — copy the link and paste in your browser:",
-          payOvCopyBtn: '📋 Copy payment link', payOvCheckBtn: "✅ I've already paid — verify",
-          payOvPromoConfirmBtn: '🎁 Confirm and submit',
+          payOvCopyBtn: 'Copy payment link', payOvCheckBtn: "I've already paid — verify",
+          payOvPromoConfirmBtn: 'Confirm and submit',
           paymentThanksTitle: 'Payment successful', paymentThanksMsg: 'Song is being created. It will arrive in the bot chat. You can close the window.',
           paymentThanksHintText: "Not arrived in 20 minutes? Message the bot 'song not received'"
         },
         de: {
           tagline: 'Musik deiner Seele',
-          startBtn: 'Mein Lied erschaffen', myProfile: '👤 Profil', myHeroes: 'Labor', myHelp: 'Hilfe', admin: '👑 Admin',
+          startBtn: 'Mein Lied erschaffen', myProfile: 'Profil', myHeroes: 'Labor', myHelp: 'Hilfe', admin: 'Admin',
           profileTitle: 'Profil', profileSubtitle: 'Deine Daten und kostenlose Generierungen',
           profileFreeCredits: 'Kostenlose Generierungen', profileInviteFriend: 'Freund einladen', profileShare: 'Teilen',
           profileInvited: 'Eingeladen', profileActivated: 'Aktiviert', profileCreateSong: 'Lied erstellen',
@@ -3050,7 +3977,7 @@
           creatingKeyDesc: 'Magie passiert in Echtzeit. Dein persönlicher Klangschlüssel wird aus deinen einzigartigen Daten geformt.',
           keyActivated: 'Schlüssel aktiviert!', done: 'Fertig!',
           successText: 'Dein persönlicher Klangschlüssel ist erstellt! Dein einzigartiges Kraftartefakt für das Spiel des Lebens.',
-          yourSong: '🎵 Dein Lied',
+          yourSong: 'Dein Lied',
           songPreviewText: 'Deine einzigartige Komposition wartet im Bot. Höre sie jeden Morgen, um dich auf Erfolg einzustimmen.',
           whatNext: 'Was weiter:', openBot: 'Bot öffnen',
           soulChat: 'Mit deiner Seele sprechen', soulChatPay: 'Zur Kasse — Soul Basic / Soul Plus',
@@ -3086,9 +4013,9 @@
           alertYourPath: 'Wähle deinen Weg', alertNoApi: 'API-Adresse nicht konfiguriert.', alertOpenFromBot: 'Öffne die App aus dem Bot-Chat in Telegram — sonst wird die Anfrage nicht angenommen.',
           alertServerSleep: 'Server brauchte etwas zum Aufwachen. Warte etwa eine Minute und tippe erneut auf «Anfrage senden».',
           sending: 'Sende…',
-          universeHeard: '✨ {name}, das Universum hat deine Anfrage gehört.\n\nDein Klangschlüssel wird erstellt und kommt in diesen Chat, wenn er fertig ist.',
-          universeHeardCouple: '✨ {name} und {name2}, das Universum hat eure Anfrage gehört.\n\nEuer Klangschlüssel wird erstellt und kommt in diesen Chat, wenn er fertig ist.',
-          universeHeardTransit: '✨ {name}, das Universum hat deine Anfrage gehört.\n\nDein Tagesenergie-Klangschlüssel wird erstellt und kommt in diesen Chat, wenn er fertig ist.',
+          universeHeard: '{name}, das Universum hat deine Anfrage gehört.\n\nDein Klangschlüssel wird erstellt und kommt in diesen Chat, wenn er fertig ist.',
+          universeHeardCouple: '{name} und {name2}, das Universum hat eure Anfrage gehört.\n\nEuer Klangschlüssel wird erstellt und kommt in diesen Chat, wenn er fertig ist.',
+          universeHeardTransit: '{name}, das Universum hat deine Anfrage gehört.\n\nDein Tagesenergie-Klangschlüssel wird erstellt und kommt in diesen Chat, wenn er fertig ist.',
           langSong: 'Liedsprache', langRu: 'Russisch', langEn: 'Englisch', langDe: 'Deutsch', langFr: 'Französisch', langUk: 'Ukrainisch',
           quick1: 'Harmonie und Selbstliebe', quick2: 'Selbstvertrauen und Bestimmung', quick3: 'Kreatives Potenzial', quick4: 'Vergangenheit loslassen',
           quick5: 'Lebensbalance', quick6: 'Vertrauen und Akzeptanz', quick7: 'Heilung und Freiheit', quick8: 'Weg zum Glück',
@@ -3114,7 +4041,7 @@
           alertNoApi: 'API-Adresse nicht konfiguriert.', alertOpenFromBot: 'Öffne die App aus dem Bot-Chat in Telegram — sonst wird die Anfrage nicht angenommen.',
           alertOpenFromBotShort: 'Öffne die App aus dem Bot-Chat in Telegram.',
           alertPaymentFirst: 'Tippe zuerst auf «Anfrage senden» im vorherigen Schritt.',
-          alertLinkCopied: '✓ Link kopiert. Füge ihn in Safari oder Chrome ein und öffne ihn.',
+          alertLinkCopied: 'Link kopiert. Füge ihn in Safari oder Chrome ein und öffne ihn.',
           alertHeroName: 'Name eingeben', alertError: 'Fehler', alertDeleteConfirm: '«{name}» löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
           alertSubmitError: 'Sendefehler',
           copyLinkPrompt: 'Kopiere diesen Link und öffne ihn im Browser:',
@@ -3124,8 +4051,8 @@
           loading: 'Laden…', noCardsYet: 'Noch keine abgeschlossenen Karten', heroHistLoading: 'Verlauf wird geladen…', heroHistEmpty: 'Noch keine Generierungen', heroHistLoadError: 'Verlauf konnte nicht geladen werden', heroesPageLoadError: 'Helden konnten nicht geladen werden', retry: 'Wiederholen',
           forMyself: 'Für mich', forHero: 'Für: {name}',
           previewHome: 'Startseite', previewForm: 'Formular', previewPayment: 'Zahlung', previewLoading: 'Laden', previewSuccess: 'Erfolg',
-          supportBtn: '💬 Support kontaktieren',
-          subActivated: '🎉 Abo aktiviert!', subBtnProfile: '👤 Mein Profil',
+          supportBtn: 'Support kontaktieren',
+          subActivated: 'Abo aktiviert!', subBtnProfile: 'Mein Profil',
           helpPageTitle: 'Hilfe & Support', helpPageSubtitle: 'Alles über YupSoul — klar und kurz',
           profileHelpBtn: 'Hilfe & Support',
           profilePageTitle: 'Profil', profileSectionMyData: 'Meine Daten', profileSectionPlans: 'Tarife',
@@ -3157,7 +4084,7 @@
           heroRelOpt9: 'Ehemann', heroRelOpt10: 'Ehefrau', heroRelOpt11: 'Geliebte Person',
           heroRelOpt12: 'Freund', heroRelOpt13: 'Freundin', heroRelOpt14: 'Kollege', heroRelOpt15: 'Mentor', heroRelOpt16: 'Anderes',
           dateDay: 'Tag', dateMonth: 'Monat', dateYear: 'Jahr',
-          scLoading: '✨ Lade…', scPromoIntro: 'Soul Chat ist dein KI-Assistent, der dich versteht wie ein bester Freund oder dein Höheres Selbst. Beantwortet Fragen zu Charakter, Bestimmung und Weg.',
+          scLoading: 'Lade…', scPromoIntro: 'Soul Chat ist dein KI-Assistent, der dich versteht wie ein bester Freund oder dein Höheres Selbst. Beantwortet Fragen zu Charakter, Bestimmung und Weg.',
           scPromoErrorText: 'Temporärer Lade Fehler. Du kannst einen Tarif wählen oder 24h-Zugang kaufen.', scPromoRetryBtn: 'Wiederholen',
           scMoreBtnText: 'Mehr ↓', scMoreBtnCollapse: 'Einklappen ↑', scStat1: 'berichten von weniger Angst', scStat2: 'fühlen sich verstanden',
           scStat3: 'finden Antworten schneller', scStat4: 'kommen wieder',
@@ -3166,8 +4093,8 @@
           scEx3: '„Was ist mein Lebensweg und wie komme ich dahin?"',
           scSubIncluded: 'Soul Chat im Abo enthalten', scChoosePlanBtn: 'Tarif wählen →',
           scGiftHeading: 'Kostenlos testen — 24 Stunden', scGiftNote: 'Einmalig pro Nutzer',
-          scGiftBtnText: '🎁 24 Stunden kostenlos', scBuyDayNote: 'Noch nicht bereit für ein Abo? Teste den Einzelzugang',
-          scBuyDayBtnText: '⚡ Soul Chat 24h öffnen — $2.99', scToastPaymentReceived: 'Zahlung erhalten, Zugang aktiv',
+          scGiftBtnText: '24 Stunden kostenlos', scBuyDayNote: 'Noch nicht bereit für ein Abo? Teste den Einzelzugang',
+          scBuyDayBtnText: 'Soul Chat 24h öffnen — $2.99', scToastPaymentReceived: 'Zahlung erhalten, Zugang aktiv',
           helpT1: 'Was ist YupSoul', helpB1: '<p>YupSoul erstellt ein <strong>persönliches Lied genau für dich</strong> — basierend auf Datum, Uhrzeit und Geburtsort. Das System analysiert deine Persönlichkeit und schreibt ein Lied über deine echten Qualitäten, Weg und Stärke.</p><p>Dies ist kein Template — jedes Lied ist einzigartig und gehört nur dir.</p>',
           helpT2: 'Was kann erstellt werden', helpB2: '<ul><li><strong>Lied über mich</strong> — dein persönliches Klangportrait: wer du bist, deine Stärke und innerer Weg</li><li><strong>Lied für zwei</strong> — für ein Paar (Verliebte, Freunde). Analysiert beide Karten und spiegelt die Verbindung wider</li><li><strong>Tagesenergie</strong> — ein Lied für ein bestimmtes Datum und Ort. Welche Möglichkeiten öffnen sich gerade jetzt</li></ul><p>Es gibt auch <strong>Schnellanfragen</strong> — fertige Ideen: Kraftlied, Geburtstagslied, meditativ, über das Loslassen der Vergangenheit und mehr.</p>',
           helpT3: 'Wie lange warten', helpB3: '<p>Normalerweise <strong>5–15 Minuten</strong>. Der Bot schickt eine Benachrichtigung, wenn dein Lied fertig ist.</p><p>Du kannst die App schließen — das Ergebnis kommt von selbst, nichts geht verloren.</p>',
@@ -3183,17 +4110,17 @@
           refFriend1: 'Freund', refFriend2: 'Freunde', refFriend5: 'Freunde', refLinkLoading: 'Laden…',
           quickPickerLabel: '✦ Schnellanfragen',
           forWhoLabel: 'Für wen generieren wir?', nameLbl: 'Name', birthdateLbl: 'Geburtsdatum', birthplaceLbl: 'Geburtsort', birthtimeLbl: 'Geburtszeit',
-          payOvCardTitleDefault: 'Zahlung', payOvTrialText: 'Erstes Lied — Geschenk!', payOvFreeClaimBtn: '🎁 Kostenlos erhalten',
+          payOvCardTitleDefault: 'Zahlung', payOvTrialText: 'Erstes Lied — Geschenk!', payOvFreeClaimBtn: 'Kostenlos erhalten',
           payOvPromoToggle: '▸ Haben Sie einen Code?', orPay: 'Oder bezahle:', priceLabel: 'Preis:',
           payOvLinkHint: 'Wenn sich das Fenster nicht öffnete — Link kopieren und im Browser einfügen:',
-          payOvCopyBtn: '📋 Zahlungslink kopieren', payOvCheckBtn: '✅ Ich habe bezahlt — prüfen',
-          payOvPromoConfirmBtn: '🎁 Bestätigen und senden',
+          payOvCopyBtn: 'Zahlungslink kopieren', payOvCheckBtn: 'Ich habe bezahlt — prüfen',
+          payOvPromoConfirmBtn: 'Bestätigen und senden',
           paymentThanksTitle: 'Zahlung erfolgreich', paymentThanksMsg: 'Lied wird erstellt. Kommt im Bot-Chat an. Fenster kann geschlossen werden.',
           paymentThanksHintText: 'Nicht in 20 Min. angekommen? Schreib dem Bot „Lied nicht angekommen"'
         },
         fr: {
           tagline: 'La musique de ton âme',
-          startBtn: 'Créer ma chanson', myProfile: '👤 Profil', myHeroes: 'Labo', myHelp: 'Aide', admin: '👑 Admin',
+          startBtn: 'Créer ma chanson', myProfile: 'Profil', myHeroes: 'Labo', myHelp: 'Aide', admin: 'Admin',
           profileTitle: 'Profil', profileSubtitle: 'Tes données et générations gratuites',
           profileFreeCredits: 'Générations gratuites', profileInviteFriend: 'Inviter un ami', profileShare: 'Partager',
           profileInvited: 'Invités', profileActivated: 'Activés', profileCreateSong: 'Créer une chanson',
@@ -3236,7 +4163,7 @@
           creatingKeyDesc: 'La magie opère en temps réel. Ta clé sonore personnelle se forme à partir de tes données uniques.',
           keyActivated: 'Clé activée !', done: 'Terminé !',
           successText: 'Ta clé sonore personnelle est créée ! Ton artefact unique de force pour le jeu de la vie.',
-          yourSong: '🎵 Ta chanson',
+          yourSong: 'Ta chanson',
           songPreviewText: 'Ta composition unique t\'attend dans le bot. Écoute-la chaque matin pour te mettre sur la voie du succès.',
           whatNext: 'Et après :', openBot: 'Ouvre le bot',
           soulChat: 'Parler à ton âme', soulChatPay: 'Paiement — Soul Basic / Soul Plus',
@@ -3272,9 +4199,9 @@
           alertYourPath: 'Choisis ton chemin', alertNoApi: 'Adresse API non configurée.', alertOpenFromBot: 'Ouvre l\'app depuis le chat du bot dans Telegram — sinon la demande ne peut pas être acceptée.',
           alertServerSleep: 'Le serveur s\'est réveillé lentement. Attends environ une minute et appuie à nouveau sur «Envoyer la demande».',
           sending: 'Envoi…',
-          universeHeard: '✨ {name}, l\'Univers a entendu ta demande.\n\nTa clé sonore est en cours de création et arrivera dans ce chat quand elle sera prête.',
-          universeHeardCouple: '✨ {name} et {name2}, l\'Univers a entendu votre demande.\n\nVotre clé sonore est en cours de création et arrivera dans ce chat quand elle sera prête.',
-          universeHeardTransit: '✨ {name}, l\'Univers a entendu ta demande.\n\nTa clé sonore Énergie du jour est en cours de création et arrivera dans ce chat quand elle sera prête.',
+          universeHeard: '{name}, l\'Univers a entendu ta demande.\n\nTa clé sonore est en cours de création et arrivera dans ce chat quand elle sera prête.',
+          universeHeardCouple: '{name} et {name2}, l\'Univers a entendu votre demande.\n\nVotre clé sonore est en cours de création et arrivera dans ce chat quand elle sera prête.',
+          universeHeardTransit: '{name}, l\'Univers a entendu ta demande.\n\nTa clé sonore Énergie du jour est en cours de création et arrivera dans ce chat quand elle sera prête.',
           langSong: 'Langue de la chanson', langRu: 'Russe', langEn: 'Anglais', langDe: 'Allemand', langFr: 'Français', langUk: 'Ukrainien',
           quick1: 'Harmonie et amour de soi', quick2: 'Confiance et but', quick3: 'Potentiel créatif', quick4: 'Lâcher le passé',
           quick5: 'Équilibre de vie', quick6: 'Confiance et acceptation', quick7: 'Guérison et liberté', quick8: 'Chemin vers le bonheur',
@@ -3300,7 +4227,7 @@
           alertNoApi: 'Adresse API non configurée.', alertOpenFromBot: 'Ouvre l\'app depuis le chat du bot dans Telegram — sinon la demande ne peut pas être acceptée.',
           alertOpenFromBotShort: 'Ouvre l\'app depuis le chat du bot dans Telegram.',
           alertPaymentFirst: 'Appuie d\'abord sur «Envoyer la demande» à l\'étape précédente.',
-          alertLinkCopied: '✓ Lien copié. Colle-le dans Safari ou Chrome et ouvre-le.',
+          alertLinkCopied: 'Lien copié. Colle-le dans Safari ou Chrome et ouvre-le.',
           alertHeroName: 'Entre le nom', alertError: 'Erreur', alertDeleteConfirm: 'Supprimer «{name}» ? Cette action ne peut pas être annulée.',
           alertSubmitError: 'Erreur d\'envoi',
           copyLinkPrompt: 'Copie ce lien et ouvre-le dans le navigateur:',
@@ -3310,8 +4237,8 @@
           loading: 'Chargement…', noCardsYet: 'Pas encore de cartes terminées', heroHistLoading: 'Chargement de l\'historique…', heroHistEmpty: 'Pas encore de générations', heroHistLoadError: 'Impossible de charger l\'historique', heroesPageLoadError: 'Impossible de charger les héros', retry: 'Réessayer',
           forMyself: 'Pour moi', forHero: 'Pour: {name}',
           previewHome: 'Accueil', previewForm: 'Formulaire', previewPayment: 'Paiement', previewLoading: 'Chargement', previewSuccess: 'Succès',
-          supportBtn: '💬 Contacter le support',
-          subActivated: '🎉 Abonnement activé !', subBtnProfile: '👤 Mon profil',
+          supportBtn: 'Contacter le support',
+          subActivated: 'Abonnement activé !', subBtnProfile: 'Mon profil',
           helpPageTitle: 'Aide & Support', helpPageSubtitle: 'Tout sur YupSoul — simple et concis',
           profileHelpBtn: 'Aide & support',
           profilePageTitle: 'Profil', profileSectionMyData: 'Mes données', profileSectionPlans: 'Abonnements',
@@ -3343,7 +4270,7 @@
           heroRelOpt9: 'Mari', heroRelOpt10: 'Femme', heroRelOpt11: 'Être aimé',
           heroRelOpt12: 'Ami', heroRelOpt13: 'Amie', heroRelOpt14: 'Collègue', heroRelOpt15: 'Mentor', heroRelOpt16: 'Autre',
           dateDay: 'Jour', dateMonth: 'Mois', dateYear: 'Année',
-          scLoading: '✨ Chargement…', scPromoIntro: "Soul Chat est ton assistant IA qui te comprend comme un meilleur ami ou ton Moi Supérieur. Répond aux questions sur ton caractère, ta vocation et ton chemin.",
+          scLoading: 'Chargement…', scPromoIntro: "Soul Chat est ton assistant IA qui te comprend comme un meilleur ami ou ton Moi Supérieur. Répond aux questions sur ton caractère, ta vocation et ton chemin.",
           scPromoErrorText: 'Erreur de chargement temporaire. Tu peux choisir un abonnement ou acheter 24h.', scPromoRetryBtn: 'Réessayer',
           scMoreBtnText: 'Plus ↓', scMoreBtnCollapse: 'Réduire ↑', scStat1: "signalent moins d'anxiété", scStat2: 'se sentent compris',
           scStat3: 'trouvent des réponses plus vite', scStat4: 'reviennent',
@@ -3352,8 +4279,8 @@
           scEx3: '« Quelle est ma vocation et comment y parvenir ? »',
           scSubIncluded: "Soul Chat inclus dans l'abonnement", scChoosePlanBtn: 'Choisir un abonnement →',
           scGiftHeading: 'Essayer gratuitement — 24 heures', scGiftNote: 'Une fois par utilisateur',
-          scGiftBtnText: '🎁 Obtenir 24 heures gratuitement', scBuyDayNote: "Pas prêt pour un abonnement ? Essaie l'accès individuel",
-          scBuyDayBtnText: '⚡ Ouvrir Soul Chat 24h — $2.99', scToastPaymentReceived: 'Paiement reçu, accès activé',
+          scGiftBtnText: 'Obtenir 24 heures gratuitement', scBuyDayNote: "Pas prêt pour un abonnement ? Essaie l'accès individuel",
+          scBuyDayBtnText: 'Ouvrir Soul Chat 24h — $2.99', scToastPaymentReceived: 'Paiement reçu, accès activé',
           helpT1: 'Qu\'est-ce que YupSoul', helpB1: '<p>YupSoul crée une <strong>chanson personnelle rien que pour toi</strong> — basée sur ta date, heure et lieu de naissance. Le système analyse ta personnalité et écrit une chanson sur tes vraies qualités, ton chemin et ta force.</p><p>Ce n\'est pas un modèle — chaque chanson est unique et t\'appartient.</p>',
           helpT2: 'Ce qu\'on peut créer', helpB2: '<ul><li><strong>Chanson sur moi</strong> — ton portrait sonore personnel : qui tu es, ta force et ton chemin intérieur</li><li><strong>Chanson pour deux</strong> — pour un couple (amoureux, amis). Analyse les deux cartes et reflète l\'union</li><li><strong>Énergie du jour</strong> — une chanson pour une date et un lieu précis. Quelles opportunités s\'ouvrent en ce moment</li></ul><p>Il y a aussi des <strong>requêtes rapides</strong> — idées prêtes : chanson de force, d\'anniversaire, méditative, sur le lâcher-prise, et plus.</p>',
           helpT3: 'Combien de temps attendre', helpB3: '<p>Généralement <strong>5–15 minutes</strong>. Le bot enverra une notification quand ta chanson sera prête.</p><p>Tu peux fermer l\'appli — le résultat arrivera tout seul, rien ne sera perdu.</p>',
@@ -3369,11 +4296,11 @@
           refFriend1: 'ami', refFriend2: 'amis', refFriend5: 'amis', refLinkLoading: 'Chargement…',
           quickPickerLabel: '✦ Demandes rapides',
           forWhoLabel: 'Pour qui générons-nous?', nameLbl: 'Prénom', birthdateLbl: 'Date de naissance', birthplaceLbl: 'Lieu de naissance', birthtimeLbl: 'Heure de naissance',
-          payOvCardTitleDefault: 'Paiement', payOvTrialText: 'Première chanson — cadeau!', payOvFreeClaimBtn: '🎁 Obtenir gratuitement',
+          payOvCardTitleDefault: 'Paiement', payOvTrialText: 'Première chanson — cadeau!', payOvFreeClaimBtn: 'Obtenir gratuitement',
           payOvPromoToggle: '▸ Vous avez un code promo?', orPay: 'Ou payez:', priceLabel: 'Prix:',
           payOvLinkHint: "Si la fenêtre ne s'est pas ouverte — copiez le lien et collez dans votre navigateur:",
-          payOvCopyBtn: '📋 Copier le lien de paiement', payOvCheckBtn: "✅ J'ai déjà payé — vérifier",
-          payOvPromoConfirmBtn: '🎁 Confirmer et envoyer',
+          payOvCopyBtn: 'Copier le lien de paiement', payOvCheckBtn: "J'ai déjà payé — vérifier",
+          payOvPromoConfirmBtn: 'Confirmer et envoyer',
           paymentThanksTitle: 'Paiement effectué', paymentThanksMsg: 'Chanson en cours de création. Arrivera dans le chat du bot. Vous pouvez fermer.',
           paymentThanksHintText: "Pas arrivée en 20 min? Écrivez au bot «chanson non reçue»"
         }
@@ -3641,7 +4568,7 @@
         var sku = pendingPaymentSku || getCurrentSku();
         var item = pricingCatalog && pricingCatalog.find(function(x) { return x && x.sku === sku; });
         var priceStr = item ? (String(item.price) + ' ' + (item.currency || 'USDT')) : '';
-        payBtn.textContent = priceStr ? ('💳 Оплатить ' + priceStr) : '💳 Оплатить через HOT Pay';
+        payBtn.textContent = priceStr ? ('Оплатить ' + priceStr) : 'Оплатить через HOT Pay';
         payBtn.style.background = 'linear-gradient(135deg,var(--primary-color),var(--secondary-color))';
       }
       function isTelegramWebApp() {
@@ -3952,8 +4879,8 @@
         if (!ov) { if (onDone) onDone(); return; }
         var tEl = document.getElementById('confirmTitle');
         var dEl = document.getElementById('confirmDesc');
-        if (tEl) tEl.textContent = title || '✨ Заявка принята!';
-        if (dEl) dEl.innerHTML = desc || 'Анализирую твои данные и создаю уникальную песню.<br><br>🎵 Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.';
+        if (tEl) tEl.textContent = title || 'Заявка принята!';
+        if (dEl) dEl.innerHTML = desc || 'Анализирую твои данные и создаю уникальную песню.<br><br>Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.';
         ov.style.display = 'block';
         // Только ручной клик — без авто-скрытия
         var btn = document.getElementById('confirmContinueBtn');
@@ -4255,7 +5182,7 @@
           if (hintEl) {
             var rem = nextN - invCount;
             hintEl.textContent = invCount === 0
-              ? 'Пригласи первого друга — получи бесплатную песню 🎁'
+              ? 'Пригласи первого друга — получи бесплатную песню'
               : 'До следующей бесплатной песни: ещё ' + rem + ' ' + (rem === 1 ? 'друг' : rem < 5 ? 'друга' : 'друзей');
           }
 
@@ -4623,12 +5550,12 @@
           if (banner) {
             if (freeTrialAvailable) {
               // Новый пользователь — предлагаем бесплатный ключ
-              if (bannerText) bannerText.innerHTML = '🎁 <strong style="color:#6ee7b7;">Твоя заявка ждёт!</strong><br>Получи первую песню бесплатно.';
-              if (rb) rb.textContent = '🎁 Получить бесплатно';
+              if (bannerText) bannerText.innerHTML = '<strong style="color:#6ee7b7;">Твоя заявка ждёт!</strong><br>Получи первую песню бесплатно.';
+              if (rb) rb.textContent = 'Получить бесплатно';
             } else {
               // Повторный пользователь — у него незавершённая оплата
-              if (bannerText) bannerText.innerHTML = '⏳ <strong style="color:#6ee7b7;">Незавершённый заказ</strong><br>У тебя есть заявка, ожидающая оплаты.';
-              if (rb) rb.textContent = '💳 Перейти к оплате';
+              if (bannerText) bannerText.innerHTML = '<strong style="color:#6ee7b7;">Незавершённый заказ</strong><br>У тебя есть заявка, ожидающая оплаты.';
+              if (rb) rb.textContent = 'Перейти к оплате';
             }
             banner.style.display = 'block';
             // Когда баннер заказа показан — скрываем реферальный блок (не перегружаем экран)
@@ -4815,18 +5742,18 @@
           
           if (isFree) {
             // Промокод даёт 100% скидку
-            setPaymentStatus('✅ Промокод применён! Генерация бесплатна.', 'ok');
+            setPaymentStatus('Промокод применён! Генерация бесплатна.', 'ok');
             showPromoConfirmButton();
             hidePaymentSection();
           } else {
             // Промокод даёт частичную скидку
-            setPaymentStatus('✅ Промокод применён! Скидка: ' + activePromo.discount_amount + ' ' + activePromo.currency, 'ok');
+            setPaymentStatus('Промокод применён! Скидка: ' + activePromo.discount_amount + ' ' + activePromo.currency, 'ok');
             updatePaymentSectionWithDiscount();
             hidePromoConfirmButton();
           }
           
         } catch (e) {
-          setPaymentStatus('❌ ' + (e.message || 'Ошибка проверки промокода'), 'error');
+          setPaymentStatus((e.message || 'Ошибка проверки промокода'), 'error');
         }
       }
       function fetchWithTimeout(url, options, timeoutMs) {
@@ -5811,10 +6738,10 @@
         var statusEl = document.getElementById('scPageBuyDayStatus');
         if (!btn) return;
         btn.addEventListener('click', async function() {
-          btn.disabled = true; btn.textContent = '⏳ Создаю ссылку…';
+          btn.disabled = true; btn.textContent = 'Создаю ссылку…';
           var apiBase  = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
           var initData = getInitData();
-          if (!apiBase || !initData) { btn.disabled = false; btn.textContent = '⚡ Открыть Soul Chat на 24ч — $2.99'; return; }
+          if (!apiBase || !initData) { btn.disabled = false; btn.textContent = 'Открыть Soul Chat на 24ч — $2.99'; return; }
           try {
             var r = await fetch(apiBase + '/api/soul-chat/buy-day', {
               method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
@@ -5825,12 +6752,12 @@
               try { sessionStorage.setItem('soul_chat_return_from_payment', Date.now().toString()); } catch(_) {}
               window.open(j.checkout_url, '_blank');
               if (statusEl) { statusEl.textContent = 'Ссылка открыта — после оплаты вернись сюда'; statusEl.style.display = ''; }
-              btn.disabled = false; btn.textContent = '⚡ Открыть Soul Chat на 24ч — $2.99';
+              btn.disabled = false; btn.textContent = 'Открыть Soul Chat на 24ч — $2.99';
             } else {
-              btn.disabled = false; btn.textContent = '⚡ Открыть Soul Chat на 24ч — $2.99';
+              btn.disabled = false; btn.textContent = 'Открыть Soul Chat на 24ч — $2.99';
               if (statusEl) { statusEl.textContent = j && j.error ? j.error : 'Ошибка. Попробуй ещё раз.'; statusEl.style.display = ''; }
             }
-          } catch(e) { btn.disabled = false; btn.textContent = '⚡ Открыть Soul Chat на 24ч — $2.99'; }
+          } catch(e) { btn.disabled = false; btn.textContent = 'Открыть Soul Chat на 24ч — $2.99'; }
         });
       })();
 
@@ -5839,10 +6766,10 @@
         var btn = document.getElementById('scPageGiftBtn');
         if (!btn) return;
         btn.addEventListener('click', async function() {
-          btn.disabled = true; btn.textContent = '⏳ Активирую…';
+          btn.disabled = true; btn.textContent = 'Активирую…';
           var apiBase  = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
           var initData = getInitData();
-          if (!apiBase || !initData) { btn.disabled = false; btn.textContent = '🎁 Попробовать'; return; }
+          if (!apiBase || !initData) { btn.disabled = false; btn.textContent = 'Попробовать'; return; }
           try {
             var r = await fetch(apiBase + '/api/soul-chat/activate-gift', {
               method:'POST', headers:{'Content-Type':'application/json'},
@@ -5852,10 +6779,10 @@
             if (j && (j.ok || j.success)) {
               initSoulChatPage();
             } else {
-              btn.disabled = false; btn.textContent = '🎁 Получить 24 часа бесплатно';
+              btn.disabled = false; btn.textContent = 'Получить 24 часа бесплатно';
               alert(j && j.error ? j.error : 'Ошибка активации');
             }
-          } catch(e) { btn.disabled = false; btn.textContent = '🎁 Получить 24 часа бесплатно'; }
+          } catch(e) { btn.disabled = false; btn.textContent = 'Получить 24 часа бесплатно'; }
         });
       })();
 
@@ -6629,7 +7556,7 @@
           if (response.ok && result.ok && result.requestId && !result.payment_required) {
             if (typeof scCurrentRequestId !== 'undefined') scCurrentRequestId = result.requestId;
             if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
-            showConfirmOverlay('✨ Заявка принята, ' + name1 + '!', 'Песня генерируется на нашем сервере. Когда будет готова — придёт сюда в этот чат с ботом.<br><br>Можешь закрыть приложение — ничего не пропадёт. Спасибо, что остаёшься с нами ❤️<br><br><span style="font-size:0.9em;color:rgba(255,255,255,0.6)">Нет песни? Напиши боту «песня не пришла».</span>', function() { goToPage('successPage'); });
+            showConfirmOverlay('Заявка принята, ' + name1 + '!', 'Песня генерируется на нашем сервере. Когда будет готова — придёт сюда в этот чат с ботом.<br><br>Можешь закрыть приложение — ничего не пропадёт. Спасибо, что остаёшься с нами<br><br><span style="font-size:0.9em;color:rgba(255,255,255,0.6)">Нет песни? Напиши боту «песня не пришла».</span>', function() { goToPage('successPage'); });
           } else if ((response.status === 402 || (result && result.payment_required)) && result.requestId) {
             console.log('[Submit] 402 Payment Required — открываем окно оплаты');
             console.log('[Submit] requestId:', result.requestId, 'sku:', result.sku);
@@ -6699,8 +7626,8 @@
         }
         
         payOvPromoConfirmBtn.disabled = true;
-        payOvPromoConfirmBtn.textContent = '⏳ Подтверждаю...';
-        setPaymentStatus('🎁 Применяю промокод...', 'ok');
+        payOvPromoConfirmBtn.textContent = 'Подтверждаю...';
+        setPaymentStatus('Применяю промокод...', 'ok');
         
         try {
           var resp = await fetch(apiBase + '/api/payments/hot/create', {
@@ -6728,8 +7655,8 @@
             
             hidePaymentOverlay();
             showConfirm(
-              '🎁 Промокод применён!',
-              'Твоя песня создаётся и скоро придёт в бот.<br><br>🎵 Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.'
+              'Промокод применён!',
+              'Твоя песня создаётся и скоро придёт в бот.<br><br>Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.'
             );
           } else {
             throw new Error('Промокод не дал бесплатный доступ');
@@ -6739,7 +7666,7 @@
           console.error('[Promo Confirm] Ошибка:', e);
           setPaymentStatus('❌ ' + (e.message || 'Ошибка применения промокода'), 'error');
           payOvPromoConfirmBtn.disabled = false;
-          payOvPromoConfirmBtn.textContent = '🎁 Подтвердить и отправить';
+          payOvPromoConfirmBtn.textContent = 'Подтвердить и отправить';
         }
       });
 
@@ -6762,8 +7689,8 @@
         }
         
         payOvFreeClaimBtn.disabled = true;
-        payOvFreeClaimBtn.textContent = '⏳ Активирую подарок...';
-        setPaymentStatus('🎁 Активирую бесплатный доступ...', 'ok');
+        payOvFreeClaimBtn.textContent = 'Активирую подарок...';
+        setPaymentStatus('Активирую бесплатный доступ...', 'ok');
         
         try {
           var resp = await fetch(apiBase + '/api/free-trial/claim', {
@@ -6777,19 +7704,19 @@
             console.log('[Free Trial] Подарок активирован успешно');
             pendingPaymentRequestId = null;
             pendingPaymentSku = null;
-            showConfirm('🎁 Первая песня в подарок!', 'Создаём твою персональную песню.<br><br>🎵 Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.');
+            showConfirm('Первая песня в подарок!', 'Создаём твою персональную песню.<br><br>Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.');
           } else {
             var errMsg = json.error || json.message || 'Не удалось активировать подарок';
             console.warn('[Free Trial] Ошибка:', errMsg);
             setPaymentStatus('❌ ' + errMsg, 'error');
             payOvFreeClaimBtn.disabled = false;
-            payOvFreeClaimBtn.textContent = '🎁 Получить бесплатную песню';
+            payOvFreeClaimBtn.textContent = 'Получить бесплатную песню';
           }
         } catch (e) {
           console.error('[Free Trial] Ошибка соединения:', e);
           setPaymentStatus('❌ Ошибка соединения. Попробуй снова.', 'error');
           payOvFreeClaimBtn.disabled = false;
-          payOvFreeClaimBtn.textContent = '🎁 Получить бесплатную песню';
+          payOvFreeClaimBtn.textContent = 'Получить бесплатную песню';
         }
       });
 
@@ -6808,7 +7735,7 @@
         var initData = getInitData();
         if (!apiBase || !initData) { setPaymentStatus('Нет соединения с сервером', 'error'); return; }
         payOvCheckBtn.disabled = true;
-        payOvCheckBtn.textContent = '⏳ Проверяю...';
+        payOvCheckBtn.textContent = 'Проверяю...';
         setPaymentStatus('Проверяю статус оплаты...', 'warn');
         try {
           var st = '';
@@ -6820,14 +7747,14 @@
             if (i < 4) await new Promise(function(res) { setTimeout(res, 1500); });
           }
           if (st === 'paid') {
-            setPaymentStatus('✅ Оплата подтверждена! Запускаем создание...', 'ok');
+            setPaymentStatus('Оплата подтверждена! Запускаем создание...', 'ok');
             await fetch(apiBase + '/api/payments/hot/confirm', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
               body: JSON.stringify({ request_id: pendingPaymentRequestId, initData: initData })
             }).catch(function(){});
             pendingPaymentRequestId = null; pendingPaymentSku = null;
-            setTimeout(function() { hidePaymentOverlay(); showConfirm('✨ Оплата подтверждена!', 'Запускаем создание твоей песни.<br><br>🎵 Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.'); }, 1200);
+            setTimeout(function() { hidePaymentOverlay(); showConfirm('Оплата подтверждена!', 'Запускаем создание твоей песни.<br><br>Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.'); }, 1200);
           } else {
             setPaymentStatus('Оплата пока не подтверждена. Подожди немного и проверь снова.', 'warn');
           }
@@ -6835,7 +7762,7 @@
           setPaymentStatus('Ошибка проверки: ' + (e && e.message ? e.message : 'попробуй снова'), 'error');
         } finally {
           payOvCheckBtn.disabled = false;
-          payOvCheckBtn.textContent = '✅ Я уже оплатил — проверить';
+          payOvCheckBtn.textContent = 'Я уже оплатил — проверить';
         }
       });
 
@@ -6903,7 +7830,7 @@
             console.warn('[HOT Pay] Версия Telegram (' + tg.version + ') может не поддерживать оплату');
             alert('⚠️ Для оплаты требуется более новая версия Telegram!\n\n' +
                   '📱 Ваша версия: ' + tg.version + '\n' +
-                  '✅ Требуется: 6.1 или выше\n\n' +
+                  'Требуется: 6.1 или выше\n\n' +
                   '🔄 Обновите Telegram и попробуйте снова');
             return;
           }
@@ -6965,7 +7892,7 @@
             pendingPaymentRequestId = null;
             pendingPaymentSku = null;
             activePromo = null;
-            showConfirmOverlay('✨ Заявка принята!', 'Промокод применён! 🎁<br><br>Песня генерируется на нашем сервере — когда будет готова, придёт сюда в чат с ботом. Можешь закрыть приложение — ничего не пропадёт. Спасибо ❤️<br><br><span style="font-size:0.9em;color:rgba(255,255,255,0.6)">Нет песни? Напиши боту «песня не пришла».</span>', function() { goToPage('successPage'); });
+            showConfirmOverlay('Заявка принята!', 'Промокод применён!<br><br>Песня генерируется на нашем сервере — когда будет готова, придёт сюда в чат с ботом. Можешь закрыть приложение — ничего не пропадёт. Спасибо<br><br><span style="font-size:0.9em;color:rgba(255,255,255,0.6)">Нет песни? Напиши боту «песня не пришла».</span>', function() { goToPage('successPage'); });
             return;
           }
           if (!hotJson.checkout_url) {
@@ -7074,7 +8001,7 @@
           pendingPaymentRequestId = null;
           pendingPaymentSku = null;
           hidePaymentOverlay();
-          showConfirm('✅ Оплата подтверждена!', 'Запускаем создание твоей песни.<br><br>🎵 Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.');
+          showConfirm('Оплата подтверждена!', 'Запускаем создание твоей песни.<br><br>Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.');
         } catch (error) {
           console.error('[HOT Pay] Критическая ошибка:', error);
           var msg = (error && error.message) ? String(error.message) : t('errorOp');
@@ -7099,7 +8026,7 @@
           payBtn.disabled = false;
           // Текст кнопки: сбрасываем в HOT Pay (активный промокод уже очищен при ошибке промокода)
           var isFreeAfterError = activePromo && Number(activePromo.amount_after) === 0;
-          payBtn.textContent = isFreeAfterError ? '🎁 Получить бесплатно' : '💳 Оплатить через HOT Pay';
+          payBtn.textContent = isFreeAfterError ? 'Получить бесплатно' : 'Оплатить через HOT Pay';
           payBtn.style.background = isFreeAfterError ? 'linear-gradient(135deg,#059669,#10b981)' : 'linear-gradient(135deg,var(--primary-color),var(--secondary-color))';
         }
       });
@@ -7138,7 +8065,7 @@
           if (tgApp && typeof tgApp.openInvoice === 'function') {
             tgApp.openInvoice(data.invoice_link, function(status) {
               if (status === 'paid') {
-                if (btn) btn.textContent = '✅ Оплачено!';
+                if (btn) btn.textContent = 'Оплачено!';
                 setTimeout(function() {
                   var ov = document.getElementById('planConfirmOverlay') || document.getElementById('paymentOverlay');
                   if (ov) ov.style.display = 'none';
@@ -7409,12 +8336,12 @@
           } else {
             alert(d && d.error ? d.error : 'Не удалось активировать');
             masterTrialBtn.disabled = false;
-            masterTrialBtn.textContent = '🎁 1 день бесплатно — попробовать';
+            masterTrialBtn.textContent = '1 день бесплатно — попробовать';
           }
         }).catch(function(e) {
           alert('Ошибка: ' + (e.message || e));
           masterTrialBtn.disabled = false;
-          masterTrialBtn.textContent = '🎁 1 день бесплатно — попробовать';
+          masterTrialBtn.textContent = '1 день бесплатно — попробовать';
         });
       });
       if (masterSubBtn) masterSubBtn.addEventListener('click', function() {
@@ -7427,11 +8354,11 @@
           }
           masterSubBtn.disabled = false;
           var priceStr = (d && d.payment_amount != null && d.payment_currency) ? (d.payment_amount + ' ' + d.payment_currency + '/мес') : '39.99 USDT/мес';
-          masterSubBtn.textContent = '💳 Подписка — ' + priceStr;
+          masterSubBtn.textContent = 'Подписка — ' + priceStr;
         }).catch(function(e) {
           alert('Ошибка: ' + (e.message || e));
           masterSubBtn.disabled = false;
-          masterSubBtn.textContent = '💳 Подписка — 39.99 USDT/мес';
+          masterSubBtn.textContent = 'Подписка — 39.99 USDT/мес';
         });
       });
 
@@ -7464,14 +8391,14 @@
               '<div style="flex:1;min-width:0">' +
               '<div class="hero-card-name">' + escHtml(h.name) + '</div>' +
               '<div class="hero-card-meta">' + escHtml(metaParts.join(' · ')) + '</div>' +
-              (h.preferred_style ? '<div class="hero-style-badge">🎵 ' + escHtml(h.preferred_style) + '</div>' : '') +
+              (h.preferred_style ? '<div class="hero-style-badge">' + escHtml(h.preferred_style) + '</div>' : '') +
               '</div>' +
               '<div class="hero-card-chevron">▼</div>' +
               '</div>' +
               '<div class="hero-card-body">' +
               (h.notes ? '<div style="font-size:0.82rem;color:rgba(255,255,255,0.45);line-height:1.5;margin-bottom:12px">' + escHtml(h.notes) + '</div>' : '') +
               '<div class="hca-row">' +
-              '<button type="button" class="hca-btn hero-solo-btn" data-id="' + escHtml(h.id) + '" data-name="' + escHtml(h.name) + '">🎵 Соло</button>' +
+              '<button type="button" class="hca-btn hero-solo-btn" data-id="' + escHtml(h.id) + '" data-name="' + escHtml(h.name) + '">Соло</button>' +
               '<button type="button" class="hca-btn hero-duo-btn" data-id="' + escHtml(h.id) + '" data-name="' + escHtml(h.name) + '">🎶 Вместе со мной</button>' +
               '<button type="button" class="hca-btn hca-secondary hero-edit-btn" data-id="' + escHtml(h.id) + '">✏️ Изменить</button>' +
               '<button type="button" class="hca-btn hca-danger hero-delete-btn" data-id="' + escHtml(h.id) + '" data-name="' + escHtml(h.name) + '">Удалить</button>' +
@@ -7501,7 +8428,7 @@
                 var reqs = (d && d.requests) || [];
                 if (!reqs.length) { contentEl.innerHTML = '<div class="hero-hist-empty">' + (typeof t === 'function' ? t('heroHistEmpty') : 'Генераций пока нет') + '</div>'; return; }
                 contentEl.innerHTML = reqs.map(function(r) {
-                  var statusEmoji = { completed:'✅', error:'❌', pending:'⏳', pending_payment:'💳' }[r.generation_status] || '🔄';
+                  var statusEmoji = { completed:'', error:'', pending:'', pending_payment:'' }[r.generation_status] || '';
                   var dateStr = r.created_at ? new Date(r.created_at).toLocaleString('ru-RU', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
                   var html = '<div class="hero-hist-item">';
                   html += '<div class="hero-hist-title">' + statusEmoji + ' ' + escHtml(r.title || '(без названия)') + '</div>';
@@ -8157,11 +9084,11 @@
         <!-- Подсказка для новичков (показывается только если free_trial доступен) -->
         <div id="payOvTrialHint" style="display:none;background:rgba(5,150,105,0.15);border:1.5px solid rgba(16,185,129,0.5);border-radius:14px;padding:16px;margin-bottom:16px;">
           <div style="font-size:0.95rem;color:#d1fae5;line-height:1.6;margin-bottom:12px;">
-            🎁 <strong id="payOvTrialText" style="color:#6ee7b7;">Первая песня — в подарок!</strong>
+            <strong id="payOvTrialText" style="color:#6ee7b7;">Первая песня — в подарок!</strong>
           </div>
           <button id="payOvFreeClaimBtn" type="button"
             style="width:100%;padding:14px;border-radius:11px;background:linear-gradient(135deg,#059669,#10b981);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.2px;">
-            🎁 Получить бесплатно
+            Получить бесплатно
           </button>
         </div>
 
@@ -8181,13 +9108,13 @@
         <!-- Успешное применение промокода 100% -->
         <div id="payOvPromoSuccessHint" style="display:none;background:rgba(5,150,105,0.15);border:1.5px solid rgba(16,185,129,0.5);border-radius:14px;padding:16px;margin-bottom:16px;">
           <p style="color:#d1fae5;font-size:0.95rem;line-height:1.6;margin:0;">
-            ✅ <strong style="color:#6ee7b7;">Промокод применён!</strong> Генерация бесплатна.
+            <strong style="color:#6ee7b7;">Промокод применён!</strong> Генерация бесплатна.
           </p>
         </div>
 
         <!-- Кнопка подтверждения промокода 100% -->
         <button id="payOvPromoConfirmBtn" type="button" style="display:none;width:100%;padding:16px;border-radius:13px;background:linear-gradient(135deg,#059669,#10b981);border:none;color:#fff;font-size:1.05rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:16px;letter-spacing:0.3px;">
-          🎁 Подтвердить и отправить
+          Подтвердить и отправить
         </button>
 
         <!-- Статус (ошибки, предупреждения) -->
@@ -8203,11 +9130,11 @@
           </div>
           <button id="payOvPayBtn" type="button"
             style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;letter-spacing:0;">
-            💳 Оплатить через HOT Pay
+            Оплатить через HOT Pay
           </button>
           <button id="payOvStarsBtn" type="button"
             style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:0;letter-spacing:0;">
-            ⭐ Оплатить звёздами Telegram
+            Оплатить звёздами Telegram
           </button>
         </div>
 
@@ -8218,13 +9145,13 @@
           </p>
           <button id="payOvCopyBtn" type="button"
             style="width:100%;padding:11px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:0.9rem;cursor:pointer;font-family:inherit;">
-            📋 Скопировать ссылку оплаты
+            Скопировать ссылку оплаты
           </button>
         </div>
 
         <!-- Кнопка ручной проверки (показывается после открытия HOT Pay) -->
         <button id="payOvCheckBtn" type="button" style="display:none;width:100%;padding:13px;border-radius:13px;background:rgba(16,185,129,0.12);border:1.5px solid rgba(16,185,129,0.4);color:rgba(16,185,129,0.95);font-size:0.9rem;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:11px;">
-          ✅ Я уже оплатил — проверить
+          Я уже оплатил — проверить
         </button>
 
         <!-- Кнопка назад -->
@@ -8250,10 +9177,10 @@
   ">
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:40px 24px;text-align:center;background:linear-gradient(180deg,rgba(1,6,26,.7) 0%,rgba(8,10,38,.85) 100%);">
       <div style="width:64px;height:64px;border:4px solid rgba(var(--primary-rgb),.15);border-top-color:var(--primary-color);border-radius:50%;margin:0 auto 24px;animation:confirmSpin 1s linear infinite;"></div>
-      <div style="font-size:1.5rem;color:var(--primary-color);font-weight:700;margin-bottom:16px;" id="confirmTitle">✨ Заявка принята!</div>
+      <div style="font-size:1.5rem;color:var(--primary-color);font-weight:700;margin-bottom:16px;" id="confirmTitle">Заявка принята!</div>
       <div style="color:rgba(255,255,255,0.8);font-size:1rem;line-height:1.8;max-width:340px;" id="confirmDesc">
         Анализирую твои данные и создаю уникальную песню.<br><br>
-        🎵 Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.
+        Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.
       </div>
       <button id="confirmContinueBtn" type="button" style="margin-top:28px;padding:13px 44px;border-radius:14px;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 6px 24px rgba(var(--primary-rgb),0.35);letter-spacing:0;">
         Продолжить →
@@ -8323,10 +9250,10 @@
         price: '$14.99 / месяц',
         color: 'gold',
         features: [
-          { icon: '🎵', name: '5 треков в месяц', desc: 'Каждый месяц — 5 новых персональных песен. Цена за трек по подписке: ~$3 вместо $5.99 в розницу. Экономия 50%.' },
-          { icon: '💬', name: 'Soul Chat', desc: 'ИИ-диалог с твоей душой на основе даты рождения, имени и личных данных. Задавай вопросы о себе, своём характере, пути и предназначении.' },
-          { icon: '📂', name: 'История заказов', desc: 'Все созданные треки сохраняются в твоём профиле. Можно вернуться, переслушать и поделиться в любое время.' },
-          { icon: '🌐', name: 'Все форматы', desc: 'Для себя, Для двоих и Энергия дня — доступны все три формата создания песни.' },
+          { icon: '', name: '5 треков в месяц', desc: 'Каждый месяц — 5 новых персональных песен. Цена за трек по подписке: ~$3 вместо $5.99 в розницу. Экономия 50%.' },
+          { icon: '', name: 'Soul Chat', desc: 'ИИ-диалог с твоей душой на основе даты рождения, имени и личных данных. Задавай вопросы о себе, своём характере, пути и предназначении.' },
+          { icon: '', name: 'История заказов', desc: 'Все созданные треки сохраняются в твоём профиле. Можно вернуться, переслушать и поделиться в любое время.' },
+          { icon: '', name: 'Все форматы', desc: 'Для себя, Для двоих и Энергия дня — доступны все три формата создания песни.' },
         ]
       },
       plus: {
@@ -8334,10 +9261,10 @@
         price: '$24.99 / месяц',
         color: 'pink',
         features: [
-          { icon: '🎵', name: '10 треков в месяц', desc: '10 персональных песен каждый месяц. Цена за трек ~$2.5 — экономия 58% по сравнению с разовой покупкой.' },
-          { icon: '💬', name: 'Soul Chat без лимита', desc: 'Неограниченное количество диалогов с Soul Chat. Общайся с ИИ-отражением своей души когда угодно и сколько угодно.' },
-          { icon: '⚡', name: 'Приоритет обработки', desc: 'Твои заявки обрабатываются в первую очередь — песня готова быстрее, чем у остальных пользователей.' },
-          { icon: '📂', name: 'Полная история треков', desc: 'Все треки сохраняются с текстами, аудио и датами создания — всегда доступны в профиле.' },
+          { icon: '', name: '10 треков в месяц', desc: '10 персональных песен каждый месяц. Цена за трек ~$2.5 — экономия 58% по сравнению с разовой покупкой.' },
+          { icon: '', name: 'Soul Chat без лимита', desc: 'Неограниченное количество диалогов с Soul Chat. Общайся с ИИ-отражением своей души когда угодно и сколько угодно.' },
+          { icon: '', name: 'Приоритет обработки', desc: 'Твои заявки обрабатываются в первую очередь — песня готова быстрее, чем у остальных пользователей.' },
+          { icon: '', name: 'Полная история треков', desc: 'Все треки сохраняются с текстами, аудио и датами создания — всегда доступны в профиле.' },
         ]
       },
       master: {
@@ -8345,11 +9272,11 @@
         price: '$39.99 / месяц',
         color: 'gold',
         features: [
-          { icon: '🎵', name: '30 треков в месяц', desc: 'Максимальный объём — 30 персональных песен каждый месяц для себя и близких. Цена за трек ~$1.33 — экономия 83%.' },
-          { icon: '👥', name: 'Картотека людей', desc: 'Добавляй близких в Лабораторию и создавай для них песни в один тап. Имя, дата рождения и другие данные сохраняются — вводить повторно не нужно.' },
-          { icon: '📋', name: 'История всех генераций', desc: 'Полная история всех созданных треков с текстами, аудио и датами — для тебя и для каждого человека в Картотеке.' },
-          { icon: '💬', name: 'Soul Chat без лимита', desc: 'Неограниченный доступ к Soul Chat для тебя и всех людей из Картотеки.' },
-          { icon: '⚡', name: 'Максимальный приоритет', desc: 'Самый высокий приоритет в очереди — песни готовы быстрее всего.' },
+          { icon: '', name: '30 треков в месяц', desc: 'Максимальный объём — 30 персональных песен каждый месяц для себя и близких. Цена за трек ~$1.33 — экономия 83%.' },
+          { icon: '', name: 'Картотека людей', desc: 'Добавляй близких в Лабораторию и создавай для них песни в один тап. Имя, дата рождения и другие данные сохраняются — вводить повторно не нужно.' },
+          { icon: '', name: 'История всех генераций', desc: 'Полная история всех созданных треков с текстами, аудио и датами — для тебя и для каждого человека в Картотеке.' },
+          { icon: '', name: 'Soul Chat без лимита', desc: 'Неограниченный доступ к Soul Chat для тебя и всех людей из Картотеки.' },
+          { icon: '', name: 'Максимальный приоритет', desc: 'Самый высокий приоритет в очереди — песни готовы быстрее всего.' },
         ]
       }
     };
@@ -8382,6 +9309,85 @@
     }
     window.openPlanDetails = openPlanDetails;
     window.closePlanModal = closePlanModal;
+  </script>
+
+  <script>
+  (function removeBotNameHeaders() {
+    setTimeout(function() {
+      console.log('[YupSoul] Финальная зачистка хедера...');
+      document.querySelectorAll('.header-title, .page-header-title, .app-title, .profile-header-title').forEach(function(el) {
+        el.remove();
+      });
+      /* Только элементы, у которых весь текст ровно "YupSoul Personal Music" — иначе скрыли бы большой контейнер и белый экран */
+      document.querySelectorAll('*').forEach(function(el) {
+        if (el.children.length > 0) return;
+        var t = el.textContent && el.textContent.trim();
+        if (t === 'YupSoul Personal Music') {
+          if (!el.classList.contains('logo') && !el.classList.contains('app-logo')) {
+            el.style.display = 'none';
+            el.style.visibility = 'hidden';
+            el.style.width = '0';
+            el.style.height = '0';
+            el.style.padding = '0';
+            el.style.margin = '0';
+          }
+        }
+      });
+      var headers = document.querySelectorAll('#homeTopBar, .page-header, .form-header-bar, .profile-header');
+      headers.forEach(function(header) {
+        header.style.background = 'transparent';
+        header.style.backgroundColor = 'transparent';
+        header.style.boxShadow = 'none';
+        header.style.backdropFilter = 'none';
+        header.style.padding = '8px 12px';
+        header.style.minHeight = '44px';
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.style.alignItems = 'center';
+        /* Не скрываем дочерние элементы — иначе скрываются слоты с кнопками (.home-topbar-slot) и весь контент */
+      });
+      console.log('[YupSoul] Зачистка завершена.');
+    }, 2000);
+  })();
+
+  (function validatePremiumDesign() {
+    if (typeof console === 'undefined') return;
+    console.log('[Premium Validator] Запуск проверки...');
+    var issues = [];
+    var emojiPattern = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u;
+    try {
+      document.querySelectorAll('button, span, div, p, label, h1, h2, h3').forEach(function(el) {
+        if (el.textContent && emojiPattern.test(el.textContent)) issues.push('Эмодзи: ' + (el.className || el.tagName));
+      });
+      document.querySelectorAll('button, .btn').forEach(function(el) {
+        var style = window.getComputedStyle(el);
+        var padding = parseInt(style.paddingTop, 10) || 0;
+        if (padding < 12 && el.offsetHeight > 0) issues.push('Маленький padding у кнопки: ' + padding + 'px');
+      });
+      document.querySelectorAll('button, .btn').forEach(function(el) {
+        if (el.offsetHeight > 0 && el.offsetHeight < 44) issues.push('Кнопка < 44px: ' + el.offsetHeight + 'px');
+      });
+      if (issues.length > 0) {
+        console.warn('[Premium Validator] Найдено проблем: ' + issues.length);
+        issues.slice(0, 10).forEach(function(i) { console.warn('  ' + i); });
+      } else {
+        console.log('[Premium Validator] Все проверки пройдены.');
+      }
+    } catch (e) { console.warn('[Premium Validator] Ошибка:', e); }
+  })();
+
+  window.checkPremiumCompliance = function checkPremiumCompliance() {
+    var emojiRanges = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
+    var emojiCount = (document.body.textContent.match(emojiRanges) || []).length;
+    var buttons = document.querySelectorAll('button');
+    var allMinHeight = true;
+    for (var i = 0; i < buttons.length; i++) { if (buttons[i].offsetHeight > 0 && buttons[i].offsetHeight < 44) { allMinHeight = false; break; } }
+    var goldEls = document.querySelectorAll('[style*="#D4AF37"], [style*="gold"]').length;
+    console.log('=== PREMIUM COMPLIANCE ===');
+    console.log('Эмодзи:', emojiCount === 0 ? 'OK' : 'Найдено: ' + emojiCount);
+    console.log('Кнопки >= 44px:', allMinHeight ? 'OK' : 'Есть кнопки < 44px');
+    console.log('Золотых элементов:', goldEls < 20 ? 'OK (' + goldEls + ')' : 'Много (' + goldEls + ')');
+  };
   </script>
 </body>
 </html>
