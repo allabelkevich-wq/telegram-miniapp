@@ -754,7 +754,8 @@
     button:disabled{background:rgba(255,255,255,0.15);cursor:not-allowed;transform:none;box-shadow:none;opacity:.6;animation:none}
     button.secondary{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.75);border:1px solid rgba(255,255,255,0.12);box-shadow:none;text-transform:none;letter-spacing:0;font-weight:500;min-height:42px;animation:none;font-size:0.92rem}
     button.secondary:hover{background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9)}
-    button:focus-visible,.home-nav-link:focus-visible,[role="button"]:focus-visible,a:focus-visible,.lang-switcher-btn:focus-visible,#profileIconBtn:focus-visible,.profile-back-btn:focus-visible,.stories-close:focus-visible,.mode-info:focus-visible,.ppc-details-btn:focus-visible{outline:2px solid var(--tg-theme-button-color);outline-offset:2px}
+    button:focus-visible,[role="button"]:focus-visible,a:focus-visible,.lang-switcher-btn:focus-visible,#profileIconBtn:focus-visible,.profile-back-btn:focus-visible,.stories-close:focus-visible,.mode-info:focus-visible,.ppc-details-btn:focus-visible{outline:2px solid var(--tg-theme-button-color);outline-offset:2px}
+    .home-nav-link:focus-visible{outline:none !important;background:transparent !important;box-shadow:none !important}
     .btn-group{display:flex;gap:15px;margin-top:25px}
     .btn-group button{flex:1}
     .price-tag{background:linear-gradient(90deg,var(--primary-color),var(--secondary-color));color:white;padding:10px 18px;border-radius:12px;font-size:1.3rem;font-weight:700;text-align:center;margin:16px 0;box-shadow:0 4px 15px rgba(var(--primary-rgb),.3);letter-spacing:0.5px}
@@ -786,9 +787,12 @@
     #homeTopBar .home-topbar-btn:active,#homeTopBar #profileIconBtn:active{background:rgba(var(--primary-rgb),0.28) !important}
     .lang-switcher-compact{position:relative}
     /* Нижняя зона: три ссылки строго в одну строку без переноса слова */
-    .home-lower{display:flex;flex-direction:column;align-items:center;text-align:center}
-    .home-nav{display:flex !important;flex-wrap:nowrap !important;justify-content:space-between !important;align-items:center !important;gap:4px !important;width:100%;max-width:100%;padding:8px 6px !important;margin-top:var(--spacing-lg) !important;box-sizing:border-box !important}
-    .home-nav .home-nav-link{flex:1 1 0 !important;min-width:0 !important;max-width:none !important;text-align:center !important;white-space:nowrap !important;word-break:normal !important;overflow:visible !important;font-size:0.7rem !important;line-height:1.2 !important;padding:6px 2px !important;background:none !important;border:none !important;color:rgba(var(--primary-rgb),0.65) !important;cursor:pointer !important;font-family:inherit !important;font-weight:600 !important;box-shadow:none !important}
+    .home-lower{display:flex;flex-direction:column;align-items:center;text-align:center;background:transparent !important}
+    .home-nav{display:flex !important;flex-wrap:nowrap !important;justify-content:space-between !important;align-items:center !important;gap:16px !important;width:100%;max-width:100%;padding:0 !important;margin:var(--spacing-lg) 0 0 0 !important;box-sizing:border-box !important;background:transparent !important;box-shadow:none !important;border:none !important}
+    .home-nav .home-nav-link{flex:1 1 0 !important;min-width:0 !important;max-width:none !important;text-align:center !important;white-space:nowrap !important;word-break:normal !important;overflow:visible !important;font-size:0.8rem !important;line-height:1.2 !important;padding:0 !important;margin:0 !important;background:transparent !important;border:none !important;color:rgba(var(--primary-rgb),0.65) !important;cursor:pointer !important;font-family:inherit !important;font-weight:600 !important;box-shadow:none !important;min-height:auto !important;transform:none !important;transition:color .2s ease !important;text-decoration:none !important;border-bottom:none !important;text-underline-offset:0 !important;animation:none !important;background-size:auto !important;overflow:visible !important;position:relative !important}
+    .home-nav .home-nav-link::before,.home-nav .home-nav-link::after{display:none !important;content:none !important}
+    .home-nav .home-nav-link:hover{background:transparent !important;color:rgba(var(--primary-rgb),0.85) !important;transform:none !important;box-shadow:none !important;text-decoration:none !important;border-bottom:none !important}
+    .home-nav .home-nav-link:active{background:transparent !important;transform:none !important;box-shadow:none !important;text-decoration:none !important;border-bottom:none !important}
     .app-logo.success{max-width:180px;margin-bottom:15px}
     /* ── СТОРИС-ОНБОРДИНГ ── */
     #onboardingPage{
@@ -846,7 +850,7 @@
     .song-preview{background:rgba(var(--primary-rgb),0.06);border-radius:16px;padding:20px;margin:20px 0;text-align:left;border:1px solid rgba(var(--primary-rgb),0.25)}
     .song-preview h3{color:var(--primary-color);font-size:1.1rem;margin-bottom:8px;text-align:center}
     .song-preview p{font-size:0.9rem;line-height:1.65;color:rgba(255,255,255,0.6)}
-    footer{text-align:center;padding:20px 0 max(16px,env(safe-area-inset-bottom));color:rgba(255,255,255,0.22);font-size:var(--fluid-xs);margin-top:auto;letter-spacing:0.02em}
+    footer{text-align:center;padding:20px 0 max(16px,env(safe-area-inset-bottom));color:rgba(255,255,255,0.22);font-size:var(--fluid-xs);margin-top:auto;letter-spacing:0.02em;background:transparent !important;border:none !important;box-shadow:none !important}
     .footer-help{display:inline-flex !important;align-items:center;justify-content:center;color:rgba(var(--primary-rgb),0.4) !important;font-size:.78rem !important;cursor:pointer;border:none !important;background:none !important;font-family:inherit;padding:8px 16px !important;margin:0 !important;border-radius:20px !important;box-shadow:none !important;animation:none !important;min-height:unset !important;width:auto !important;font-weight:400 !important;letter-spacing:0.04em !important;transition:color .2s,background .2s}
     .footer-help:hover,.footer-help:active{color:rgba(var(--primary-rgb),0.75) !important;background:rgba(var(--primary-rgb),0.06) !important}
     /* Карточки героев */
@@ -2684,12 +2688,11 @@
       <div id="homeHero">
         <img src="assets/logo-yupsoul.png" alt="YupSoul" class="app-logo" width="140" height="140">
         <div id="homeTagline" class="home-tagline">Музыка твоей души</div>
-        <p id="homeGreeting" class="home-greeting">Привет</p>
         <button id="startBtn" class="btn-primary">Создать свою песню</button>
       </div>
 
       <!-- Нижняя зона — тихо, когда пусто -->
-      <div class="home-lower" style="flex-shrink:0;padding:var(--spacing-md) var(--spacing-md) max(var(--spacing-lg),env(safe-area-inset-bottom))">
+      <div class="home-lower" style="flex-shrink:0;padding:0 0 max(var(--spacing-lg),env(safe-area-inset-bottom)) 0">
 
       <!-- Баннер восстановления — мягко, без давления -->
       <div id="recoveryBanner" style="display:none;margin:0 0 var(--spacing-md) 0;background:rgba(5,150,105,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius-md);padding:var(--spacing-md) var(--spacing-lg);position:relative;">
