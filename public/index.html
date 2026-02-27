@@ -118,6 +118,52 @@
       --tg-theme-button-text-color: #0A0A1A;
       --subtitle-readable: rgba(255,255,255,0.92);
     }
+    /* Дополнительная тема: бумага + благородное золото (демо, только по флагу) */
+    body.theme-paper-gold {
+      --gold-foil: #C9A961;
+      --gold-light: #E5D4A1;
+      --gold-dark: #A68B4B;
+      --primary-color: #C9A961;
+      --primary-light: #E5D4A1;
+      --secondary-color: #A68B4B;
+      --primary-rgb: 201, 169, 97;
+      --secondary-rgb: 166, 139, 75;
+      --bg-primary: #0D0D0D;
+      --bg-secondary: rgba(255,255,255,0.03);
+      --bg-tertiary: rgba(255,255,255,0.06);
+      --tg-theme-bg-color: #0D0D0D;
+      --tg-theme-secondary-bg-color: rgba(32,32,32,0.9);
+      --tg-theme-text-color: #F5F5F5;
+      --tg-theme-hint-color: rgba(229, 212, 161, 0.7);
+      --tg-theme-border-color: rgba(201,169,97,0.4);
+      --tg-theme-button-color: #C9A961;
+      --tg-theme-button-text-color: #111111;
+      background-color: var(--bg-primary);
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      background-blend-mode: multiply;
+    }
+    body.theme-paper-gold .app-logo{
+      filter:drop-shadow(0 2px 8px rgba(201,169,97,0.3));
+      opacity:0.96;
+    }
+    body.theme-paper-gold h1,
+    body.theme-paper-gold .home-tagline{
+      -webkit-background-clip:text;
+      background-clip:text;
+      background-image:linear-gradient(135deg,#E5D4A1 0%,#C9A961 45%,#A68B4B 80%);
+      color:transparent;
+    }
+    body.theme-paper-gold button{
+      background:linear-gradient(135deg,#E5D4A1 0%,#C9A961 50%,#A68B4B 100%);
+      box-shadow:0 6px 20px rgba(201,169,97,0.35);
+      color:#111111;
+    }
+    body.theme-paper-gold button.secondary{
+      background:rgba(32,32,32,0.9);
+      color:rgba(245,245,245,0.9);
+      border:1px solid rgba(201,169,97,0.4);
+      box-shadow:none;
+    }
     @keyframes gradientShift {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
@@ -9444,6 +9490,18 @@
     console.log('Кнопки >= 44px:', allMinHeight ? 'OK' : 'Есть кнопки < 44px');
     console.log('Золотых элементов:', goldEls < 20 ? 'OK (' + goldEls + ')' : 'Много (' + goldEls + ')');
   };
+
+  // Демо-тема «бумага + золотая фольга» включается только по ?style=paper или ?style=paper-gold
+  (function enablePaperGoldFromQuery() {
+    try {
+      var qs = window.location.search || '';
+      if (/[?&]style=paper(?:-gold)?(?:&|$)/.test(qs)) {
+        document.addEventListener('DOMContentLoaded', function() {
+          document.body.classList.add('theme-paper-gold');
+        });
+      }
+    } catch (e) {}
+  })();
   </script>
 </body>
 </html>
