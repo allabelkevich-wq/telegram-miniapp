@@ -437,14 +437,48 @@
     .page-footer{flex-shrink:0;padding:var(--spacing-md);padding-bottom:max(var(--spacing-md),env(safe-area-inset-bottom))}
     header{text-align:center;margin:var(--spacing-xl) 0 var(--spacing-lg);position:relative}
     .lang-switcher-compact{position:relative;z-index:1}
-    .lang-switcher-btn{display:inline-flex !important;align-items:center;justify-content:center;gap:2px;min-width:44px !important;min-height:44px !important;width:44px !important;height:44px !important;padding:0 !important;font-size:9px;line-height:1;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.18),rgba(var(--secondary-rgb),0.14)) !important;border:1.5px solid rgba(var(--primary-rgb),0.4) !important;border-radius:50% !important;color:rgba(var(--primary-rgb),0.9);cursor:pointer;font-family:inherit;font-weight:600;letter-spacing:0;transition:background .2s, border-color .2s, color .2s;box-shadow:0 2px 12px rgba(0,0,0,0.3) !important;animation:none !important;transform:none !important}
-    .lang-switcher-btn:hover{background:rgba(var(--primary-rgb),0.28) !important;border-color:rgba(var(--primary-rgb),0.6) !important;color:var(--primary-color)}
-    #langSwitcherIcon{font-size:10px;opacity:0.6;line-height:1}
-    #langSwitcherCurrent{text-align:center;font-size:9px;font-weight:600}
-    .lang-dropdown{position:absolute;top:calc(100% + 4px);right:0;left:auto;margin-top:0;width:40px;padding:2px;background:rgba(18,15,40,0.97);border:1px solid rgba(var(--primary-rgb),0.18);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,0.55);overflow:hidden;z-index:9999}
+    .lang-switcher-btn{
+      display:inline-flex !important;align-items:center;justify-content:center;gap:2px;
+      min-width:40px !important;min-height:40px !important;width:40px !important;height:40px !important;
+      padding:0 !important;font-size:9px;line-height:1;
+      background:radial-gradient(circle at 30% 0%,rgba(212,175,55,0.45) 0%,rgba(212,175,55,0.16) 40%,rgba(10,10,26,0.9) 100%) !important;
+      border:1.5px solid rgba(212,175,55,0.85) !important;
+      border-radius:999px !important;
+      color:rgba(255,240,210,0.95);
+      cursor:pointer;font-family:inherit;font-weight:600;letter-spacing:0.06em;
+      transition:background .2s, border-color .2s, color .2s, transform .12s;
+      box-shadow:0 4px 18px rgba(0,0,0,0.45) !important;
+      animation:none !important;transform:translateY(0) !important;
+    }
+    .lang-switcher-btn:hover{
+      background:radial-gradient(circle at 30% 0%,rgba(212,175,55,0.65) 0%,rgba(212,175,55,0.24) 42%,rgba(10,10,26,0.95) 100%) !important;
+      border-color:rgba(212,175,55,0.95) !important;
+      color:#fff;
+      transform:translateY(-1px) !important;
+    }
+    #langSwitcherIcon{font-size:10px;opacity:0.7;line-height:1}
+    #langSwitcherCurrent{text-align:center;font-size:9px;font-weight:700;letter-spacing:0.08em}
+    .lang-dropdown{
+      position:absolute;top:calc(100% + 6px);right:0;left:auto;
+      margin-top:0;width:46px;padding:4px 3px;
+      background:linear-gradient(160deg,#141226 0%,#09081a 100%);
+      border:1px solid rgba(212,175,55,0.55);
+      border-radius:14px;
+      box-shadow:0 10px 28px rgba(0,0,0,0.7);
+      overflow:hidden;z-index:9999
+    }
     .lang-dropdown[hidden]{display:none !important}
-    .lang-opt{display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;padding:8px 0;text-align:center;background:transparent;border:none;border-radius:4px;color:rgba(255,255,255,0.55);font-size:9px;font-weight:600;letter-spacing:0.04em;cursor:pointer;font-family:inherit;transition:color .15s,background .15s;animation:none;box-shadow:none;margin:0}
-    .lang-opt:hover,.lang-opt:active{background:rgba(var(--primary-rgb),0.12);color:var(--primary-color)}
+    .lang-opt{
+      display:flex;align-items:center;justify-content:center;width:100%;
+      min-height:32px;padding:6px 0;
+      text-align:center;background:transparent;border:none;border-radius:999px;
+      color:rgba(255,255,255,0.75);font-size:9px;font-weight:600;letter-spacing:0.06em;
+      cursor:pointer;font-family:inherit;transition:color .15s,background .15s;animation:none;box-shadow:none;margin:1px 0;
+    }
+    .lang-opt:hover,.lang-opt:active{
+      background:rgba(212,175,55,0.18);
+      color:#fde68a;
+    }
     h1{font-size:var(--fluid-2xl);background:linear-gradient(135deg,var(--primary-color),var(--secondary-color),var(--primary-color));background-size:300% 300%;animation:gradientShift 4s ease infinite;-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:700;letter-spacing:-1px;line-height:1.2;padding-bottom:4px}
     .subtitle{color:var(--subtitle-readable,var(--tg-theme-text-color));font-size:var(--fluid-base);margin-top:8px;font-weight:400}
     .tagline{color:var(--primary-color);font-size:var(--fluid-sm);font-weight:400;margin:6px 0 0;letter-spacing:0.1px;opacity:0.75}
@@ -563,14 +597,9 @@
       .date-group{flex-direction:column;align-items:stretch;gap:12px}
       .date-group select{width:100%;max-width:none;min-width:0;min-height:48px;font-size:1rem;-webkit-tap-highlight-color:rgba(var(--primary-rgb),0.15)}
     }
-    .time-group{display:flex;flex-direction:row;align-items:center;gap:var(--spacing-sm);flex-wrap:wrap;margin:0}
-    .time-group-input{flex:0 0 auto;min-width:0;width:140px;max-width:160px}
-    .time-group-checkbox{margin:0;flex:1 1 auto;align-self:center}
-    @media (max-width: 420px){
-      .time-group{flex-direction:column;align-items:stretch}
-      .time-group-input{width:100%;max-width:none}
-      .time-group-checkbox{justify-content:flex-start}
-    }
+    .time-group{display:flex;flex-direction:column;align-items:flex-start;gap:var(--spacing-sm);margin:0}
+    .time-group-input{flex:0 0 auto;min-width:0;width:100%;max-width:none}
+    .time-group-checkbox{margin:0;width:100%;align-self:flex-start;justify-content:flex-start}
     .checkbox{display:flex;align-items:center;gap:10px;margin-top:0}
     .checkbox input{width:22px;height:22px;min-width:22px;accent-color:var(--primary-color);opacity:.65}
     .time-group .checkbox input{opacity:.45}
@@ -880,11 +909,11 @@
     .form-header-bar,.form-nav-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top));position:relative;flex-shrink:0;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;z-index:100}
     .profile-scroll{padding:24px 20px calc(env(safe-area-inset-bottom)+120px)}
     .profile-identity{text-align:center;margin-bottom:28px;padding-top:8px}
-    .profile-avatar-wrap{position:relative;width:72px;height:72px;margin:0 auto 14px;cursor:pointer}
-    .profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));display:flex;align-items:center;justify-content:center;font-size:2rem;color:#fff;font-weight:700;letter-spacing:0;box-shadow:0 0 0 4px rgba(var(--primary-rgb),0.12),0 4px 24px rgba(var(--primary-rgb),0.18);overflow:hidden;transition:filter .2s}
+    .profile-avatar-wrap{position:relative;width:88px;height:88px;margin:4px auto 18px;cursor:pointer}
+    .profile-avatar{width:100%;height:100%;border-radius:28px;background:linear-gradient(145deg,rgba(var(--primary-rgb),0.2),rgba(var(--secondary-rgb),0.15));display:flex;align-items:center;justify-content:center;font-size:2.2rem;color:#fff;font-weight:700;letter-spacing:0;box-shadow:0 10px 32px rgba(0,0,0,0.6);overflow:hidden;transition:filter .18s,transform .18s}
     .profile-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
-    .profile-avatar-wrap:active .profile-avatar{filter:brightness(0.75)}
-    .profile-avatar-edit{position:absolute;bottom:-4px;right:-4px;min-width:44px;min-height:44px;width:44px;height:44px;border-radius:50%;background:#1a1628;border:1.5px solid rgba(var(--primary-rgb),0.5);display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:rgba(var(--primary-rgb),0.85);pointer-events:none}
+    .profile-avatar-wrap:active .profile-avatar{filter:brightness(0.78);transform:translateY(1px)}
+    .profile-avatar-edit{position:absolute;bottom:-4px;right:-4px;min-width:36px;min-height:36px;width:36px;height:36px;border-radius:50%;background:#1a1628;border:1.5px solid rgba(var(--primary-rgb),0.5);display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:rgba(var(--primary-rgb),0.85);pointer-events:none}
     .profile-avatar-spinner{position:absolute;inset:0;border-radius:50%;background:rgba(10,8,25,0.6);display:none;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(var(--primary-rgb),0.8)}
     .profile-name{font-size:1.3rem;font-weight:700;color:#fff;letter-spacing:0.01em;margin-bottom:8px}
     .profile-plan-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(var(--primary-rgb),0.1);border:1px solid rgba(var(--primary-rgb),0.28);border-radius:20px;padding:4px 12px;font-size:0.75rem;font-weight:600;color:rgba(var(--primary-rgb),0.85);letter-spacing:0.04em;text-transform:uppercase}
@@ -951,6 +980,9 @@
     .ppc-btn{padding:8px 14px;border-radius:10px;background:rgba(var(--primary-rgb),0.15);border:1px solid rgba(var(--primary-rgb),0.35);color:var(--primary-color);font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;margin:0;letter-spacing:0.02em;width:100%}
     .ppc-btn:active{background:rgba(var(--primary-rgb),0.25)}
     .ppc-btn.popular-btn{background:linear-gradient(135deg,rgba(var(--secondary-rgb),0.25),rgba(var(--primary-rgb),0.18));border-color:rgba(var(--secondary-rgb),0.45);color:var(--secondary-color)}
+    @media (max-width:520px){
+      .profile-plans-grid{grid-template-columns:1fr}
+    }
     /* Кнопка «Подробнее» под тарифной карточкой */
     .ppc-details-btn{width:100%;background:none;border:none;color:rgba(255,255,255,0.28);font-size:0.7rem;font-weight:500;font-family:inherit;min-height:44px;padding:12px 0;cursor:pointer;text-align:center;letter-spacing:0.03em;box-shadow:none;animation:none;margin:0;transition:color .2s;text-decoration:underline;text-underline-offset:3px;display:inline-flex;align-items:center;justify-content:center;}
     .ppc-details-btn:hover{color:rgba(255,255,255,0.55);}
@@ -3264,7 +3296,7 @@
         <!-- Стиль музыки (для подписчиков Plus и Лаборатория) -->
         <div class="field" style="margin-top:14px;">
           <label for="requestPreferredStyle" id="requestPreferredStyleLabel" style="font-size:0.82rem;color:rgba(255,255,255,0.5);">Стиль музыки <span style="color:rgba(var(--primary-rgb),0.5);">(Plus и Лаборатория)</span></label>
-          <input type="text" id="requestPreferredStyle" placeholder="поп, соул, джаз, электронная…" maxlength="120" autocomplete="off" style="margin-top:6px;font-size:0.9rem;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#fff;width:100%;box-sizing:border-box;">
+          <input type="text" id="requestPreferredStyle" placeholder="Стиль моей души: поп, r&b, рэп, хип‑хоп, техно, house, ambient…" maxlength="120" autocomplete="off" style="margin-top:6px;font-size:0.9rem;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#fff;width:100%;box-sizing:border-box;">
         </div>
 
         <p id="submitHint" style="display:none"></p>
@@ -3707,6 +3739,8 @@
           heroesSubNote: '30 треков в месяц · Оплата через HOT Pay',
           heroFormTitle: 'Добавить героя', heroRelLabel: 'Кто для тебя', heroBirthdateHint: 'Выбери день, месяц и год',
           heroTimeBirthLabel: 'Время рождения', heroStyleLabel: 'Любимые стили музыки', heroStylePh: 'поп, джаз, электронная…',
+          requestPreferredStyleLabel: 'Стиль моей души <span style="color:rgba(var(--primary-rgb),0.5);">(Plus и Лаборатория)</span>',
+          requestPreferredStylePh: 'Стиль моей души: поп, r&b, рэп, хип‑хоп, техно, house, ambient…',
           heroRelOpt0: '— выбери —', heroRelOpt1: 'Мать', heroRelOpt2: 'Отец', heroRelOpt3: 'Дочь', heroRelOpt4: 'Сын',
           heroRelOpt5: 'Сестра', heroRelOpt6: 'Брат', heroRelOpt7: 'Бабушка', heroRelOpt8: 'Дедушка',
           heroRelOpt9: 'Муж', heroRelOpt10: 'Жена', heroRelOpt11: 'Любимый человек',
@@ -3893,6 +3927,8 @@
           heroesSubNote: '30 tracks/month · Payment via HOT Pay',
           heroFormTitle: 'Add person', heroRelLabel: 'Relationship', heroBirthdateHint: 'Select day, month and year',
           heroTimeBirthLabel: 'Time of birth', heroStyleLabel: 'Favourite music styles', heroStylePh: 'pop, jazz, electronic…',
+          requestPreferredStyleLabel: 'Style of my soul <span style="color:rgba(var(--primary-rgb),0.5);">(Plus & Laboratory)</span>',
+          requestPreferredStylePh: 'Style of my soul: pop, R&B, hip‑hop, techno, house, ambient…',
           heroRelOpt0: '— select —', heroRelOpt1: 'Mother', heroRelOpt2: 'Father', heroRelOpt3: 'Daughter', heroRelOpt4: 'Son',
           heroRelOpt5: 'Sister', heroRelOpt6: 'Brother', heroRelOpt7: 'Grandmother', heroRelOpt8: 'Grandfather',
           heroRelOpt9: 'Husband', heroRelOpt10: 'Wife', heroRelOpt11: 'Loved one',
@@ -4079,6 +4115,8 @@
           heroesSubNote: '30 Tracks/Monat · Zahlung via HOT Pay',
           heroFormTitle: 'Person hinzufügen', heroRelLabel: 'Beziehung', heroBirthdateHint: 'Tag, Monat und Jahr wählen',
           heroTimeBirthLabel: 'Geburtszeit', heroStyleLabel: 'Lieblingsmusikstile', heroStylePh: 'Pop, Jazz, Elektronisch…',
+          requestPreferredStyleLabel: 'Stil meiner Seele <span style="color:rgba(var(--primary-rgb),0.5);">(Plus & Labor)</span>',
+          requestPreferredStylePh: 'Stil meiner Seele: Pop, Soul, R&B, Hip‑Hop, Techno, House, Ambient…',
           heroRelOpt0: '— auswählen —', heroRelOpt1: 'Mutter', heroRelOpt2: 'Vater', heroRelOpt3: 'Tochter', heroRelOpt4: 'Sohn',
           heroRelOpt5: 'Schwester', heroRelOpt6: 'Bruder', heroRelOpt7: 'Großmutter', heroRelOpt8: 'Großvater',
           heroRelOpt9: 'Ehemann', heroRelOpt10: 'Ehefrau', heroRelOpt11: 'Geliebte Person',
@@ -4265,6 +4303,8 @@
           heroesSubNote: '30 titres/mois · Paiement via HOT Pay',
           heroFormTitle: 'Ajouter une personne', heroRelLabel: 'Relation', heroBirthdateHint: 'Sélectionne jour, mois et année',
           heroTimeBirthLabel: 'Heure de naissance', heroStyleLabel: 'Styles musicaux préférés', heroStylePh: 'pop, jazz, électronique…',
+          requestPreferredStyleLabel: 'Style de mon âme <span style="color:rgba(var(--primary-rgb),0.5);">(Plus & Laboratoire)</span>',
+          requestPreferredStylePh: "Style de mon âme : pop, soul, R&B, hip‑hop, techno, house, ambient…",
           heroRelOpt0: '— choisir —', heroRelOpt1: 'Mère', heroRelOpt2: 'Père', heroRelOpt3: 'Fille', heroRelOpt4: 'Fils',
           heroRelOpt5: 'Sœur', heroRelOpt6: 'Frère', heroRelOpt7: 'Grand-mère', heroRelOpt8: 'Grand-père',
           heroRelOpt9: 'Mari', heroRelOpt10: 'Femme', heroRelOpt11: 'Être aimé',
@@ -4364,7 +4404,8 @@
           ['helpT1','#helpT1'], ['helpT2','#helpT2'], ['helpT3','#helpT3'], ['helpT4','#helpT4'],
           ['helpT5','#helpT5'], ['helpT6','#helpT6'], ['helpT7','#helpT7'],
           ['forWhoLabel','#forWhoLabel'], ['nameLbl','#nameLabel'],
-          ['birthdateLbl','#birthdateLbl'], ['birthplaceLbl','#birthplaceLbl'], ['birthtimeLbl','#birthtimeLbl']
+          ['birthdateLbl','#birthdateLbl'], ['birthplaceLbl','#birthplaceLbl'], ['birthtimeLbl','#birthtimeLbl'],
+          ['requestPreferredStyleLabel','#requestPreferredStyleLabel']
         ];
         // innerHTML — для подписей с переносом (напр. «Энергия» + «момента» на двух строках)
         var htmlMap = [
@@ -4528,7 +4569,7 @@
         var sdEl = document.getElementById('successDesc');
         if (sdEl) sdEl.innerHTML = t('successDesc').replace(/\n/g,'<br>');
         // Перевод плейсхолдеров новых полей
-        var newPh = [['heroStylePh','#heroStyle']];
+        var newPh = [['heroStylePh','#heroStyle'], ['requestPreferredStylePh','#requestPreferredStyle']];
         newPh.forEach(function(p){ var e = document.querySelector(p[1]); if(e) e.placeholder = t(p[0]); });
         // Перевод опций heroRelationship
         var relSel = document.getElementById('heroRelationship');
