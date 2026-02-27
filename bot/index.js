@@ -485,7 +485,27 @@ function verifyHotWebhookSignature(rawBody, signatureHeader) {
   return ok;
 }
 
-async function createOrRefreshSubscription({ telegramUserId, planSku, source = "hot" }) {
+async function logSubscriptionActivationError({ telegramUserId, requestId, paymentOrderId, planSku, errorMessage, errorSource, paymentProvider, metadata = {} }) {
+  if (!supabase) return;
+  try {
+    await supabase.from("subscription_activation_errors").insert({
+      telegram_user_id: Number(telegramUserId),
+      request_id: requestId || null,
+      payment_order_id: paymentOrderId || null,
+      plan_sku: planSku,
+      error_message: errorMessage,
+      error_source: errorSource,
+      payment_provider: paymentProvider || null,
+      metadata,
+      created_at: new Date().toISOString(),
+    });
+    console.error(`[sub/error] Залогирована ошибка активации: user=${telegramUserId}, sku=${planSku}, source=${errorSource}, error=${errorMessage}`);
+  } catch (logErr) {
+    console.warn("[sub/error] Не удалось залогировать ошибку активации:", logErr?.message);
+  }
+}
+
+async function createOrRefreshSubscription({ telegramUserId, planSku, source = "hot", requestId = null, paymentOrderId = null }) {
   if (!supabase) return { ok: false, error: "Supabase недоступен" };
   // Проверяем: нет ли уже активной подписки на этот план (идемпотентность)
   const existing = await getActiveSubscriptionFull(telegramUserId);
@@ -495,11 +515,17 @@ async function createOrRefreshSubscription({ telegramUserId, planSku, source = "
   }
   const now = new Date();
   const renewAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  
   // Деактивируем все прежние подписки этого пользователя на любой план
-  await supabase.from("subscriptions")
+  const { error: cancelErr } = await supabase.from("subscriptions")
     .update({ status: "cancelled", updated_at: now.toISOString() })
     .eq("telegram_user_id", Number(telegramUserId))
     .eq("status", "active");
+  
+  if (cancelErr) {
+    console.warn(`[sub] Не удалось отменить старые подписки для ${telegramUserId}:`, cancelErr.message);
+  }
+  
   const payload = {
     telegram_user_id: Number(telegramUserId),
     plan_sku: planSku,
@@ -509,13 +535,57 @@ async function createOrRefreshSubscription({ telegramUserId, planSku, source = "
     created_at: now.toISOString(),
     updated_at: now.toISOString(),
   };
-  const { error } = await supabase.from("subscriptions").insert(payload);
-  if (error && /does not exist|relation/i.test(error.message)) return { ok: false, error: "missing_table" };
-  if (error) {
-    console.error(`[sub] Ошибка создания подписки ${planSku} для ${telegramUserId}:`, error.message);
-    return { ok: false, error: error.message };
+  
+  // Пытаемся вставить новую подписку с retry
+  let insertError = null;
+  let insertSuccess = false;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const { error } = await supabase.from("subscriptions").insert(payload);
+    if (!error) {
+      insertSuccess = true;
+      break;
+    }
+    insertError = error;
+    if (error && /does not exist|relation/i.test(error.message)) {
+      await logSubscriptionActivationError({
+        telegramUserId, requestId, paymentOrderId, planSku,
+        errorMessage: `missing_table: ${error.message}`,
+        errorSource: source,
+        paymentProvider: source === "stars_payment" ? "stars" : "hot",
+      });
+      return { ok: false, error: "missing_table" };
+    }
+    console.warn(`[sub] Попытка ${attempt}/3 вставки подписки failed:`, error.message);
+    if (attempt < 3) await new Promise(r => setTimeout(r, 2000));
   }
-  console.log(`[sub] Подписка ${planSku} создана для ${telegramUserId}, renew_at: ${renewAt}`);
+  
+  if (!insertSuccess) {
+    console.error(`[sub] Все 3 попытки создания подписки ${planSku} для ${telegramUserId} провалились:`, insertError?.message);
+    await logSubscriptionActivationError({
+      telegramUserId, requestId, paymentOrderId, planSku,
+      errorMessage: insertError?.message || "insert_failed_after_retries",
+      errorSource: source,
+      paymentProvider: source === "stars_payment" ? "stars" : "hot",
+      metadata: { attempts: 3 },
+    });
+    return { ok: false, error: insertError?.message || "insert_failed" };
+  }
+  
+  // Подтверждаем, что подписка действительно создана
+  const verification = await getActiveSubscriptionFull(telegramUserId);
+  if (!verification || verification.plan_sku !== planSku) {
+    console.error(`[sub] КРИТИЧНО: подписка ${planSku} не найдена после успешного insert для ${telegramUserId}`);
+    await logSubscriptionActivationError({
+      telegramUserId, requestId, paymentOrderId, planSku,
+      errorMessage: "subscription_not_found_after_insert",
+      errorSource: source,
+      paymentProvider: source === "stars_payment" ? "stars" : "hot",
+      metadata: { existing_plan: verification?.plan_sku || null },
+    });
+    return { ok: false, error: "verification_failed" };
+  }
+  
+  console.log(`[sub] Подписка ${planSku} создана и проверена для ${telegramUserId}, renew_at: ${renewAt}`);
   return { ok: true, renew_at: renewAt };
 }
 
@@ -562,14 +632,15 @@ async function getActiveSubscriptionFull(telegramUserId) {
 /** Восстанавливает подписку из оплаченных заявок, если вебхук/claim не сработали. Идемпотентно. */
 async function ensureSubscriptionFromPaidRequests(telegramUserId, source = "repair_on_read") {
   if (!supabase) return;
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  // Расширено с 7 до 90 дней для восстановления подписок (защита от временных сбоев Supabase)
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
   const { data: paidRow } = await supabase
     .from("track_requests")
     .select("id,mode,payment_order_id,created_at")
     .eq("telegram_user_id", Number(telegramUserId))
     .like("mode", "sub_%")
     .eq("payment_status", "paid")
-    .gte("created_at", sevenDaysAgo)
+    .gte("created_at", ninetyDaysAgo)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -579,12 +650,36 @@ async function ensureSubscriptionFromPaidRequests(telegramUserId, source = "repa
   const existing = await getActiveSubscriptionFull(telegramUserId);
   if (existing && existing.plan_sku === sku) return;
   console.log(`[sub/repair] userId=${telegramUserId}, paid request ${paidRow.id?.slice(0, 8)}, sku=${sku}, current=${existing?.plan_sku || "none"} → активируем`);
-  await grantPurchaseBySku({
+  const grantResult = await grantPurchaseBySku({
     telegramUserId,
     sku,
     source,
     orderId: paidRow.payment_order_id || null,
+    requestId: paidRow.id || null,
   });
+  
+  // Проверяем, что подписка действительно активировалась
+  if (!grantResult?.ok) {
+    console.error(`[sub/repair] Ошибка активации подписки: userId=${telegramUserId}, sku=${sku}, error=${grantResult?.error}`);
+    await logSubscriptionActivationError({
+      telegramUserId,
+      requestId: paidRow.id,
+      paymentOrderId: paidRow.payment_order_id,
+      planSku: sku,
+      errorMessage: grantResult?.error || "repair_grant_failed",
+      errorSource: source,
+      paymentProvider: "hot",
+    });
+  } else {
+    // Обновляем track_requests: записываем subscription_activated_at
+    await supabase.from("track_requests")
+      .update({ 
+        subscription_activated_at: new Date().toISOString(),
+        subscription_activation_attempts: (paidRow.subscription_activation_attempts || 0) + 1,
+      })
+      .eq("id", paidRow.id);
+    console.log(`[sub/repair] Подписка успешно активирована: userId=${telegramUserId}, sku=${sku}`);
+  }
 }
 
 async function countTracksUsedThisMonth(telegramUserId, subCreatedAt = null) {
@@ -607,11 +702,11 @@ async function countTracksUsedThisMonth(telegramUserId, subCreatedAt = null) {
   return Number(count || 0);
 }
 
-async function grantPurchaseBySku({ telegramUserId, sku, source = "hot_payment", orderId = null }) {
+async function grantPurchaseBySku({ telegramUserId, sku, source = "hot_payment", orderId = null, requestId = null }) {
   const normalizedSku = String(sku || "").trim();
   if (!normalizedSku) return { ok: false, error: "sku_required" };
   if (normalizedSku === "soul_basic_sub" || normalizedSku === "soul_plus_sub" || normalizedSku === "master_monthly") {
-    return createOrRefreshSubscription({ telegramUserId, planSku: normalizedSku, source });
+    return createOrRefreshSubscription({ telegramUserId, planSku: normalizedSku, source, requestId, paymentOrderId: orderId });
   }
   if (normalizedSku === "soul_chat_1day") {
     return activateSoulChatDay(telegramUserId, orderId);
@@ -1204,12 +1299,73 @@ bot.on(":successful_payment", async (ctx) => {
     // Для подписок и soul_chat — grantPurchaseBySku создаёт/активирует подписку (необходимо)
     // Для song SKU — НЕ грантим доп. entitlement: конкретная заявка обрабатывается через generateSoundKey(requestId)
     const songSkus = ["single_song", "transit_energy_song", "couple_song", "extra_regeneration"];
+    const isSubscription = ["soul_basic_sub", "soul_plus_sub", "master_monthly"].includes(sku);
+    
     if (!songSkus.includes(sku)) {
-      const grantResult = await grantPurchaseBySku({ telegramUserId: userId, sku, source: "stars_payment", orderId: telegramChargeId });
-      if (!grantResult?.ok) {
-        console.error(`[Stars] grantPurchaseBySku failed: sku=${sku}, userId=${userId}, error=${grantResult?.error}`);
-      } else {
-        console.log(`[Stars] grantPurchaseBySku ok: sku=${sku}, userId=${userId}`);
+      // Для подписок: retry с проверкой активации
+      const maxAttempts = isSubscription ? 4 : 2;
+      let grantResult = null;
+      let activationVerified = false;
+      
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        const attemptSource = attempt === 1 ? "stars_payment" : `stars_payment_retry_${attempt}`;
+        grantResult = await grantPurchaseBySku({ 
+          telegramUserId: userId, 
+          sku, 
+          source: attemptSource, 
+          orderId: telegramChargeId,
+          requestId: requestId || null,
+        });
+        
+        if (grantResult?.ok) {
+          console.log(`[Stars] grantPurchaseBySku ok (attempt ${attempt}/${maxAttempts}): sku=${sku}, userId=${userId}`);
+          
+          // Для подписок: проверяем что запись действительно создана
+          if (isSubscription) {
+            await new Promise(r => setTimeout(r, 1000));
+            const verificationSub = await getActiveSubscriptionFull(userId);
+            if (verificationSub && verificationSub.plan_sku === sku) {
+              activationVerified = true;
+              console.log(`[Stars] Подписка ${sku} проверена и активна для ${userId}`);
+              await supabase.from("track_requests")
+                .update({ 
+                  subscription_activated_at: new Date().toISOString(),
+                  subscription_activation_attempts: attempt,
+                })
+                .eq("id", requestId);
+              break;
+            } else {
+              console.warn(`[Stars] Подписка ${sku} не найдена после grantPurchaseBySku (attempt ${attempt})`);
+              if (attempt < maxAttempts) {
+                await new Promise(r => setTimeout(r, 2000 * attempt));
+                continue;
+              }
+            }
+          } else {
+            activationVerified = true;
+            break;
+          }
+        } else {
+          console.error(`[Stars] grantPurchaseBySku failed (attempt ${attempt}/${maxAttempts}): sku=${sku}, userId=${userId}, error=${grantResult?.error}`);
+          if (attempt < maxAttempts) {
+            await new Promise(r => setTimeout(r, 2000 * attempt));
+          }
+        }
+      }
+      
+      // Если все попытки провалились — логируем ошибку
+      if (isSubscription && !activationVerified) {
+        console.error(`[Stars] КРИТИЧНО: подписка ${sku} не активирована после ${maxAttempts} попыток для ${userId}`);
+        await logSubscriptionActivationError({
+          telegramUserId: userId,
+          requestId: requestId || null,
+          paymentOrderId: telegramChargeId,
+          planSku: sku,
+          errorMessage: grantResult?.error || "activation_failed_after_all_retries",
+          errorSource: "stars_payment",
+          paymentProvider: "stars",
+          metadata: { attempts: maxAttempts, last_error: grantResult?.error },
+        });
       }
     }
 
@@ -2885,19 +3041,73 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
           });
         }
       }
-      let grantResult = await grantPurchaseBySku({ telegramUserId: row.telegram_user_id, sku: purchasedSku, source: "hot_payment", orderId: orderId || null });
-      if (!grantResult?.ok) {
-        console.error(`[webhook] grantPurchaseBySku failed: sku=${purchasedSku}, userId=${row.telegram_user_id}, error=${grantResult?.error} — retry in 5s`);
-        // Retry once after 5 seconds (защита от transient Supabase errors)
-        await new Promise(r => setTimeout(r, 5000));
-        grantResult = await grantPurchaseBySku({ telegramUserId: row.telegram_user_id, sku: purchasedSku, source: "hot_payment_retry", orderId: orderId || null });
-        if (!grantResult?.ok) {
-          console.error(`[webhook] grantPurchaseBySku retry also failed: sku=${purchasedSku}, userId=${row.telegram_user_id}, error=${grantResult?.error}`);
+      
+      // Улучшенная retry логика с проверкой активации после каждой попытки (для подписок критично)
+      const isSubscription = ["soul_basic_sub", "soul_plus_sub", "master_monthly"].includes(purchasedSku);
+      const maxAttempts = isSubscription ? 5 : 2;
+      let grantResult = null;
+      let activationVerified = false;
+      
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        const attemptSource = attempt === 1 ? "hot_payment" : `hot_payment_retry_${attempt}`;
+        grantResult = await grantPurchaseBySku({ 
+          telegramUserId: row.telegram_user_id, 
+          sku: purchasedSku, 
+          source: attemptSource, 
+          orderId: orderId || null,
+          requestId: row.id || null,
+        });
+        
+        if (grantResult?.ok) {
+          console.log(`[webhook] grantPurchaseBySku ok (attempt ${attempt}/${maxAttempts}): sku=${purchasedSku}, userId=${row.telegram_user_id}${grantResult.already_active ? " (already_active)" : ""}`);
+          
+          // Для подписок: дополнительная проверка что запись в subscriptions действительно создана
+          if (isSubscription) {
+            await new Promise(r => setTimeout(r, 1000));
+            const verificationSub = await getActiveSubscriptionFull(row.telegram_user_id);
+            if (verificationSub && verificationSub.plan_sku === purchasedSku) {
+              activationVerified = true;
+              console.log(`[webhook] Подписка ${purchasedSku} проверена и активна для ${row.telegram_user_id}`);
+              // Обновляем track_requests: записываем subscription_activated_at
+              await supabase.from("track_requests")
+                .update({ 
+                  subscription_activated_at: new Date().toISOString(),
+                  subscription_activation_attempts: attempt,
+                })
+                .eq("id", row.id);
+              break;
+            } else {
+              console.warn(`[webhook] Подписка ${purchasedSku} не найдена после grantPurchaseBySku (attempt ${attempt}), текущая: ${verificationSub?.plan_sku || "none"}`);
+              if (attempt < maxAttempts) {
+                await new Promise(r => setTimeout(r, 3000 * attempt));
+                continue;
+              }
+            }
+          } else {
+            activationVerified = true;
+            break;
+          }
         } else {
-          console.log(`[webhook] grantPurchaseBySku retry ok: sku=${purchasedSku}, userId=${row.telegram_user_id}`);
+          console.error(`[webhook] grantPurchaseBySku failed (attempt ${attempt}/${maxAttempts}): sku=${purchasedSku}, userId=${row.telegram_user_id}, error=${grantResult?.error}`);
+          if (attempt < maxAttempts) {
+            await new Promise(r => setTimeout(r, 3000 * attempt));
+          }
         }
-      } else {
-        console.log(`[webhook] grantPurchaseBySku ok: sku=${purchasedSku}, userId=${row.telegram_user_id}${grantResult.already_active ? " (already_active)" : ""}`);
+      }
+      
+      // Если все попытки провалились или подписка не активировалась — логируем критическую ошибку
+      if (isSubscription && !activationVerified) {
+        console.error(`[webhook] КРИТИЧНО: подписка ${purchasedSku} не активирована после ${maxAttempts} попыток для ${row.telegram_user_id}`);
+        await logSubscriptionActivationError({
+          telegramUserId: row.telegram_user_id,
+          requestId: row.id,
+          paymentOrderId: orderId,
+          planSku: purchasedSku,
+          errorMessage: grantResult?.error || "activation_failed_after_all_retries",
+          errorSource: "webhook",
+          paymentProvider: "hot",
+          metadata: { attempts: maxAttempts, last_error: grantResult?.error },
+        });
       }
 
       // Специальная обработка для Soul Chat 1day
@@ -4150,8 +4360,8 @@ app.post("/api/subscription/claim", express.json(), asyncApi(async (req, res) =>
   if (!mode.startsWith("sub_")) {
     return res.status(400).json({ success: false, error: "Только для заявок-подписок" });
   }
-  // Заявка не старше 7 дней (вебхук мог не прийти — claim как страховка)
-  const SUB_CLAIM_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+  // Расширен период с 7 до 30 дней (claim может быть вызван позже при возврате пользователя)
+  const SUB_CLAIM_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
   const ageMs = Date.now() - new Date(data.created_at).getTime();
   if (ageMs > SUB_CLAIM_MAX_AGE_MS) {
     return res.status(409).json({ success: false, error: "Заявка слишком старая. Обратись в поддержку." });
@@ -4167,15 +4377,57 @@ app.post("/api/subscription/claim", express.json(), asyncApi(async (req, res) =>
     return res.json({ success: true, status: "already_active", plan_sku: sku });
   }
   console.log(`[sub/claim] userId=${telegramUserId}, requestId=${requestId.slice(0,8)}, sku=${sku}, ageMin=${Math.round(ageMs/60000)}`);
-  const grantResult = await grantPurchaseBySku({
-    telegramUserId,
-    sku,
-    source: "user_claimed_no_webhook",
-    orderId: data.payment_order_id || null,
-  });
-  if (!grantResult?.ok) {
+  
+  // Retry с проверкой активации
+  let grantResult = null;
+  let activationVerified = false;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    grantResult = await grantPurchaseBySku({
+      telegramUserId,
+      sku,
+      source: `user_claimed_no_webhook_attempt_${attempt}`,
+      orderId: data.payment_order_id || null,
+      requestId: requestId || null,
+    });
+    
+    if (grantResult?.ok) {
+      // Проверяем что подписка действительно активна
+      await new Promise(r => setTimeout(r, 500));
+      const verification = await getActiveSubscriptionFull(telegramUserId);
+      if (verification && verification.plan_sku === sku) {
+        activationVerified = true;
+        console.log(`[sub/claim] Подписка ${sku} активирована и проверена (attempt ${attempt}/3)`);
+        await supabase.from("track_requests")
+          .update({ 
+            subscription_activated_at: new Date().toISOString(),
+            subscription_activation_attempts: attempt,
+          })
+          .eq("id", requestId);
+        break;
+      } else {
+        console.warn(`[sub/claim] Подписка не найдена после grantPurchaseBySku (attempt ${attempt}/3)`);
+        if (attempt < 3) await new Promise(r => setTimeout(r, 1500 * attempt));
+      }
+    } else {
+      console.error(`[sub/claim] grantPurchaseBySku failed (attempt ${attempt}/3): error=${grantResult?.error}`);
+      if (attempt < 3) await new Promise(r => setTimeout(r, 1500 * attempt));
+    }
+  }
+  
+  if (!activationVerified) {
+    await logSubscriptionActivationError({
+      telegramUserId,
+      requestId,
+      paymentOrderId: data.payment_order_id,
+      planSku: sku,
+      errorMessage: grantResult?.error || "claim_activation_failed_after_retries",
+      errorSource: "user_claim",
+      paymentProvider: "hot",
+      metadata: { attempts: 3 },
+    });
     return res.status(500).json({ success: false, error: grantResult?.error || "grant_failed" });
   }
+  
   return res.json({ success: true, status: "activated", plan_sku: sku });
 }));
 
@@ -4227,7 +4479,7 @@ app.post("/api/payments/hot/create", express.json(), asyncApi(async (req, res) =
   }
   const orderId = requestRow.payment_order_id || crypto.randomUUID();
   if (promoResult?.promo?.type === "free_generation" || finalAmount <= 0) {
-    await grantPurchaseBySku({ telegramUserId, sku, source: "promo_free" });
+    await grantPurchaseBySku({ telegramUserId, sku, source: "promo_free", orderId, requestId });
     await redeemPromoUsage({
       promo: promoResult?.promo,
       telegramUserId,
@@ -4470,16 +4722,60 @@ app.post("/api/payments/hot/confirm", express.json(), asyncApi(async (req, res) 
   if (isSubOrService) {
     const sku = resolveSkuByMode(data.mode);
     if (sku && data.mode !== "soul_chat_day") {
+      // Проверяем, не активирована ли уже подписка
+      const existingSub = await getActiveSubscriptionFull(data.telegram_user_id);
+      if (existingSub && existingSub.plan_sku === sku) {
+        console.log(`[confirm] Подписка ${sku} уже активна для ${data.telegram_user_id}`);
+        return res.json({ success: true, started: false, status: "subscription_active", plan_sku: sku });
+      }
+      
       // Идемпотентно: createOrRefreshSubscription вернёт already_active если подписка уже есть
-      const grantResult = await grantPurchaseBySku({
-        telegramUserId: data.telegram_user_id,
-        sku,
-        source: "hot_payment_confirm_fallback",
-      });
-      if (!grantResult?.ok) {
-        console.error(`[confirm] grantPurchaseBySku failed: sku=${sku}, userId=${data.telegram_user_id}, error=${grantResult?.error}`);
-      } else {
-        console.log(`[confirm] sub activated: sku=${sku}, userId=${data.telegram_user_id}${grantResult.already_active ? " (already_active)" : " (NEW)"}`);
+      let grantResult = null;
+      let activationVerified = false;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        grantResult = await grantPurchaseBySku({
+          telegramUserId: data.telegram_user_id,
+          sku,
+          source: `hot_payment_confirm_fallback_attempt_${attempt}`,
+          orderId: data.payment_order_id || null,
+          requestId: requestId || null,
+        });
+        
+        if (grantResult?.ok) {
+          await new Promise(r => setTimeout(r, 500));
+          const verification = await getActiveSubscriptionFull(data.telegram_user_id);
+          if (verification && verification.plan_sku === sku) {
+            activationVerified = true;
+            console.log(`[confirm] sub activated and verified (attempt ${attempt}/3): sku=${sku}, userId=${data.telegram_user_id}`);
+            await supabase.from("track_requests")
+              .update({ 
+                subscription_activated_at: new Date().toISOString(),
+                subscription_activation_attempts: attempt,
+              })
+              .eq("id", requestId);
+            break;
+          } else {
+            console.warn(`[confirm] Подписка не найдена после grant (attempt ${attempt}/3)`);
+            if (attempt < 3) await new Promise(r => setTimeout(r, 1000 * attempt));
+          }
+        } else {
+          console.error(`[confirm] grantPurchaseBySku failed (attempt ${attempt}/3): sku=${sku}, userId=${data.telegram_user_id}, error=${grantResult?.error}`);
+          if (attempt < 3) await new Promise(r => setTimeout(r, 1000 * attempt));
+        }
+      }
+      
+      if (!activationVerified) {
+        console.error(`[confirm] КРИТИЧНО: подписка ${sku} не активирована после 3 попыток для ${data.telegram_user_id}`);
+        await logSubscriptionActivationError({
+          telegramUserId: data.telegram_user_id,
+          requestId,
+          paymentOrderId: data.payment_order_id,
+          planSku: sku,
+          errorMessage: grantResult?.error || "confirm_activation_failed_after_retries",
+          errorSource: "confirm_fallback",
+          paymentProvider: "hot",
+          metadata: { attempts: 3 },
+        });
       }
     } else if (data.mode === "soul_chat_day") {
       // Soul Chat Day — тоже активируем через confirm как фолбек
@@ -4489,7 +4785,7 @@ app.post("/api/payments/hot/confirm", express.json(), asyncApi(async (req, res) 
         console.error(`[confirm] activateSoulChatDay failed: userId=${data.telegram_user_id}, error=${dayResult?.error}`);
       }
     }
-    return res.json({ success: true, started: false, status: "subscription_active" });
+    return res.json({ success: true, started: false, status: "subscription_active", plan_sku: sku });
   }
   const gs = String(data.generation_status || data.status || "pending");
   if (["completed", "processing", "lyrics_generated", "suno_processing", "astro_calculated"].includes(gs)) {
@@ -4574,7 +4870,7 @@ app.post("/api/admin/grant-subscription", express.json(), asyncApi(async (req, r
   if (!userId || !sku) {
     return res.status(400).json({ success: false, error: "Нужны telegram_user_id и plan_key (plan_basic|plan_plus|plan_master)" });
   }
-  const result = await grantPurchaseBySku({ telegramUserId: userId, sku, source: "admin_manual" });
+  const result = await grantPurchaseBySku({ telegramUserId: userId, sku, source: "admin_manual", orderId: null, requestId: null });
   if (!result?.ok) return res.status(500).json({ success: false, error: result?.error || "grant_failed" });
   console.log(`[admin/grant-sub] admin=${auth.id}, userId=${userId}, sku=${sku}${result.already_active ? " (already_active)" : " (GRANTED)"}`);
   return res.json({ success: true, already_active: result.already_active || false, sku, renew_at: result.renew_at });
