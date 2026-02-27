@@ -1027,7 +1027,15 @@
     .profile-plans-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
     .profile-plan-card{background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px 14px;position:relative;display:flex;flex-direction:column;gap:4px;transition:border-color .2s,background .2s}
     .profile-plan-card.current{background:rgba(var(--primary-rgb),0.07);border-color:rgba(var(--primary-rgb),0.38)}
-    .profile-plan-card.popular{background:linear-gradient(135deg,rgba(var(--secondary-rgb),0.08),rgba(var(--primary-rgb),0.06));border-color:rgba(var(--secondary-rgb),0.35);grid-column:1 / -1}
+    .profile-plan-card.popular{
+      background:radial-gradient(circle at top,rgba(212,175,55,0.18) 0,transparent 55%),
+                 linear-gradient(135deg,rgba(var(--secondary-rgb),0.10),rgba(var(--primary-rgb),0.08));
+      border-color:rgba(212,175,55,0.7);
+      box-shadow:0 10px 30px rgba(0,0,0,0.45),0 0 0 1px rgba(212,175,55,0.35);
+      grid-column:1 / -1;
+      position:relative;
+      overflow:hidden;
+    }
     .ppc-badge{font-size:0.62rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(var(--primary-rgb),0.7);margin-bottom:4px}
     .ppc-badge.hot{color:var(--secondary-color)}
     .ppc-name{font-size:1rem;font-weight:700;color:#fff;margin-bottom:8px}
@@ -2900,9 +2908,9 @@
             <button class="ppc-btn" id="planBtnBasic">Оформить</button>
             <button class="ppc-details-btn" id="planDetailsBasic" onclick="openPlanDetails('basic')">Подробнее</button>
           </div>
-          <!-- Soul Plus -->
+          <!-- Soul Plus — главный акцент подписок -->
           <div class="profile-plan-card popular" id="planCardPlus">
-            <div id="planPlusBadge" class="ppc-badge hot">✦ Популярный</div>
+            <div id="planPlusBadge" class="ppc-badge hot">✦ Лучший выбор</div>
             <div class="ppc-name">Plus</div>
             <div class="ppc-features">
               <div class="ppc-feature"><span id="planPlusF1">✦ 10 треков/мес</span> <i class="ppc-info" data-tip="10 персональных песен в месяц. Разовая цена — $5.99/трек. По подписке выходит $2.5/трек. Экономия 58%.">i</i></div>
@@ -2915,7 +2923,10 @@
               <div class="ppc-price">$24.99/мес</div>
               <div id="planPlusSave" class="ppc-save">−58% vs разовых</div>
             </div>
-            <button class="ppc-btn popular-btn" id="planBtnPlus">Оформить</button>
+            <button class="ppc-btn popular-btn" id="planBtnPlus">Оформить подписку Plus</button>
+            <div class="ppc-subhint" style="margin-top:6px;font-size:0.8rem;color:rgba(255,255,255,0.75);">
+              Все треки и Soul Chat по фиксированной цене каждый месяц.
+            </div>
             <button class="ppc-details-btn" id="planDetailsPlus" onclick="openPlanDetails('plus')">Подробнее</button>
           </div>
           <!-- Мастер — Лаборатория -->
@@ -3852,7 +3863,7 @@
           refFriend1: 'друг', refFriend2: 'друга', refFriend5: 'друзей', refLinkLoading: 'Загрузка…',
           quickPickerLabel: '✦ Быстрые запросы',
           forWhoLabel: 'Для кого генерируем?', nameLbl: 'Имя', birthdateLbl: 'Дата рождения', birthplaceLbl: 'Место рождения', birthtimeLbl: 'Время рождения',
-          payOvCardTitleDefault: 'Оплата заявки', payOvTrialText: 'Первая песня — в подарок!', payOvFreeClaimBtn: 'Получить бесплатно',
+          payOvCardTitleDefault: 'Оплата подписки / заявки', payOvTrialText: 'Первая песня — в подарок!', payOvFreeClaimBtn: 'Получить бесплатно',
           payOvPromoToggle: '▸ Есть промокод?', orPay: 'Или оплати:', priceLabel: 'Цена:',
           payOvLinkHint: 'Если окно не открылось — скопируйте ссылку и вставьте в браузер:',
           payOvCopyBtn: 'Скопировать ссылку оплаты', payOvCheckBtn: 'Я уже оплатил — проверить',
@@ -4041,7 +4052,7 @@
           refFriend1: 'friend', refFriend2: 'friends', refFriend5: 'friends', refLinkLoading: 'Loading…',
           quickPickerLabel: '✦ Quick requests',
           forWhoLabel: 'Who are we generating for?', nameLbl: 'Name', birthdateLbl: 'Date of birth', birthplaceLbl: 'Place of birth', birthtimeLbl: 'Time of birth',
-          payOvCardTitleDefault: 'Payment', payOvTrialText: 'First song — free gift!', payOvFreeClaimBtn: 'Get for free',
+          payOvCardTitleDefault: 'Subscription / order payment', payOvTrialText: 'First song — free gift!', payOvFreeClaimBtn: 'Get for free',
           payOvPromoToggle: '▸ Have a promo code?', orPay: 'Or pay:', priceLabel: 'Price:',
           payOvLinkHint: "If the window didn't open — copy the link and paste in your browser:",
           payOvCopyBtn: 'Copy payment link', payOvCheckBtn: "I've already paid — verify",
@@ -4230,7 +4241,7 @@
           refFriend1: 'Freund', refFriend2: 'Freunde', refFriend5: 'Freunde', refLinkLoading: 'Laden…',
           quickPickerLabel: '✦ Schnellanfragen',
           forWhoLabel: 'Für wen generieren wir?', nameLbl: 'Name', birthdateLbl: 'Geburtsdatum', birthplaceLbl: 'Geburtsort', birthtimeLbl: 'Geburtszeit',
-          payOvCardTitleDefault: 'Zahlung', payOvTrialText: 'Erstes Lied — Geschenk!', payOvFreeClaimBtn: 'Kostenlos erhalten',
+          payOvCardTitleDefault: 'Abo / Bestellung bezahlen', payOvTrialText: 'Erstes Lied — Geschenk!', payOvFreeClaimBtn: 'Kostenlos erhalten',
           payOvPromoToggle: '▸ Haben Sie einen Code?', orPay: 'Oder bezahle:', priceLabel: 'Preis:',
           payOvLinkHint: 'Wenn sich das Fenster nicht öffnete — Link kopieren und im Browser einfügen:',
           payOvCopyBtn: 'Zahlungslink kopieren', payOvCheckBtn: 'Ich habe bezahlt — prüfen',
@@ -4419,7 +4430,7 @@
           refFriend1: 'ami', refFriend2: 'amis', refFriend5: 'amis', refLinkLoading: 'Chargement…',
           quickPickerLabel: '✦ Demandes rapides',
           forWhoLabel: 'Pour qui générons-nous?', nameLbl: 'Prénom', birthdateLbl: 'Date de naissance', birthplaceLbl: 'Lieu de naissance', birthtimeLbl: 'Heure de naissance',
-          payOvCardTitleDefault: 'Paiement', payOvTrialText: 'Première chanson — cadeau!', payOvFreeClaimBtn: 'Obtenir gratuitement',
+          payOvCardTitleDefault: 'Paiement abonnement / commande', payOvTrialText: 'Première chanson — cadeau!', payOvFreeClaimBtn: 'Obtenir gratuitement',
           payOvPromoToggle: '▸ Vous avez un code promo?', orPay: 'Ou payez:', priceLabel: 'Prix:',
           payOvLinkHint: "Si la fenêtre ne s'est pas ouverte — copiez le lien et collez dans votre navigateur:",
           payOvCopyBtn: 'Copier le lien de paiement', payOvCheckBtn: "J'ai déjà payé — vérifier",
@@ -9249,7 +9260,7 @@
 
       <!-- Карточка оплаты: один продукт, одна цена, один CTA -->
       <div style="background:rgba(15,12,40,0.96);border:1px solid rgba(var(--primary-rgb),0.3);border-radius:18px;padding:24px 20px;">
-        <div id="payOvCardTitle" style="color:var(--primary-color);font-weight:700;font-size:1.05rem;margin-bottom:10px;">Оплата заявки</div>
+        <div id="payOvCardTitle" style="color:var(--primary-color);font-weight:700;font-size:1.05rem;margin-bottom:10px;">Оплата подписки / заявки</div>
 
         <!-- Подсказка для новичков (показывается только если free_trial доступен) -->
         <div id="payOvTrialHint" style="display:none;background:rgba(5,150,105,0.15);border:1.5px solid rgba(16,185,129,0.5);border-radius:14px;padding:16px;margin-bottom:16px;">
