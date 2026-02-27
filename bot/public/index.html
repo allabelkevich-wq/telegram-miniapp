@@ -68,26 +68,26 @@
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
     /* АДАПТИВНЫЕ СТИЛИ С ПОДДЕРЖКОЙ ТЕМЫ ТЕЛЕГРАМ */
-    /* Палитра: БЛАГОРОДНОЕ ЗОЛОТО (металлическое, не жёлтое) */
+    /* Палитра: настоящее золото + тёплый янтарь (без розового) */
     :root {
-      --primary-color: #C9A961;
-      --primary-light: #E5D4A1;
-      --secondary-color: #A68B4B;
-      --primary-rgb: 201, 169, 97;
-      --secondary-rgb: 166, 139, 75;
+      --primary-color: #B8860B;
+      --primary-light: #D4A017;
+      --secondary-color: #B45309;
+      --primary-rgb: 184, 134, 11;
+      --secondary-rgb: 180, 83, 9;
       --success-color: #10b981;
       --subtitle-readable: rgba(255,255,255,0.92);
       /* YupSoul Premium Design System */
       --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-7: 28px; --space-8: 32px; --space-9: 40px; --space-10: 48px; --space-11: 56px; --space-12: 64px;
-      --gold-primary: #C9A961; --gold-light: #E5D4A1; --gold-dark: #A68B4B; --gold-metallic: #B8964B; --gold-muted: rgba(201, 169, 97, 0.15); --gold-foil: linear-gradient(135deg, #E5D4A1 0%, #C9A961 40%, #A68B4B 100%);
-      --bg-primary: #0D0D0D; --bg-secondary: rgba(255, 255, 255, 0.03); --bg-tertiary: rgba(255, 255, 255, 0.05);
+      --gold-primary: #D4AF37; --gold-light: #E5C156; --gold-dark: #B8860B; --gold-muted: rgba(212, 175, 55, 0.15);
+      --bg-primary: #0A0A1A; --bg-secondary: rgba(255, 255, 255, 0.03); --bg-tertiary: rgba(255, 255, 255, 0.05);
       --text-primary: rgba(255, 255, 255, 0.95); --text-secondary: rgba(255, 255, 255, 0.75); --text-tertiary: rgba(255, 255, 255, 0.55); --text-muted: rgba(255, 255, 255, 0.35);
-      --border-subtle: rgba(255, 255, 255, 0.08); --border-default: rgba(255, 255, 255, 0.12); --border-accent: rgba(201, 169, 97, 0.35);
+      --border-subtle: rgba(255, 255, 255, 0.08); --border-default: rgba(255, 255, 255, 0.12); --border-accent: rgba(212, 175, 55, 0.35);
       --font-size-xs: 0.75rem; --font-size-sm: 0.875rem; --font-size-base: 1rem; --font-size-lg: 1.125rem; --font-size-xl: 1.25rem; --font-size-2xl: 1.5rem; --font-size-3xl: 1.875rem;
       --font-weight-normal: 400; --font-weight-medium: 500; --font-weight-semibold: 600; --font-weight-bold: 700;
       --line-height-tight: 1.25; --line-height-normal: 1.5; --line-height-relaxed: 1.75;
       --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px; --radius-2xl: 24px; --radius-full: 9999px;
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3); --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3); --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.3); --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.35); --shadow-glow: 0 0 20px rgba(201, 169, 97, 0.15);
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3); --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3); --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.3); --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.35); --shadow-glow: 0 0 20px rgba(212, 175, 55, 0.15);
       --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1); --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1); --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
       /* Fluid scaling — пропорции Apple: уменьшается пропорционально экрану */
       --fluid-xs: clamp(0.7rem, 1.8vw, 0.8rem);
@@ -115,27 +115,14 @@
       --tg-theme-button-text-color: #0A0A1A;
     }
     .theme-light {
-      --tg-theme-bg-color: #FAF9F6;
+      --tg-theme-bg-color: #f5f3ff;
       --tg-theme-secondary-bg-color: rgba(255,255,255,0.92);
-      --tg-theme-text-color: #1A1A1A;
-      --tg-theme-hint-color: rgba(26, 26, 26, 0.6);
-      --tg-theme-border-color: rgba(201, 169, 97, 0.35);
+      --tg-theme-text-color: #1f2937;
+      --tg-theme-hint-color: rgba(31, 41, 55, 0.6);
+      --tg-theme-border-color: rgba(var(--primary-rgb), 0.35);
       --tg-theme-button-color: var(--primary-color);
-      --tg-theme-button-text-color: #0D0D0D;
-      --subtitle-readable: rgba(26,26,26,0.88);
-      --bg-primary: #FAF9F6;
-      --text-primary: rgba(26, 26, 26, 0.95);
-    }
-    
-    .theme-light body {
-      background-color: #FAF9F6;
-      background-image: 
-        radial-gradient(ellipse at top, rgba(201, 169, 97, 0.12) 0%, transparent 50%),
-        radial-gradient(ellipse at bottom, rgba(229, 212, 161, 0.08) 0%, transparent 50%),
-        linear-gradient(160deg, #FAF9F6 0%, #FFFEF8 30%, #F5F3ED 60%, #FAF9F6 100%),
-        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.06'/%3E%3C/svg%3E");
-      background-blend-mode: normal, normal, normal, multiply;
-      background-attachment: fixed;
+      --tg-theme-button-text-color: #1f2937;
+      --subtitle-readable: rgba(31,41,55,0.88);
     }
     .theme-dark {
       --tg-theme-bg-color: #0A0A1A;
@@ -198,43 +185,9 @@
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
-    
-    /* ============================================
-       ЭФФЕКТ ЗОЛОТОЙ ФОЛЬГИ — металлический блеск
-       ============================================ */
-    @keyframes foilShimmer {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-    }
-    
-    .foil-gold {
-      background: linear-gradient(135deg, #E5D4A1 0%, #C9A961 35%, #A68B4B 65%, #B8964B 100%);
-      background-size: 200% 200%;
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      color: transparent;
-      animation: foilShimmer 8s ease-in-out infinite;
-    }
-    
-    .foil-gold-solid {
-      background: linear-gradient(135deg, #E5D4A1 0%, #C9A961 35%, #A68B4B 65%, #8B6914 100%);
-      background-size: 150% 150%;
-      box-shadow: 
-        0 2px 8px rgba(201, 169, 97, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    }
-    
     html { height: 100%; }
     body {
-      background-color: #0D0D0D;
-      background-image: 
-        radial-gradient(ellipse at top, rgba(201, 169, 97, 0.08) 0%, transparent 50%),
-        radial-gradient(ellipse at bottom, rgba(166, 139, 75, 0.06) 0%, transparent 50%),
-        linear-gradient(160deg, #0D0D0D 0%, #1C1814 30%, #141210 60%, #0D0D0D 100%),
-        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
-      background-blend-mode: normal, normal, normal, multiply;
-      background-attachment: fixed;
+      background: linear-gradient(160deg,#08071a 0%,#100828 40%,#0b1022 70%,#08071a 100%) !important;
       color: var(--tg-theme-text-color) !important;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: var(--fluid-base);
@@ -794,10 +747,10 @@
     .example-btn{width:auto;min-width:0;max-width:none;flex-shrink:0;white-space:normal;text-transform:none;letter-spacing:0;font-size:.95rem;font-weight:600;padding:12px 16px;margin:0;min-height:auto;border-radius:12px;box-shadow:none;word-wrap:break-word;word-break:break-word;overflow:visible}
     .example-btn::after{display:none}
     .example-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(var(--primary-rgb),0.45)}
-    button{background:linear-gradient(135deg, #E5D4A1 0%, #C9A961 45%, #A68B4B 100%);border:1px solid rgba(201, 169, 97, 0.4);color:#0D0D0D;padding:13px 24px;font-size:1rem;border-radius:14px;width:100%;font-weight:600;cursor:pointer;transition:all .25s ease;box-shadow:0 4px 16px rgba(201, 169, 97, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);margin-top:8px;letter-spacing:0;text-transform:none;min-height:48px;position:relative;overflow:hidden}
+    button{background:linear-gradient(135deg, var(--primary-color), var(--secondary-color), var(--primary-color));background-size:300% 300%;animation:gradientShift 4s ease infinite;color:var(--tg-theme-button-text-color);border:none;padding:13px 24px;font-size:1rem;border-radius:14px;width:100%;font-weight:600;cursor:pointer;transition:all .25s ease;box-shadow:0 8px 22px rgba(var(--primary-rgb),0.4);margin-top:8px;letter-spacing:0;text-transform:none;min-height:48px;position:relative;overflow:hidden}
     button::after{display:none}
-    button:hover{background:linear-gradient(135deg, #F5E4B1 0%, #E5D4A1 45%, #C9A961 100%);transform:translateY(-1px);box-shadow:0 6px 20px rgba(201, 169, 97, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4);border-color:rgba(201, 169, 97, 0.6)}
-    button:active{transform:translateY(1px);box-shadow:0 2px 8px rgba(201, 169, 97, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.1)}
+    button:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(var(--primary-rgb),0.5)}
+    button:active{transform:translateY(1px);box-shadow:0 4px 12px rgba(var(--primary-rgb),0.3)}
     button:disabled{background:rgba(255,255,255,0.15);cursor:not-allowed;transform:none;box-shadow:none;opacity:.6;animation:none}
     button.secondary{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.75);border:1px solid rgba(255,255,255,0.12);box-shadow:none;text-transform:none;letter-spacing:0;font-weight:500;min-height:42px;animation:none;font-size:0.92rem}
     button.secondary:hover{background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9)}
