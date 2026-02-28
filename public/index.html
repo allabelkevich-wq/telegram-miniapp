@@ -7400,7 +7400,13 @@
           }
           var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
           var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
+          // #region agent log
+          fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17d287'},body:JSON.stringify({sessionId:'17d287',runId:'hot_sub_debug_v2',hypothesisId:'H7',location:'public/index.html:7387',message:'Payment return has API/auth context',data:{hasApiBase:!!apiBase,hasInitData:!!initData,tgWebApp:!!(window.Telegram&&window.Telegram.WebApp),tgVersion:String((window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.version)||''),requestId:String(thanksRequestId||'').slice(0,40)},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
           if (!apiBase || !initData) {
+            // #region agent log
+            fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17d287'},body:JSON.stringify({sessionId:'17d287',runId:'hot_sub_debug_v2',hypothesisId:'H7',location:'public/index.html:7389',message:'Payment return exited early due to missing api/initData',data:{hasApiBase:!!apiBase,hasInitData:!!initData,requestId:String(thanksRequestId||'').slice(0,40)},timestamp:Date.now()})}).catch(()=>{});
+            // #endregion
             if (paymentThanksMsg && !isSubPaymentImmediate) paymentThanksMsg.textContent = t('songInProgress');
             return;
           }
@@ -8709,6 +8715,9 @@
                   type: 'subscription', plan_key: planKey, plan_name: planName, ts: Date.now()
                 }));
               } catch(e) {}
+              // #region agent log
+              fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17d287'},body:JSON.stringify({sessionId:'17d287',runId:'hot_sub_debug_v2',hypothesisId:'H8',location:'public/index.html:8640',message:'Subscription checkout URL opened',data:{planKey:String(planKey||''),hasTgOpenLink:!!(tg&&tg.openLink),urlPrefix:String((data.checkout_url||'')).slice(0,80)},timestamp:Date.now()})}).catch(()=>{});
+              // #endregion
               // Открываем оплату без закрытия приложения
               if (tg && tg.openLink) {
                 tg.openLink(data.checkout_url);
