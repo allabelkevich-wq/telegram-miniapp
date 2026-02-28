@@ -687,13 +687,13 @@
       .date-group{flex-direction:column;align-items:stretch;gap:12px}
       .date-group select{width:100%;max-width:none;min-width:0;min-height:48px;font-size:1rem;-webkit-tap-highlight-color:rgba(var(--primary-rgb),0.15)}
     }
-    .time-group{display:flex;flex-direction:column;align-items:flex-start;gap:var(--spacing-sm);margin:0}
-    .time-group-input{flex:0 0 auto;min-width:0;width:100%;max-width:none}
-    .time-group-checkbox{margin:0;width:100%;align-self:flex-start;justify-content:flex-start}
-    .checkbox{display:flex;align-items:center;gap:10px;margin-top:0}
-    .checkbox input{width:22px;height:22px;min-width:22px;accent-color:var(--primary-color);opacity:.65}
+    .time-group{display:flex;flex-direction:row;align-items:center;gap:12px;margin:0;flex-wrap:nowrap}
+    .time-group-input{flex:0 0 auto;min-width:0;width:auto;max-width:140px}
+    .time-group-checkbox{margin:0;flex:1 1 auto;white-space:nowrap}
+    .checkbox{display:flex;align-items:center;gap:8px;margin-top:0}
+    .checkbox input{width:20px;height:20px;min-width:20px;accent-color:var(--primary-color);opacity:.65;flex-shrink:0}
     .time-group .checkbox input{opacity:.45}
-    .checkbox label{margin-bottom:0;font-weight:500;color:var(--tg-theme-text-color,#fff);font-size:1rem;display:flex;align-items:center;gap:6px;opacity:.88}
+    .checkbox label{margin-bottom:0;font-weight:500;color:var(--tg-theme-text-color,#fff);font-size:0.88rem;display:flex;align-items:center;gap:5px;opacity:.88;white-space:nowrap;line-height:1.2}
     select{appearance:none;background:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23FF6B35' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 16px center;background-size:20px;padding-right:48px}
     textarea:not(.request-textarea){min-height:140px;line-height:1.6;resize:vertical}
     textarea.request-textarea{line-height:1.6;}
@@ -3479,13 +3479,12 @@
           <div id="heroesPromoFeaturesTitle" style="color:var(--primary-color);font-weight:600;margin-bottom:8px">Что входит в тариф:</div>
           <div id="heroesF1">✦ Неограниченное число героев</div>
           <div id="heroesF2">✦ Быстрый запуск соло и совместных песен</div>
-          <div id="heroesF3">✦ Предпочтения по стилю музыки</div>
           <div id="heroesF4">✦ Полная история генераций с текстами и анализом</div>
           <div id="heroesF5">✦ Аудио прямо из карточки героя</div>
         </div>
         <button type="button" id="masterTrialBtn" aria-label="Получить 1 день бесплатного доступа к Лаборатории" style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.2),rgba(var(--primary-rgb),0.08));border:1px solid rgba(var(--primary-rgb),0.4);color:var(--primary-color);font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">1 день бесплатно — попробовать</button>
         <button type="button" id="masterSubBtn" onclick="showPlanConfirm('plan_master','Лаборатория')" aria-label="Оформить подписку на Лабораторию за $39.99 в месяц" style="width:100%;padding:14px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(167,139,250,0.15),rgba(167,139,250,0.06));border:1.5px solid rgba(167,139,250,0.35);color:rgba(167,139,250,0.9);font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">Оформить Лабораторию — $39.99/мес</button>
-        <div id="heroesSubNote" style="font-size:0.7rem;color:rgba(255,255,255,0.22);text-align:center;margin-top:12px">30 треков в месяц · Оплата через HOT Pay</div>
+        <div id="heroesSubNote" style="font-size:0.7rem;color:rgba(255,255,255,0.22);text-align:center;margin-top:12px">30 треков в месяц · Оплата через HOT</div>
       </div>
 
       <!-- Кабинет героев (показывается если есть доступ) -->
@@ -3554,7 +3553,7 @@
             <input type="time" id="heroBirthtime" class="time-group-input">
             <div class="checkbox time-group-checkbox">
               <input type="checkbox" id="heroBirthtimeUnknown">
-              <label for="heroBirthtimeUnknown">Не знаю точное время</label>
+              <label for="heroBirthtimeUnknown">Не знаю</label>
             </div>
           </div>
         </div>
@@ -3664,8 +3663,8 @@
           <div class="time-group" role="group" aria-label="Время рождения">
             <input type="time" id="birthtime" required aria-label="Время" class="time-group-input">
             <div class="checkbox time-group-checkbox">
-              <input type="checkbox" id="unknown" aria-label="Не знаю точное время">
-              <label for="unknown">Не знаю точное время</label>
+              <input type="checkbox" id="unknown" aria-label="Не знаю время">
+              <label for="unknown">Не знаю</label>
             </div>
           </div>
         </div>
@@ -3737,8 +3736,8 @@
                 <div class="time-group" role="group">
                   <input type="time" id="birthtime2" aria-label="Время" class="time-group-input">
                   <div class="checkbox time-group-checkbox">
-                    <input type="checkbox" id="unknown2" aria-label="Не знаю точное время">
-                    <label for="unknown2">Не знаю точное время</label>
+                    <input type="checkbox" id="unknown2" aria-label="Не знаю время">
+                    <label for="unknown2">Не знаю</label>
                   </div>
                 </div>
               </div>
@@ -4191,7 +4190,7 @@
           paymentPageIntroAfterSubmit: 'Заявка отправлена. Введите промокод или нажмите кнопку ниже для оплаты через HOT Pay.',
           paymentPageIntroOrPay: 'Или введите промокод, или оплатите через HOT Pay.',
           paymentPageTagline: 'Промокод или оплата',
-          payWithHot: 'Оплатить через HOT Pay',
+          payWithHot: 'Оплатить HOT',
           firstFree: 'Первая песня доступна бесплатно.',
           paymentRequired: 'Оплата требуется для новых заявок.',
           subscriptionActive: 'У вас активная подписка — можно продолжить.',
@@ -4300,7 +4299,7 @@
           heroesF3: '✦ Предпочтения по стилю музыки', heroesF4: '✦ Полная история генераций с текстами и анализом',
           heroesF5: '✦ Аудио прямо из карточки героя',
           heroesTrialBtn: '1 день бесплатно — попробовать', heroesSubBtn: 'Оформить Лабораторию — $39.99/мес',
-          heroesSubNote: '30 треков в месяц · Оплата через HOT Pay',
+          heroesSubNote: '30 треков в месяц · Оплата через HOT',
           heroFormTitle: 'Добавить героя', heroRelLabel: 'Кто для тебя', heroBirthdateHint: 'Выбери день, месяц и год',
           heroTimeBirthLabel: 'Время рождения', heroStyleLabel: 'Любимые стили музыки', heroStylePh: 'поп, джаз, электронная…',
           requestPreferredStyleLabel: 'Стиль песни',
@@ -4380,7 +4379,7 @@
           submitHint: 'The song will arrive in this chat with the bot. If you haven\'t pressed «Start» in the bot yet — do it now.',
           paymentPageIntroAfterSubmit: 'Request submitted. Enter a promo code or tap the button below to pay via HOT Pay.',
           paymentPageTagline: 'Promo code or payment',
-          payWithHot: 'Pay via HOT Pay',
+          payWithHot: 'Pay HOT',
           firstFree: 'Your first sound key is free.',
           paymentRequired: 'Payment required for new requests.',
           subscriptionActive: 'You have an active subscription — continue.',
@@ -4489,7 +4488,7 @@
           heroesF3: '✦ Music style preferences', heroesF4: '✦ Full history with lyrics & analysis',
           heroesF5: '✦ Audio straight from the person\'s card',
           heroesTrialBtn: '1 day free — try it out', heroesSubBtn: 'Subscribe to Laboratory — $39.99/mo',
-          heroesSubNote: '30 tracks/month · Payment via HOT Pay',
+          heroesSubNote: '30 tracks/month · Payment via HOT',
           heroFormTitle: 'Add person', heroRelLabel: 'Relationship', heroBirthdateHint: 'Select day, month and year',
           heroTimeBirthLabel: 'Time of birth', heroStyleLabel: 'Favourite music styles', heroStylePh: 'pop, jazz, electronic…',
           requestPreferredStyleLabel: 'Song style',
@@ -4569,7 +4568,7 @@
           submitHint: 'Das Lied kommt in diesen Chat mit dem Bot. Falls Sie im Bot noch nicht auf «Start» geklickt haben — tun Sie es jetzt.',
           paymentPageIntroAfterSubmit: 'Anfrage gesendet. Gutscheincode eingeben oder unten tippen für Zahlung via HOT Pay.',
           paymentPageTagline: 'Gutscheincode oder Zahlung',
-          payWithHot: 'Zahlen via HOT Pay',
+          payWithHot: 'Zahlen HOT',
           firstFree: 'Dein erster Klangschlüssel ist kostenlos.',
           subscriptionActive: 'Du hast ein aktives Abo — fahre fort.',
           catalogLoadFailed: 'Tarife konnten nicht geladen werden. Tippe «Zur Kasse» — der Backend bestimmt den Preis.',
@@ -4678,7 +4677,7 @@
           heroesF3: '✦ Musikstil-Präferenzen', heroesF4: '✦ Komplette Geschichte mit Texten & Analyse',
           heroesF5: '✦ Audio direkt aus der Personenkarte',
           heroesTrialBtn: '1 Tag kostenlos — ausprobieren', heroesSubBtn: 'Labor abonnieren — $39.99/Mon.',
-          heroesSubNote: '30 Tracks/Monat · Zahlung via HOT Pay',
+          heroesSubNote: '30 Tracks/Monat · Zahlung via HOT',
           heroFormTitle: 'Person hinzufügen', heroRelLabel: 'Beziehung', heroBirthdateHint: 'Tag, Monat und Jahr wählen',
           heroTimeBirthLabel: 'Geburtszeit', heroStyleLabel: 'Lieblingsmusikstile', heroStylePh: 'Pop, Jazz, Elektronisch…',
           requestPreferredStyleLabel: 'Song-Stil',
@@ -4758,7 +4757,7 @@
           submitHint: 'La chanson arrivera dans ce chat avec le bot. Si vous n\'avez pas encore appuyé sur «Démarrer» dans le bot — faites-le maintenant.',
           paymentPageIntroAfterSubmit: 'Demande envoyée. Entre le code promo ou appuie ci-dessous pour payer via HOT Pay.',
           paymentPageTagline: 'Code promo ou paiement',
-          payWithHot: 'Payer via HOT Pay',
+          payWithHot: 'Payer HOT',
           firstFree: 'Ta première clé sonore est gratuite.',
           subscriptionActive: 'Tu as un abonnement actif — continue.',
           catalogLoadFailed: 'Tarifs non chargés. Appuie sur «Payer» — le backend déterminera le prix.',
@@ -5029,7 +5028,7 @@
         var heroFemale = document.querySelector('#heroGender option[value="female"]'); if (heroFemale) heroFemale.textContent = t('female');
         document.getElementById('birthplaceHint') && (document.getElementById('birthplaceHint').textContent = t('birthplaceHint'));
         document.getElementById('birthplace2Hint') && (document.getElementById('birthplace2Hint').textContent = t('birthplaceHint'));
-        document.querySelector('label[for="unknown"]') && (document.querySelector('label[for="unknown"]').textContent = t('unknownTime'));
+        document.querySelector('label[for="unknown"]') && (document.querySelector('label[for="unknown"]').textContent = t('unknownTimeShort'));
         document.querySelector('label[for="unknown2"]') && (document.querySelector('label[for="unknown2"]').textContent = t('unknownTimeShort'));
         var quickBtns = document.querySelectorAll('.example-btn'); var quickK = ['quick1','quick2','quick3','quick4','quick5','quick6','quick7','quick8','quick9','quick10','quick11','quick12']; var quickT = ['quick1t','quick2t','quick3t','quick4t','quick5t','quick6t','quick7t','quick8t','quick9t','quick10t','quick11t','quick12t'];
         quickBtns.forEach(function(btn, i) { if (btn && i < quickK.length) { btn.textContent = t(quickK[i]); btn.setAttribute('data-text', t(quickT[i])); } });
@@ -5178,7 +5177,7 @@
         var sku = pendingPaymentSku || getCurrentSku();
         var item = pricingCatalog && pricingCatalog.find(function(x) { return x && x.sku === sku; });
         var priceStr = item ? (String(item.price) + ' ' + (item.currency || 'USDT')) : '';
-        payBtn.textContent = priceStr ? ('Оплатить ' + priceStr) : 'Оплатить через HOT Pay';
+        payBtn.textContent = priceStr ? ('Оплатить ' + priceStr) : 'Оплатить HOT';
         payBtn.style.background = 'linear-gradient(135deg,var(--primary-color),var(--secondary-color))';
       }
       function isTelegramWebApp() {
@@ -6610,6 +6609,19 @@
         var _qsStart = _urlParams.match(/[?&](?:tgWebAppStartParam|startapp|start_param)=([^&]+)/);
         if (!_tgStartParam && _qsStart && _qsStart[1]) _tgStartParam = decodeURIComponent(_qsStart[1]);
         var _isPaymentReturn = _urlParams.indexOf('payment=success') !== -1 || /^pay_/.test(_tgStartParam);
+        function normalizeRequestId(rawValue) {
+          var raw = rawValue == null ? '' : String(rawValue);
+          if (!raw) return null;
+          var decoded = raw;
+          try { decoded = decodeURIComponent(raw); } catch(_) {}
+          var m = decoded.match(/[?&]request_id=([^&#]+)/i);
+          if (m && m[1]) decoded = m[1];
+          decoded = decoded.split('#')[0];
+          decoded = decoded.replace(/[?&](memo|order_id)=.*$/i, '');
+          decoded = decoded.split('?')[0].split('&')[0].trim();
+          var uuid = decoded.match(/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i);
+          return uuid ? uuid[0] : decoded;
+        }
 
         function _hasSeenOnboarding() {
           try { return !!localStorage.getItem(ONBOARDING_KEY); } catch(_) { return false; }
@@ -6670,7 +6682,7 @@
         // Восстановление незавершённого HOT-платежа (Mini App могла закрыться на iOS)
         setTimeout(function() {
           try {
-            var savedReqId = (localStorage.getItem('hot_pending_request_id') || '').trim();
+            var savedReqId = normalizeRequestId((localStorage.getItem('hot_pending_request_id') || '').trim()) || '';
             if (!savedReqId || savedReqId.length < 10) return;
             var savedSku = localStorage.getItem('hot_pending_sku') || '';
             var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
@@ -7812,7 +7824,7 @@
         goToPage('paymentThanksPage');
         var requestIdMatch = search.match(/request_id=([^&\s]+)/);
         var thanksRequestIdRaw = requestIdMatch ? decodeURIComponent(requestIdMatch[1]) : (startParamRequestId || null);
-        var thanksRequestId = thanksRequestIdRaw ? String(thanksRequestIdRaw).split('?')[0].split('#')[0].trim() : null;
+        var thanksRequestId = normalizeRequestId(thanksRequestIdRaw);
         var uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
         if (thanksRequestId && !uuidRe.test(thanksRequestId)) {
           thanksRequestId = null;
@@ -7832,6 +7844,10 @@
           var _pp = localStorage.getItem('pending_payment_type');
           if (_pp) { pendingPayment = JSON.parse(_pp); localStorage.removeItem('pending_payment_type'); }
         } catch(e) {}
+        if (!thanksRequestId && pendingPayment && pendingPayment.request_id) {
+          var pendingReqId = normalizeRequestId(pendingPayment.request_id);
+          if (pendingReqId && uuidRe.test(pendingReqId)) thanksRequestId = pendingReqId;
+        }
         
         // КРИТИЧНО: сбрасываем кэш и перезагружаем профиль/каталог для актуального статуса подписки
         catalogCache = null;
@@ -9056,7 +9072,7 @@
           payBtn.disabled = false;
           // Текст кнопки: сбрасываем в HOT Pay (активный промокод уже очищен при ошибке промокода)
           var isFreeAfterError = activePromo && Number(activePromo.amount_after) === 0;
-          payBtn.textContent = isFreeAfterError ? 'Получить бесплатно' : 'Оплатить через HOT Pay';
+          payBtn.textContent = isFreeAfterError ? 'Получить бесплатно' : 'Оплатить HOT';
           payBtn.style.background = isFreeAfterError ? 'linear-gradient(135deg,#059669,#10b981)' : 'linear-gradient(135deg,var(--primary-color),var(--secondary-color))';
         }
       });
@@ -9184,7 +9200,7 @@
               // Сохраняем в localStorage что это оплата подписки — нужно для экрана после возврата
               try {
                 localStorage.setItem('pending_payment_type', JSON.stringify({
-                  type: 'subscription', plan_key: planKey, plan_name: planName, ts: Date.now()
+                  type: 'subscription', plan_key: planKey, plan_name: planName, request_id: data.request_id || '', ts: Date.now()
                 }));
               } catch(e) {}
               // Открываем оплату без закрытия приложения
@@ -10251,16 +10267,18 @@
           </button>
         </div>
 
-        <!-- Промокод — раскрываемый блок, чтобы не перегружать экран -->
+        <!-- Промокод — всегда видимое поле -->
         <div style="margin-bottom:16px;">
-          <button type="button" id="payOvPromoToggle" style="width:100%;padding:10px 0;background:none;border:none;color:rgba(var(--primary-rgb),0.85);font-size:0.9rem;cursor:pointer;font-family:inherit;text-align:left;">▸ Есть промокод?</button>
-          <div id="payOvPromoSection" style="display:none;margin-top:8px;">
-            <input id="payOvPromoInput" type="text" placeholder="Введите промокод"
-              style="display:block;width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(var(--primary-rgb),0.65);background:rgba(255,255,255,0.14);color:#fff;font-size:1rem;font-family:inherit;text-transform:uppercase;outline:none;-webkit-appearance:none;margin-bottom:8px;">
-            <button id="payOvPromoBtn" type="button"
-              style="display:block;width:100%;box-sizing:border-box;padding:11px;border-radius:10px;background:rgba(var(--primary-rgb),0.18);border:1.5px solid rgba(var(--primary-rgb),0.55);color:var(--primary-color);font-weight:600;font-size:0.9rem;cursor:pointer;font-family:inherit;">
-              Применить
-            </button>
+          <button type="button" id="payOvPromoToggle" style="display:none;">▸ Есть промокод?</button>
+          <div id="payOvPromoSection" style="display:block;margin-top:0;">
+            <div style="display:flex;gap:8px;align-items:stretch;">
+              <input id="payOvPromoInput" type="text" placeholder="Промокод"
+                style="flex:1;min-width:0;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(var(--primary-rgb),0.65);background:rgba(255,255,255,0.14);color:#fff;font-size:1rem;font-family:inherit;text-transform:uppercase;outline:none;-webkit-appearance:none;">
+              <button id="payOvPromoBtn" type="button"
+                style="flex:0 0 auto;padding:12px 18px;border-radius:10px;background:rgba(var(--primary-rgb),0.18);border:1.5px solid rgba(var(--primary-rgb),0.55);color:var(--primary-color);font-weight:600;font-size:0.9rem;cursor:pointer;font-family:inherit;white-space:nowrap;">
+                Применить
+              </button>
+            </div>
           </div>
         </div>
 
@@ -10289,7 +10307,7 @@
           </div>
           <button id="payOvPayBtn" type="button"
             style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;letter-spacing:0;">
-            Оплатить через HOT Pay
+            Оплатить HOT
           </button>
           <button id="payOvStarsBtn" type="button"
             style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:0;letter-spacing:0;">

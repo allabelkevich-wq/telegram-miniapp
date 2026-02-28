@@ -456,11 +456,50 @@ function buildHotCheckoutUrl({ itemId, orderId, amount, currency, requestId, sku
   // redirect_url: домен должен совпадать с настроенным в панели HOT Pay.
   // Используем наш сервер как промежуточный редирект → /api/payments/hot/return → Telegram deep-link.
   const baseUrl = String(MINI_APP_BASE).replace(/\/app\/?$/, "").replace(/\/$/, "");
-  const returnPath = "/api/payments/hot/return?request_id=" + encodeURIComponent(requestId || "");
+  // Не передаём request_id в query redirect_url: HOT может некорректно добавлять свои query-параметры.
+  // Идентификацию заявки делаем по memo/order_id на стороне /api/payments/hot/return.
+  const returnPath = "/api/payments/hot/return";
   const redirectUrl = process.env.HOT_REDIRECT_URL || (baseUrl + returnPath);
   if (redirectUrl) url.searchParams.set("redirect_url", redirectUrl);
   url.searchParams.set("notify_url", HOT_NOTIFY_URL_EFFECTIVE);
   return url.toString();
+}
+
+function safeDecodeURIComponent(value) {
+  try {
+    return decodeURIComponent(String(value || ""));
+  } catch (_) {
+    return String(value || "");
+  }
+}
+
+function extractQueryParam(rawValue, key) {
+  const value = String(rawValue || "");
+  const re = new RegExp(`[?&]${String(key).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}=([^&#]+)`, "i");
+  const m = value.match(re);
+  return m && m[1] ? safeDecodeURIComponent(m[1]).trim() : "";
+}
+
+function normalizeHotRequestId(rawValue) {
+  let value = safeDecodeURIComponent(rawValue).trim();
+  if (!value) return "";
+  if (/^[^?&]+$/.test(value) === false && /request_id=/i.test(value)) {
+    value = extractQueryParam(value, "request_id") || value;
+  }
+  value = value.split("#")[0];
+  value = value.replace(/[?&](memo|order_id)=.*$/i, "");
+  value = value.split("?")[0].split("&")[0].trim();
+  const uuidMatch = value.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+  return uuidMatch ? uuidMatch[0] : value;
+}
+
+function normalizeHotStatus(rawStatus) {
+  const raw = String(rawStatus ?? "").trim();
+  if (!raw) return "";
+  const upper = raw.toUpperCase();
+  if (["PAID", "SUCCESS", "COMPLETED", "CONFIRMED"].includes(upper)) return "paid";
+  if (["PENDING", "WAITING", "PROCESSING"].includes(upper)) return "pending";
+  return raw.toLowerCase();
 }
 
 function verifyHotWebhookSignature(rawBody, signatureHeader) {
@@ -1293,10 +1332,11 @@ bot.on("callback_query:data", async (ctx) => {
       show_alert: true,
     }).catch(() => {});
     if (supabase && stars >= 1 && stars <= 5 && requestId && callerId) {
-      await supabase.from("song_ratings").upsert(
+      const { error: rateErr } = await supabase.from("song_ratings").upsert(
         { request_id: requestId, telegram_user_id: callerId, rating: stars },
         { onConflict: "request_id,telegram_user_id" }
-      ).catch((e) => console.warn("[rate_song] supabase error:", e?.message));
+      );
+      if (rateErr) console.warn("[rate_song] supabase error:", rateErr.message);
     }
     try {
       await ctx.editMessageText(
@@ -1317,12 +1357,12 @@ bot.on("callback_query:data", async (ctx) => {
   const callerId = ctx.from?.id;
   if (supabase && requestId && callerId) {
     // Отменяем только если заявка принадлежит этому пользователю
-    await supabase
+    const { error: cancelErr } = await supabase
       .from("track_requests")
       .update({ generation_status: "cancelled", updated_at: new Date().toISOString() })
       .eq("id", requestId)
-      .eq("telegram_user_id", callerId)
-      .catch((e) => console.warn("[cancel_req] supabase error:", e?.message));
+      .eq("telegram_user_id", callerId);
+    if (cancelErr) console.warn("[cancel_req] supabase error:", cancelErr.message);
   }
   await ctx.answerCallbackQuery({ text: "✅ Заявка отменена" }).catch(() => {});
   try {
@@ -1643,8 +1683,10 @@ bot.command("start", async (ctx) => {
   if (supabase && telegramUserId) {
     const profileData = { telegram_id: Number(telegramUserId), updated_at: new Date().toISOString() };
     if (ctx.from?.username) profileData.tg_username = ctx.from.username;
-    supabase.from("user_profiles").upsert(profileData, { onConflict: "telegram_id" })
-      .then(() => null).catch((e) => console.warn("[start] upsert user_profiles:", e?.message));
+    const { error: startUpsertErr } = await supabase
+      .from("user_profiles")
+      .upsert(profileData, { onConflict: "telegram_id" });
+    if (startUpsertErr) console.warn("[start] upsert user_profiles:", startUpsertErr.message);
   }
 
   const name = ctx.from?.first_name || "друг";
@@ -1825,10 +1867,11 @@ bot.on("message:web_app_data", async (ctx) => {
 
   // Сохраняем username при каждой заявке — для ссылок в админке
   if (supabase && ctx.from?.username) {
-    supabase.from("user_profiles").upsert(
+    const { error: usernameUpsertErr } = await supabase.from("user_profiles").upsert(
       { telegram_id: Number(telegramUserId), tg_username: ctx.from.username, updated_at: new Date().toISOString() },
       { onConflict: "telegram_id" }
-    ).catch((e) => console.warn("[Заявка] upsert tg_username:", e?.message));
+    );
+    if (usernameUpsertErr) console.warn("[Заявка] upsert tg_username:", usernameUpsertErr.message);
   }
 
   console.log("[Заявка] Пользователь:", telegramUserId, "Имя:", payload.name, "Место:", payload.birthplace, "Координаты:", payload.birthplaceLat ? `${payload.birthplaceLat}, ${payload.birthplaceLon}` : "нет");
@@ -1953,12 +1996,17 @@ bot.on("message:web_app_data", async (ctx) => {
   }
   await supabase?.from("track_requests").update(updatePayload).eq("id", requestId);
   if (access.source === "promo_free" && promoData && supabase) {
-    await supabase.from("promo_redemptions").insert({
+    const { error: promoRedemptionErr } = await supabase.from("promo_redemptions").insert({
       promo_code_id: promoData.id,
       telegram_user_id: Number(telegramUserId),
       request_id: requestId,
-    }).catch((e) => console.warn("[Заявка] promo_redemptions insert:", e?.message));
-    await supabase.from("promo_codes").update({ used_count: (promoData.used_count || 0) + 1, updated_at: new Date().toISOString() }).eq("id", promoData.id).catch((e) => console.warn("[Заявка] promo_codes update:", e?.message));
+    });
+    if (promoRedemptionErr) console.warn("[Заявка] promo_redemptions insert:", promoRedemptionErr.message);
+    const { error: promoCounterErr } = await supabase
+      .from("promo_codes")
+      .update({ used_count: (promoData.used_count || 0) + 1, updated_at: new Date().toISOString() })
+      .eq("id", promoData.id);
+    if (promoCounterErr) console.warn("[Заявка] promo_codes update:", promoCounterErr.message);
   }
 
   if (supabase && birthdate && birthplace) {
@@ -3047,10 +3095,16 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
     const signature = req.headers["x-hot-signature"] || req.headers["x-signature"] || "";
     const body = parseJsonSafe(rawBody, {});
     // HOT присылает memo (и иногда request_id). Поддержка status: SUCCESS, paid, success и т.д.
-    const orderId = String(body.memo || body.order_id || body.orderId || body.data?.order_id || "").trim();
-    const requestId = String(body.request_id || body.requestId || body.data?.request_id || body.data?.requestId || "").trim();
-    const statusRaw = body.payment_status ?? body.status ?? body.event ?? "";
-    const status = String(statusRaw).toLowerCase();
+    const requestIdRaw = String(body.request_id || body.requestId || body.data?.request_id || body.data?.requestId || body["request_id"] || "").trim();
+    let orderId = normalizeHotRequestId(
+      body.memo || body.order_id || body.orderId || body.data?.order_id || body.data?.memo || body.note || ""
+    );
+    const requestId = normalizeHotRequestId(requestIdRaw);
+    if (!orderId && requestIdRaw) {
+      orderId = normalizeHotRequestId(extractQueryParam(requestIdRaw, "memo") || extractQueryParam(requestIdRaw, "order_id"));
+    }
+    const statusRaw = body.payment_status ?? body.status ?? body.event ?? body.state ?? "";
+    const status = normalizeHotStatus(statusRaw);
     const txId = String(body.tx_id || body.txId || body.near_trx || body.transaction_id || body.data?.tx_id || "").trim() || null;
 
     console.log("[HOT webhook] входящий запрос", { memo: orderId || "(пусто)", request_id: requestId || "(пусто)", status: statusRaw, hasSignature: !!signature, bodyKeys: Object.keys(body) });
@@ -3114,7 +3168,7 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
     }
     if ((row.payment_status || "").toLowerCase() === "paid") return res.json({ success: true, message: "Already processed" });
 
-    const normalizedPaid = ["paid", "success", "completed", "confirmed"].includes(status);
+    const normalizedPaid = status === "paid";
     console.log("[HOT webhook] заказ найден", { id: row.id?.slice(0, 8), mode: row.mode, statusRaw, normalizedPaid });
     const paymentStatus = normalizedPaid ? "paid" : (status || "pending");
     const paymentAmount = body.amount != null ? Number(body.amount) : null;
@@ -3418,7 +3472,18 @@ app.get("/api/diag/hot-payments", asyncApi(async (req, res) => {
 // HOT Pay redirect: промежуточная страница после оплаты → перенаправляет в Telegram Mini App
 // Также запускает серверную проверку оплаты (на случай если webhook не придёт и пользователь не вернётся в Mini App)
 app.get("/api/payments/hot/return", async (req, res) => {
-  const requestId = String(req.query.request_id || "").trim();
+  const rawRequestId = String(req.query.request_id || req.query.requestId || "").trim();
+  const memoFromRequestId = extractQueryParam(rawRequestId, "memo");
+  const orderIdFromQuery = normalizeHotRequestId(req.query.memo || req.query.order_id || memoFromRequestId || "");
+  let requestId = normalizeHotRequestId(rawRequestId);
+  if (!requestId && orderIdFromQuery && supabase) {
+    const { data: byOrderId } = await supabase
+      .from("track_requests")
+      .select("id")
+      .eq("payment_order_id", orderIdFromQuery)
+      .maybeSingle();
+    if (byOrderId?.id) requestId = String(byOrderId.id);
+  }
   const botUsername = String(RESOLVED_BOT_USERNAME || process.env.BOT_USERNAME || "Yup_Soul_bot").replace(/^@/, "");
   const startPayload = requestId ? ("pay_" + requestId) : "pay_return";
   const telegramDeepLink = "https://t.me/" + botUsername + "?startapp=" + encodeURIComponent(startPayload);
@@ -3485,8 +3550,8 @@ app.get("/api/payments/hot/return", async (req, res) => {
     '<p style="opacity:.7;max-width:320px">Перенаправляем в приложение...</p>' +
     '<a href="' + telegramDeepLink.replace(/"/g, '&quot;') + '">Открыть YupSoul</a>' +
     '<script>' +
-    'setTimeout(function(){window.location.href="' + telegramDeepLink.replace(/"/g, '\\"') + '";},1500);' +
-    'setTimeout(function(){window.location.href="' + miniAppUrl.replace(/"/g, '\\"') + '";},5000);' +
+    'setTimeout(function(){window.location.href="' + telegramDeepLink.replace(/"/g, '\\"') + '";},1200);' +
+    'setTimeout(function(){window.location.href="' + telegramDeepLink.replace(/"/g, '\\"') + '";},4200);' +
     '</script></body></html>'
   );
 });
@@ -4377,7 +4442,8 @@ app.post("/api/user/sync", asyncApi(async (req, res) => {
   const profileData = { telegram_id: Number(tgUser.id), updated_at: new Date().toISOString() };
   if (tgUser.username) profileData.tg_username = tgUser.username;
   if (tgUser.first_name) profileData.name = tgUser.first_name;
-  await supabase.from("user_profiles").upsert(profileData, { onConflict: "telegram_id" }).catch(() => {});
+  const { error: syncErr } = await supabase.from("user_profiles").upsert(profileData, { onConflict: "telegram_id" });
+  if (syncErr) console.warn("[user/sync] upsert error:", syncErr.message);
   console.log(`[user/sync] ${tgUser.id} @${tgUser.username || "—"}`);
   return res.json({ success: true });
 }));
@@ -4594,7 +4660,7 @@ app.post("/api/payments/subscription/checkout", express.json(), asyncApi(async (
   const orderId = crypto.randomUUID();
   const requestId = crypto.randomUUID();
 
-  await supabase.from("track_requests").insert({
+  const { data: createdSubRequest, error: subInsertErr } = await supabase.from("track_requests").insert({
     id: requestId,
     telegram_user_id: Number(telegramUserId),
     name: String(req.body?.name || ""),
@@ -4608,7 +4674,11 @@ app.post("/api/payments/subscription/checkout", express.json(), asyncApi(async (
     generation_status: "pending_payment",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  });
+  }).select("id").single();
+  if (subInsertErr || !createdSubRequest?.id) {
+    console.error("[subscription/checkout] Не удалось создать track_request:", subInsertErr?.message || "unknown_error");
+    return res.status(500).json({ success: false, error: "Не удалось создать заказ подписки" });
+  }
 
   const checkoutUrl = buildHotCheckoutUrl({
     itemId, orderId,
@@ -4621,6 +4691,8 @@ app.post("/api/payments/subscription/checkout", express.json(), asyncApi(async (
   return res.json({
     success: true,
     checkout_url: checkoutUrl,
+    request_id: requestId,
+    order_id: orderId,
     plan_name: planInfo.name,
     price: priceData.price,
     currency: priceData.currency || "USDT",
@@ -5906,15 +5978,20 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
     updateData.payment_amount = 0;
     updateData.payment_currency = "USDT";
     // Записываем использование промокода
-    await supabase.from("promo_redemptions").insert({
+    const { error: promoInsertErr2 } = await supabase.from("promo_redemptions").insert({
       promo_code_id: promoData.id,
       telegram_user_id: Number(telegramUserId),
       request_id: requestId,
       discount_amount: promoData.discount,
       redeemed_at: new Date().toISOString(),
-    }).catch((e) => console.warn("[submit-request] promo_redemptions insert:", e?.message));
+    });
+    if (promoInsertErr2) console.warn("[submit-request] promo_redemptions insert:", promoInsertErr2.message);
     // Увеличиваем счётчик использований промокода
-    await supabase.from("promo_codes").update({ used_count: (promoData.used_count || 0) + 1, updated_at: new Date().toISOString() }).eq("id", promoData.id).catch((e) => console.warn("[submit-request] promo_codes update:", e?.message));
+    const { error: promoCounterErr2 } = await supabase
+      .from("promo_codes")
+      .update({ used_count: (promoData.used_count || 0) + 1, updated_at: new Date().toISOString() })
+      .eq("id", promoData.id);
+    if (promoCounterErr2) console.warn("[submit-request] promo_codes update:", promoCounterErr2.message);
   }
   
   await supabase.from("track_requests").update(updateData).eq("id", requestId);
