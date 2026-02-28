@@ -6989,14 +6989,36 @@
             if (checkEl) checkEl.setAttribute('aria-hidden', 'true');
             if (hintEl) hintEl.style.display = 'none';
           }
+          var _fetchPlacesRetries = 0;
           function fetchPlaces(q) {
             if (!q || q.length < 2) { hideSuggestions(); return; }
             var url = typeof getPlacesSearchUrl === 'function' ? getPlacesSearchUrl(q) : ('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=8&addressdetails=1');
             var headers = { 'Accept': 'application/json' };
             if (url.indexOf('nominatim') !== -1) { headers['Accept-Language'] = 'ru'; headers['User-Agent'] = 'YupSoulMiniApp/1.0 (contact@yupsoul.com)'; }
             fetch(url, { headers: headers })
-              .then(function(r) { return r.json(); })
+              .then(function(r) {
+                if (r.status === 429 || r.status === 502 || r.status === 503) {
+                  if (_fetchPlacesRetries < 2) {
+                    _fetchPlacesRetries++;
+                    setTimeout(function() { fetchPlaces(q); }, 1500 * _fetchPlacesRetries);
+                  } else {
+                    _fetchPlacesRetries = 0;
+                    if (suggestionsEl) {
+                      suggestionsEl.innerHTML = '';
+                      var errLi = document.createElement('li');
+                      errLi.style.cssText = 'padding:12px;color:rgba(255,255,255,0.5);text-align:center;cursor:default';
+                      errLi.textContent = 'Сервис загружен, попробуй через пару секунд';
+                      suggestionsEl.appendChild(errLi);
+                      suggestionsEl.style.display = 'block';
+                    }
+                  }
+                  return null;
+                }
+                _fetchPlacesRetries = 0;
+                return r.json();
+              })
               .then(function(list) {
+                if (!list) return;
                 if (lastSearch !== q) return;
                 if (!suggestionsEl) return;
                 suggestionsEl.innerHTML = '';
@@ -7072,14 +7094,36 @@
             if (wrap2El) wrap2El.classList.remove('has-place');
             if (check2El) check2El.setAttribute('aria-hidden', 'true');
           }
+          var _fetchPlaces2Retries = 0;
           function fetchPlaces2(q) {
             if (!q || q.length < 2) { hideSuggestions2(); return; }
             var url = typeof getPlacesSearchUrl === 'function' ? getPlacesSearchUrl(q) : ('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=8&addressdetails=1');
             var headers = { 'Accept': 'application/json' };
             if (url.indexOf('nominatim') !== -1) { headers['Accept-Language'] = 'ru'; headers['User-Agent'] = 'YupSoulMiniApp/1.0 (contact@yupsoul.com)'; }
             fetch(url, { headers: headers })
-              .then(function(r) { return r.json(); })
+              .then(function(r) {
+                if (r.status === 429 || r.status === 502 || r.status === 503) {
+                  if (_fetchPlaces2Retries < 2) {
+                    _fetchPlaces2Retries++;
+                    setTimeout(function() { fetchPlaces2(q); }, 1500 * _fetchPlaces2Retries);
+                  } else {
+                    _fetchPlaces2Retries = 0;
+                    if (sugg2El) {
+                      sugg2El.innerHTML = '';
+                      var errLi = document.createElement('li');
+                      errLi.style.cssText = 'padding:12px;color:rgba(255,255,255,0.5);text-align:center;cursor:default';
+                      errLi.textContent = 'Сервис загружен, попробуй через пару секунд';
+                      sugg2El.appendChild(errLi);
+                      sugg2El.style.display = 'block';
+                    }
+                  }
+                  return null;
+                }
+                _fetchPlaces2Retries = 0;
+                return r.json();
+              })
               .then(function(list) {
+                if (!list) return;
                 if (lastSearch2 !== q) return;
                 if (!sugg2El) return;
                 sugg2El.innerHTML = '';
@@ -9740,14 +9784,36 @@
           if (hWrap)  hWrap.classList.remove('has-place');
           if (hCheck) hCheck.setAttribute('aria-hidden','true');
         }
+        var _hFetchRetries = 0;
         function hFetchPlaces(q) {
           if (!q || q.length < 2) { hHideSuggestions(); return; }
           var url = typeof getPlacesSearchUrl === 'function' ? getPlacesSearchUrl(q) : ('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=8&addressdetails=1');
           var headers = { 'Accept': 'application/json' };
           if (url.indexOf('nominatim') !== -1) { headers['Accept-Language'] = 'ru'; headers['User-Agent'] = 'YupSoulMiniApp/1.0'; }
           fetch(url, { headers: headers })
-            .then(function(r){ return r.json(); })
+            .then(function(r){
+              if (r.status === 429 || r.status === 502 || r.status === 503) {
+                if (_hFetchRetries < 2) {
+                  _hFetchRetries++;
+                  setTimeout(function(){ hFetchPlaces(q); }, 1500 * _hFetchRetries);
+                } else {
+                  _hFetchRetries = 0;
+                  if (hSugg) {
+                    hSugg.innerHTML = '';
+                    var errLi = document.createElement('li');
+                    errLi.style.cssText = 'padding:12px;color:rgba(255,255,255,0.5);text-align:center;cursor:default';
+                    errLi.textContent = 'Сервис загружен, попробуй через пару секунд';
+                    hSugg.appendChild(errLi);
+                    hSugg.style.display = 'block';
+                  }
+                }
+                return null;
+              }
+              _hFetchRetries = 0;
+              return r.json();
+            })
             .then(function(list){
+              if (!list) return;
               if (hLastQ !== q || !hSugg) return;
               hSugg.innerHTML = '';
               (list || []).forEach(function(item) {

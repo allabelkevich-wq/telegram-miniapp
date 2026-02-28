@@ -4393,28 +4393,69 @@ app.get("/api/config", (req, res) => {
 // Прокси поиска городов (Nominatim) — автовыбор города в Mini App без CORS/блокировок
 const NOMINATIM_SEARCH = "https://nominatim.openstreetmap.org/search";
 const NOMINATIM_USER_AGENT = "YupSoulMiniApp/1.0 (contact@yupsoul.com)";
+
+const _placesCache = new Map();
+const PLACES_CACHE_TTL = 1000 * 60 * 60 * 24;
+const PLACES_CACHE_MAX = 2000;
+let _nominatimLastCall = 0;
+const NOMINATIM_MIN_INTERVAL = 1100;
+
+function _placesCleanup() {
+  if (_placesCache.size <= PLACES_CACHE_MAX) return;
+  const entries = [..._placesCache.entries()].sort((a, b) => a[1].ts - b[1].ts);
+  const toDelete = entries.slice(0, entries.length - PLACES_CACHE_MAX);
+  for (const [k] of toDelete) _placesCache.delete(k);
+}
+
+async function _nominatimFetch(q) {
+  const now = Date.now();
+  const wait = NOMINATIM_MIN_INTERVAL - (now - _nominatimLastCall);
+  if (wait > 0) await new Promise(r => setTimeout(r, wait));
+  _nominatimLastCall = Date.now();
+
+  const url = `${NOMINATIM_SEARCH}?${new URLSearchParams({
+    q, format: "json", limit: "10", addressdetails: "1",
+  })}`;
+  const resp = await fetch(url, {
+    headers: { "Accept": "application/json", "Accept-Language": "ru", "User-Agent": NOMINATIM_USER_AGENT },
+  });
+  if (resp.status === 429) {
+    console.warn("[api/places] Nominatim 429, retry after 2s for:", q);
+    await new Promise(r => setTimeout(r, 2000));
+    _nominatimLastCall = Date.now();
+    const retry = await fetch(url, {
+      headers: { "Accept": "application/json", "Accept-Language": "ru", "User-Agent": NOMINATIM_USER_AGENT },
+    });
+    if (!retry.ok) return null;
+    return retry.json();
+  }
+  if (!resp.ok) return null;
+  return resp.json();
+}
+
 app.get("/api/places", async (req, res) => {
   const q = String(req.query.q || "").trim();
   if (!q || q.length < 2) {
     return res.status(400).json([]);
   }
+  const cacheKey = q.toLowerCase();
+  const cached = _placesCache.get(cacheKey);
+  if (cached && (Date.now() - cached.ts < PLACES_CACHE_TTL)) {
+    return res.json(cached.data);
+  }
   try {
-    const url = `${NOMINATIM_SEARCH}?${new URLSearchParams({
-      q,
-      format: "json",
-      limit: "10",
-      addressdetails: "1",
-    })}`;
-    const resp = await fetch(url, {
-      headers: { "Accept": "application/json", "Accept-Language": "ru", "User-Agent": NOMINATIM_USER_AGENT },
-    });
-    if (!resp.ok) {
-      return res.status(resp.status).json([]);
+    const list = await _nominatimFetch(q);
+    if (list === null) {
+      if (cached) return res.json(cached.data);
+      return res.status(502).json([]);
     }
-    const list = await resp.json();
-    return res.json(Array.isArray(list) ? list : []);
+    const data = Array.isArray(list) ? list : [];
+    _placesCache.set(cacheKey, { data, ts: Date.now() });
+    _placesCleanup();
+    return res.json(data);
   } catch (err) {
     console.warn("[api/places]", err.message);
+    if (cached) return res.json(cached.data);
     return res.status(502).json([]);
   }
 });
