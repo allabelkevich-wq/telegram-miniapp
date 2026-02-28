@@ -6670,41 +6670,73 @@
         // Восстановление незавершённого HOT-платежа (Mini App могла закрыться на iOS)
         setTimeout(function() {
           try {
-            var savedReqId = localStorage.getItem('hot_pending_request_id');
-            if (!savedReqId) return;
+            var savedReqId = (localStorage.getItem('hot_pending_request_id') || '').trim();
+            if (!savedReqId || savedReqId.length < 10) return;
+            var savedSku = localStorage.getItem('hot_pending_sku') || '';
             var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
             var initData = typeof getInitData === 'function' ? getInitData() : '';
             if (!apiBase || !initData) return;
-            console.log('[HOT recovery] Найден незавершённый платёж:', savedReqId.slice(0, 8));
+            console.log('[HOT recovery] Найден незавершённый платёж:', savedReqId.slice(0, 8), 'sku:', savedSku);
             (async function recoverHotPayment() {
-              var maxAttempts = 40;
+              var maxAttempts = 60;
+              var authFailCount = 0;
               for (var i = 0; i < maxAttempts; i++) {
                 try {
+                  var ctrl = new AbortController();
+                  var tid = setTimeout(function() { ctrl.abort(); }, 12000);
                   var resp = await fetch(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(savedReqId), {
-                    headers: { 'X-Telegram-Init': initData }
+                    headers: { 'X-Telegram-Init': initData },
+                    signal: ctrl.signal
                   });
+                  clearTimeout(tid);
+                  if (resp.status === 401 || resp.status === 403) {
+                    authFailCount++;
+                    if (authFailCount >= 3) {
+                      console.warn('[HOT recovery] Авторизация не проходит (' + resp.status + '), прекращаем');
+                      return;
+                    }
+                  }
                   var json = await resp.json().catch(function() { return {}; });
                   var ps = json && json.data && json.data.payment_status;
                   if (String(ps || '').toLowerCase() === 'paid') {
-                    console.log('[HOT recovery] Платёж подтверждён!');
+                    console.log('[HOT recovery] Платёж подтверждён! Вызываем confirm...');
+                    try {
+                      var confirmResp = await fetch(apiBase + '/api/payments/hot/confirm', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+                        body: JSON.stringify({ request_id: savedReqId, initData: initData })
+                      });
+                      if (!confirmResp.ok) {
+                        console.warn('[HOT recovery] confirm вернул', confirmResp.status, '— повторяем');
+                        await new Promise(function(r) { setTimeout(r, 3000); });
+                        continue;
+                      }
+                      console.log('[HOT recovery] confirm успешен');
+                    } catch(ce) {
+                      console.warn('[HOT recovery] confirm ошибка:', ce && ce.message, '— повторяем');
+                      await new Promise(function(r) { setTimeout(r, 3000); });
+                      continue;
+                    }
                     localStorage.removeItem('hot_pending_request_id');
                     localStorage.removeItem('hot_pending_sku');
-                    fetch(apiBase + '/api/payments/hot/confirm', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
-                      body: JSON.stringify({ request_id: savedReqId, initData: initData })
-                    }).catch(function() {});
                     catalogCache = null; catalogCacheTime = 0;
                     if (typeof loadProfilePage === 'function') loadProfilePage().catch(function() {});
                     if (typeof loadPricingCatalog === 'function') loadPricingCatalog().catch(function() {});
-                    if (typeof showConfirm === 'function') showConfirm('Оплата подтверждена!', 'Подписка активирована. Обнови профиль.');
+                    var isSub = savedSku && (savedSku.indexOf('sub') !== -1 || savedSku.indexOf('master') !== -1);
+                    var msg = isSub ? 'Подписка активирована!' : 'Оплата подтверждена! Песня создаётся.';
+                    if (typeof showConfirm === 'function') showConfirm('Оплата подтверждена!', msg);
                     return;
                   }
-                } catch(e) { console.warn('[HOT recovery] poll error:', e && e.message); }
+                } catch(e) {
+                  if (e && e.name === 'AbortError') {
+                    console.warn('[HOT recovery] таймаут запроса, продолжаем');
+                  } else {
+                    console.warn('[HOT recovery] poll error:', e && e.message);
+                  }
+                }
                 await new Promise(function(r) { setTimeout(r, 3000); });
               }
-              localStorage.removeItem('hot_pending_request_id');
-              localStorage.removeItem('hot_pending_sku');
+              console.log('[HOT recovery] Не подтверждено за', maxAttempts, 'попыток — оставляем для следующего запуска');
             })();
           } catch(_) {}
         }, 3000);
@@ -8426,13 +8458,13 @@
             if (typeof scCurrentRequestId !== 'undefined') scCurrentRequestId = result.requestId;
             if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
             
-            // Очищаем состояние после успешной отправки
             // Полная очистка состояния при успешной отправке
             pendingPaymentRequestId = null;
             pendingPaymentSku = null;
             pendingPaymentPromo = null;
             activePromo = null;
             isSubmitting = false;
+            try { localStorage.removeItem('hot_pending_request_id'); localStorage.removeItem('hot_pending_sku'); } catch(_) {}
             
             // Очищаем форму для новой заявки
             var formEl = document.getElementById('requestForm');
@@ -8679,6 +8711,7 @@
               body: JSON.stringify({ request_id: pendingPaymentRequestId, initData: initData })
             }).catch(function(){});
             pendingPaymentRequestId = null; pendingPaymentSku = null;
+            try { localStorage.removeItem('hot_pending_request_id'); localStorage.removeItem('hot_pending_sku'); } catch(_) {}
             setTimeout(function() { hidePaymentOverlay(); showConfirm('Оплата подтверждена!', 'Запускаем создание твоей песни.<br><br>Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.'); }, 1200);
           } else {
             setPaymentStatus('Оплата пока не подтверждена. Подожди немного и проверь снова.', 'warn');
@@ -8859,8 +8892,10 @@
 
           // Сохраняем данные о платеже ДО открытия ссылки (Mini App может закрыться на iOS)
           try {
-            localStorage.setItem('hot_pending_request_id', pendingPaymentRequestId || '');
-            localStorage.setItem('hot_pending_sku', pendingPaymentSku || '');
+            if (pendingPaymentRequestId) {
+              localStorage.setItem('hot_pending_request_id', pendingPaymentRequestId);
+              localStorage.setItem('hot_pending_sku', pendingPaymentSku || '');
+            }
           } catch(_) {}
 
           try {
@@ -8942,6 +8977,7 @@
           pendingPaymentRequestId = null;
           pendingPaymentSku = null;
           pendingPaymentPromo = null;
+          try { localStorage.removeItem('hot_pending_request_id'); localStorage.removeItem('hot_pending_sku'); } catch(_) {}
           // Сбрасываем кэш каталога, чтобы подписка и тарифы подтянулись свежими
           catalogCache = null;
           catalogCacheTime = 0;

@@ -55,7 +55,8 @@ const ADMIN_IDS = (process.env.ADMIN_TELEGRAM_IDS || "")
   .map((s) => parseInt(s, 10))
   .filter((n) => !Number.isNaN(n));
 const ADMIN_SECRET = process.env.ADMIN_SECRET || "";
-const HOT_API_JWT = process.env.HOT_API_JWT || "";
+const _rawHotApiJwt = (process.env.HOT_API_JWT || "").trim();
+const HOT_API_JWT = _rawHotApiJwt ? (_rawHotApiJwt.startsWith("Bearer ") ? _rawHotApiJwt : "Bearer " + _rawHotApiJwt) : "";
 // Реальное username бота — заполняется при старте через bot.api.getMe()
 let RESOLVED_BOT_USERNAME = process.env.BOT_USERNAME || "";
 const SUPPORT_TG_USERNAME = (process.env.SUPPORT_TG_USERNAME || "yupsoul").trim().replace(/^@/, "");
