@@ -448,12 +448,11 @@ function buildHotCheckoutUrl({ itemId, orderId, amount, currency, requestId, sku
   if (currency) url.searchParams.set("currency", String(currency));
   if (requestId) url.searchParams.set("request_id", requestId);
   if (sku) url.searchParams.set("sku", sku);
-  // redirect_url: после оплаты возвращаем пользователя именно в Telegram (startapp),
-  // чтобы Mini App открылась с валидным initData, а не в обычном браузере без авторизации.
-  const botUsername = String(RESOLVED_BOT_USERNAME || process.env.BOT_USERNAME || "Yup_Soul_bot").replace(/^@/, "");
-  const startPayload = requestId ? ("pay_" + requestId) : (orderId ? ("payo_" + orderId) : "pay_return");
-  const telegramDeepLink = "https://t.me/" + botUsername + "?startapp=" + encodeURIComponent(startPayload);
-  const redirectUrl = process.env.HOT_REDIRECT_URL || telegramDeepLink;
+  // redirect_url: домен должен совпадать с настроенным в панели HOT Pay.
+  // Используем наш сервер как промежуточный редирект → /api/payments/hot/return → Telegram deep-link.
+  const baseUrl = String(MINI_APP_BASE).replace(/\/app\/?$/, "").replace(/\/$/, "");
+  const returnPath = "/api/payments/hot/return?request_id=" + encodeURIComponent(requestId || "");
+  const redirectUrl = process.env.HOT_REDIRECT_URL || (baseUrl + returnPath);
   if (redirectUrl) url.searchParams.set("redirect_url", redirectUrl);
   url.searchParams.set("notify_url", HOT_NOTIFY_URL_EFFECTIVE);
   return url.toString();
@@ -3376,6 +3375,34 @@ const healthHtml =
 app.get("/healthz", (_req, res) =>
   res.status(200).set("Content-Type", "text/html; charset=utf-8").send(healthHtml)
 );
+// HOT Pay redirect: промежуточная страница после оплаты → перенаправляет в Telegram Mini App
+app.get("/api/payments/hot/return", (req, res) => {
+  const requestId = String(req.query.request_id || "").trim();
+  const botUsername = String(RESOLVED_BOT_USERNAME || process.env.BOT_USERNAME || "Yup_Soul_bot").replace(/^@/, "");
+  const startPayload = requestId ? ("pay_" + requestId) : "pay_return";
+  const telegramDeepLink = "https://t.me/" + botUsername + "?startapp=" + encodeURIComponent(startPayload);
+  const miniAppUrl = MINI_APP_STABLE_URL + "&payment=success&request_id=" + encodeURIComponent(requestId || "");
+  console.log("[hot/return] Redirect после оплаты:", { requestId: requestId?.slice(0, 8), telegramDeepLink });
+  res.status(200).set("Content-Type", "text/html; charset=utf-8").send(
+    '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>YupSoul — Оплата получена</title>' +
+    '<style>body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+    'background:#08071a;color:#fff;font-family:-apple-system,BlinkMacSystemFont,sans-serif;text-align:center;padding:24px;}' +
+    '.spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:#f97316;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}' +
+    '@keyframes spin{to{transform:rotate(360deg)}}' +
+    'a{display:inline-block;margin-top:16px;padding:14px 28px;background:linear-gradient(135deg,#f97316,#ec4899);color:#fff;' +
+    'text-decoration:none;border-radius:12px;font-size:1rem;font-weight:600}</style></head><body>' +
+    '<div class="spinner"></div>' +
+    '<h2>Оплата получена!</h2>' +
+    '<p style="opacity:.7;max-width:320px">Перенаправляем в приложение...</p>' +
+    '<a href="' + telegramDeepLink.replace(/"/g, '&quot;') + '">Открыть YupSoul</a>' +
+    '<script>' +
+    'setTimeout(function(){window.location.href="' + telegramDeepLink.replace(/"/g, '\\"') + '";},1500);' +
+    'setTimeout(function(){window.location.href="' + miniAppUrl.replace(/"/g, '\\"') + '";},5000);' +
+    '</script></body></html>'
+  );
+});
 // Эндпоинт для проверки URL Mini App (для кнопки в Telegram)
 app.get("/api/miniapp-url", (_req, res) => {
   res.json({
