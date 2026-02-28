@@ -2204,38 +2204,39 @@
       transform: translateX(2px) !important;
     }
 
-    /* --- ГЛАВНАЯ КНОПКА СОЗДАТЬ СВОЮ ПЕСНЮ --- */
+    /* --- ГЛАВНАЯ КНОПКА СОЗДАТЬ СВОЮ ПЕСНЮ (полупрозрачная, как остальные) --- */
     #startBtn,
     .profile-create-btn,
     .onboarding-btn {
       padding: 16px 40px !important;
       min-height: 56px !important;
       border-radius: 28px !important;
-      background: linear-gradient(135deg, #FF6B35 0%, #F85A3E 45%, #E85A30 100%) !important;
+      background: linear-gradient(135deg, rgba(255, 107, 53, 0.5) 0%, rgba(248, 90, 62, 0.5) 45%, rgba(232, 90, 48, 0.5) 100%) !important;
       background-size: 100% 100% !important;
       border: 1px solid rgba(255, 107, 53, 0.4) !important;
       box-shadow:
-        0 8px 24px rgba(255, 107, 53, 0.25),
-        0 4px 10px rgba(255, 107, 53, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+        0 8px 24px rgba(255, 107, 53, 0.2),
+        0 4px 10px rgba(255, 107, 53, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
       color: #ffffff !important;
       font-size: 1rem !important;
       font-weight: 700 !important;
       letter-spacing: 0.02em !important;
-      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
       transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
       animation: none !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
     }
     #startBtn:hover,
     .profile-create-btn:hover,
     .onboarding-btn:hover {
-      background: #FF7A45 !important;
-      background: linear-gradient(135deg, #FF8A5B 0%, #FF6B35 45%, #F85A3E 100%) !important;
+      background: linear-gradient(135deg, rgba(255, 138, 91, 0.6) 0%, rgba(255, 107, 53, 0.6) 45%, rgba(248, 90, 62, 0.6) 100%) !important;
       border-color: rgba(255, 107, 53, 0.6) !important;
       box-shadow:
-        0 12px 32px rgba(255, 107, 53, 0.35),
-        0 6px 14px rgba(255, 107, 53, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+        0 12px 32px rgba(255, 107, 53, 0.25),
+        0 6px 14px rgba(255, 107, 53, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
       transform: translateY(-3px) !important;
       color: #ffffff !important;
     }
@@ -2484,9 +2485,11 @@
     #payOvPayBtn,
     .profile-create-btn,
     .onboarding-btn {
-      background: linear-gradient(135deg, #FF6B35 0%, #F85A3E 100%) !important;
+      background: linear-gradient(135deg, rgba(255, 107, 53, 0.5) 0%, rgba(248, 90, 62, 0.5) 100%) !important;
       border: 1px solid rgba(255, 107, 53, 0.4) !important;
       color: #ffffff !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
     }
     #startBtn:hover,
     #stepNext:hover,
@@ -2494,9 +2497,9 @@
     #payOvPayBtn:hover,
     .profile-create-btn:hover,
     .onboarding-btn:hover {
-      background: linear-gradient(135deg, #FF8A5B 0%, #FF6B35 100%) !important;
+      background: linear-gradient(135deg, rgba(255, 138, 91, 0.6) 0%, rgba(255, 107, 53, 0.6) 100%) !important;
       transform: translateY(-2px) !important;
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4) !important;
+      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.3) !important;
     }
     button.secondary,
     .btn-secondary,
