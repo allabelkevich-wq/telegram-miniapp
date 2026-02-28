@@ -356,7 +356,7 @@
       background: linear-gradient(135deg,
         rgba(var(--primary-rgb), 0.3) 0%,
         rgba(var(--primary-rgb), 0.15) 100%);
-      border: 2px solid #FF6B35;
+      border: 2px solid rgba(var(--primary-rgb), 0.4);
       color: #FF8A5B !important;
       font-weight: 600;
       box-shadow:
@@ -1889,23 +1889,25 @@
       font-weight: 600 !important;
       letter-spacing: 0.02em !important;
       line-height: 1.4 !important;
-      background: linear-gradient(135deg, #FF6B35 0%, #F85A3E 50%, #E85A30 100%) !important;
+      background: linear-gradient(135deg, rgba(255, 107, 53, 0.5) 0%, rgba(248, 90, 62, 0.5) 50%, rgba(232, 90, 48, 0.5) 100%) !important;
       border: 1px solid rgba(255, 107, 53, 0.4) !important;
       box-shadow:
         0 4px 12px rgba(0, 0, 0, 0.2),
         0 1px 3px rgba(255, 107, 53, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-      color: #0A0A1A !important;
-      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+      color: #ffffff !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
       cursor: pointer !important;
       position: relative !important;
       overflow: hidden !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
     }
     button:hover,
     .btn:hover,
     [role="button"]:hover {
-      background: linear-gradient(135deg, #FF8A5B 0%, #FF6B35 50%, #F85A3E 100%) !important;
+      background: linear-gradient(135deg, rgba(255, 138, 91, 0.6) 0%, rgba(255, 107, 53, 0.6) 50%, rgba(248, 90, 62, 0.6) 100%) !important;
       box-shadow:
         0 8px 24px rgba(0, 0, 0, 0.3),
         0 2px 6px rgba(255, 107, 53, 0.25),
@@ -7183,8 +7185,12 @@
         
         // КРИТИЧНО: перезагружаем профиль пользователя, чтобы обновить статус подписки
         setTimeout(function() {
-          if (typeof loadUserProfile === 'function') {
-            loadUserProfile().catch(function(e) { console.warn('[payment success] loadUserProfile error:', e); });
+          if (typeof loadProfilePage === 'function') {
+            loadProfilePage().catch(function(e) { console.warn('[payment success] loadProfilePage error:', e); });
+          }
+          // Также перезагружаем каталог цен, чтобы обновить доступность тарифов
+          if (typeof loadPricingCatalog === 'function') {
+            loadPricingCatalog().catch(function(e) { console.warn('[payment success] loadPricingCatalog error:', e); });
           }
         }, 1000);
         var isSubPaymentImmediate = pendingPayment && pendingPayment.type === 'subscription'
