@@ -2728,8 +2728,8 @@
   </div>
 
   <!-- Страницы приложения -->
-    <!-- Главная страница -->
-    <div class="page" id="homePage">
+    <!-- Главная страница (active по умолчанию — если JS упадёт до startApp(), контент всё равно виден) -->
+    <div class="page active" id="homePage">
 
       <!-- Только кнопки: язык слева, профиль справа, без панели и заголовка -->
       <div id="homeTopBar" style="display:flex;justify-content:space-between;align-items:center;padding:max(10px,env(safe-area-inset-top)) 16px 0;position:absolute;top:0;left:0;right:0;z-index:20;pointer-events:none;">
@@ -6281,6 +6281,15 @@
         } else {
           startApp();
         }
+        // Страховка: если через 2 с ни одна страница не активна — показываем главную и запускаем startApp
+        setTimeout(function() {
+          var activePage = document.querySelector('.page.active');
+          if (!activePage && document.getElementById('homePage')) {
+            console.warn('[App] Нет активной страницы — показываем главную');
+            document.getElementById('homePage').classList.add('active');
+            if (typeof window.startApp === 'function') window.startApp();
+          }
+        }, 2000);
       })();
 
       // ── Логика гейт-экрана ─────────────────────────────────────────────────
