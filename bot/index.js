@@ -38,6 +38,9 @@ const APP_BUILD = Date.now(); // Меняется при каждом перез
 const MINI_APP_URL = MINI_APP_BASE.replace(/\/app\/?$/, "") + "/app?v=" + APP_BUILD;
 // MINI_APP_STABLE_URL — с cache-bust как MINI_APP_URL, чтобы после деплоя пользователи получали свежую версию (раньше без ?v= Telegram кэшировал навсегда)
 const MINI_APP_STABLE_URL = MINI_APP_BASE.replace(/\/app\/?$/, "") + "/app?v=" + APP_BUILD;
+// HOT API JWT — нужен для fallback-проверки оплаты через API (если webhook не пришёл)
+const _rawHotApiJwt = (process.env.HOT_API_JWT || "").trim();
+const HOT_API_JWT = _rawHotApiJwt ? (_rawHotApiJwt.startsWith("Bearer ") ? _rawHotApiJwt : "Bearer " + _rawHotApiJwt) : "";
 // URL для HOT Pay webhook — должен указывать на бэкенд (Render), иначе оплата не подтвердится
 const _hotNotifyBase = process.env.RENDER_EXTERNAL_URL || process.env.BACKEND_URL || process.env.HOT_WEBHOOK_BASE || MINI_APP_BASE;
 const HOT_NOTIFY_URL_EFFECTIVE = process.env.HOT_NOTIFY_URL || (String(_hotNotifyBase).replace(/\/$/, "").replace(/\/app\/?$/, "") + "/api/payments/hot/webhook");
@@ -58,8 +61,6 @@ const ADMIN_IDS = (process.env.ADMIN_TELEGRAM_IDS || "")
   .map((s) => parseInt(s, 10))
   .filter((n) => !Number.isNaN(n));
 const ADMIN_SECRET = process.env.ADMIN_SECRET || "";
-const _rawHotApiJwt = (process.env.HOT_API_JWT || "").trim();
-const HOT_API_JWT = _rawHotApiJwt ? (_rawHotApiJwt.startsWith("Bearer ") ? _rawHotApiJwt : "Bearer " + _rawHotApiJwt) : "";
 // Реальное username бота — заполняется при старте через bot.api.getMe()
 let RESOLVED_BOT_USERNAME = process.env.BOT_USERNAME || "";
 const SUPPORT_TG_USERNAME = (process.env.SUPPORT_TG_USERNAME || "yupsoul").trim().replace(/^@/, "");
