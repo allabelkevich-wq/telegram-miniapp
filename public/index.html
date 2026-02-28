@@ -2786,8 +2786,8 @@
       <!-- Профиль, Лаборатория, Помощь — без переносов, стили в CSS -->
       <nav class="home-nav">
         <button type="button" class="home-nav-link" onclick="goToSoulChat()">Soul Chat</button>
-        <button type="button" id="goHeroesBtn" class="home-nav-link" onclick="goToHeroesFrom('homePage')">Лаборатория</button>
-        <button type="button" id="goHelpBtn" class="home-nav-link" onclick="goToHelpFrom('homePage')">Помощь</button>
+        <button type="button" id="goHeroesBtn" class="home-nav-link" onclick="goToHeroesFrom('homePage')" aria-label="Перейти в Лабораторию">Лаборатория</button>
+        <button type="button" id="goHelpBtn" class="home-nav-link" onclick="goToHelpFrom('homePage')" aria-label="Перейти в раздел Помощь">Помощь</button>
       </nav>
 
       </div><!-- /нижняя обёртка -->
@@ -2913,7 +2913,7 @@
         <!-- Ошибка загрузки профиля / подписки -->
         <div id="profileLoadErrorWrap" style="display:none;margin-bottom:16px;padding:14px 16px;background:rgba(var(--secondary-rgb),0.08);border:1px solid rgba(var(--secondary-rgb),0.25);border-radius:14px;">
           <div id="profileLoadErrorText" style="font-size:0.88rem;color:rgba(255,255,255,0.75);line-height:1.5;margin-bottom:12px;">Не удалось загрузить подписку. Проверьте интернет.</div>
-          <button type="button" id="profileLoadRetryBtn" style="width:100%;padding:10px 16px;border-radius:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.9);font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;">Повторить</button>
+          <button type="button" id="profileLoadRetryBtn" aria-label="Повторить загрузку профиля" style="width:100%;padding:10px 16px;border-radius:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.9);font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;">Повторить</button>
         </div>
         <!-- Идентификация: аватар + имя + план -->
         <div class="profile-identity">
@@ -3074,7 +3074,7 @@
           <div class="profile-ref-link-row">
             <input id="profileRefLinkInput" readonly placeholder="Загрузка…">
           </div>
-          <button type="button" id="profileRefShareBtn" class="profile-ref-share-btn">Поделиться ссылкой</button>
+          <button type="button" id="profileRefShareBtn" class="profile-ref-share-btn" aria-label="Поделиться реферальной ссылкой">Поделиться ссылкой</button>
           <div class="profile-ref-stats">
             <span><strong id="profileRefInvited">0</strong><span id="profileRefInvitedLabel" class="profile-ref-stats-label">Приглашено</span></span>
             <span><strong id="profileRefRewarded">0</strong><span id="profileRefActivatedLabel" class="profile-ref-stats-label">Активировано</span></span>
@@ -3083,10 +3083,10 @@
         </div>
 
         <!-- Действия -->
-        <button type="button" id="profileCreateSongBtn" class="profile-create-btn">
+        <button type="button" id="profileCreateSongBtn" class="profile-create-btn" aria-label="Создать новую песню">
           Создать свою песню
         </button>
-        <button type="button" id="profileHelpBtn" class="secondary" onclick="goToHelpFrom('profilePage')" style="width:100%;margin-bottom:16px;background:transparent;border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);font-size:0.82rem;">Помощь и поддержка</button>
+        <button type="button" id="profileHelpBtn" class="secondary" onclick="goToHelpFrom('profilePage')" aria-label="Открыть раздел помощи и поддержки" style="width:100%;margin-bottom:16px;background:transparent;border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);font-size:0.82rem;">Помощь и поддержка</button>
       </div>
     </div>
 
@@ -3094,7 +3094,7 @@
     <div class="page" id="heroesPage">
       <!-- Шапка страницы -->
       <div class="page-header" style="padding:max(20px,calc(env(safe-area-inset-top)+12px)) 18px 12px; display:flex; align-items:center; gap:12px;">
-        <button type="button" id="heroesBackBtn" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.4rem;cursor:pointer;padding:4px 8px;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;line-height:1">←</button>
+        <button type="button" id="heroesBackBtn" aria-label="Назад" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.4rem;cursor:pointer;padding:4px 8px;min-height:unset;width:auto;box-shadow:none;animation:none;margin:0;line-height:1">←</button>
         <div style="flex:1">
           <div id="heroesPageTitle" style="font-size:1.15rem;font-weight:700;color:#fff;line-height:1.2">Лаборатория</div>
           <div style="font-size:0.75rem;color:rgba(var(--primary-rgb),0.65);margin-top:2px" id="masterAccessBadge"></div>
@@ -3116,8 +3116,8 @@
           <div id="heroesF4">✦ Полная история генераций с текстами и анализом</div>
           <div id="heroesF5">✦ Аудио прямо из карточки героя</div>
         </div>
-        <button type="button" id="masterTrialBtn" style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.2),rgba(var(--primary-rgb),0.08));border:1px solid rgba(var(--primary-rgb),0.4);color:var(--primary-color);font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">1 день бесплатно — попробовать</button>
-        <button type="button" id="masterSubBtn" onclick="showPlanConfirm('plan_master','Лаборатория')" style="width:100%;padding:14px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(167,139,250,0.15),rgba(167,139,250,0.06));border:1.5px solid rgba(167,139,250,0.35);color:rgba(167,139,250,0.9);font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">Оформить Лабораторию — $39.99/мес</button>
+        <button type="button" id="masterTrialBtn" aria-label="Получить 1 день бесплатного доступа к Лаборатории" style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.2),rgba(var(--primary-rgb),0.08));border:1px solid rgba(var(--primary-rgb),0.4);color:var(--primary-color);font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">1 день бесплатно — попробовать</button>
+        <button type="button" id="masterSubBtn" onclick="showPlanConfirm('plan_master','Лаборатория')" aria-label="Оформить подписку на Лабораторию за $39.99 в месяц" style="width:100%;padding:14px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(167,139,250,0.15),rgba(167,139,250,0.06));border:1.5px solid rgba(167,139,250,0.35);color:rgba(167,139,250,0.9);font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">Оформить Лабораторию — $39.99/мес</button>
         <div id="heroesSubNote" style="font-size:0.7rem;color:rgba(255,255,255,0.22);text-align:center;margin-top:12px">30 треков в месяц · Оплата через HOT Pay</div>
       </div>
 
@@ -7938,12 +7938,17 @@
             if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
             
             // Очищаем состояние после успешной отправки
+            // Полная очистка состояния при успешной отправке
             pendingPaymentRequestId = null;
             pendingPaymentSku = null;
             pendingPaymentPromo = null;
             activePromo = null;
             isSubmitting = false;
             
+            // Очищаем форму для новой заявки
+            var formEl = document.getElementById('requestForm');
+            if (formEl) formEl.reset();
+
             showConfirmOverlay('Заявка принята, ' + name1 + '!', 'Песня генерируется на нашем сервере. Когда будет готова — придёт сюда в этот чат с ботом.<br><br>Можешь закрыть приложение — ничего не пропадёт. Спасибо, что остаёшься с нами<br><br><span style="font-size:0.9em;color:rgba(255,255,255,0.6)">Нет песни? Напиши боту «песня не пришла».</span>', function() { goToPage('successPage'); });
           } else if ((response.status === 402 || (result && result.payment_required)) && result.requestId) {
             console.log('[Submit] 402 Payment Required — открываем окно оплаты');
@@ -8328,9 +8333,12 @@
           // КРИТИЧНО: Если промокод дал 100% скидку или free_applied — показываем экран подтверждения
           if (hotJson.free_applied || (hotJson.success && hotJson.provider === 'promo' && Number(hotJson.amount) === 0)) {
             console.log('[HOT Pay] Промокод дал бесплатную генерацию — показываем экран подтверждения');
+            // Полная очистка состояния
             pendingPaymentRequestId = null;
             pendingPaymentSku = null;
+            pendingPaymentPromo = null;
             activePromo = null;
+            hidePaymentOverlay();
             showConfirmOverlay('Заявка принята!', 'Промокод применён!<br><br>Песня генерируется на нашем сервере — когда будет готова, придёт сюда в чат с ботом. Можешь закрыть приложение — ничего не пропадёт. Спасибо<br><br><span style="font-size:0.9em;color:rgba(255,255,255,0.6)">Нет песни? Напиши боту «песня не пришла».</span>', function() { goToPage('successPage'); });
             return;
           }
