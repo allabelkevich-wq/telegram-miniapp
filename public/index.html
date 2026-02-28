@@ -3748,8 +3748,15 @@
         return true;
       };
       window.addEventListener('unhandledrejection', function(e) {
-        console.error('[YupSoul] unhandledrejection', e.reason && (e.reason.stack || e.reason.message || e.reason));
-        showErrorToast();
+        var reason = e && e.reason;
+        var message = String((reason && (reason.message || reason)) || '');
+        console.error('[YupSoul] unhandledrejection', reason && (reason.stack || reason.message || reason));
+        // Не показываем фатальный полноэкранный тост для нефатальных сетевых/ожидаемых отказов после оплаты.
+        // Иначе пользователь видит "Что-то пошло не так", хотя процесс может просто ожидать вебхук.
+        var nonFatal =
+          (reason && reason.name === 'AbortError') ||
+          /fetch|network|timeout|Оплата не подтверждена|not confirmed|Unauthorized|401|409/i.test(message);
+        if (!nonFatal) showErrorToast();
       });
     })();
     document.addEventListener('DOMContentLoaded', function() {
