@@ -2637,6 +2637,190 @@
         padding: 16px 12px calc(env(safe-area-inset-bottom) + 120px) !important;
       }
     }
+
+    /* ═══════════════════════════════════════════════════════════
+       PREMIUM UI SYSTEM — единый стиль, перекрывает все конфликты
+       Референс: тёмный glass-морфизм, мягкие свечения, pill-формы
+       ═══════════════════════════════════════════════════════════ */
+
+    /* ── Инпуты ─────────────────────────────────────────────── */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]),
+    textarea,
+    select {
+      background: rgba(255,255,255,0.06) !important;
+      border: 1px solid rgba(255,255,255,0.10) !important;
+      border-radius: 14px !important;
+      color: rgba(255,255,255,0.92) !important;
+      padding: 14px 18px !important;
+      font-size: 0.95rem !important;
+      font-family: inherit !important;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: border-color 0.25s, box-shadow 0.25s, background 0.25s !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04) !important;
+    }
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):focus,
+    textarea:focus,
+    select:focus {
+      border-color: rgba(255,107,53,0.5) !important;
+      box-shadow: 0 0 0 3px rgba(255,107,53,0.10), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+      background: rgba(255,255,255,0.08) !important;
+      outline: none !important;
+    }
+    input::placeholder, textarea::placeholder {
+      color: rgba(255,255,255,0.35) !important;
+    }
+    input[type="date"], input[type="time"] {
+      min-height: 52px !important;
+      font-size: 1rem !important;
+      font-weight: 500 !important;
+      border-radius: 14px !important;
+    }
+
+    /* ── Карточки / секции ──────────────────────────────────── */
+    .section,
+    .form-section,
+    .referral-card,
+    .profile-balance-card,
+    #profileDataCard,
+    .pricing-card,
+    .ppc-card {
+      background: rgba(255,255,255,0.04) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      border: 1px solid rgba(255,255,255,0.08) !important;
+      border-radius: 20px !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+    }
+
+    /* ── Основные CTA-кнопки ────────────────────────────────── */
+    #startBtn,
+    #stepNext,
+    #payBtn,
+    #payOvPayBtn,
+    .profile-create-btn,
+    .onboarding-btn {
+      background: linear-gradient(135deg, rgba(255,107,53,0.55), rgba(236,72,153,0.45)) !important;
+      border: 1px solid rgba(255,107,53,0.35) !important;
+      border-radius: 50px !important;
+      color: #fff !important;
+      font-weight: 600 !important;
+      font-size: 1rem !important;
+      padding: 15px 36px !important;
+      min-height: 52px !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
+      box-shadow: 0 6px 20px rgba(255,107,53,0.18), inset 0 1px 0 rgba(255,255,255,0.12) !important;
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1) !important;
+      letter-spacing: 0.02em !important;
+      text-transform: none !important;
+      animation: none !important;
+    }
+    #startBtn:hover, #stepNext:hover, #payBtn:hover, #payOvPayBtn:hover,
+    .profile-create-btn:hover, .onboarding-btn:hover {
+      background: linear-gradient(135deg, rgba(255,130,80,0.65), rgba(236,72,153,0.55)) !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 10px 28px rgba(255,107,53,0.25), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+    }
+    #startBtn:active, #stepNext:active, #payBtn:active, #payOvPayBtn:active,
+    .profile-create-btn:active, .onboarding-btn:active {
+      transform: translateY(0) scale(0.98) !important;
+      box-shadow: 0 3px 10px rgba(255,107,53,0.15) !important;
+    }
+
+    /* ── Вторичные кнопки ───────────────────────────────────── */
+    button.secondary,
+    .btn-secondary,
+    .form-nav-link {
+      background: rgba(255,255,255,0.05) !important;
+      border: 1px solid rgba(255,255,255,0.12) !important;
+      border-radius: 14px !important;
+      color: rgba(255,255,255,0.75) !important;
+      box-shadow: none !important;
+      animation: none !important;
+    }
+    button.secondary:hover, .btn-secondary:hover {
+      background: rgba(255,255,255,0.10) !important;
+      border-color: rgba(255,255,255,0.20) !important;
+    }
+
+    /* ── Иконочные кнопки (назад, меню) ─────────────────────── */
+    button.profile-back-btn,
+    button.header-back-btn,
+    button.btn-nav,
+    button.header-menu-btn,
+    button.btn-info {
+      background: rgba(255,255,255,0.06) !important;
+      border: 1px solid rgba(255,255,255,0.10) !important;
+      border-radius: 50% !important;
+      width: 44px !important;
+      height: 44px !important;
+      min-width: 44px !important;
+      min-height: 44px !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+      animation: none !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
+    }
+    button.profile-back-btn:active,
+    button.header-back-btn:active,
+    button.btn-nav:active {
+      background: rgba(255,255,255,0.12) !important;
+      transform: scale(0.92) !important;
+    }
+
+    /* ── Метки форм ─────────────────────────────────────────── */
+    .field label,
+    .form-group label {
+      font-size: 0.82rem !important;
+      font-weight: 500 !important;
+      color: rgba(255,255,255,0.65) !important;
+      letter-spacing: 0.02em !important;
+      margin-bottom: 8px !important;
+    }
+
+    /* ── Разделители секций ──────────────────────────────────── */
+    .profile-section-title {
+      font-size: 0.7rem !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.12em !important;
+      color: rgba(255,255,255,0.30) !important;
+      text-transform: uppercase !important;
+    }
+
+    /* ── Overlay оплаты ─────────────────────────────────────── */
+    #paymentOverlay {
+      backdrop-filter: blur(20px) !important;
+      -webkit-backdrop-filter: blur(20px) !important;
+    }
+    #paymentOverlay .payment-overlay-inner,
+    .payment-overlay-inner {
+      background: rgba(12,10,30,0.92) !important;
+      border: 1px solid rgba(255,255,255,0.08) !important;
+      border-radius: 24px !important;
+    }
+
+    /* ── Тарифные карточки ───────────────────────────────────── */
+    .ppc-card {
+      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s !important;
+    }
+    .ppc-card:hover {
+      transform: translateY(-3px) !important;
+      border-color: rgba(255,107,53,0.25) !important;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.25), 0 0 20px rgba(255,107,53,0.08) !important;
+    }
+    .ppc-card.active, .ppc-card.selected {
+      border-color: rgba(255,107,53,0.45) !important;
+      box-shadow: 0 0 24px rgba(255,107,53,0.12), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+    }
+
+    /* ── Скроллбар ──────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
   </style>
 </head>
 <body>
