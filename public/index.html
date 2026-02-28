@@ -3751,9 +3751,6 @@
         var reason = e && e.reason;
         var message = String((reason && (reason.message || reason)) || '');
         console.error('[YupSoul] unhandledrejection', reason && (reason.stack || reason.message || reason));
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17d287'},body:JSON.stringify({sessionId:'17d287',runId:'hot_sub_debug_v1',hypothesisId:'H5',location:'public/index.html:3750',message:'Unhandled rejection captured on client',data:{message:message.slice(0,160),name:String((reason&&reason.name)||'')},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         // Не показываем фатальный полноэкранный тост для нефатальных сетевых/ожидаемых отказов после оплаты.
         // Иначе пользователь видит "Что-то пошло не так", хотя процесс может просто ожидать вебхук.
         var nonFatal =
@@ -7333,14 +7330,8 @@
         var thanksRequestId = thanksRequestIdRaw ? String(thanksRequestIdRaw).split('?')[0].split('#')[0].trim() : null;
         var uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
         if (thanksRequestId && !uuidRe.test(thanksRequestId)) {
-          // #region agent log
-          fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17d287'},body:JSON.stringify({sessionId:'17d287',runId:'hot_sub_debug_v1',hypothesisId:'H6',location:'public/index.html:7321',message:'Malformed request_id in return URL',data:{raw:String(thanksRequestIdRaw||'').slice(0,120),normalized:String(thanksRequestId||'').slice(0,60)},timestamp:Date.now()})}).catch(()=>{});
-          // #endregion
           thanksRequestId = null;
         }
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17d287'},body:JSON.stringify({sessionId:'17d287',runId:'hot_sub_debug_v1',hypothesisId:'H5',location:'public/index.html:7316',message:'Client entered payment success return flow',data:{hasRequestId:!!thanksRequestId,requestId:String(thanksRequestId||'').slice(0,40),search:search.slice(0,120)},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         var paymentReturnConfirmKey = thanksRequestId ? ('payment_return_confirm_' + thanksRequestId) : null;
         var paymentReturnClaimKey = thanksRequestId ? ('payment_return_claim_' + thanksRequestId) : null;
         var paymentReturnConfirmSent = false;
@@ -7481,9 +7472,6 @@
               if (attempt < maxAttempts - 1) await new Promise(function(r) { setTimeout(r, delayMs); });
             }
             isSub = isSubPaymentImmediate || (payMode && payMode.startsWith('sub_'));
-            // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17d287'},body:JSON.stringify({sessionId:'17d287',runId:'hot_sub_debug_v1',hypothesisId:'H5',location:'public/index.html:7459',message:'Client payment polling finished',data:{requestId:String(thanksRequestId||'').slice(0,8),payStatus:String(payStatus||''),payMode:String(payMode||''),isSub:!!isSub},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
 
             if (payStatus === 'paid') {
               // Моментально: confirm + один запрос subscription/status (запускает repair_on_read)
@@ -7563,9 +7551,6 @@
             }
           } catch (e) {
             console.warn('[payment/return] Ошибка проверки оплаты:', e && e.message);
-            // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17d287'},body:JSON.stringify({sessionId:'17d287',runId:'hot_sub_debug_v1',hypothesisId:'H5',location:'public/index.html:7537',message:'Client payment return flow threw error',data:{message:String((e&&e.message)||'').slice(0,180)},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
             if (paymentThanksMsg) {
               paymentThanksMsg.innerHTML = (isSubPaymentImmediate || (payMode && String(payMode).startsWith('sub_')))
                 ? 'Оплата получена. Если тариф не обновился — <strong>обнови страницу</strong> или закрой и открой приложение.'

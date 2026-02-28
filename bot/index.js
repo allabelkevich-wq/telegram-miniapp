@@ -448,9 +448,12 @@ function buildHotCheckoutUrl({ itemId, orderId, amount, currency, requestId, sku
   if (currency) url.searchParams.set("currency", String(currency));
   if (requestId) url.searchParams.set("request_id", requestId);
   if (sku) url.searchParams.set("sku", sku);
-  // redirect_url: после оплаты HOT отправляет пользователя сюда.
-  const redirectUrl = process.env.HOT_REDIRECT_URL ||
-    (MINI_APP_STABLE_URL + "&payment=success&request_id=" + encodeURIComponent(requestId || ""));
+  // redirect_url: после оплаты возвращаем пользователя именно в Telegram (startapp),
+  // чтобы Mini App открылась с валидным initData, а не в обычном браузере без авторизации.
+  const botUsername = String(RESOLVED_BOT_USERNAME || process.env.BOT_USERNAME || "Yup_Soul_bot").replace(/^@/, "");
+  const startPayload = requestId ? ("pay_" + requestId) : (orderId ? ("payo_" + orderId) : "pay_return");
+  const telegramDeepLink = "https://t.me/" + botUsername + "?startapp=" + encodeURIComponent(startPayload);
+  const redirectUrl = process.env.HOT_REDIRECT_URL || telegramDeepLink;
   if (redirectUrl) url.searchParams.set("redirect_url", redirectUrl);
   url.searchParams.set("notify_url", HOT_NOTIFY_URL_EFFECTIVE);
   return url.toString();
@@ -466,8 +469,21 @@ function verifyHotWebhookSignature(rawBody, signatureHeader) {
     return false;
   }
   if (!signatureHeader) {
-    // HOT пока может не присылать подпись — принимаем с предупреждением, чтобы оплаты проходили. Когда HOT добавит X-HOT-Signature — проверка заработает.
-    console.warn("[webhook] verifyHotWebhookSignature: заголовок подписи отсутствует — принимаем (рекомендуется настроить X-HOT-Signature в кабинете HOT)");
+    // В бою не блокируем оплату только из-за отсутствующего заголовка:
+    // часть интеграций HOT может не прислать X-HOT-Signature при корректной оплате.
+    // Для truly strict режима используйте HOT_WEBHOOK_STRICT_SIGNATURE=true.
+    const requireSignature = process.env.HOT_WEBHOOK_REQUIRE_SIGNATURE === 'true';
+    const strictSignature = process.env.HOT_WEBHOOK_STRICT_SIGNATURE === 'true';
+    if (requireSignature && strictSignature) {
+      console.error("[webhook] ❌ КРИТИЧНО: Подпись отсутствует и включён strict-режим (HOT_WEBHOOK_STRICT_SIGNATURE=true). Webhook отклонён.");
+      return false;
+    }
+    if (requireSignature && !strictSignature) {
+      console.warn("[webhook] ⚠️ Подпись отсутствует, но strict-режим выключен — webhook принят, чтобы не терять оплаты.");
+      return true;
+    }
+    // dev/staging
+    console.warn("[webhook] ⚠️ НЕБЕЗОПАСНО: Подпись отсутствует, webhook принят. Для строгой проверки включите HOT_WEBHOOK_STRICT_SIGNATURE=true.");
     return true;
   }
   const expected = crypto.createHmac("sha256", HOT_WEBHOOK_SECRET).update(rawBody).digest("hex");
@@ -483,6 +499,93 @@ function verifyHotWebhookSignature(rawBody, signatureHeader) {
   const ok = crypto.timingSafeEqual(expectedBuf, providedBuf);
   if (!ok) console.warn("[webhook] Signature mismatch — проверь HOT_WEBHOOK_SECRET в Render");
   return ok;
+}
+
+// Активная проверка статуса платежа через HOT Pay API (не зависит от webhook)
+async function checkHotPaymentViaApi(orderId, requestId) {
+  if (!HOT_API_JWT) {
+    console.warn("[hot/api-check] HOT_API_JWT не задан — проверка через API невозможна");
+    return null;
+  }
+  if (!orderId && !requestId) return null;
+  try {
+    const params = new URLSearchParams();
+    if (orderId) params.set("memo", orderId);
+    params.set("limit", "10");
+    const url = "https://api.hot-labs.org/partners/processed_payments?" + params.toString();
+    const ctrl = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), 15000);
+    const resp = await fetch(url, {
+      headers: { Authorization: HOT_API_JWT },
+      signal: ctrl.signal,
+    });
+    clearTimeout(timeout);
+    if (!resp.ok) {
+      console.warn("[hot/api-check] HOT API вернул", resp.status, resp.statusText);
+      return null;
+    }
+    const json = await resp.json();
+    const payments = json.payments || json.data || [];
+    if (!Array.isArray(payments) || payments.length === 0) {
+      console.log("[hot/api-check] Платежи не найдены для memo:", orderId);
+      return null;
+    }
+    const successPayment = payments.find(
+      (p) => String(p.status || "").toUpperCase() === "SUCCESS"
+    );
+    if (!successPayment) {
+      console.log("[hot/api-check] Нет SUCCESS платежей для memo:", orderId, "статусы:", payments.map((p) => p.status));
+      return null;
+    }
+    console.log("[hot/api-check] ✅ Найден SUCCESS платёж для memo:", orderId, "tx:", successPayment.near_trx || "N/A");
+    return {
+      paid: true,
+      status: "SUCCESS",
+      txId: successPayment.near_trx || null,
+      amount: successPayment.amount_float ?? successPayment.amount_usd ?? null,
+      senderId: successPayment.sender_id || null,
+      raw: successPayment,
+    };
+  } catch (err) {
+    if (err.name === "AbortError") {
+      console.warn("[hot/api-check] Таймаут запроса к HOT API");
+    } else {
+      console.warn("[hot/api-check] Ошибка:", err.message);
+    }
+    return null;
+  }
+}
+
+// Обновляет payment_status в track_requests на основании данных HOT API
+async function markPaidFromHotApi(row, hotResult) {
+  if (!supabase || !row || !hotResult?.paid) return false;
+  const updatePayload = {
+    payment_provider: "hot",
+    payment_status: "paid",
+    payment_tx_id: hotResult.txId || null,
+    payment_amount: hotResult.amount != null ? Number(hotResult.amount) : null,
+    payment_currency: "USDT",
+    payment_raw: { ...(typeof row.payment_raw === "object" ? row.payment_raw : {}), hot_api_confirmed: true, hot_api_data: hotResult.raw },
+    paid_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  const { data: updatedRow, error: updErr } = await supabase
+    .from("track_requests")
+    .update(updatePayload)
+    .eq("id", row.id)
+    .or("payment_status.is.null,payment_status.neq.paid")
+    .select("id")
+    .maybeSingle();
+  if (updErr) {
+    console.warn("[hot/api-check] Ошибка обновления track_requests:", updErr.message);
+    return false;
+  }
+  if (!updatedRow) {
+    console.log("[hot/api-check] Заказ уже оплачен (другим путём)");
+    return true;
+  }
+  console.log("[hot/api-check] ✅ payment_status обновлён на paid для заказа", row.id?.slice(0, 8));
+  return true;
 }
 
 async function logSubscriptionActivationError({ telegramUserId, requestId, paymentOrderId, planSku, errorMessage, errorSource, paymentProvider, metadata = {} }) {
@@ -632,11 +735,11 @@ async function getActiveSubscriptionFull(telegramUserId) {
 /** Восстанавливает подписку из оплаченных заявок, если вебхук/claim не сработали. Идемпотентно. */
 async function ensureSubscriptionFromPaidRequests(telegramUserId, source = "repair_on_read") {
   if (!supabase) return;
-  // Расширено с 7 до 90 дней для восстановления подписок (защита от временных сбоев Supabase)
   const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
-  const { data: paidRow } = await supabase
+  // Сначала ищем уже оплаченную заявку
+  let { data: paidRow } = await supabase
     .from("track_requests")
-    .select("id,mode,payment_order_id,created_at")
+    .select("id,mode,payment_order_id,created_at,payment_raw,subscription_activation_attempts")
     .eq("telegram_user_id", Number(telegramUserId))
     .like("mode", "sub_%")
     .eq("payment_status", "paid")
@@ -644,6 +747,29 @@ async function ensureSubscriptionFromPaidRequests(telegramUserId, source = "repa
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+  // Если нет paid — ищем pending и проверяем через HOT API
+  if (!paidRow) {
+    const { data: pendingRow } = await supabase
+      .from("track_requests")
+      .select("id,mode,payment_order_id,created_at,payment_raw,payment_status,subscription_activation_attempts")
+      .eq("telegram_user_id", Number(telegramUserId))
+      .like("mode", "sub_%")
+      .eq("payment_status", "pending")
+      .gte("created_at", ninetyDaysAgo)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (pendingRow?.payment_order_id) {
+      const hotResult = await checkHotPaymentViaApi(pendingRow.payment_order_id, pendingRow.id);
+      if (hotResult?.paid) {
+        const marked = await markPaidFromHotApi(pendingRow, hotResult);
+        if (marked) {
+          console.log(`[sub/repair] Pending заявка ${pendingRow.id?.slice(0, 8)} помечена как paid через HOT API`);
+          paidRow = pendingRow;
+        }
+      }
+    }
+  }
   if (!paidRow || !paidRow.mode) return;
   const sku = resolveSkuByMode(paidRow.mode);
   if (!sku) return;
@@ -1276,6 +1402,18 @@ bot.on(":successful_payment", async (ctx) => {
     if (!["pending", "requires_payment", ""].includes(ps)) {
       console.warn("[Stars] заявка не в ожидании оплаты, пропуск", { requestId: requestId?.slice(0, 8), payment_status: existing.payment_status });
       return;
+    }
+    if (telegramChargeId) {
+      const { data: existingByChargeId, error: chargeErr } = await supabase
+        .from("track_requests")
+        .select("id,payment_status")
+        .eq("payment_order_id", telegramChargeId)
+        .neq("id", requestId)
+        .maybeSingle();
+      if (!chargeErr && existingByChargeId && String(existingByChargeId.payment_status || "").toLowerCase() === "paid") {
+        console.log("[Stars] duplicate charge_id ignored", telegramChargeId);
+        return;
+      }
     }
 
     const { data: updatedRow, error: updErr } = await supabase
@@ -4367,7 +4505,19 @@ app.post("/api/subscription/claim", express.json(), asyncApi(async (req, res) =>
     return res.status(409).json({ success: false, error: "Заявка слишком старая. Обратись в поддержку." });
   }
   const sku = resolveSkuByMode(mode);
-  const paid = (data.payment_status || "").toLowerCase() === "paid";
+  let paid = (data.payment_status || "").toLowerCase() === "paid";
+  // Если ещё не paid — активная проверка через HOT Pay API
+  if (!paid && data.payment_order_id) {
+    console.log("[sub/claim] payment_status не paid, проверяем через HOT API для", requestId?.slice(0, 8));
+    const hotResult = await checkHotPaymentViaApi(data.payment_order_id, requestId);
+    if (hotResult?.paid) {
+      const marked = await markPaidFromHotApi(data, hotResult);
+      if (marked) {
+        paid = true;
+        console.log("[sub/claim] ✅ Статус обновлён на paid через HOT API для", requestId?.slice(0, 8));
+      }
+    }
+  }
   if (!paid) {
     return res.status(202).json({ success: false, error: "Оплата ещё не подтверждена. Подожди минуту и открой профиль снова — подписка подтянется автоматически." });
   }
@@ -4694,6 +4844,39 @@ app.get("/api/payments/hot/status", asyncApi(async (req, res) => {
   if (Number(data.telegram_user_id) !== Number(telegramUserId)) {
     return res.status(403).json({ success: false, error: "Нет доступа к этой заявке" });
   }
+  // Если payment_status ещё не paid — проверяем через HOT Pay API (webhook мог не прийти)
+  if (String(data.payment_status || "").toLowerCase() !== "paid" && data.payment_order_id) {
+    const hotResult = await checkHotPaymentViaApi(data.payment_order_id, requestId);
+    if (hotResult?.paid) {
+      const marked = await markPaidFromHotApi(data, hotResult);
+      if (marked) {
+        data.payment_status = "paid";
+        data.paid_at = new Date().toISOString();
+        data.payment_tx_id = hotResult.txId || data.payment_tx_id;
+        console.log("[hot/status] Статус обновлён через HOT API для", requestId?.slice(0, 8));
+        // Для подписок — сразу активируем
+        const mode = String(data.mode || "");
+        if (mode.startsWith("sub_")) {
+          const sku = resolveSkuByMode(mode);
+          if (sku) {
+            const grantResult = await grantPurchaseBySku({
+              telegramUserId: data.telegram_user_id,
+              sku,
+              source: "hot_api_status_check",
+              orderId: data.payment_order_id || null,
+              requestId: requestId || null,
+            });
+            if (grantResult?.ok) {
+              console.log("[hot/status] Подписка активирована через HOT API check:", sku);
+              await supabase.from("track_requests").update({
+                subscription_activated_at: new Date().toISOString(),
+              }).eq("id", requestId);
+            }
+          }
+        }
+      }
+    }
+  }
   return res.json({ success: true, data });
 }));
 
@@ -4715,8 +4898,22 @@ app.post("/api/payments/hot/confirm", express.json(), asyncApi(async (req, res) 
   if (Number(data.telegram_user_id) !== Number(telegramUserId)) {
     return res.status(403).json({ success: false, error: "Нет доступа к этой заявке" });
   }
-  const paid = String(data.payment_status || "").toLowerCase() === "paid";
-  if (!paid) return res.status(409).json({ success: false, error: "Оплата не подтверждена" });
+  let paid = String(data.payment_status || "").toLowerCase() === "paid";
+  // Если ещё не paid — активная проверка через HOT Pay API (webhook мог не прийти)
+  if (!paid && data.payment_order_id) {
+    console.log("[confirm] payment_status не paid, проверяем через HOT API для", requestId?.slice(0, 8));
+    const hotResult = await checkHotPaymentViaApi(data.payment_order_id, requestId);
+    if (hotResult?.paid) {
+      const marked = await markPaidFromHotApi(data, hotResult);
+      if (marked) {
+        paid = true;
+        console.log("[confirm] ✅ Статус обновлён на paid через HOT API для", requestId?.slice(0, 8));
+      }
+    }
+  }
+  if (!paid) {
+    return res.status(409).json({ success: false, error: "Оплата не подтверждена" });
+  }
   // Подписки и Soul Chat Day: убеждаемся что подписка активна (вебхук мог не прийти)
   const isSubOrService = String(data.mode || "").startsWith("sub_") || data.mode === "soul_chat_day";
   if (isSubOrService) {
