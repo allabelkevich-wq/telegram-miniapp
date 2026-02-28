@@ -2920,6 +2920,62 @@
       background: rgba(255,255,255,0.09) !important;
     }
 
+    /* ── Выпадающие списки (быстрые запросы, стили) ─────────── */
+    .request-quick-dropdown,
+    .quick-list {
+      background: rgba(12,10,28,0.92) !important;
+      backdrop-filter: blur(20px) !important;
+      -webkit-backdrop-filter: blur(20px) !important;
+      border: 1px solid rgba(255,255,255,0.08) !important;
+      border-radius: 16px !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important;
+      overflow: hidden !important;
+      overflow-y: auto !important;
+    }
+    .request-quick-dropdown .quick-item,
+    .quick-list .quick-item,
+    .quick-item.example-btn,
+    .quick-item.style-quick {
+      all: unset !important;
+      display: block !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      padding: 13px 18px !important;
+      color: rgba(255,255,255,0.80) !important;
+      font-size: 0.9rem !important;
+      font-weight: 400 !important;
+      font-family: inherit !important;
+      cursor: pointer !important;
+      border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+      transition: background 0.15s !important;
+      text-align: left !important;
+      -webkit-tap-highlight-color: transparent !important;
+    }
+    .request-quick-dropdown .quick-item:last-child,
+    .quick-list .quick-item:last-child {
+      border-bottom: none !important;
+    }
+    .request-quick-dropdown .quick-item:hover,
+    .request-quick-dropdown .quick-item:active,
+    .quick-list .quick-item:hover,
+    .quick-list .quick-item:active {
+      background: rgba(255,255,255,0.06) !important;
+      color: #fff !important;
+    }
+
+    /* ── Табы режимов (Обо мне, Про двоих, Энергия) ─────────── */
+    .mode-btn {
+      border: 1px solid rgba(255,255,255,0.08) !important;
+      border-radius: 12px !important;
+      background: rgba(255,255,255,0.04) !important;
+      transition: border-color 0.2s, background 0.2s !important;
+    }
+    .mode-btn.active,
+    .mode-btn.selected {
+      border-color: rgba(255,107,53,0.5) !important;
+      background: rgba(255,107,53,0.10) !important;
+    }
+
     /* ── Мелкие кнопки не должны быть CTA ───────────────────── */
     .ppc-details-btn,
     .ppc-btn,
