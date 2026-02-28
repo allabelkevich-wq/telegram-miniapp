@@ -4080,9 +4080,9 @@
       </header>
       <div class="section page-scroll" style="text-align:center; padding-top:40px">
         <div id="paymentThanksIcon" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.2),rgba(var(--primary-rgb),0.06));border:1.5px solid rgba(var(--primary-rgb),0.35);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.8rem;color:var(--primary-color);font-weight:300"></div>
-        <h2 id="paymentThanksTitle" class="success-title" style="font-size:1.5rem; margin:0 0 12px 0">Оплата прошла</h2>
+        <h2 id="paymentThanksTitle" class="success-title" style="font-size:1.5rem; margin:0 0 12px 0">Оплата получена</h2>
         <p class="success-text" id="paymentThanksMessage" style="margin:0 0 24px 0; font-size:0.92rem; color:rgba(255,255,255,0.6); line-height:1.65">
-          Песня создаётся. Придёт в чат с ботом. Можно закрыть окно.
+          Проверяем платёж и обновляем доступ. Это может занять до минуты.
         </p>
         <button id="paymentThanksBackBtn" class="primary" style="margin-bottom:12px">Создать свою песню</button>
         <p id="paymentThanksHint" style="font-size:0.72rem;color:rgba(255,255,255,0.3);line-height:1.5;margin:0;">Не пришла за 20 минут? Напиши боту «песня не пришла»</p>
@@ -4341,7 +4341,7 @@
           payOvLinkHint: 'Если окно не открылось — скопируйте ссылку и вставьте в браузер:',
           payOvCopyBtn: 'Скопировать ссылку оплаты', payOvCheckBtn: 'Я уже оплатил — проверить',
           payOvPromoConfirmBtn: 'Подтвердить и отправить',
-          paymentThanksTitle: 'Оплата прошла', paymentThanksMsg: 'Песня создаётся. Придёт в чат с ботом. Можно закрыть окно.',
+          paymentThanksTitle: 'Оплата получена', paymentThanksMsg: 'Проверяем платёж и обновляем доступ. Это может занять до минуты.',
           paymentThanksHintText: 'Не пришла за 20 минут? Напиши боту «песня не пришла»'
         },
         en: {
@@ -6683,8 +6683,21 @@
         setTimeout(function() {
           try {
             var savedReqId = normalizeRequestId((localStorage.getItem('hot_pending_request_id') || '').trim()) || '';
-            if (!savedReqId || savedReqId.length < 10) return;
             var savedSku = localStorage.getItem('hot_pending_sku') || '';
+            if (!savedReqId) {
+              try {
+                var _ppRecoveryRaw = localStorage.getItem('pending_payment_type') || '';
+                if (_ppRecoveryRaw) {
+                  var _ppRecovery = JSON.parse(_ppRecoveryRaw);
+                  savedReqId = normalizeRequestId(_ppRecovery && _ppRecovery.request_id ? _ppRecovery.request_id : '') || '';
+                  if (!savedSku && _ppRecovery && _ppRecovery.plan_key) {
+                    var _planSkuMap = { plan_basic: 'soul_basic_sub', plan_plus: 'soul_plus_sub', plan_master: 'master_monthly' };
+                    savedSku = _planSkuMap[_ppRecovery.plan_key] || '';
+                  }
+                }
+              } catch(_) {}
+            }
+            if (!savedReqId || savedReqId.length < 10) return;
             var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
             var initData = typeof getInitData === 'function' ? getInitData() : '';
             if (!apiBase || !initData) return;
@@ -6724,6 +6737,18 @@
                         continue;
                       }
                       console.log('[HOT recovery] confirm успешен');
+                      var isSubSku = savedSku && (savedSku.indexOf('sub') !== -1 || savedSku.indexOf('master') !== -1);
+                      if (isSubSku) {
+                        try {
+                          await fetch(apiBase + '/api/subscription/claim', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+                            body: JSON.stringify({ request_id: savedReqId, initData: initData })
+                          });
+                        } catch(claimErr) {
+                          console.warn('[HOT recovery] subscription/claim ошибка:', claimErr && claimErr.message);
+                        }
+                      }
                     } catch(ce) {
                       console.warn('[HOT recovery] confirm ошибка:', ce && ce.message, '— повторяем');
                       await new Promise(function(r) { setTimeout(r, 3000); });
@@ -6731,6 +6756,7 @@
                     }
                     localStorage.removeItem('hot_pending_request_id');
                     localStorage.removeItem('hot_pending_sku');
+                    localStorage.removeItem('pending_payment_type');
                     catalogCache = null; catalogCacheTime = 0;
                     if (typeof loadProfilePage === 'function') loadProfilePage().catch(function() {});
                     if (typeof loadPricingCatalog === 'function') loadPricingCatalog().catch(function() {});
@@ -7893,8 +7919,8 @@
               var ptTitle = document.getElementById('paymentThanksTitle');
               var ptSub = document.getElementById('paymentThanksSubtitle');
               var ptBack = document.getElementById('paymentThanksBackBtn');
-              if (paymentThanksMsg) paymentThanksMsg.textContent = t('songInProgress');
-              if (ptTitle) ptTitle.textContent = typeof t === 'function' ? t('paymentThanks') : 'Спасибо за оплату';
+              if (paymentThanksMsg) paymentThanksMsg.textContent = 'Платёж получен. Проверяем активацию доступа…';
+              if (ptTitle) ptTitle.textContent = typeof t === 'function' ? t('paymentThanks') : 'Оплата получена';
               if (ptSub) ptSub.textContent = typeof t === 'function' ? t('thanksSubtitle') : 'заявка принята';
               if (ptBack) { ptBack.textContent = (typeof t === 'function' ? t('paymentThanksBackToForm') : 'Создать свою песню'); ptBack.onclick = function() { goToPage('formPage'); }; }
             }
@@ -7903,12 +7929,13 @@
           var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
           var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
           if (!apiBase || !initData) {
-            if (paymentThanksMsg && !isSubPaymentImmediate) paymentThanksMsg.textContent = t('songInProgress');
+            if (paymentThanksMsg && !isSubPaymentImmediate) paymentThanksMsg.textContent = 'Платёж получен. Проверяем активацию доступа…';
             return;
           }
           try {
             var payStatus = '';
             var payMode = '';
+            var paySku = '';
             var isSub = isSubPaymentImmediate;
 
             // Определяем ожидаемый plan_sku по plan_key из localStorage
@@ -7966,13 +7993,14 @@
                 var rawStatus = statusJson && statusJson.data && statusJson.data.payment_status;
                 payStatus = (rawStatus !== null && rawStatus !== undefined) ? String(rawStatus).toLowerCase() : '';
                 payMode = statusJson && statusJson.data && statusJson.data.mode ? String(statusJson.data.mode) : '';
+                paySku = statusJson && statusJson.data && statusJson.data.payment_raw && statusJson.data.payment_raw.sku ? String(statusJson.data.payment_raw.sku) : '';
                 if (payStatus === 'paid') break;
               } catch (statusErr) {
                 console.warn('[payment/return] status attempt', attempt, statusErr && statusErr.message);
               }
               if (attempt < maxAttempts - 1) await new Promise(function(r) { setTimeout(r, delayMs); });
             }
-            isSub = isSubPaymentImmediate || (payMode && payMode.startsWith('sub_'));
+            isSub = isSubPaymentImmediate || (payMode && payMode.startsWith('sub_')) || isSubscriptionSku(paySku);
 
             if (payStatus === 'paid') {
               // Моментально: confirm + один запрос subscription/status (запускает repair_on_read)
@@ -8005,8 +8033,9 @@
             // Важно: проверяем конкретный plan_sku (защита от апгрейда Basic→Plus,
             // когда subscription_active=true ещё от Basic, но Plus ещё не активирован)
             if (isSub) {
-              var expectedSkuFromMode = payMode.startsWith('sub_') ? payMode.slice(4) : null;
-              var targetPlanSku = expectedSkuFromMode || expectedPlanSku || null;
+              var expectedSkuFromMode = payMode && payMode.startsWith('sub_') ? payMode.slice(4) : null;
+              var expectedSkuFromStatus = isSubscriptionSku(paySku) ? paySku : null;
+              var targetPlanSku = expectedSkuFromStatus || expectedSkuFromMode || expectedPlanSku || null;
               var subCheckDelayMs = 800;
               for (var si = 0; si < 20; si++) {
                 if (si > 0) await new Promise(function(r){ setTimeout(r, subCheckDelayMs); });
@@ -8034,9 +8063,11 @@
             }
             // Если не знали про подписку из localStorage — определяем по mode
             if (!isSubPaymentImmediate) {
-              var isSubFromMode = payMode.startsWith('sub_');
+              var isSubFromMode = (payMode && payMode.startsWith('sub_')) || isSubscriptionSku(paySku);
               if (isSubFromMode && paymentThanksMsg) {
-                var sn = payMode.includes('basic') ? 'Basic' : payMode.includes('plus') ? 'Plus' : 'Лаборатория';
+                var sn = isSubscriptionSku(paySku)
+                  ? (paySku === 'soul_basic_sub' ? 'Basic' : (paySku === 'soul_plus_sub' ? 'Plus' : 'Лаборатория'))
+                  : (payMode.includes('basic') ? 'Basic' : payMode.includes('plus') ? 'Plus' : 'Лаборатория');
                 var ptT = document.getElementById('paymentThanksTitle');
                 var ptS = document.getElementById('paymentThanksSubtitle');
                 var ptH = document.getElementById('paymentThanksHint');
@@ -9087,6 +9118,10 @@
       var PLAN_TRACKS = { plan_basic: '5', plan_plus: '10', plan_master: '30' };
       var PLAN_SKU_MAP = { plan_basic: 'soul_basic_sub', plan_plus: 'soul_plus_sub', plan_master: 'master_monthly' };
       var PLAN_STARS = { plan_basic: '1 150 ⭐', plan_plus: '1 920 ⭐', plan_master: '3 070 ⭐' };
+      function isSubscriptionSku(sku) {
+        var s = String(sku || '').toLowerCase();
+        return s === 'soul_basic_sub' || s === 'soul_plus_sub' || s === 'master_monthly';
+      }
 
       // ── Stars: универсальная функция открытия инвойса ─────────────────────
       window.payWithStars = async function payWithStars(sku, requestId, btn) {
@@ -9202,6 +9237,8 @@
                 localStorage.setItem('pending_payment_type', JSON.stringify({
                   type: 'subscription', plan_key: planKey, plan_name: planName, request_id: data.request_id || '', ts: Date.now()
                 }));
+                if (data.request_id) localStorage.setItem('hot_pending_request_id', String(data.request_id));
+                localStorage.setItem('hot_pending_sku', PLAN_SKU_MAP[planKey] || '');
               } catch(e) {}
               // Открываем оплату без закрытия приложения
               if (tg && tg.openLink) {

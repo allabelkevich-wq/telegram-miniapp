@@ -3498,9 +3498,11 @@ app.get("/api/payments/hot/return", async (req, res) => {
   }
   const botUsername = String(RESOLVED_BOT_USERNAME || process.env.BOT_USERNAME || "Yup_Soul_bot").replace(/^@/, "");
   const startPayload = requestId ? ("pay_" + requestId) : "pay_return";
-  const telegramDeepLink = "https://t.me/" + botUsername + "?startapp=" + encodeURIComponent(startPayload);
-  const miniAppUrl = MINI_APP_STABLE_URL + "&payment=success&request_id=" + encodeURIComponent(requestId || "");
-  console.log("[hot/return] Redirect после оплаты:", { requestId: requestId?.slice(0, 8), telegramDeepLink });
+  const startPayloadEncoded = encodeURIComponent(startPayload);
+  const telegramDeepLink = "https://t.me/" + botUsername + "?startapp=" + startPayloadEncoded;
+  const telegramResolveLink = "tg://resolve?domain=" + encodeURIComponent(botUsername) + "&startapp=" + startPayloadEncoded;
+  const telegramChatLink = "https://t.me/" + botUsername + "?start=" + encodeURIComponent(startPayload);
+  console.log("[hot/return] Redirect после оплаты:", { requestId: requestId?.slice(0, 8), telegramDeepLink, telegramChatLink });
 
   // Фоновая проверка: пока пользователь видит страницу редиректа, пробуем подтвердить оплату на сервере
   if (requestId && supabase) {
@@ -3560,11 +3562,17 @@ app.get("/api/payments/hot/return", async (req, res) => {
     'text-decoration:none;border-radius:12px;font-size:1rem;font-weight:600}</style></head><body>' +
     '<div class="spinner"></div>' +
     '<h2>Оплата получена!</h2>' +
-    '<p style="opacity:.7;max-width:320px">Перенаправляем в приложение...</p>' +
-    '<a href="' + telegramDeepLink.replace(/"/g, '&quot;') + '">Открыть YupSoul</a>' +
+    '<p style="opacity:.7;max-width:360px">Открываем Telegram и возвращаем в YupSoul. Если не открылось автоматически — нажми кнопку ниже.</p>' +
+    '<a href="' + telegramDeepLink.replace(/"/g, '&quot;') + '">Открыть YupSoul в Telegram</a>' +
+    '<a href="' + telegramChatLink.replace(/"/g, '&quot;') + '" style="margin-top:10px;background:rgba(255,255,255,.12)">Открыть чат с ботом</a>' +
     '<script>' +
-    'setTimeout(function(){window.location.href="' + telegramDeepLink.replace(/"/g, '\\"') + '";},1200);' +
-    'setTimeout(function(){window.location.href="' + telegramDeepLink.replace(/"/g, '\\"') + '";},4200);' +
+    'var _tgLinks=[' +
+      '"' + telegramResolveLink.replace(/"/g, '\\"') + '",' +
+      '"' + telegramDeepLink.replace(/"/g, '\\"') + '",' +
+      '"' + telegramChatLink.replace(/"/g, '\\"') + '"' +
+    '];' +
+    'function _openTg(i){if(i>=_tgLinks.length)return;try{window.location.href=_tgLinks[i];}catch(e){}if(i<_tgLinks.length-1){setTimeout(function(){_openTg(i+1);},1500);}}' +
+    'setTimeout(function(){_openTg(0);},700);' +
     '</script></body></html>'
   );
 });
@@ -5112,23 +5120,20 @@ app.get("/api/payments/hot/status", asyncApi(async (req, res) => {
         data.payment_tx_id = hotResult.txId || data.payment_tx_id;
         console.log("[hot/status] Статус обновлён через HOT API для", requestId?.slice(0, 8));
         // Для подписок — сразу активируем
-        const mode = String(data.mode || "");
-        if (mode.startsWith("sub_")) {
-          const sku = resolveSkuByMode(mode);
-          if (sku) {
-            const grantResult = await grantPurchaseBySku({
-              telegramUserId: data.telegram_user_id,
-              sku,
-              source: "hot_api_status_check",
-              orderId: data.payment_order_id || null,
-              requestId: requestId || null,
-            });
-            if (grantResult?.ok) {
-              console.log("[hot/status] Подписка активирована через HOT API check:", sku);
-              await supabase.from("track_requests").update({
-                subscription_activated_at: new Date().toISOString(),
-              }).eq("id", requestId);
-            }
+        const sku = resolveSkuFromRequestRow(data);
+        if (isSubscriptionSku(sku)) {
+          const grantResult = await grantPurchaseBySku({
+            telegramUserId: data.telegram_user_id,
+            sku,
+            source: "hot_api_status_check",
+            orderId: data.payment_order_id || null,
+            requestId: requestId || null,
+          });
+          if (grantResult?.ok) {
+            console.log("[hot/status] Подписка активирована через HOT API check:", sku);
+            await supabase.from("track_requests").update({
+              subscription_activated_at: new Date().toISOString(),
+            }).eq("id", requestId);
           }
         }
       }
@@ -5148,7 +5153,7 @@ app.post("/api/payments/hot/confirm", express.json(), asyncApi(async (req, res) 
   }
   const { data, error } = await supabase
     .from("track_requests")
-    .select("id,telegram_user_id,payment_status,payment_order_id,status,generation_status,mode")
+    .select("id,telegram_user_id,payment_status,payment_order_id,status,generation_status,mode,payment_raw")
     .eq("id", requestId)
     .maybeSingle();
   if (error || !data) return res.status(404).json({ success: false, error: "Заявка не найдена" });
@@ -5172,10 +5177,11 @@ app.post("/api/payments/hot/confirm", express.json(), asyncApi(async (req, res) 
     return res.status(409).json({ success: false, error: "Оплата не подтверждена" });
   }
   // Подписки и Soul Chat Day: убеждаемся что подписка активна (вебхук мог не прийти)
-  const isSubOrService = String(data.mode || "").startsWith("sub_") || data.mode === "soul_chat_day";
+  const resolvedSku = resolveSkuFromRequestRow(data);
+  const isSubOrService = isSubscriptionSku(resolvedSku) || resolvedSku === "soul_chat_1day";
   if (isSubOrService) {
-    const sku = resolveSkuByMode(data.mode);
-    if (sku && data.mode !== "soul_chat_day") {
+    const sku = resolvedSku;
+    if (sku && sku !== "soul_chat_1day") {
       // Проверяем, не активирована ли уже подписка
       const existingSub = await getActiveSubscriptionFull(data.telegram_user_id);
       if (existingSub && existingSub.plan_sku === sku) {
