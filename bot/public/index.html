@@ -7319,9 +7319,17 @@
       if (search.indexOf('payment=success') !== -1) {
         goToPage('paymentThanksPage');
         var requestIdMatch = search.match(/request_id=([^&\s]+)/);
-        var thanksRequestId = requestIdMatch ? decodeURIComponent(requestIdMatch[1]) : null;
+        var thanksRequestIdRaw = requestIdMatch ? decodeURIComponent(requestIdMatch[1]) : null;
+        var thanksRequestId = thanksRequestIdRaw ? String(thanksRequestIdRaw).split('?')[0].split('#')[0].trim() : null;
+        var uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        if (thanksRequestId && !uuidRe.test(thanksRequestId)) {
+          // #region agent log
+          fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17d287'},body:JSON.stringify({sessionId:'17d287',runId:'hot_sub_debug_v1',hypothesisId:'H6',location:'public/index.html:7321',message:'Malformed request_id in return URL',data:{raw:String(thanksRequestIdRaw||'').slice(0,120),normalized:String(thanksRequestId||'').slice(0,60)},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
+          thanksRequestId = null;
+        }
         // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17d287'},body:JSON.stringify({sessionId:'17d287',runId:'hot_sub_debug_v1',hypothesisId:'H5',location:'public/index.html:7316',message:'Client entered payment success return flow',data:{hasRequestId:!!thanksRequestId,search:search.slice(0,120)},timestamp:Date.now()})}).catch(()=>{});
+        fetch('http://127.0.0.1:7243/ingest/dccd13d7-932e-4733-92f4-45355c9cfd86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17d287'},body:JSON.stringify({sessionId:'17d287',runId:'hot_sub_debug_v1',hypothesisId:'H5',location:'public/index.html:7316',message:'Client entered payment success return flow',data:{hasRequestId:!!thanksRequestId,requestId:String(thanksRequestId||'').slice(0,40),search:search.slice(0,120)},timestamp:Date.now()})}).catch(()=>{});
         // #endregion
         var paymentReturnConfirmKey = thanksRequestId ? ('payment_return_confirm_' + thanksRequestId) : null;
         var paymentReturnClaimKey = thanksRequestId ? ('payment_return_claim_' + thanksRequestId) : null;
