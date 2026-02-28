@@ -468,21 +468,9 @@ function verifyHotWebhookSignature(rawBody, signatureHeader) {
     return false;
   }
   if (!signatureHeader) {
-    // В бою не блокируем оплату только из-за отсутствующего заголовка:
-    // часть интеграций HOT может не прислать X-HOT-Signature при корректной оплате.
-    // Для truly strict режима используйте HOT_WEBHOOK_STRICT_SIGNATURE=true.
-    const requireSignature = process.env.HOT_WEBHOOK_REQUIRE_SIGNATURE === 'true';
-    const strictSignature = process.env.HOT_WEBHOOK_STRICT_SIGNATURE === 'true';
-    if (requireSignature && strictSignature) {
-      console.error("[webhook] ❌ КРИТИЧНО: Подпись отсутствует и включён strict-режим (HOT_WEBHOOK_STRICT_SIGNATURE=true). Webhook отклонён.");
-      return false;
-    }
-    if (requireSignature && !strictSignature) {
-      console.warn("[webhook] ⚠️ Подпись отсутствует, но strict-режим выключен — webhook принят, чтобы не терять оплаты.");
-      return true;
-    }
-    // dev/staging
-    console.warn("[webhook] ⚠️ НЕБЕЗОПАСНО: Подпись отсутствует, webhook принят. Для строгой проверки включите HOT_WEBHOOK_STRICT_SIGNATURE=true.");
+    // HOT Pay не поддерживает X-HOT-Signature — всегда принимаем webhook без подписи.
+    // Защита от подделки: верифицируем платёж через HOT API (checkHotPaymentViaApi).
+    console.log("[webhook] Подпись отсутствует (HOT Pay не отправляет подписи) — webhook принят.");
     return true;
   }
   const expected = crypto.createHmac("sha256", HOT_WEBHOOK_SECRET).update(rawBody).digest("hex");
