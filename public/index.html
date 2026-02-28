@@ -2821,6 +2821,133 @@
     ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
 
+    /* ── Аватар — чистый круг, без рамок ────────────────────── */
+    .profile-avatar-wrap {
+      width: 88px !important;
+      height: 88px !important;
+      min-width: 88px !important;
+      min-height: 88px !important;
+      max-width: 88px !important;
+      max-height: 88px !important;
+      border-radius: 50% !important;
+      overflow: hidden !important;
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      margin: 4px auto 18px !important;
+      position: relative !important;
+    }
+    .profile-avatar {
+      width: 88px !important;
+      height: 88px !important;
+      border-radius: 50% !important;
+      overflow: hidden !important;
+      background: rgba(var(--primary-rgb),0.10) !important;
+      border: none !important;
+      box-shadow: none !important;
+      position: relative !important;
+      display: block !important;
+    }
+    .profile-avatar img {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 88px !important;
+      height: 88px !important;
+      object-fit: cover !important;
+      border-radius: 50% !important;
+      display: block !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+    .profile-avatar span {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 88px !important;
+      height: 88px !important;
+      font-size: 2.2rem !important;
+      color: #fff !important;
+      font-weight: 700 !important;
+    }
+    #profilePage .profile-identity {
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+    }
+
+    /* ── Кнопки-тогглы (Быстрые запросы, Стили музыки) ──────── */
+    .request-quick-toggle {
+      background: rgba(255,255,255,0.05) !important;
+      border: 1px solid rgba(255,255,255,0.10) !important;
+      border-radius: 50px !important;
+      color: rgba(255,255,255,0.55) !important;
+      font-size: 0.78rem !important;
+      font-weight: 500 !important;
+      padding: 8px 18px !important;
+      min-height: 36px !important;
+      height: auto !important;
+      width: auto !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
+      box-shadow: none !important;
+      animation: none !important;
+      letter-spacing: 0.02em !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      margin: 0 !important;
+      white-space: nowrap !important;
+      transition: background 0.2s, color 0.2s, border-color 0.2s !important;
+    }
+    .request-quick-toggle:hover {
+      background: rgba(255,255,255,0.08) !important;
+      color: rgba(255,255,255,0.80) !important;
+      border-color: rgba(255,255,255,0.18) !important;
+      transform: none !important;
+    }
+    .request-quick-toggle:active {
+      background: rgba(255,255,255,0.10) !important;
+      transform: scale(0.97) !important;
+    }
+    .request-quick-toggle.open {
+      background: rgba(255,255,255,0.08) !important;
+      color: rgba(255,255,255,0.80) !important;
+      border-color: rgba(255,255,255,0.18) !important;
+    }
+
+    /* ── Мелкие кнопки не должны быть CTA ───────────────────── */
+    .ppc-details-btn,
+    .ppc-btn,
+    .quick-item,
+    .quick-picker-btn,
+    .mode-btn,
+    .example-btn,
+    .hca-btn,
+    .hero-hist-toggle,
+    .lang-opt,
+    .lang-switcher-btn,
+    .form-nav-link,
+    .referral-share-btn,
+    .home-nav-link {
+      animation: none !important;
+    }
+
+    /* ── Все элементы — мягкие скругления ───────────────────── */
+    .form-section,
+    .section {
+      border-radius: 20px !important;
+    }
+    .request-quick-dropdown {
+      border-radius: 16px !important;
+    }
+    .quick-item {
+      border-radius: 12px !important;
+    }
+
   </style>
 </head>
 <body>
