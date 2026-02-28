@@ -3375,6 +3375,53 @@ const healthHtml =
 app.get("/healthz", (_req, res) =>
   res.status(200).set("Content-Type", "text/html; charset=utf-8").send(healthHtml)
 );
+// Диагностика HOT Pay: последние заявки + проверка HOT API (только для админов)
+app.get("/api/diag/hot-payments", asyncApi(async (req, res) => {
+  const token = req.query.token || req.headers["x-admin-token"] || "";
+  if (!ADMIN_SECRET || token !== ADMIN_SECRET) return res.status(401).json({ error: "unauthorized" });
+  if (!supabase) return res.status(503).json({ error: "no supabase" });
+  // Последние 5 HOT-заявок
+  const { data: rows } = await supabase
+    .from("track_requests")
+    .select("id,telegram_user_id,mode,payment_status,payment_order_id,payment_provider,payment_tx_id,paid_at,created_at,generation_status,subscription_activated_at")
+    .eq("payment_provider", "hot")
+    .order("created_at", { ascending: false })
+    .limit(5);
+  // Проверяем HOT API для каждой pending заявки
+  const results = [];
+  for (const row of (rows || [])) {
+    const hotApiResult = (String(row.payment_status || "").toLowerCase() !== "paid" && row.payment_order_id)
+      ? await checkHotPaymentViaApi(row.payment_order_id, row.id)
+      : "skipped_already_paid";
+    results.push({
+      id: row.id,
+      mode: row.mode,
+      payment_status: row.payment_status,
+      payment_order_id: row.payment_order_id,
+      payment_tx_id: row.payment_tx_id,
+      paid_at: row.paid_at,
+      created_at: row.created_at,
+      subscription_activated_at: row.subscription_activated_at,
+      hot_api_check: hotApiResult,
+    });
+  }
+  // Также проверяем HOT API без фильтра memo — последние 5 платежей вообще
+  let hotAllPayments = null;
+  if (HOT_API_JWT) {
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 10000);
+      const r = await fetch("https://api.hot-labs.org/partners/processed_payments?limit=5", {
+        headers: { Authorization: HOT_API_JWT }, signal: ctrl.signal,
+      });
+      clearTimeout(t);
+      hotAllPayments = await r.json();
+    } catch (e) { hotAllPayments = { error: e.message }; }
+  } else {
+    hotAllPayments = { error: "HOT_API_JWT not set" };
+  }
+  return res.json({ db_rows: results, hot_api_all: hotAllPayments, hot_jwt_set: !!HOT_API_JWT });
+}));
 // HOT Pay redirect: промежуточная страница после оплаты → перенаправляет в Telegram Mini App
 app.get("/api/payments/hot/return", (req, res) => {
   const requestId = String(req.query.request_id || "").trim();
