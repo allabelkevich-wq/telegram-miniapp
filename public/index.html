@@ -731,7 +731,7 @@
     .request-textarea::placeholder{color:rgba(255,255,255,0.38);opacity:1;}
     .request-textarea:focus{outline:none;box-shadow:none;border:none;}
     .request-quick-bar{border-top:1px solid rgba(255,255,255,0.07);position:relative;display:flex;justify-content:flex-start;}
-    .request-quick-toggle{width:auto;max-width:100%;background:rgba(255,255,255,0.06);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:rgba(255,255,255,0.52);font-size:0.7rem;font-weight:600;font-family:inherit;padding:4px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;letter-spacing:0.02em;transition:color .2s,background .2s;min-height:28px;box-shadow:none;animation:none;margin:0;justify-content:center;white-space:nowrap;}
+    /* toggle styles — see PREMIUM UI SYSTEM block */
     /* Soul Chat page */
     .sc-msg-user{display:flex;justify-content:flex-end;margin-bottom:12px;padding:0 4px;}
     .sc-msg-soul{display:flex;justify-content:flex-start;margin-bottom:12px;padding:0 4px;}
@@ -741,10 +741,7 @@
     .sc-char-hint{font-size:0.7rem;color:rgba(255,255,255,0.25);flex:1;}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(0.88);}}
     @keyframes sc-spin{to{transform:rotate(360deg);}}
-    .request-quick-toggle:hover{color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.1);}
-    .request-quick-toggle.open{color:rgba(255,255,255,0.75);}
-    body.theme-light .request-quick-toggle{color:rgba(31,41,55,0.65);background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.08);}
-    body.theme-light .request-quick-toggle:hover{color:rgba(31,41,55,0.85);background:rgba(0,0,0,0.07);}
+    /* toggle hover/open — see PREMIUM UI SYSTEM block */
     .request-quick-dropdown{position:absolute;left:0;right:0;bottom:calc(100% + 4px);z-index:200;background:#1c1930;border:1px solid rgba(var(--primary-rgb),0.2);border-radius:14px;box-shadow:0 -8px 32px rgba(0,0,0,.75);max-height:240px;overflow-y:auto;}
     .request-quick-dropdown::-webkit-scrollbar{width:3px}
     .request-quick-dropdown::-webkit-scrollbar-thumb{background:rgba(var(--primary-rgb),0.25);border-radius:2px}
@@ -1008,13 +1005,7 @@
     .form-header-bar,.form-nav-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top));position:relative;flex-shrink:0;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;z-index:100}
     .profile-scroll{padding:24px 20px calc(env(safe-area-inset-bottom)+120px)}
     .profile-identity{text-align:center;margin-bottom:28px;padding-top:8px}
-    .profile-avatar-wrap{position:relative;width:88px;height:88px;min-width:88px;min-height:88px;max-width:88px;max-height:88px;margin:4px auto 18px;cursor:pointer;border-radius:50%;overflow:hidden;border:none;box-shadow:none;outline:none;flex-shrink:0}
-    .profile-avatar{width:88px;height:88px;border-radius:50%;background:rgba(var(--primary-rgb),0.12);overflow:hidden;position:relative;transition:filter .18s,transform .18s}
-    .profile-avatar img{position:absolute;top:0;left:0;width:88px;height:88px;object-fit:cover;border-radius:50%;display:block}
-    .profile-avatar span{display:flex;align-items:center;justify-content:center;width:88px;height:88px;font-size:2.2rem;color:#fff;font-weight:700}
-    .profile-avatar-wrap:active .profile-avatar{filter:brightness(0.78);transform:translateY(1px)}
-    .profile-avatar-edit{position:absolute;bottom:2px;right:2px;width:28px;height:28px;border-radius:50%;background:rgba(26,22,40,0.95);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:rgba(255,255,255,0.9);pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,0.3)}
-    #profilePage .profile-identity{background:none;border:none;box-shadow:none;border-radius:0;padding:0}
+    /* avatar styles — see PREMIUM UI SYSTEM block */
     .profile-avatar-spinner{position:absolute;inset:0;border-radius:50%;background:rgba(10,8,25,0.6);display:none;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(var(--primary-rgb),0.8)}
     .profile-name{font-size:1.3rem;font-weight:700;color:#fff;letter-spacing:0.01em;margin-bottom:8px}
     .profile-plan-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(var(--primary-rgb),0.1);border:1px solid rgba(var(--primary-rgb),0.28);border-radius:20px;padding:4px 12px;font-size:0.75rem;font-weight:600;color:rgba(var(--primary-rgb),0.85);letter-spacing:0.04em;text-transform:uppercase}
@@ -2821,102 +2812,112 @@
     ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
 
-    /* ── Аватар — чистый круг, без рамок ────────────────────── */
-    .profile-avatar-wrap {
-      width: 88px !important;
-      height: 88px !important;
-      min-width: 88px !important;
-      min-height: 88px !important;
-      max-width: 88px !important;
-      max-height: 88px !important;
-      border-radius: 50% !important;
-      overflow: hidden !important;
-      background: none !important;
-      border: none !important;
-      box-shadow: none !important;
-      padding: 0 !important;
-      margin: 4px auto 18px !important;
-      position: relative !important;
+    /* ── Аватар — написан с нуля, чистый круг ──────────────── */
+    #profilePage .profile-identity,
+    .profile-identity {
+      all: unset !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      text-align: center !important;
     }
-    .profile-avatar {
-      width: 88px !important;
-      height: 88px !important;
-      border-radius: 50% !important;
-      overflow: hidden !important;
-      background: rgba(var(--primary-rgb),0.10) !important;
-      border: none !important;
-      box-shadow: none !important;
-      position: relative !important;
+    .profile-avatar-wrap,
+    #profileAvatarWrap {
+      all: unset !important;
       display: block !important;
+      width: 84px !important;
+      height: 84px !important;
+      border-radius: 50% !important;
+      overflow: hidden !important;
+      position: relative !important;
+      cursor: pointer !important;
+      margin: 0 auto 16px !important;
+      flex-shrink: 0 !important;
+      -webkit-tap-highlight-color: transparent !important;
     }
-    .profile-avatar img {
+    .profile-avatar,
+    #profileAvatar {
+      all: unset !important;
+      display: block !important;
+      width: 84px !important;
+      height: 84px !important;
+      border-radius: 50% !important;
+      overflow: hidden !important;
+      background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)) !important;
+      position: relative !important;
+    }
+    .profile-avatar img,
+    #profileAvatar img {
+      all: unset !important;
+      display: block !important;
+      width: 84px !important;
+      height: 84px !important;
+      border-radius: 50% !important;
+      object-fit: cover !important;
       position: absolute !important;
       top: 0 !important;
       left: 0 !important;
-      width: 88px !important;
-      height: 88px !important;
-      object-fit: cover !important;
-      border-radius: 50% !important;
-      display: block !important;
-      border: none !important;
-      box-shadow: none !important;
     }
-    .profile-avatar span {
+    #profileAvatarInitial,
+    .profile-avatar > span {
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
-      width: 88px !important;
-      height: 88px !important;
-      font-size: 2.2rem !important;
-      color: #fff !important;
+      width: 84px !important;
+      height: 84px !important;
+      font-size: 2rem !important;
       font-weight: 700 !important;
+      color: #fff !important;
+      line-height: 1 !important;
     }
-    #profilePage .profile-identity {
-      background: none !important;
-      border: none !important;
-      box-shadow: none !important;
-      padding: 0 !important;
-      border-radius: 0 !important;
+    .profile-avatar-edit {
+      all: unset !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      position: absolute !important;
+      bottom: 0 !important;
+      right: 0 !important;
+      width: 26px !important;
+      height: 26px !important;
+      border-radius: 50% !important;
+      background: rgba(15,12,30,0.90) !important;
+      border: 1px solid rgba(255,255,255,0.15) !important;
+      font-size: 0.55rem !important;
+      color: rgba(255,255,255,0.85) !important;
+      pointer-events: none !important;
     }
 
-    /* ── Кнопки-тогглы (Быстрые запросы, Стили музыки) ──────── */
+    /* ── Тогглы (Быстрые запросы, Стили музыки) — полоски ──── */
     .request-quick-toggle {
-      background: rgba(255,255,255,0.05) !important;
-      border: 1px solid rgba(255,255,255,0.10) !important;
-      border-radius: 50px !important;
-      color: rgba(255,255,255,0.55) !important;
-      font-size: 0.78rem !important;
-      font-weight: 500 !important;
-      padding: 8px 18px !important;
-      min-height: 36px !important;
-      height: auto !important;
-      width: auto !important;
-      backdrop-filter: blur(8px) !important;
-      -webkit-backdrop-filter: blur(8px) !important;
-      box-shadow: none !important;
-      animation: none !important;
-      letter-spacing: 0.02em !important;
-      display: inline-flex !important;
+      all: unset !important;
+      display: flex !important;
       align-items: center !important;
+      justify-content: center !important;
       gap: 6px !important;
-      margin: 0 !important;
-      white-space: nowrap !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      padding: 10px 16px !important;
+      background: rgba(255,255,255,0.04) !important;
+      border: 1px solid rgba(255,255,255,0.08) !important;
+      border-radius: 14px !important;
+      color: rgba(255,255,255,0.50) !important;
+      font-size: 0.8rem !important;
+      font-weight: 500 !important;
+      font-family: inherit !important;
+      cursor: pointer !important;
+      letter-spacing: 0.02em !important;
       transition: background 0.2s, color 0.2s, border-color 0.2s !important;
+      -webkit-tap-highlight-color: transparent !important;
     }
-    .request-quick-toggle:hover {
-      background: rgba(255,255,255,0.08) !important;
-      color: rgba(255,255,255,0.80) !important;
-      border-color: rgba(255,255,255,0.18) !important;
-      transform: none !important;
+    .request-quick-toggle:hover,
+    .request-quick-toggle.open {
+      background: rgba(255,255,255,0.07) !important;
+      color: rgba(255,255,255,0.75) !important;
+      border-color: rgba(255,255,255,0.14) !important;
     }
     .request-quick-toggle:active {
-      background: rgba(255,255,255,0.10) !important;
-      transform: scale(0.97) !important;
-    }
-    .request-quick-toggle.open {
-      background: rgba(255,255,255,0.08) !important;
-      color: rgba(255,255,255,0.80) !important;
-      border-color: rgba(255,255,255,0.18) !important;
+      background: rgba(255,255,255,0.09) !important;
     }
 
     /* ── Мелкие кнопки не должны быть CTA ───────────────────── */
@@ -3572,7 +3573,7 @@
           </div>
         </div>
 
-        <div id="formFieldsWrap">
+        <div id="formFieldsWrap" class="pfw-collapsed no-anim">
         <div class="step-panel" data-step="2">
         <div class="field">
           <label id="nameLabel" for="name" data-icon="">Имя</label>
