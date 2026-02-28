@@ -9193,7 +9193,7 @@
               if (!data.success || !data.checkout_url) {
                 btn.textContent = 'Перейти к оплате →';
                 btn.disabled = false;
-                alert('Не удалось создать ссылку на оплату. Попробуй ещё раз.');
+                alert(data && data.error ? ('Не удалось создать ссылку на оплату: ' + data.error) : 'Не удалось создать ссылку на оплату. Попробуй ещё раз.');
                 return;
               }
               overlay.style.display = 'none';

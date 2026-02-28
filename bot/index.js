@@ -123,6 +123,18 @@ function resolveSkuByMode(mode) {
   return "single_song";
 }
 
+function isSubscriptionSku(sku) {
+  return ["soul_basic_sub", "soul_plus_sub", "master_monthly"].includes(String(sku || "").trim());
+}
+
+function resolveSkuFromRequestRow(row, explicitSku = "") {
+  const direct = String(explicitSku || "").trim();
+  if (direct) return direct;
+  const rawSku = String(parseJsonSafe(row?.payment_raw, {})?.sku || "").trim();
+  if (rawSku) return rawSku;
+  return resolveSkuByMode(row?.mode);
+}
+
 function parseJsonSafe(value, fallback = null) {
   if (!value) return fallback;
   if (typeof value === "object") return value;
@@ -3496,13 +3508,14 @@ app.get("/api/payments/hot/return", async (req, res) => {
       try {
         const { data: row } = await supabase
           .from("track_requests")
-          .select("id,telegram_user_id,payment_status,payment_order_id,mode")
+          .select("id,telegram_user_id,payment_status,payment_order_id,mode,payment_raw")
           .eq("id", requestId)
           .maybeSingle();
         if (!row) return;
         if (String(row.payment_status || "").toLowerCase() === "paid") {
           console.log("[hot/return] Заявка уже paid:", requestId?.slice(0, 8));
-          const isSubOrService = String(row.mode || "").startsWith("sub_") || row.mode === "soul_chat_day";
+          const rowSku = resolveSkuFromRequestRow(row);
+          const isSubOrService = isSubscriptionSku(rowSku) || rowSku === "soul_chat_1day";
           if (isSubOrService) {
             await ensureSubscriptionFromPaidRequests(row.telegram_user_id, "hot_return_page");
           }
@@ -3516,8 +3529,8 @@ app.get("/api/payments/hot/return", async (req, res) => {
             const marked = await markPaidFromHotApi(row, hotResult);
             if (marked) {
               console.log("[hot/return] Оплата подтверждена через HOT API для", requestId?.slice(0, 8));
-              const sku = resolveSkuByMode(row.mode);
-              if (sku && (String(row.mode || "").startsWith("sub_") || row.mode === "soul_chat_day")) {
+              const sku = resolveSkuFromRequestRow(row);
+              if (sku && (isSubscriptionSku(sku) || sku === "soul_chat_1day")) {
                 await grantPurchaseBySku({
                   telegramUserId: row.telegram_user_id,
                   sku,
@@ -4660,7 +4673,7 @@ app.post("/api/payments/subscription/checkout", express.json(), asyncApi(async (
   const orderId = crypto.randomUUID();
   const requestId = crypto.randomUUID();
 
-  const { data: createdSubRequest, error: subInsertErr } = await supabase.from("track_requests").insert({
+  const subInsertPayload = {
     id: requestId,
     telegram_user_id: Number(telegramUserId),
     name: String(req.body?.name || ""),
@@ -4670,13 +4683,31 @@ app.post("/api/payments/subscription/checkout", express.json(), asyncApi(async (
     payment_order_id: orderId,
     payment_amount: Number(priceData.price),
     payment_currency: priceData.currency || "USDT",
-    payment_raw: JSON.stringify({ provider: "hot", sku, plan: planKey }),
+    payment_raw: JSON.stringify({ provider: "hot", sku, plan: planKey, kind: "subscription" }),
     generation_status: "pending_payment",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  }).select("id").single();
+  };
+  let { data: createdSubRequest, error: subInsertErr } = await supabase
+    .from("track_requests")
+    .insert(subInsertPayload)
+    .select("id")
+    .single();
+  if (subInsertErr && /mode_check|violates check constraint/i.test(String(subInsertErr.message || ""))) {
+    const fallbackPayload = { ...subInsertPayload, mode: "single" };
+    const retry = await supabase.from("track_requests").insert(fallbackPayload).select("id").single();
+    createdSubRequest = retry.data;
+    subInsertErr = retry.error;
+    if (!subInsertErr) {
+      console.warn("[subscription/checkout] mode constraint detected, fallback to mode=single for request", requestId.slice(0, 8));
+    }
+  }
   if (subInsertErr || !createdSubRequest?.id) {
-    console.error("[subscription/checkout] Не удалось создать track_request:", subInsertErr?.message || "unknown_error");
+    console.error("[subscription/checkout] Не удалось создать track_request:", subInsertErr?.message || "unknown_error", {
+      requestId: requestId.slice(0, 8),
+      sku,
+      mode: subInsertPayload.mode,
+    });
     return res.status(500).json({ success: false, error: "Не удалось создать заказ подписки" });
   }
 
@@ -4713,16 +4744,16 @@ app.post("/api/subscription/claim", express.json(), asyncApi(async (req, res) =>
   }
   const { data, error } = await supabase
     .from("track_requests")
-    .select("id,telegram_user_id,payment_status,mode,created_at,payment_order_id")
+    .select("id,telegram_user_id,payment_status,mode,payment_raw,created_at,payment_order_id")
     .eq("id", requestId)
     .maybeSingle();
   if (error || !data) return res.status(404).json({ success: false, error: "Заявка не найдена" });
   if (Number(data.telegram_user_id) !== Number(telegramUserId)) {
     return res.status(403).json({ success: false, error: "Нет доступа к этой заявке" });
   }
-  // Только для режима подписки
-  const mode = String(data.mode || "");
-  if (!mode.startsWith("sub_")) {
+  // Только для заявок подписки (по sku из payment_raw или mode)
+  const sku = resolveSkuFromRequestRow(data);
+  if (!isSubscriptionSku(sku)) {
     return res.status(400).json({ success: false, error: "Только для заявок-подписок" });
   }
   // Расширен период с 7 до 30 дней (claim может быть вызван позже при возврате пользователя)
@@ -4731,7 +4762,6 @@ app.post("/api/subscription/claim", express.json(), asyncApi(async (req, res) =>
   if (ageMs > SUB_CLAIM_MAX_AGE_MS) {
     return res.status(409).json({ success: false, error: "Заявка слишком старая. Обратись в поддержку." });
   }
-  const sku = resolveSkuByMode(mode);
   let paid = (data.payment_status || "").toLowerCase() === "paid";
   // Если ещё не paid — активная проверка через HOT Pay API
   if (!paid && data.payment_order_id) {
