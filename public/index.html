@@ -6299,6 +6299,48 @@
             if (typeof window.startApp === 'function') window.startApp();
           }
         }, 2000);
+
+        // Восстановление незавершённого HOT-платежа (Mini App могла закрыться на iOS)
+        setTimeout(function() {
+          try {
+            var savedReqId = localStorage.getItem('hot_pending_request_id');
+            if (!savedReqId) return;
+            var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+            var initData = typeof getInitData === 'function' ? getInitData() : '';
+            if (!apiBase || !initData) return;
+            console.log('[HOT recovery] Найден незавершённый платёж:', savedReqId.slice(0, 8));
+            (async function recoverHotPayment() {
+              var maxAttempts = 40;
+              for (var i = 0; i < maxAttempts; i++) {
+                try {
+                  var resp = await fetch(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(savedReqId), {
+                    headers: { 'X-Telegram-Init': initData }
+                  });
+                  var json = await resp.json().catch(function() { return {}; });
+                  var ps = json && json.data && json.data.payment_status;
+                  if (String(ps || '').toLowerCase() === 'paid') {
+                    console.log('[HOT recovery] Платёж подтверждён!');
+                    localStorage.removeItem('hot_pending_request_id');
+                    localStorage.removeItem('hot_pending_sku');
+                    fetch(apiBase + '/api/payments/hot/confirm', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+                      body: JSON.stringify({ request_id: savedReqId, initData: initData })
+                    }).catch(function() {});
+                    catalogCache = null; catalogCacheTime = 0;
+                    if (typeof loadProfilePage === 'function') loadProfilePage().catch(function() {});
+                    if (typeof loadPricingCatalog === 'function') loadPricingCatalog().catch(function() {});
+                    if (typeof showConfirm === 'function') showConfirm('Оплата подтверждена!', 'Подписка активирована. Обнови профиль.');
+                    return;
+                  }
+                } catch(e) { console.warn('[HOT recovery] poll error:', e && e.message); }
+                await new Promise(function(r) { setTimeout(r, 3000); });
+              }
+              localStorage.removeItem('hot_pending_request_id');
+              localStorage.removeItem('hot_pending_sku');
+            })();
+          } catch(_) {}
+        }, 3000);
       })();
 
       // ── Логика гейт-экрана ─────────────────────────────────────────────────
@@ -8447,44 +8489,38 @@
 
           var opened = false;
           console.log('[HOT Pay] Пытаемся открыть ссылку оплаты:', checkoutUrl);
-          
+
+          // Сохраняем данные о платеже ДО открытия ссылки (Mini App может закрыться на iOS)
+          try {
+            localStorage.setItem('hot_pending_request_id', pendingPaymentRequestId || '');
+            localStorage.setItem('hot_pending_sku', pendingPaymentSku || '');
+          } catch(_) {}
+
           try {
             if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.openLink === 'function') {
-              console.log('[HOT Pay] Используем Telegram.WebApp.openLink');
-              try {
-                window.Telegram.WebApp.openLink(checkoutUrl, { try_instant_view: false });
-                console.log('[HOT Pay] openLink с try_instant_view: false - успешно');
-              } catch (e1) {
-                console.log('[HOT Pay] openLink с try_instant_view: false - ошибка:', e1);
-                window.Telegram.WebApp.openLink(checkoutUrl);
-                console.log('[HOT Pay] openLink без параметров - успешно');
-              }
+              // try_instant_view: false — не показывать Instant View
+              // На iOS openLink открывает in-app browser, Mini App остаётся в фоне
+              window.Telegram.WebApp.openLink(checkoutUrl, { try_instant_view: false });
               opened = true;
-            } else {
-              console.log('[HOT Pay] Telegram.WebApp.openLink недоступен');
+              console.log('[HOT Pay] openLink - успешно');
             }
           } catch (linkErr) {
-            console.error('[HOT Pay] Ошибка Telegram.WebApp.openLink:', linkErr);
+            console.warn('[HOT Pay] openLink ошибка:', linkErr);
           }
-          
+
           if (!opened) {
-            console.log('[HOT Pay] Пытаемся открыть через window.open');
-            var newWindow = window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
-            if (newWindow) {
+            try {
+              window.open(checkoutUrl, '_blank');
               opened = true;
               console.log('[HOT Pay] window.open - успешно');
-            } else {
-              console.log('[HOT Pay] window.open - заблокировано браузером');
-              // Пытаемся открыть через location.href как последний вариант
-              console.log('[HOT Pay] Пытаемся открыть через location.href');
-              try {
-                window.location.href = checkoutUrl;
-                opened = true;
-                console.log('[HOT Pay] location.href - успешно');
-              } catch (e) {
-                console.error('[HOT Pay] location.href - ошибка:', e);
-              }
-            }
+            } catch(_) {}
+          }
+
+          if (!opened) {
+            try {
+              window.location.href = checkoutUrl;
+              opened = true;
+            } catch(_) {}
           }
           
           if (!opened) {
