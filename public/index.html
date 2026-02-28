@@ -70,24 +70,24 @@
     /* АДАПТИВНЫЕ СТИЛИ С ПОДДЕРЖКОЙ ТЕМЫ ТЕЛЕГРАМ */
     /* Палитра: настоящее золото + тёплый янтарь (без розового) */
     :root {
-      --primary-color: #FF6B35;
-      --primary-light: #FF8A5B;
-      --secondary-color: #F85A3E;
-      --primary-rgb: 255, 107, 53;
-      --secondary-rgb: 248, 90, 62;
+      --primary-color: #FFFFFF;
+      --primary-light: rgba(255,255,255,0.9);
+      --secondary-color: rgba(255,255,255,0.8);
+      --primary-rgb: 255, 255, 255;
+      --secondary-rgb: 255, 255, 255;
       --success-color: #10b981;
       --subtitle-readable: rgba(255,255,255,0.92);
       /* YupSoul Premium Design System */
       --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-7: 28px; --space-8: 32px; --space-9: 40px; --space-10: 48px; --space-11: 56px; --space-12: 64px;
-      --gold-primary: #FF6B35; --gold-light: #FF8A5B; --gold-dark: #F85A3E; --gold-muted: rgba(255, 107, 53, 0.15);
+      --gold-primary: #FFFFFF; --gold-light: rgba(255,255,255,0.9); --gold-dark: rgba(255,255,255,0.7); --gold-muted: rgba(255, 255, 255, 0.15);
       --bg-primary: #0A0A1A; --bg-secondary: rgba(255, 255, 255, 0.03); --bg-tertiary: rgba(255, 255, 255, 0.05);
       --text-primary: rgba(255, 255, 255, 0.95); --text-secondary: rgba(255, 255, 255, 0.75); --text-tertiary: rgba(255, 255, 255, 0.55); --text-muted: rgba(255, 255, 255, 0.35);
-      --border-subtle: rgba(255, 255, 255, 0.08); --border-default: rgba(255, 255, 255, 0.12); --border-accent: rgba(255, 107, 53, 0.35);
+      --border-subtle: rgba(255, 255, 255, 0.08); --border-default: rgba(255, 255, 255, 0.12); --border-accent: rgba(255, 255, 255, 0.35);
       --font-size-xs: 0.75rem; --font-size-sm: 0.875rem; --font-size-base: 1rem; --font-size-lg: 1.125rem; --font-size-xl: 1.25rem; --font-size-2xl: 1.5rem; --font-size-3xl: 1.875rem;
       --font-weight-normal: 400; --font-weight-medium: 450; --font-weight-semibold: 500; --font-weight-bold: 550;
       --line-height-tight: 1.25; --line-height-normal: 1.5; --line-height-relaxed: 1.75;
       --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px; --radius-2xl: 24px; --radius-full: 9999px;
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3); --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3); --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.3); --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.35); --shadow-glow: 0 0 20px rgba(255, 107, 53, 0.15);
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3); --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3); --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.3); --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.35); --shadow-glow: 0 0 20px rgba(255, 255, 255, 0.15);
       --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1); --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1); --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
       /* Fluid scaling — пропорции Apple: уменьшается пропорционально экрану */
       --fluid-xs: clamp(0.7rem, 1.8vw, 0.8rem);
@@ -519,8 +519,8 @@
       display:inline-flex !important;align-items:center;justify-content:center;gap:2px;
       min-width:40px !important;min-height:40px !important;width:40px !important;height:40px !important;
       padding:0 !important;font-size:9px;line-height:1;
-      background:radial-gradient(circle at 30% 0%,rgba(255,107,53,0.45) 0%,rgba(255,107,53,0.16) 40%,rgba(10,10,26,0.9) 100%) !important;
-      border:1.5px solid rgba(255,107,53,0.85) !important;
+      background:rgba(255,255,255,0.08) !important;
+      border:none !important;
       border-radius:999px !important;
       color:rgba(255,240,210,0.95);
       cursor:pointer;font-family:inherit;font-weight:600;letter-spacing:0.06em;
@@ -529,9 +529,9 @@
       animation:none !important;transform:translateY(0) !important;
     }
     .lang-switcher-btn:hover{
-      background:radial-gradient(circle at 30% 0%,rgba(255,107,53,0.65) 0%,rgba(255,107,53,0.24) 42%,rgba(10,10,26,0.95) 100%) !important;
-      border-color:rgba(255,107,53,0.95) !important;
-      color:#fff;
+      background:rgba(255,255,255,0.12) !important;
+      border:none !important;
+      color:rgba(255,255,255,0.95);
       transform:translateY(-1px) !important;
     }
     #langSwitcherIcon{font-size:10px;opacity:0.7;line-height:1}
@@ -776,10 +776,10 @@
     .example-btn{width:auto;min-width:0;max-width:none;flex-shrink:0;white-space:normal;text-transform:none;letter-spacing:0;font-size:.95rem;font-weight:600;padding:12px 16px;margin:0;min-height:auto;border-radius:12px;box-shadow:none;word-wrap:break-word;word-break:break-word;overflow:visible}
     .example-btn::after{display:none}
     .example-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(var(--primary-rgb),0.45)}
-    button{background:linear-gradient(135deg, var(--primary-color), var(--secondary-color), var(--primary-color));background-size:300% 300%;animation:gradientShift 4s ease infinite;color:var(--tg-theme-button-text-color);border:none;padding:13px 24px;font-size:1rem;border-radius:14px;width:100%;font-weight:600;cursor:pointer;transition:all .25s ease;box-shadow:0 8px 22px rgba(var(--primary-rgb),0.4);margin-top:8px;letter-spacing:0;text-transform:none;min-height:48px;position:relative;overflow:hidden}
+    button{background:rgba(255,255,255,0.15);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.25);color:#0A0A1A;border-radius:14px;width:100%;font-weight:600;cursor:pointer;transition:all .25s ease;box-shadow:0 4px 16px rgba(255,255,255,0.1);margin-top:8px;letter-spacing:0;text-transform:none;min-height:48px;position:relative;overflow:hidden;padding:13px 24px;font-size:1rem;animation:none}
     button::after{display:none}
-    button:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(var(--primary-rgb),0.5)}
-    button:active{transform:translateY(1px);box-shadow:0 4px 12px rgba(var(--primary-rgb),0.3)}
+    button:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(255,255,255,0.2)}
+    button:active{transform:translateY(1px);box-shadow:0 4px 12px rgba(255,255,255,0.12)}
     button:disabled{background:rgba(255,255,255,0.15);cursor:not-allowed;transform:none;box-shadow:none;opacity:.6;animation:none}
     button.secondary{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.75);border:1px solid rgba(255,255,255,0.12);box-shadow:none;text-transform:none;letter-spacing:0;font-weight:500;min-height:42px;animation:none;font-size:0.92rem}
     button.secondary:hover{background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9)}
@@ -810,7 +810,7 @@
     #homeTopBar .home-topbar-slot{display:flex;align-items:center;justify-content:center;box-sizing:border-box}
     #homeTopBar .lang-switcher-compact{position:relative;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
     /* Унификация кнопок topbar: 44×44, шрифт 9px Comfortaa, SVG 18×18 — перебивают все глобальные и медиаправила */
-    #homeTopBar .home-topbar-btn,#homeTopBar #profileIconBtn,#homeTopBar .lang-switcher-btn{box-sizing:border-box !important;width:40px !important;height:40px !important;min-width:40px !important;min-height:40px !important;max-width:40px !important;max-height:40px !important;margin:0 !important;padding:0 !important;border:1.5px solid rgba(var(--primary-rgb),0.4) !important;border-radius:50% !important;display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;line-height:0 !important;font-size:9px !important;font-family:'Comfortaa',sans-serif !important;font-weight:600 !important;color:rgba(var(--primary-rgb),0.9) !important;overflow:hidden !important;vertical-align:middle !important;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.18),rgba(var(--secondary-rgb),0.14)) !important;cursor:pointer !important;box-shadow:0 2px 12px rgba(0,0,0,0.3) !important;position:relative !important;top:auto !important;right:auto !important;bottom:auto !important;left:auto;aspect-ratio:1/1 !important}
+    #homeTopBar .home-topbar-btn,#homeTopBar #profileIconBtn,#homeTopBar .lang-switcher-btn{box-sizing:border-box !important;width:40px !important;height:40px !important;min-width:40px !important;min-height:40px !important;max-width:40px !important;max-height:40px !important;margin:0 !important;padding:0 !important;border:none !important;border-radius:50% !important;display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;line-height:0 !important;font-size:9px !important;font-family:'Comfortaa',sans-serif !important;font-weight:600 !important;color:rgba(255,255,255,0.85) !important;overflow:hidden !important;vertical-align:middle !important;background:rgba(255,255,255,0.08) !important;cursor:pointer !important;box-shadow:none !important;position:relative !important;top:auto !important;right:auto !important;bottom:auto !important;left:auto;aspect-ratio:1/1 !important}
     #homeTopBar .home-topbar-btn svg,#homeTopBar #profileIconBtn svg{display:block !important;vertical-align:middle !important;width:18px !important;height:18px !important;min-width:18px !important;min-height:18px !important;flex-shrink:0 !important;fill:rgba(var(--primary-rgb),0.9) !important}
     #homeTopBar .home-topbar-btn span,#homeTopBar .lang-switcher-btn span{line-height:0 !important;vertical-align:middle !important;font-size:9px !important;font-family:'Comfortaa',sans-serif !important;font-weight:600 !important;color:rgba(var(--primary-rgb),0.9) !important}
     #homeTopBar .home-topbar-btn:active,#homeTopBar #profileIconBtn:active{background:rgba(var(--primary-rgb),0.28) !important}
@@ -863,7 +863,7 @@
     @keyframes accentFade{from{opacity:0;transform:scaleX(0.4)}to{opacity:1;transform:scaleX(1)}}
     .onboarding-title{font-size:1.25rem !important;font-weight:600 !important;color:rgba(255,248,225,0.96);margin:0 0 16px 0;line-height:1.35;max-width:260px;letter-spacing:-0.01em}
     .onboarding-text{font-size:0.85rem !important;line-height:1.7 !important;color:rgba(255,255,255,0.5);margin:0 0 28px 0;max-width:240px}
-    .onboarding-btn{padding:14px 32px;border-radius:var(--radius-lg);background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;color:#fff;font-size:0.9rem !important;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(var(--primary-rgb),0.3);transition:transform .2s,box-shadow .2s;min-width:180px;width:auto;margin-top:0;min-height:unset;animation:none;letter-spacing:0.03em;text-transform:none}
+    .onboarding-btn{padding:14px 32px;border-radius:var(--radius-lg);background:rgba(255,255,255,0.15);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.25);color:#0A0A1A;font-size:0.9rem !important;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(255,255,255,0.1);transition:transform .2s,box-shadow .2s;min-width:180px;width:auto;margin-top:0;min-height:unset;animation:none;letter-spacing:0.03em;text-transform:none}
     .onboarding-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(var(--primary-rgb),0.4)}
     .onboarding-btn:active{transform:translateY(1px)}
     .onboarding-dots{display:none}
@@ -987,7 +987,7 @@
     }
 
     /* ── ИКОНКА ПРОФИЛЯ (в шапке главной страницы) ── */
-    #profileIconBtn{min-width:44px;min-height:44px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.18),rgba(var(--secondary-rgb),0.14));border:1.5px solid rgba(var(--primary-rgb),0.4);cursor:pointer;padding:0;margin:0;box-shadow:0 2px 12px rgba(0,0,0,0.3);animation:none;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;color:var(--primary-color);font-family:inherit;letter-spacing:0;line-height:1;transition:background .2s,border-color .2s;flex-shrink:0}
+    #profileIconBtn{min-width:44px;min-height:44px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;cursor:pointer;padding:0;margin:0;box-shadow:none;animation:none;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;color:rgba(255,255,255,0.85);font-family:inherit;letter-spacing:0;line-height:1;transition:background .2s,border-color .2s;flex-shrink:0}
     #profileIconBtn:active{background:rgba(var(--primary-rgb),0.28)}
 
     /* ── ПРОФИЛЬ ── */
@@ -1035,10 +1035,10 @@
     /* YupSoul — компактная кнопка «Изменить» в профиле */
     #profileSectionMyData.profile-section-title{margin-bottom:12px}
     #profileDataCard{padding:12px 16px !important;margin-bottom:16px !important}
-    #profileDataCard #profileEditBtn{padding:8px 16px !important;font-size:0.9rem !important;font-weight:500 !important;border-radius:20px !important;border:1px solid rgba(var(--primary-rgb),0.6) !important;background:rgba(var(--primary-rgb),0.1) !important;color:#FF6B35 !important;box-shadow:0 0 8px rgba(var(--primary-rgb),0.3) !important;backdrop-filter:blur(4px);min-height:unset !important;gap:6px !important}
+    #profileDataCard #profileEditBtn{padding:8px 16px !important;font-size:0.9rem !important;font-weight:500 !important;border-radius:20px !important;border:1px solid rgba(255,255,255,0.3) !important;background:rgba(255,255,255,0.12) !important;color:#FFFFFF !important;box-shadow:0 0 8px rgba(255,255,255,0.15) !important;backdrop-filter:blur(4px);min-height:unset !important;gap:6px !important}
     #profileDataCard #profileEditBtn::before{display:none}
-    #profileDataCard #profileEditBtn:hover{background:rgba(var(--primary-rgb),0.2) !important;box-shadow:0 0 12px rgba(var(--primary-rgb),0.5) !important;transform:translateY(-1px)}
-    #profileDataCard #profileEditBtn svg{width:14px !important;height:14px !important;fill:#FF6B35 !important;stroke:#FF6B35 !important}
+    #profileDataCard #profileEditBtn:hover{background:rgba(255,255,255,0.18) !important;box-shadow:0 0 12px rgba(255,255,255,0.25) !important;transform:translateY(-1px)}
+    #profileDataCard #profileEditBtn svg{width:14px !important;height:14px !important;fill:#FFFFFF !important;stroke:#FFFFFF !important}
     /* YupSoul — воздух в профиле: отступы и структура */
     #profilePage .profile-header{margin-bottom:24px !important}
     #profilePage .profile-section-title{margin-top:0 !important;margin-bottom:16px !important;padding-top:8px !important}
@@ -1132,7 +1132,7 @@
     .profile-ref-stats span{flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;align-items:center;gap:2px}
     .profile-ref-stats strong{font-size:1.4rem;font-weight:800;color:var(--primary-color);line-height:1}
     .profile-ref-stats-label{font-size:0.68rem;color:rgba(255,255,255,0.38);margin-top:2px;text-align:center}
-    .profile-create-btn{width:100%;padding:15px 24px;border-radius:16px;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;letter-spacing:0.02em;box-shadow:0 4px 20px rgba(var(--primary-rgb),0.2);transition:transform .15s,box-shadow .15s}
+    .profile-create-btn{width:100%;padding:15px 24px;border-radius:16px;background:rgba(255,255,255,0.15);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.25);color:#0A0A1A;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;letter-spacing:0.02em;box-shadow:0 4px 16px rgba(255,255,255,0.1);transition:transform .15s,box-shadow .15s;animation:none}
     .profile-create-btn:active{transform:scale(0.98)}
     /* ── ФОРМА: АККОРДЕОН ПРОФИЛЯ ── */
     .pfa-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(var(--primary-rgb),0.05);border:1px solid rgba(var(--primary-rgb),0.2);border-radius:14px;cursor:pointer;font-family:'Comfortaa',sans-serif;transition:background .2s,border-color .2s;user-select:none;-webkit-user-select:none;box-sizing:border-box;}
@@ -7180,6 +7180,13 @@
           var _pp = localStorage.getItem('pending_payment_type');
           if (_pp) { pendingPayment = JSON.parse(_pp); localStorage.removeItem('pending_payment_type'); }
         } catch(e) {}
+        
+        // КРИТИЧНО: перезагружаем профиль пользователя, чтобы обновить статус подписки
+        setTimeout(function() {
+          if (typeof loadUserProfile === 'function') {
+            loadUserProfile().catch(function(e) { console.warn('[payment success] loadUserProfile error:', e); });
+          }
+        }, 1000);
         var isSubPaymentImmediate = pendingPayment && pendingPayment.type === 'subscription'
           && pendingPayment.ts && (Date.now() - pendingPayment.ts) < 30 * 60 * 1000; // не старше 30 мин
 
