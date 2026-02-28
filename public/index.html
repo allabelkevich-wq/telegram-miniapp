@@ -718,6 +718,8 @@
     .quick-picker-btn.open .qa{transform:rotate(180deg)}
     .quick-picker-sheet{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:200;background:#1a1730;border:1px solid rgba(var(--primary-rgb),0.25);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.8);overflow:hidden;animation:sheetIn .2s ease}
     @keyframes sheetIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+    .loading-spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.2);border-top-color:var(--primary-color);border-radius:50%;animation:spin 0.8s linear infinite;margin-left:8px;vertical-align:middle}
     .quick-picker-scroll{max-height:260px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 0}
     .quick-picker-scroll::-webkit-scrollbar{width:3px}
     .quick-picker-scroll::-webkit-scrollbar-track{background:transparent}
@@ -2778,7 +2780,7 @@
 
       <!-- Админка — только для админов, ненавязчиво -->
       <div id="adminLinkWrap" style="display:none;margin-top:var(--spacing-lg);text-align:center">
-        <button type="button" id="adminLinkBtn" onclick="goToPage('adminPage')" style="background:none;border:none;color:rgba(var(--primary-rgb),0.35);font-size:0.72rem;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;padding:6px 12px;margin:0;font-weight:400;letter-spacing:0.03em">Админка</button>
+        <button type="button" id="adminLinkBtn" onclick="goToPage('adminPage')" aria-label="Перейти в админку" style="background:none;border:none;color:rgba(var(--primary-rgb),0.35);font-size:0.72rem;cursor:pointer;font-family:inherit;min-height:unset;box-shadow:none;animation:none;padding:6px 12px;margin:0;font-weight:400;letter-spacing:0.03em">Админка</button>
       </div>
 
       <!-- Профиль, Лаборатория, Помощь — без переносов, стили в CSS -->
@@ -2952,7 +2954,7 @@
             <span id="profileDataCitySep" class="pfa-sep" style="display:none;">·</span>
             <span id="profileDataCity" class="pfa-date" style="color:rgba(255,255,255,0.35);"></span>
           </div>
-          <button type="button" id="profileEditBtn" onclick="window.returnToPage='profilePage';goToPage('formPage')">Изменить →</button>
+          <button type="button" id="profileEditBtn" onclick="window.returnToPage='profilePage';goToPage('formPage')" aria-label="Изменить данные профиля">Изменить →</button>
         </div>
 
         <!-- Тарифы -->
@@ -3669,10 +3671,10 @@
           <div style="font-weight:700;color:var(--primary-color);margin-bottom:6px;font-size:0.92rem;">Нужны твои данные</div>
           <div style="font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:14px;">Soul Chat строит персональный разговор на основе имени и даты рождения. Заполни профиль или создай первую заявку на песню.</div>
           <div style="display:flex;flex-direction:column;gap:9px;">
-            <button type="button" onclick="goToPage('profilePage')" style="width:100%;padding:11px;border-radius:12px;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.25),rgba(var(--secondary-rgb),0.2));border:1px solid rgba(var(--primary-rgb),0.4);color:var(--primary-color);font-size:0.9rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
+            <button type="button" onclick="goToPage('profilePage')" aria-label="Перейти к заполнению профиля" style="width:100%;padding:11px;border-radius:12px;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.25),rgba(var(--secondary-rgb),0.2));border:1px solid rgba(var(--primary-rgb),0.4);color:var(--primary-color);font-size:0.9rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
               Заполнить профиль →
             </button>
-            <button type="button" onclick="goToPage('formPage')" style="width:100%;padding:11px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);font-size:0.86rem;font-weight:500;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
+            <button type="button" onclick="goToPage('formPage')" aria-label="Перейти к созданию заявки на песню" style="width:100%;padding:11px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);font-size:0.86rem;font-weight:500;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;">
               Создать заявку на песню →
             </button>
           </div>
@@ -4853,8 +4855,7 @@
             console.log('[Telegram] initData длина:', tg.initData ? tg.initData.length : 0);
             
             // Проверяем версию Telegram WebApp
-            var version = parseFloat(tg.version) || 0;
-            if (version < 6.1) {
+            if (!compareVersion(tg.version, '6.1')) {
               console.warn('[Telegram] Старая версия WebApp (' + tg.version + ') может не поддерживать initData');
               console.warn('[Telegram] Рекомендуется обновить Telegram до последней версии');
             }
@@ -4968,28 +4969,48 @@
             return;
           }
           if (suggestionsContainer) {
-            suggestionsContainer.innerHTML = locations.map(function(loc) {
+            // Безопасное создание элементов без innerHTML для защиты от XSS
+            suggestionsContainer.innerHTML = '';
+            var fragment = document.createDocumentFragment();
+            
+            locations.forEach(function(loc) {
               var display = (loc.display_name || '')
                 .replace(', Россия', '').replace(', Беларусь', '').replace(', Российская Федерация', '').replace(', Republic of Belarus', '');
-              var safe = typeof escHtml === 'function' ? escHtml(display) : String(display).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-              return '<div class="location-suggestion" data-value="' + safe + '">' + safe + '</div>';
-            }).join('');
-            suggestionsContainer.style.display = 'block';
-            suggestionsContainer.querySelectorAll('.location-suggestion').forEach(function(item) {
-              item.addEventListener('click', function() {
-                inputElement.value = item.getAttribute('data-value');
+              
+              var suggestionDiv = document.createElement('div');
+              suggestionDiv.className = 'location-suggestion';
+              suggestionDiv.textContent = display;
+              suggestionDiv.setAttribute('data-value', display);
+              suggestionDiv.setAttribute('data-lat', loc.lat || '');
+              suggestionDiv.setAttribute('data-lon', loc.lon || '');
+              
+              suggestionDiv.addEventListener('click', function() {
+                inputElement.value = this.getAttribute('data-value');
+                inputElement.setAttribute('data-lat', this.getAttribute('data-lat'));
+                inputElement.setAttribute('data-lon', this.getAttribute('data-lon'));
                 suggestionsContainer.style.display = 'none';
                 if (confirmCheckboxId) {
                   var checkbox = document.getElementById(confirmCheckboxId);
                   if (checkbox) checkbox.checked = true;
                 }
               });
+              
+              fragment.appendChild(suggestionDiv);
             });
+            
+            suggestionsContainer.appendChild(fragment);
+            suggestionsContainer.style.display = 'block';
           }
         } catch (err) {
           console.error('Ошибка поиска местоположения:', err);
           if (suggestionsContainer) {
-            suggestionsContainer.innerHTML = '<div style="padding: 10px; color: #ef4444; text-align: center;">' + t('searchError') + '</div>';
+            var errorText = t('searchError') || 'Ошибка поиска';
+            if (err.name === 'AbortError') {
+              errorText = '⏱️ Превышено время ожидания';
+            } else if (err.message && err.message.includes('network')) {
+              errorText = '🌐 Проблема с интернетом';
+            }
+            suggestionsContainer.innerHTML = '<div style="padding: 10px; color: #ef4444; text-align: center;">' + errorText + '</div>';
             suggestionsContainer.style.display = 'block';
           }
         }
@@ -5010,6 +5031,13 @@
       var activePromo = null;
       var pendingPaymentRequestId = null;
       var pendingPaymentSku = null;
+      var pendingPaymentPromo = null; // Промокод, который был отправлен с заявкой
+      var paymentPollingActive = false; // Флаг для остановки polling
+      var promoDebounceTimer = null; // Таймер для debounce промокода
+      var isSubmitting = false; // Флаг для защиты от дублирования заявок
+      var catalogCache = null; // Кэш каталога (5 минут)
+      var catalogCacheTime = 0;
+      var CATALOG_CACHE_TTL = 5 * 60 * 1000; // 5 минут
       var selectedMode = 'single';
 
       function getCurrentSku() {
@@ -5064,20 +5092,24 @@
       }
       function hidePaymentOverlay() {
         console.log('[Payment Overlay] Закрытие окна оплаты');
+        
+        // Останавливаем polling для предотвращения утечки памяти
+        paymentPollingActive = false;
+        
         var ov = document.getElementById('paymentOverlay');
         if (ov) ov.style.display = 'none';
-        
+
         // Полный сброс состояния
         setPaymentStatus('', '');
         activePromo = null;
         resetPaymentUI();
-        
+
         var pi = document.getElementById('payOvPromoInput');
         if (pi) pi.value = '';
-        
+
         var lr = document.getElementById('payOvLinkRow');
         if (lr) lr.style.display = 'none';
-        
+
         var cb = document.getElementById('payOvCheckBtn');
         if (cb) cb.style.display = 'none';
       }
@@ -5218,6 +5250,20 @@
           return;
         }
         try {
+          // Проверяем кэш
+          var now = Date.now();
+          if (catalogCache && (now - catalogCacheTime) < CATALOG_CACHE_TTL) {
+            console.log('[Catalog] Используем кэш (возраст: ' + Math.round((now - catalogCacheTime) / 1000) + 'с)');
+            pricingCatalog = catalogCache.catalog || [];
+            freeTrialAvailable = catalogCache.free_trial_available || false;
+            hasSubscriptionActive = catalogCache.subscription_active || false;
+            catalogLoadError = false;
+            updatePaymentUiFromCatalog();
+            checkPendingRequestOnStart();
+            loadReferralStats();
+            return;
+          }
+          
           var url = apiBase + '/api/pricing/catalog';
           var sep = url.indexOf('?') >= 0 ? '&' : '?';
           if (initData) url += sep + 'initData=' + encodeURIComponent(initData);
@@ -5227,6 +5273,16 @@
             pricingCatalog = Array.isArray(json.catalog) ? json.catalog : [];
             freeTrialAvailable = !!(json.free_trial && json.free_trial.available);
             hasSubscriptionActive = !!(json.subscription_active);
+            
+            // Сохраняем в кэш
+            catalogCache = {
+              catalog: pricingCatalog,
+              free_trial_available: freeTrialAvailable,
+              subscription_active: hasSubscriptionActive
+            };
+            catalogCacheTime = now;
+            console.log('[Catalog] Данные загружены и закэшированы');
+            
             catalogLoadError = false;
             updatePaymentUiFromCatalog();
             // Проверяем зависшую заявку (не при возврате с HOT Pay — там заявка уже оплачена)
@@ -5898,6 +5954,13 @@
         var input = document.getElementById('payOvPromoInput') || document.getElementById('promoCodeInput');
         if (!input) return;
         var code = String(input.value || '').trim().toUpperCase();
+        
+        // Валидация длины промокода
+        if (code && (code.length < 3 || code.length > 50)) {
+          setPaymentStatus('❌ Промокод должен быть от 3 до 50 символов', 'error');
+          return;
+        }
+        
         if (!code) {
           activePromo = null;
           resetPaymentUI();
@@ -7325,7 +7388,8 @@
                   headers: { 'X-Telegram-Init': initData }
                 }, 10000);
                 var statusJson = await statusResp.json().catch(function() { return {}; });
-                payStatus = statusJson && statusJson.data && statusJson.data.payment_status ? String(statusJson.data.payment_status).toLowerCase() : '';
+                var rawStatus = statusJson && statusJson.data && statusJson.data.payment_status;
+                payStatus = (rawStatus !== null && rawStatus !== undefined) ? String(rawStatus).toLowerCase() : '';
                 payMode = statusJson && statusJson.data && statusJson.data.mode ? String(statusJson.data.mode) : '';
                 if (payStatus === 'paid') break;
               } catch (statusErr) {
@@ -7733,7 +7797,15 @@
       })();
 
       if (stepNext) stepNext.addEventListener('click', async function() {
+        // Защита от дублирования заявок
+        if (isSubmitting) {
+          console.log('[Submit] Заявка уже отправляется, игнорируем повторное нажатие');
+          return;
+        }
+        
         if (!validateStep(1) || !validateStep(2) || !validateStep(3)) return;
+        
+        isSubmitting = true;
         var mode = selectedMode || 'single';
         var name1 = document.getElementById('name').value.trim();
         var birthdate1 = document.getElementById('birthdate').value;
@@ -7746,6 +7818,22 @@
         if (!birthdate1) { alert(t('alertBirthdate')); return; }
         if (birthplace1.length < 3) { alert(t('alertBirthplace')); return; }
         if (!birthtimeUnknown1 && !birthtime1) { alert(t('alertBirthtime')); return; }
+        
+        // Валидация формата времени (HH:MM)
+        if (!birthtimeUnknown1 && birthtime1) {
+          var timeMatch = birthtime1.match(/^(\d{1,2}):(\d{2})$/);
+          if (!timeMatch) {
+            alert('⚠️ Неверный формат времени\n\nИспользуй формат ЧЧ:ММ (например, 14:30)');
+            return;
+          }
+          var hours = parseInt(timeMatch[1], 10);
+          var minutes = parseInt(timeMatch[2], 10);
+          if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+            alert('⚠️ Неверное время\n\nЧасы: 0-23, минуты: 0-59');
+            return;
+          }
+        }
+        
         if (!gender1) { alert(t('alertGender')); return; }
         if (requestText.length < 15) { alert(t('alertRequestLong')); return; }
         var songLangEl = document.getElementById('language');
@@ -7782,6 +7870,22 @@
           if (!birthdate2) { alert(t('alertBirthdate2')); return; }
           if (birthplace2.length < 3) { alert(t('alertBirthplace2')); return; }
           if (!birthtimeUnknown2 && !birthtime2) { alert(t('alertBirthtime2')); return; }
+          
+          // Валидация формата времени для второго человека
+          if (!birthtimeUnknown2 && birthtime2) {
+            var timeMatch2 = birthtime2.match(/^(\d{1,2}):(\d{2})$/);
+            if (!timeMatch2) {
+              alert('⚠️ Неверный формат времени (Человек 2)\n\nИспользуй формат ЧЧ:ММ (например, 14:30)');
+              return;
+            }
+            var hours2 = parseInt(timeMatch2[1], 10);
+            var minutes2 = parseInt(timeMatch2[2], 10);
+            if (hours2 < 0 || hours2 > 23 || minutes2 < 0 || minutes2 > 59) {
+              alert('⚠️ Неверное время (Человек 2)\n\nЧасы: 0-23, минуты: 0-59');
+              return;
+            }
+          }
+          
           if (!gender2) { alert(t('alertGender2')); return; }
           var p2relField = document.getElementById('person2Relationship');
           var relationship2 = p2relField ? p2relField.value.trim() : '';
@@ -7832,15 +7936,24 @@
           if (response.ok && result.ok && result.requestId && !result.payment_required) {
             if (typeof scCurrentRequestId !== 'undefined') scCurrentRequestId = result.requestId;
             if (tg && tg.disableClosingConfirmation) try { tg.disableClosingConfirmation(); } catch (e) {}
+            
+            // Очищаем состояние после успешной отправки
+            pendingPaymentRequestId = null;
+            pendingPaymentSku = null;
+            pendingPaymentPromo = null;
+            activePromo = null;
+            isSubmitting = false;
+            
             showConfirmOverlay('Заявка принята, ' + name1 + '!', 'Песня генерируется на нашем сервере. Когда будет готова — придёт сюда в этот чат с ботом.<br><br>Можешь закрыть приложение — ничего не пропадёт. Спасибо, что остаёшься с нами<br><br><span style="font-size:0.9em;color:rgba(255,255,255,0.6)">Нет песни? Напиши боту «песня не пришла».</span>', function() { goToPage('successPage'); });
           } else if ((response.status === 402 || (result && result.payment_required)) && result.requestId) {
             console.log('[Submit] 402 Payment Required — открываем окно оплаты');
             console.log('[Submit] requestId:', result.requestId, 'sku:', result.sku);
             
-            // Сохраняем ID заявки и SKU для оплаты
+            // Сохраняем ID заявки, SKU и промокод для оплаты
             pendingPaymentRequestId = result.requestId;
             pendingPaymentSku = result.sku || getCurrentSku();
-            activePromo = null; // Сбрасываем промокод (пользователь может ввести новый)
+            pendingPaymentPromo = activePromo ? activePromo.code : null; // Сохраняем промокод, который был с заявкой
+            activePromo = null; // Сбрасываем для возможности ввести новый
             
             // Открываем окно оплаты и обновляем UI
             showPaymentOverlay();
@@ -7848,19 +7961,41 @@
             setPaymentStatus('', '');
           } else {
             var errMsg = result.error || result.message || (typeof t === 'function' ? t('submitFailed') : 'Не удалось отправить заявку.');
-            if (response.status === 503) errMsg = t('alertServerSleep');
+            if (response.status === 503) {
+              errMsg = '⏱️ Сервер запускается (холодный старт)\n\nПодожди 30-60 секунд и нажми «Отправить заявку» снова.\n\n💡 Это нормально — бесплатный сервер засыпает при неактивности.';
+            }
             stepNext.disabled = false;
             stepNext.textContent = stepNextOriginalText;
+            isSubmitting = false;
             alert(errMsg);
             return;
           }
         } catch (e) {
           stepNext.disabled = false;
           stepNext.textContent = stepNextOriginalText;
-          if (e && e.name === 'AbortError') { alert(t('alertServerSleep')); return; }
-          var catchMsg = (e && e.message) ? (typeof t === 'function' ? t('submitFailed') + ' ' + e.message : e.message) : (typeof t === 'function' ? t('submitFailed') : 'Не удалось отправить заявку.');
-          alert(catchMsg);
+          
+          // Понятные сообщения об ошибках
+          if (e && e.name === 'AbortError') {
+            alert('⏱️ Сервер не отвечает\n\nПроверьте интернет-соединение и попробуйте снова.\n\nЕсли проблема повторяется — сервер может быть временно недоступен (холодный старт). Подождите 1-2 минуты.');
+            return;
+          }
+          
+          var errorMsg = '❌ Не удалось отправить заявку';
+          if (e && e.message) {
+            if (e.message.includes('fetch') || e.message.includes('network')) {
+              errorMsg += '\n\n🌐 Проблема с интернетом. Проверьте соединение.';
+            } else if (e.message.includes('timeout')) {
+              errorMsg += '\n\n⏱️ Превышено время ожидания. Попробуйте снова.';
+            } else {
+              errorMsg += '\n\n' + e.message;
+            }
+          }
+          
+          alert(errorMsg);
+          isSubmitting = false;
           return;
+        } finally {
+          isSubmitting = false;
         }
         stepNext.disabled = false;
         stepNext.textContent = stepNextOriginalText;
@@ -7869,7 +8004,13 @@
       updateStepUI();
       // ── Overlay: кнопка «Применить промокод» ────────────────────────────
       var payOvPromoBtn = document.getElementById('payOvPromoBtn');
-      if (payOvPromoBtn) payOvPromoBtn.addEventListener('click', applyPromoCode);
+      if (payOvPromoBtn) payOvPromoBtn.addEventListener('click', function() {
+        // Debounce для защиты от спама
+        if (promoDebounceTimer) clearTimeout(promoDebounceTimer);
+        promoDebounceTimer = setTimeout(function() {
+          applyPromoCode();
+        }, 300);
+      });
       var payOvPromoToggle = document.getElementById('payOvPromoToggle');
       if (payOvPromoToggle) payOvPromoToggle.addEventListener('click', function() {
         var section = document.getElementById('payOvPromoSection');
@@ -7965,6 +8106,7 @@
         }
         
         payOvFreeClaimBtn.disabled = true;
+        var originalBtnText = payOvFreeClaimBtn.textContent;
         payOvFreeClaimBtn.textContent = 'Активирую подарок...';
         setPaymentStatus('Активирую бесплатный доступ...', 'ok');
         
@@ -7984,15 +8126,27 @@
           } else {
             var errMsg = json.error || json.message || 'Не удалось активировать подарок';
             console.warn('[Free Trial] Ошибка:', errMsg);
-            setPaymentStatus('❌ ' + errMsg, 'error');
-            payOvFreeClaimBtn.disabled = false;
-            payOvFreeClaimBtn.textContent = 'Получить бесплатную песню';
+            
+            // Специальная обработка race condition
+            if (errMsg.includes('уже использован') || errMsg.includes('already claimed') || errMsg.includes('limit')) {
+              setPaymentStatus('❌ Подарок уже был использован ранее', 'error');
+              // Скрываем кнопку, чтобы не было повторных попыток
+              payOvFreeClaimBtn.style.display = 'none';
+            } else {
+              setPaymentStatus('❌ ' + errMsg, 'error');
+              payOvFreeClaimBtn.disabled = false;
+              payOvFreeClaimBtn.textContent = originalBtnText;
+            }
           }
         } catch (e) {
           console.error('[Free Trial] Ошибка соединения:', e);
-          setPaymentStatus('❌ Ошибка соединения. Попробуй снова.', 'error');
+          var errorMsg = '❌ Ошибка соединения. Попробуй снова.';
+          if (e.name === 'AbortError') {
+            errorMsg = '❌ Превышено время ожидания. Проверь интернет.';
+          }
+          setPaymentStatus(errorMsg, 'error');
           payOvFreeClaimBtn.disabled = false;
-          payOvFreeClaimBtn.textContent = 'Получить бесплатную песню';
+          payOvFreeClaimBtn.textContent = originalBtnText;
         }
       });
 
@@ -8018,7 +8172,8 @@
           for (var i = 0; i < 5; i++) {
             var r = await fetchWithTimeout(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(pendingPaymentRequestId), { headers: { 'X-Telegram-Init': initData } }, 10000);
             var j = await r.json().catch(function() { return {}; });
-            st = j && j.data && j.data.payment_status ? String(j.data.payment_status).toLowerCase() : '';
+            var rawSt = j && j.data && j.data.payment_status;
+            st = (rawSt !== null && rawSt !== undefined) ? String(rawSt).toLowerCase() : '';
             if (st === 'paid') break;
             if (i < 4) await new Promise(function(res) { setTimeout(res, 1500); });
           }
@@ -8047,21 +8202,29 @@
       if (payBtn) payBtn.addEventListener('click', async function() {
         console.log('[HOT Pay] Нажата кнопка оплаты');
         
+        // Немедленно блокируем кнопку для защиты от двойного нажатия
         if (payBtn.disabled) {
           console.log('[HOT Pay] Кнопка отключена, игнорируем клик');
           return;
         }
+        payBtn.disabled = true;
+        var originalText = payBtn.textContent;
+        payBtn.textContent = t('processing') || 'Обработка...';
         
         if (!pendingPaymentRequestId) {
           console.error('[HOT Pay] КРИТИЧНО: Нет pendingPaymentRequestId!');
           setPaymentStatus('❌ Сначала заполни форму и отправь заявку', 'error');
+          payBtn.disabled = false;
+          payBtn.textContent = originalText;
           return;
         }
         
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         if (!apiBase) { 
           console.error('[HOT Pay] Нет API базового URL');
-          alert(t('alertNoApi')); 
+          alert(t('alertNoApi'));
+          payBtn.disabled = false;
+          payBtn.textContent = originalText;
           return; 
         }
         
@@ -8092,6 +8255,8 @@
             window.demoMode = true;
             alert('💡 Демо-режим активирован\n\nВы можете заполнить форму, но оплата будет недоступна.');
           }
+          payBtn.disabled = false;
+          payBtn.textContent = originalText;
           return; 
         }
         
@@ -8101,29 +8266,27 @@
         
         // Дополнительная проверка версии для оплаты
         if (tg && tg.version) {
-          var version = parseFloat(tg.version) || 0;
-          if (version < 6.1) {
+          if (!compareVersion(tg.version, '6.1')) {
             console.warn('[HOT Pay] Версия Telegram (' + tg.version + ') может не поддерживать оплату');
             alert('⚠️ Для оплаты требуется более новая версия Telegram!\n\n' +
                   '📱 Ваша версия: ' + tg.version + '\n' +
                   'Требуется: 6.1 или выше\n\n' +
                   '🔄 Обновите Telegram и попробуйте снова');
+            payBtn.disabled = false;
+            payBtn.textContent = originalText;
             return;
           }
         }
 
-        // Используем только ПРОВЕРЕННЫЙ промокод (activePromo). Если в поле текст, но activePromo=null —
-        // значит промокод был отклонён, и отправлять его не нужно.
-        var promoCode = activePromo ? activePromo.code : null;
+        // Используем ПРОВЕРЕННЫЙ промокод: сначала activePromo (если применён в overlay),
+        // иначе pendingPaymentPromo (который был отправлен с заявкой при submit).
+        var promoCode = activePromo ? activePromo.code : (pendingPaymentPromo || null);
         var hotPayload = {
           request_id: pendingPaymentRequestId,
           sku: pendingPaymentSku,
           promo_code: promoCode || null,
           initData: initData
         };
-
-        payBtn.disabled = true;
-        payBtn.textContent = t('sending');
         console.log('[HOT Pay] Начинаем создание платежа, payload:', hotPayload);
         
         try {
@@ -8250,15 +8413,26 @@
           // Показываем кнопку ручной проверки — на случай если webhook задержится
           var checkBtn = document.getElementById('payOvCheckBtn');
           if (checkBtn) checkBtn.style.display = 'block';
+          
+          // Запускаем polling с возможностью отмены
+          paymentPollingActive = true;
           var maxAttempts = 60;
           var attempt = 0;
           var paid = false;
-          while (attempt < maxAttempts) {
+          while (attempt < maxAttempts && paymentPollingActive) {
             attempt += 1;
             await new Promise(function(resolve) { setTimeout(resolve, 3000); });
+            
+            // Проверяем, не закрыл ли пользователь overlay
+            if (!paymentPollingActive) {
+              console.log('[HOT Pay] Polling отменён пользователем');
+              break;
+            }
+            
             var statusResp = await fetchWithTimeout(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(pendingPaymentRequestId), { headers: { 'X-Telegram-Init': initData } }, 10000);
             var statusJson = await statusResp.json().catch(function() { return {}; });
-            var paymentStatus = statusJson && statusJson.data && statusJson.data.payment_status ? String(statusJson.data.payment_status).toLowerCase() : '';
+            var rawPayStatus = statusJson && statusJson.data && statusJson.data.payment_status;
+            var paymentStatus = (rawPayStatus !== null && rawPayStatus !== undefined) ? String(rawPayStatus).toLowerCase() : '';
             if (paymentStatus === 'paid') { paid = true; break; }
           }
           if (!paid) {
@@ -8323,6 +8497,14 @@
         var apiBase  = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         var initData = getInitData ? getInitData() : '';
         if (!apiBase || !initData) { alert('Ошибка авторизации. Открой приложение из Telegram.'); return; }
+        
+        // Проверка версии Telegram для Stars (требуется 6.9+)
+        var tgApp = window.Telegram && window.Telegram.WebApp;
+        if (tgApp && tgApp.version && !compareVersion(tgApp.version, '6.9')) {
+          alert('⚠️ Для оплаты Stars требуется Telegram 6.9 или выше\n\n📱 Ваша версия: ' + tgApp.version + '\n🔄 Обновите Telegram');
+          return;
+        }
+        
         var origText = btn ? btn.textContent : '';
         if (btn) { btn.disabled = true; btn.textContent = 'Создаём инвойс…'; }
         try {
@@ -8640,6 +8822,54 @@
 
       // ── Список героев ─────────────────────────────────────────────────────
       function escHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+      
+      // Корректное сравнение версий Telegram (например, "7.10" > "7.2")
+      function compareVersion(version, minVersion) {
+        if (!version) return false;
+        var vParts = String(version).split('.').map(function(p) { return parseInt(p, 10) || 0; });
+        var minParts = String(minVersion).split('.').map(function(p) { return parseInt(p, 10) || 0; });
+        for (var i = 0; i < Math.max(vParts.length, minParts.length); i++) {
+          var v = vParts[i] || 0;
+          var m = minParts[i] || 0;
+          if (v > m) return true;
+          if (v < m) return false;
+        }
+        return true;
+      }
+      
+      // Индикатор состояния сети
+      function showOfflineIndicator() {
+        var indicator = document.getElementById('offlineIndicator');
+        if (!indicator) {
+          indicator = document.createElement('div');
+          indicator.id = 'offlineIndicator';
+          indicator.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);background:rgba(239,68,68,0.95);color:#fff;padding:8px 16px;border-radius:20px;font-size:0.8rem;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(8px);';
+          indicator.textContent = '⚠️ Нет интернета';
+          document.body.appendChild(indicator);
+        }
+        indicator.style.display = 'block';
+      }
+      
+      function hideOfflineIndicator() {
+        var indicator = document.getElementById('offlineIndicator');
+        if (indicator) indicator.style.display = 'none';
+      }
+      
+      // Отслеживание состояния сети
+      window.addEventListener('online', function() {
+        console.log('[Network] Соединение восстановлено');
+        hideOfflineIndicator();
+      });
+      
+      window.addEventListener('offline', function() {
+        console.log('[Network] Соединение потеряно');
+        showOfflineIndicator();
+      });
+      
+      // Проверка при загрузке
+      if (!navigator.onLine) {
+        showOfflineIndicator();
+      }
 
       function loadHeroesList() {
         var listEl = document.getElementById('heroesList');
@@ -8703,30 +8933,77 @@
               heroesApi('/heroes/' + id + '/requests', { method: 'GET' }).then(function(d) {
                 var reqs = (d && d.requests) || [];
                 if (!reqs.length) { contentEl.innerHTML = '<div class="hero-hist-empty">' + (typeof t === 'function' ? t('heroHistEmpty') : 'Генераций пока нет') + '</div>'; return; }
-                contentEl.innerHTML = reqs.map(function(r) {
+                // Безопасное создание элементов без innerHTML для предотвращения XSS
+                var fragment = document.createDocumentFragment();
+                reqs.forEach(function(r) {
                   var statusEmoji = { completed:'', error:'', pending:'', pending_payment:'' }[r.generation_status] || '';
                   var dateStr = r.created_at ? new Date(r.created_at).toLocaleString('ru-RU', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
-                  var html = '<div class="hero-hist-item">';
-                  html += '<div class="hero-hist-title">' + statusEmoji + ' ' + escHtml(r.title || '(без названия)') + '</div>';
-                  html += '<div class="hero-hist-meta">' + escHtml(dateStr) + (r.request_type ? ' · ' + escHtml(r.request_type) : '') + '</div>';
+                  
+                  var itemDiv = document.createElement('div');
+                  itemDiv.className = 'hero-hist-item';
+                  
+                  var titleDiv = document.createElement('div');
+                  titleDiv.className = 'hero-hist-title';
+                  titleDiv.textContent = statusEmoji + ' ' + (r.title || '(без названия)');
+                  itemDiv.appendChild(titleDiv);
+                  
+                  var metaDiv = document.createElement('div');
+                  metaDiv.className = 'hero-hist-meta';
+                  metaDiv.textContent = dateStr + (r.request_type ? ' · ' + r.request_type : '');
+                  itemDiv.appendChild(metaDiv);
+                  
                   if (r.lyrics) {
-                    html += '<div class="hero-hist-block-label">Текст песни</div>';
-                    html += '<div class="hero-hist-text">' + escHtml(r.lyrics) + '</div>';
+                    var lyricsLabel = document.createElement('div');
+                    lyricsLabel.className = 'hero-hist-block-label';
+                    lyricsLabel.textContent = 'Текст песни';
+                    itemDiv.appendChild(lyricsLabel);
+                    var lyricsText = document.createElement('div');
+                    lyricsText.className = 'hero-hist-text';
+                    lyricsText.textContent = r.lyrics;
+                    itemDiv.appendChild(lyricsText);
                   }
+                  
                   if (r.detailed_analysis) {
-                    html += '<button type="button" class="hero-hist-toggle hha-toggle" style="margin-bottom:4px">▸ Анализ</button>';
-                    html += '<div class="hero-hist-text" style="display:none">' + escHtml(r.detailed_analysis) + '</div>';
+                    var analysisBtn = document.createElement('button');
+                    analysisBtn.type = 'button';
+                    analysisBtn.className = 'hero-hist-toggle hha-toggle';
+                    analysisBtn.style.marginBottom = '4px';
+                    analysisBtn.textContent = '▸ Анализ';
+                    itemDiv.appendChild(analysisBtn);
+                    var analysisText = document.createElement('div');
+                    analysisText.className = 'hero-hist-text';
+                    analysisText.style.display = 'none';
+                    analysisText.textContent = r.detailed_analysis;
+                    itemDiv.appendChild(analysisText);
                   }
+                  
                   if (r.cover_letter) {
-                    html += '<button type="button" class="hero-hist-toggle hha-toggle" style="margin-bottom:4px">▸ Сопроводительное письмо</button>';
-                    html += '<div class="hero-hist-text" style="display:none">' + escHtml(r.cover_letter) + '</div>';
+                    var letterBtn = document.createElement('button');
+                    letterBtn.type = 'button';
+                    letterBtn.className = 'hero-hist-toggle hha-toggle';
+                    letterBtn.style.marginBottom = '4px';
+                    letterBtn.textContent = '▸ Сопроводительное письмо';
+                    itemDiv.appendChild(letterBtn);
+                    var letterText = document.createElement('div');
+                    letterText.className = 'hero-hist-text';
+                    letterText.style.display = 'none';
+                    letterText.textContent = r.cover_letter;
+                    itemDiv.appendChild(letterText);
                   }
+                  
                   if (r.audio_url) {
-                    html += '<a href="' + escHtml(r.audio_url) + '" target="_blank" class="hero-hist-audio">🎧 Слушать</a>';
+                    var audioLink = document.createElement('a');
+                    audioLink.href = r.audio_url;
+                    audioLink.target = '_blank';
+                    audioLink.className = 'hero-hist-audio';
+                    audioLink.textContent = '🎧 Слушать';
+                    itemDiv.appendChild(audioLink);
                   }
-                  html += '</div>';
-                  return html;
-                }).join('');
+                  
+                  fragment.appendChild(itemDiv);
+                });
+                contentEl.innerHTML = '';
+                contentEl.appendChild(fragment);
                 // Раскрытие анализа/письма
                 contentEl.querySelectorAll('.hha-toggle').forEach(function(tb) {
                   tb.addEventListener('click', function() {
