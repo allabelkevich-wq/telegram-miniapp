@@ -46,6 +46,14 @@ const _hotNotifyBase = process.env.RENDER_EXTERNAL_URL || process.env.BACKEND_UR
 const HOT_NOTIFY_URL_EFFECTIVE = process.env.HOT_NOTIFY_URL || (String(_hotNotifyBase).replace(/\/$/, "").replace(/\/app\/?$/, "") + "/api/payments/hot/webhook");
 if (process.env.HOT_PAYMENT_URL || process.env.HOT_ITEM_ID_DEFAULT) {
   console.log("[HOT Pay] notify_url для вебхука (проверь в кабинете HOT, если оплаты не подтверждаются):", HOT_NOTIFY_URL_EFFECTIVE);
+  console.log("[HOT Pay] redirect_url:", process.env.HOT_REDIRECT_URL || "(auto)");
+  console.log("[HOT Pay] item_id конфигурация:", {
+    SOUL_BASIC_SUB: process.env.HOT_ITEM_ID_SOUL_BASIC_SUB ? process.env.HOT_ITEM_ID_SOUL_BASIC_SUB.slice(0, 12) + "…" : "НЕ ЗАДАН",
+    SOUL_PLUS_SUB: process.env.HOT_ITEM_ID_SOUL_PLUS_SUB ? process.env.HOT_ITEM_ID_SOUL_PLUS_SUB.slice(0, 12) + "…" : "НЕ ЗАДАН",
+    MASTER_MONTHLY: process.env.HOT_ITEM_ID_MASTER_MONTHLY ? process.env.HOT_ITEM_ID_MASTER_MONTHLY.slice(0, 12) + "…" : "НЕ ЗАДАН",
+    SINGLE_SONG: process.env.HOT_ITEM_ID_SINGLE_SONG ? process.env.HOT_ITEM_ID_SINGLE_SONG.slice(0, 12) + "…" : "НЕ ЗАДАН",
+    DEFAULT: process.env.HOT_ITEM_ID_DEFAULT ? process.env.HOT_ITEM_ID_DEFAULT.slice(0, 12) + "…" : "НЕ ЗАДАН",
+  });
   if (!_rawHotApiJwt) {
     console.warn("[HOT Pay] ⚠️ HOT_API_JWT не задан! Без него fallback-проверка оплаты через API невозможна — оплата зависит ТОЛЬКО от webhook.");
   }
@@ -4721,7 +4729,7 @@ app.post("/api/payments/subscription/checkout", express.json(), asyncApi(async (
     requestId, sku,
   });
 
-  console.log(`[subscription/checkout] sku=${sku}, orderId=${orderId.slice(0, 8)}, userId=${telegramUserId}`);
+  console.log(`[subscription/checkout] sku=${sku}, orderId=${orderId.slice(0, 8)}, userId=${telegramUserId}, itemId=${itemId.slice(0, 12)}…, amount=${priceData.price}, checkoutUrl=${checkoutUrl.slice(0, 80)}…`);
   return res.json({
     success: true,
     checkout_url: checkoutUrl,
