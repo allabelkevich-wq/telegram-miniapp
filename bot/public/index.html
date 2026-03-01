@@ -5552,6 +5552,11 @@
         // Полный сброс состояния
         setPaymentStatus('', '');
         activePromo = null;
+        if (pendingPaymentSku === 'deep_analysis_addon') {
+          pendingPaymentSku = null;
+          pendingPaymentRequestId = null;
+          try { localStorage.removeItem('hot_pending_sku'); localStorage.removeItem('hot_pending_request_id'); } catch(_) {}
+        }
         resetPaymentUI();
 
         var pi = document.getElementById('payOvPromoInput');
@@ -9175,14 +9180,18 @@
           }
           // КРИТИЧНО: Если промокод дал 100% скидку или free_applied — показываем экран подтверждения
           if (hotJson.free_applied || (hotJson.success && hotJson.provider === 'promo' && Number(hotJson.amount) === 0)) {
-            console.log('[HOT Pay] Промокод дал бесплатную генерацию — показываем экран подтверждения');
-            // Полная очистка состояния
+            console.log('[HOT Pay] Промокод дал бесплатный доступ — показываем экран подтверждения');
+            var _promoSku = pendingPaymentSku;
             pendingPaymentRequestId = null;
             pendingPaymentSku = null;
             pendingPaymentPromo = null;
             activePromo = null;
             hidePaymentOverlay();
-            showConfirmOverlay('Заявка принята!', 'Промокод применён!<br><br>Песня генерируется на нашем сервере — когда будет готова, придёт сюда в чат с ботом. Можешь закрыть приложение — ничего не пропадёт. Спасибо<br><br><span style="font-size:0.9em;color:rgba(255,255,255,0.6)">Нет песни? Напиши боту «песня не пришла».</span>', function() { goToPage('successPage'); });
+            if (_promoSku === 'deep_analysis_addon') {
+              showConfirmOverlay('Расшифровка доступна!', 'Промокод применён!<br><br>Напиши боту <strong>@Yup_Soul_bot</strong> команду «расшифровка» — и получишь текстовый анализ.', function() { goToPage('homePage'); });
+            } else {
+              showConfirmOverlay('Заявка принята!', 'Промокод применён!<br><br>Песня генерируется на нашем сервере — когда будет готова, придёт сюда в чат с ботом. Можешь закрыть приложение — ничего не пропадёт. Спасибо<br><br><span style="font-size:0.9em;color:rgba(255,255,255,0.6)">Нет песни? Напиши боту «песня не пришла».</span>', function() { goToPage('successPage'); });
+            }
             return;
           }
           if (!hotJson.checkout_url) {
@@ -9627,15 +9636,26 @@
         pendingPaymentRequestId = '';
         pendingPaymentSku = '';
         var isSub = ['soul_basic_sub','soul_plus_sub','master_monthly'].indexOf(sku) >= 0;
+        var isAnalysis = (sku === 'deep_analysis_addon');
         var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
         if (isSub && typeof claimSubscriptionSafe === 'function') {
           claimSubscriptionSafe(apiBase, initData, requestId);
         }
-        showConfirmOverlay(
-          'Оплата получена!',
-          isSub ? 'Подписка активирована. Добро пожаловать!' : 'Генерация запущена. Скоро ты получишь свою песню!',
-          function() { goToPage(isSub ? 'homePage' : 'loadingPage'); }
-        );
+        var title, desc, targetPage;
+        if (isSub) {
+          title = 'Подписка активирована!';
+          desc = 'Добро пожаловать! Все функции доступны.';
+          targetPage = 'homePage';
+        } else if (isAnalysis) {
+          title = 'Расшифровка оплачена!';
+          desc = 'Теперь ты можешь получить подробный разбор своей песни.<br><br>Напиши боту <strong>@Yup_Soul_bot</strong> команду «расшифровка».';
+          targetPage = 'homePage';
+        } else {
+          title = 'Оплата получена!';
+          desc = 'Генерация запущена. Скоро ты получишь свою песню!';
+          targetPage = 'loadingPage';
+        }
+        showConfirmOverlay(title, desc, function() { goToPage(targetPage); });
       }
 
       window.showPlanConfirm = function showPlanConfirm(planKey, planName) {

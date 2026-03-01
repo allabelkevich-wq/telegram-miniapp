@@ -143,6 +143,7 @@ const DEFAULT_PRICING_CATALOG = [
 function resolveSkuByMode(mode) {
   if (mode === "couple") return "couple_song";
   if (mode === "transit") return "transit_energy_song";
+  if (mode === "deep_analysis") return "deep_analysis_addon";
   // Подписки: mode = "sub_soul_basic_sub" → sku = "soul_basic_sub"
   if (typeof mode === "string" && mode.startsWith("sub_")) return mode.slice(4);
   return "single_song";
@@ -5752,7 +5753,7 @@ app.post("/api/payments/tbank/init", express.json(), asyncApi(async (req, res) =
     orderId,
     amount: amountRub,
     customerKey: isSubscription ? String(telegramUserId) : undefined,
-    description: isSubscription ? `Подписка YupSoul (${skuNorm})` : "YupSoul — Звуковой ключ",
+    description: isSubscription ? `Подписка YupSoul (${skuNorm})` : (skuNorm === "deep_analysis_addon" ? "YupSoul — Текстовая расшифровка" : "YupSoul — Звуковой ключ"),
     recurrent: isSubscription,
     operationInitiatorType: isSubscription ? "0" : undefined,
   });
@@ -5886,9 +5887,10 @@ app.post("/api/payments/tbank/notification", express.json(), async (req, res) =>
       });
     }
 
-    // Для разовых заявок — запускаем генерацию
+    // Для разовых заявок — запускаем генерацию (кроме расшифровок и подписок)
     const isSubscription = ["soul_basic_sub", "soul_plus_sub", "master_monthly"].includes(sku);
-    if (!isSubscription && reqRow.id) {
+    const isAnalysisAddon = (sku === "deep_analysis_addon");
+    if (!isSubscription && !isAnalysisAddon && reqRow.id) {
       const gs = String(reqRow.generation_status || "pending");
       if (!["completed", "processing", "lyrics_generated", "suno_processing", "astro_calculated"].includes(gs)) {
         import("./workerSoundKey.js").then(({ generateSoundKey }) => {
@@ -5897,12 +5899,42 @@ app.post("/api/payments/tbank/notification", express.json(), async (req, res) =>
       }
     }
 
+    // Для расшифровки — помечаем analysis_paid у последней завершённой заявки
+    if (isAnalysisAddon) {
+      try {
+        const { data: lastCompleted } = await supabase
+          .from("track_requests")
+          .select("id")
+          .eq("telegram_user_id", telegramUserId)
+          .eq("status", "completed")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (lastCompleted) {
+          await supabase.from("track_requests")
+            .update({ analysis_paid: true })
+            .eq("id", lastCompleted.id);
+          console.log(`[T-Bank notification] analysis_paid=true для заявки ${lastCompleted.id}`);
+        }
+      } catch (e) {
+        console.warn("[T-Bank notification] Не удалось пометить analysis_paid:", e?.message);
+      }
+    }
+
     // Уведомляем пользователя через бота
     try {
-      const msg = isSubscription
-        ? `✅ Подписка ${sku} активирована! Оплата ${amountRub ? amountRub + "₽" : ""} получена.`
-        : `✅ Оплата ${amountRub ? amountRub + "₽" : ""} получена! Генерация запущена.`;
-      await bot.api.sendMessage(Number(telegramUserId), msg);
+      let msg;
+      if (isSubscription) {
+        msg = `✅ Подписка ${sku} активирована! Оплата ${amountRub ? amountRub + "₽" : ""} получена.`;
+      } else if (isAnalysisAddon) {
+        msg = `✅ *Расшифровка оплачена!*\n\nТеперь ты можешь получить подробный текстовый разбор своей песни.`;
+      } else {
+        msg = `✅ Оплата ${amountRub ? amountRub + "₽" : ""} получена! Генерация запущена.`;
+      }
+      const msgOpts = isAnalysisAddon
+        ? { parse_mode: "Markdown", reply_markup: { inline_keyboard: [[{ text: "📜 Получить расшифровку", callback_data: "get_analysis" }]] } }
+        : {};
+      await bot.api.sendMessage(Number(telegramUserId), msg, msgOpts);
     } catch (e) {
       console.warn("[T-Bank notification] Не удалось уведомить пользователя:", e?.message);
     }
