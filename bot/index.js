@@ -518,7 +518,7 @@ function normalizeHotStatus(rawStatus) {
   if (!raw) return "";
   const upper = raw.toUpperCase();
   if (["PAID", "SUCCESS", "COMPLETED", "CONFIRMED"].includes(upper)) return "paid";
-  if (["PENDING", "WAITING", "PROCESSING"].includes(upper)) return "pending";
+  if (["PENDING", "WAITING", "PROCESSING", "PENDING_DEPOSIT"].includes(upper)) return "pending";
   return raw.toLowerCase();
 }
 
@@ -581,14 +581,15 @@ async function checkHotPaymentViaApi(orderId, requestId) {
       console.log("[hot/api-check] Платежи не найдены для memo:", orderId);
       return null;
     }
+    const PAID_STATUSES = new Set(["SUCCESS", "COMPLETED", "CONFIRMED", "PAID"]);
     const successPayment = payments.find(
-      (p) => String(p.status || "").toUpperCase() === "SUCCESS"
+      (p) => PAID_STATUSES.has(String(p.status || "").toUpperCase())
     );
     if (!successPayment) {
-      console.log("[hot/api-check] Нет SUCCESS платежей для memo:", orderId, "статусы:", payments.map((p) => p.status));
+      console.log("[hot/api-check] Нет оплаченных платежей для memo:", orderId, "статусы:", payments.map((p) => p.status));
       return null;
     }
-    console.log("[hot/api-check] ✅ Найден SUCCESS платёж для memo:", orderId, "tx:", successPayment.near_trx || "N/A");
+    console.log("[hot/api-check] ✅ Найден оплаченный платёж для memo:", orderId, "status:", successPayment.status, "tx:", successPayment.near_trx || "N/A");
     return {
       paid: true,
       status: "SUCCESS",
@@ -607,36 +608,44 @@ async function checkHotPaymentViaApi(orderId, requestId) {
   }
 }
 
-// Обновляет payment_status в track_requests на основании данных HOT API
+// Обновляет payment_status в track_requests на основании данных HOT API.
+// Обновляет track_requests на paid. Устойчив к отсутствию колонок — пробует несколько вариантов.
 async function markPaidFromHotApi(row, hotResult) {
   if (!supabase || !row || !hotResult?.paid) return false;
-  const updatePayload = {
-    payment_provider: "hot",
-    payment_status: "paid",
-    payment_tx_id: hotResult.txId || null,
-    payment_amount: hotResult.amount != null ? Number(hotResult.amount) : null,
-    payment_currency: "USDT",
-    payment_raw: { ...(typeof row.payment_raw === "object" ? row.payment_raw : {}), hot_api_confirmed: true, hot_api_data: hotResult.raw },
-    paid_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-  const { data: updatedRow, error: updErr } = await supabase
-    .from("track_requests")
-    .update(updatePayload)
-    .eq("id", row.id)
-    .or("payment_status.is.null,payment_status.neq.paid")
-    .select("id")
-    .maybeSingle();
-  if (updErr) {
-    console.warn("[hot/api-check] Ошибка обновления track_requests:", updErr.message);
-    return false;
+  const hotData = { hot_api_confirmed: true, hot_api_data: hotResult.raw };
+  const rawMerged = { ...(typeof row.payment_raw === "object" ? row.payment_raw : {}), ...hotData };
+  const now = new Date().toISOString();
+
+  // Набор колонок от «полного» к «минимальному»
+  const variants = [
+    { payment_status: "paid", payment_provider: "hot", payment_tx_id: hotResult.txId || null, payment_amount: hotResult.amount != null ? Number(hotResult.amount) : null, payment_currency: "USDT", payment_raw: rawMerged, paid_at: now, updated_at: now },
+    { payment_status: "paid", payment_raw: rawMerged, paid_at: now, updated_at: now },
+    { status: "paid", updated_at: now },
+  ];
+
+  for (let vi = 0; vi < variants.length; vi++) {
+    const { data: updatedRow, error: updErr } = await supabase
+      .from("track_requests")
+      .update(variants[vi])
+      .eq("id", row.id)
+      .select("id")
+      .maybeSingle();
+    if (!updErr) {
+      if (!updatedRow) {
+        console.log("[hot/api-check] Заказ уже оплачен (другим путём):", row.id?.slice(0, 8));
+        return true;
+      }
+      console.log(`[hot/api-check] ✅ Статус обновлён на paid (вариант ${vi + 1}) для заказа`, row.id?.slice(0, 8));
+      return true;
+    }
+    if (!/does not exist|column|unknown/i.test(updErr.message)) {
+      console.warn("[hot/api-check] Ошибка обновления track_requests:", updErr.message);
+      return false;
+    }
+    console.warn(`[hot/api-check] Вариант ${vi + 1} не подошёл (${updErr.message.slice(0, 80)}) — пробуем следующий`);
   }
-  if (!updatedRow) {
-    console.log("[hot/api-check] Заказ уже оплачен (другим путём)");
-    return true;
-  }
-  console.log("[hot/api-check] ✅ payment_status обновлён на paid для заказа", row.id?.slice(0, 8));
-  return true;
+  console.error("[hot/api-check] Все варианты update провалились для", row.id?.slice(0, 8));
+  return false;
 }
 
 async function logSubscriptionActivationError({ telegramUserId, requestId, paymentOrderId, planSku, errorMessage, errorSource, paymentProvider, metadata = {} }) {
@@ -787,8 +796,8 @@ async function getActiveSubscriptionFull(telegramUserId) {
 async function ensureSubscriptionFromPaidRequests(telegramUserId, source = "repair_on_read") {
   if (!supabase) return;
   const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
-  // Сначала ищем уже оплаченную заявку
-  let { data: paidRow } = await supabase
+  // Ищем оплаченную заявку — пробуем payment_status, fallback на status
+  let paidResult = await supabase
     .from("track_requests")
     .select("id,mode,payment_order_id,created_at,payment_raw,subscription_activation_attempts")
     .eq("telegram_user_id", Number(telegramUserId))
@@ -798,11 +807,24 @@ async function ensureSubscriptionFromPaidRequests(telegramUserId, source = "repa
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+  if (paidResult.error && /does not exist|column/i.test(paidResult.error.message)) {
+    paidResult = await supabase
+      .from("track_requests")
+      .select("id,mode,payment_order_id,created_at,payment_raw,subscription_activation_attempts")
+      .eq("telegram_user_id", Number(telegramUserId))
+      .like("mode", "sub_%")
+      .eq("status", "paid")
+      .gte("created_at", ninetyDaysAgo)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+  }
+  let paidRow = paidResult.data || null;
   // Если нет paid — ищем pending и проверяем через HOT API
   if (!paidRow) {
-    const { data: pendingRow } = await supabase
+    let pendingResult = await supabase
       .from("track_requests")
-      .select("id,mode,payment_order_id,created_at,payment_raw,payment_status,subscription_activation_attempts")
+      .select("id,mode,payment_order_id,created_at,payment_raw,status,subscription_activation_attempts")
       .eq("telegram_user_id", Number(telegramUserId))
       .like("mode", "sub_%")
       .eq("payment_status", "pending")
@@ -810,6 +832,19 @@ async function ensureSubscriptionFromPaidRequests(telegramUserId, source = "repa
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+    if (pendingResult.error && /does not exist|column/i.test(pendingResult.error.message)) {
+      pendingResult = await supabase
+        .from("track_requests")
+        .select("id,mode,payment_order_id,created_at,payment_raw,status,subscription_activation_attempts")
+        .eq("telegram_user_id", Number(telegramUserId))
+        .like("mode", "sub_%")
+        .eq("status", "pending")
+        .gte("created_at", ninetyDaysAgo)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+    }
+    const pendingRow = pendingResult.data || null;
     if (pendingRow?.payment_order_id) {
       const hotResult = await checkHotPaymentViaApi(pendingRow.payment_order_id, pendingRow.id);
       if (hotResult?.paid) {
@@ -1468,21 +1503,32 @@ bot.on(":successful_payment", async (ctx) => {
       }
     }
 
-    const { data: updatedRow, error: updErr } = await supabase
+    const starsUpdatePayload = {
+      payment_status: "paid",
+      status: "paid",
+      payment_provider: "stars",
+      payment_amount: String(sp.total_amount),
+      payment_order_id: telegramChargeId,
+      updated_at: new Date().toISOString(),
+    };
+    let { data: updatedRow, error: updErr } = await supabase
       .from("track_requests")
-      .update({
-        payment_status: "paid",
-        payment_provider: "stars",
-        payment_amount: String(sp.total_amount),
-        payment_order_id: telegramChargeId,
-        updated_at: new Date().toISOString(),
-      })
+      .update(starsUpdatePayload)
       .eq("id", requestId)
-      .or("payment_status.is.null,payment_status.eq.pending,payment_status.eq.requires_payment")
       .select("id")
       .maybeSingle();
+    if (updErr && /does not exist|column.*payment_status/i.test(updErr.message)) {
+      console.warn("[Stars] Колонка payment_status не найдена — повтор без неё");
+      delete starsUpdatePayload.payment_status;
+      ({ data: updatedRow, error: updErr } = await supabase
+        .from("track_requests")
+        .update(starsUpdatePayload)
+        .eq("id", requestId)
+        .select("id")
+        .maybeSingle());
+    }
     if (updErr || !updatedRow) {
-      console.warn("[Stars] update не применился", requestId?.slice(0, 8));
+      console.warn("[Stars] update не применился", requestId?.slice(0, 8), updErr?.message);
       return;
     }
 
@@ -3127,7 +3173,7 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
     const status = normalizeHotStatus(statusRaw);
     const txId = String(body.tx_id || body.txId || body.near_trx || body.transaction_id || body.data?.tx_id || "").trim() || null;
 
-    console.log("[HOT webhook] входящий запрос", { memo: orderId || "(пусто)", request_id: requestId || "(пусто)", status: statusRaw, hasSignature: !!signature, bodyKeys: Object.keys(body) });
+    console.log("[HOT webhook] входящий запрос", { memo: orderId || "(пусто)", request_id: requestId || "(пусто)", statusRaw, normalized: status, txId: txId || "(нет)", hasSignature: !!signature, bodyKeys: Object.keys(body) });
 
     if (!verifyHotWebhookSignature(rawBody, signature)) {
       console.warn("[HOT webhook] отклонён: неверная подпись. Проверь HOT_WEBHOOK_SECRET или отключи проверку в кабинете HOT.");
@@ -3186,9 +3232,9 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
       if (insErr) console.warn("[HOT webhook] unmatched_payments insert failed (таблица может отсутствовать):", insErr.message);
       return res.status(200).json({ ok: true, warning: "order_not_found_logged" });
     }
-    if ((row.payment_status || "").toLowerCase() === "paid") return res.json({ success: true, message: "Already processed" });
+    if ((row.payment_status || row.status || "").toLowerCase() === "paid") return res.json({ success: true, message: "Already processed" });
 
-    const normalizedPaid = status === "paid";
+    let normalizedPaid = status === "paid";
     console.log("[HOT webhook] заказ найден", { id: row.id?.slice(0, 8), mode: row.mode, statusRaw, normalizedPaid });
     const paymentStatus = normalizedPaid ? "paid" : (status || "pending");
     const paymentAmount = body.amount != null ? Number(body.amount) : null;
@@ -3200,36 +3246,57 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
     if (txId) {
       const { data: txRow, error: txErr } = await supabase
         .from("track_requests")
-        .select("id,payment_status")
+        .select("id,status")
         .eq("payment_tx_id", txId)
         .neq("id", row.id)
         .maybeSingle();
-      if (!txErr && txRow && String(txRow.payment_status || "").toLowerCase() === "paid") {
+      if (!txErr && txRow && String(txRow.status || "").toLowerCase() === "paid") {
         return res.json({ success: true, message: "Duplicate tx ignored" });
       }
     }
 
-    const updatePayload = {
-      payment_provider: "hot",
-      payment_status: paymentStatus,
-      ...(orderId && (!row.payment_order_id || String(row.payment_order_id).trim() !== orderId) ? { payment_order_id: orderId } : {}),
-      payment_tx_id: txId,
-      payment_amount: Number.isFinite(paymentAmount) ? paymentAmount : null,
-      payment_currency: paymentCurrency,
-      payment_raw: { ...parseJsonSafe(row.payment_raw, {}) || {}, ...body, sku: purchasedSku },
-      paid_at: normalizedPaid ? new Date().toISOString() : null,
-      updated_at: new Date().toISOString(),
-    };
-    // Идемпотентность: обновляем только если заказ ещё не в статусе paid (защита от двойного grant при повторных webhook)
-    const { data: updatedRow, error: updErr } = await supabase
-      .from("track_requests")
-      .update(updatePayload)
-      .eq("id", row.id)
-      .or("payment_status.is.null,payment_status.neq.paid")
-      .select("id")
-      .maybeSingle();
-    if (updErr && !/does not exist|column/i.test(updErr.message)) return res.status(500).json({ success: false, error: updErr.message });
+    const mergedRaw = { ...parseJsonSafe(row.payment_raw, {}) || {}, ...body, sku: purchasedSku };
+    const now = new Date().toISOString();
+    const orderIdPatch = orderId && (!row.payment_order_id || String(row.payment_order_id).trim() !== orderId) ? { payment_order_id: orderId } : {};
+
+    // Каскадные варианты update: от полного набора колонок к минимальному
+    const webhookUpdateVariants = [
+      { payment_provider: "hot", payment_status: paymentStatus, ...orderIdPatch, payment_tx_id: txId, payment_amount: Number.isFinite(paymentAmount) ? paymentAmount : null, payment_currency: paymentCurrency, payment_raw: mergedRaw, paid_at: normalizedPaid ? now : null, updated_at: now, ...(normalizedPaid ? { status: "paid" } : {}) },
+      { payment_status: paymentStatus, payment_raw: mergedRaw, paid_at: normalizedPaid ? now : null, updated_at: now, ...(normalizedPaid ? { status: "paid" } : {}) },
+      { status: normalizedPaid ? "paid" : (paymentStatus || "pending"), updated_at: now },
+    ];
+
+    let updatedRow = null;
+    let updErr = null;
+    for (let vi = 0; vi < webhookUpdateVariants.length; vi++) {
+      ({ data: updatedRow, error: updErr } = await supabase
+        .from("track_requests")
+        .update(webhookUpdateVariants[vi])
+        .eq("id", row.id)
+        .select("id")
+        .maybeSingle());
+      if (!updErr) {
+        if (vi > 0) console.log(`[HOT webhook] Update сработал с вариантом ${vi + 1} (упрощённый набор колонок)`);
+        break;
+      }
+      if (!/does not exist|column|unknown/i.test(updErr.message)) break;
+      console.warn(`[HOT webhook] Update вариант ${vi + 1} не подошёл: ${updErr.message.slice(0, 100)}`);
+    }
+    if (updErr) return res.status(500).json({ success: false, error: updErr.message });
     if (!updatedRow) return res.json({ success: true, message: "Already processed" });
+
+    // Для промежуточных статусов (pending_deposit и т.д.) — проверяем через HOT API, не оплачен ли уже
+    if (!normalizedPaid && orderId) {
+      console.log(`[HOT webhook] Промежуточный статус "${statusRaw}" — проверяем через HOT API для memo: ${orderId}`);
+      const hotApiResult = await checkHotPaymentViaApi(orderId, row.id);
+      if (hotApiResult?.paid) {
+        console.log(`[HOT webhook] ✅ HOT API подтвердил оплату для "${statusRaw}" webhook, memo: ${orderId}`);
+        const marked = await markPaidFromHotApi(row, hotApiResult);
+        if (marked) {
+          normalizedPaid = true;
+        }
+      }
+    }
 
     if (normalizedPaid) {
       const promoFromOrder = String(parseJsonSafe(row.payment_raw, {})?.promo_code || "").trim();
@@ -3417,6 +3484,53 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
         }
       }
     }
+    // Фоновая отложенная проверка: если webhook пришёл с промежуточным статусом и подписка не активирована —
+    // проверяем через HOT API через 30 и 60 секунд (HOT может не слать отдельный SUCCESS webhook)
+    if (!normalizedPaid && orderId && isSubscriptionSku(purchasedSku)) {
+      const bgRowId = row.id;
+      const bgUserId = row.telegram_user_id;
+      const bgSku = purchasedSku;
+      const bgOrderId = orderId;
+      (async () => {
+        for (const delaySec of [30, 60, 120]) {
+          await new Promise(r => setTimeout(r, delaySec * 1000));
+          try {
+            const { data: freshRow } = await supabase.from("track_requests")
+              .select("status").eq("id", bgRowId).maybeSingle();
+            if (freshRow && String(freshRow.payment_status || freshRow.status || "").toLowerCase() === "paid") {
+              console.log(`[HOT bg-check] Заявка ${bgRowId.slice(0,8)} уже paid (проверка через ${delaySec}с) — пропускаем`);
+              return;
+            }
+            const hotResult = await checkHotPaymentViaApi(bgOrderId, bgRowId);
+            if (hotResult?.paid) {
+              console.log(`[HOT bg-check] ✅ HOT API подтвердил оплату через ${delaySec}с для ${bgRowId.slice(0,8)}`);
+              const freshData = (await supabase.from("track_requests")
+                .select("id,telegram_user_id,payment_order_id,mode,payment_raw,status")
+                .eq("id", bgRowId).maybeSingle()).data;
+              if (freshData && String(freshData.payment_status || freshData.status || "").toLowerCase() !== "paid") {
+                await markPaidFromHotApi(freshData, hotResult);
+                await grantPurchaseBySku({
+                  telegramUserId: bgUserId, sku: bgSku,
+                  source: `hot_bg_check_${delaySec}s`, orderId: bgOrderId, requestId: bgRowId,
+                });
+                const verification = await getActiveSubscriptionFull(bgUserId);
+                if (verification && verification.plan_sku === bgSku) {
+                  console.log(`[HOT bg-check] ✅ Подписка ${bgSku} активирована через ${delaySec}с для userId=${bgUserId}`);
+                  bot.api.sendMessage(bgUserId,
+                    `✅ Подписка активирована!\n\nТвой тариф обновлён. Открой YupSoul, чтобы увидеть изменения.`
+                  ).catch(() => {});
+                }
+              }
+              return;
+            }
+          } catch (bgErr) {
+            console.warn(`[HOT bg-check] Ошибка при проверке через ${delaySec}с:`, bgErr?.message);
+          }
+        }
+        console.warn(`[HOT bg-check] Оплата не подтверждена через HOT API после 120с для ${bgRowId.slice(0,8)}`);
+      })().catch(e => console.error("[HOT bg-check] fatal:", e?.message));
+    }
+
     return res.json({ success: true, paid: normalizedPaid, sku: purchasedSku });
   } catch (e) {
     return res.status(500).json({ success: false, error: e?.message || "Webhook error" });
@@ -4773,7 +4887,7 @@ app.post("/api/subscription/claim", express.json(), asyncApi(async (req, res) =>
   if (ageMs > SUB_CLAIM_MAX_AGE_MS) {
     return res.status(409).json({ success: false, error: "Заявка слишком старая. Обратись в поддержку." });
   }
-  let paid = (data.payment_status || "").toLowerCase() === "paid";
+  let paid = (data.payment_status || data.status || "").toLowerCase() === "paid";
   // Если ещё не paid — активная проверка через HOT Pay API
   if (!paid && data.payment_order_id) {
     console.log("[sub/claim] payment_status не paid, проверяем через HOT API для", requestId?.slice(0, 8));

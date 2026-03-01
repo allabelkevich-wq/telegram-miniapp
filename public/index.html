@@ -8001,8 +8001,8 @@
             // ── Для подписок: моментально запускаем claim (без задержки) и повторяем до успеха ──
             if (isSubPaymentImmediate && thanksRequestId) {
               (async function runClaimLoop() {
-                var maxClaimAttempts = 8;
-                var claimIntervalMs = 4000;
+                var maxClaimAttempts = 15;
+                var claimIntervalMs = 5000;
                 for (var ci = 0; ci < maxClaimAttempts; ci++) {
                   try {
                     var claimRes = await claimSubscriptionSafe(apiBase, initData, thanksRequestId);
@@ -8017,7 +8017,6 @@
                         loadProfilePage().then(function() {
                           var curPage = document.querySelector('.page.active');
                           if (curPage && curPage.id === 'profilePage') return;
-                          // Если не на профиле — всё равно обновили глобальные переменные
                         }).catch(function(e) { console.warn('[sub] loadProfilePage after claim:', e); });
                       }
                       return;
@@ -8032,7 +8031,7 @@
             }
 
             // ── Поллинг payment_status (вебхук путь) ──
-            var maxAttempts = isSubPaymentImmediate ? 20 : 5;
+            var maxAttempts = isSubPaymentImmediate ? 30 : 5;
             var delayMs = 3000;
             for (var attempt = 0; attempt < maxAttempts; attempt++) {
               try {
