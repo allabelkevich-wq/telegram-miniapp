@@ -5489,6 +5489,7 @@
       var selectedMode = 'single';
 
       function getCurrentSku() {
+        if (pendingPaymentSku && pendingPaymentSku !== '') return pendingPaymentSku;
         var modeSku = (typeof selectedMode !== 'undefined' && selectedMode) ? selectedMode : 'single';
         if (modeSku === 'couple') return 'couple_song';
         if (modeSku === 'transit') return 'transit_energy_song';
@@ -5525,10 +5526,11 @@
         
         ov.scrollTop = 0;
         
-        // Free trial блок
+        // Free trial блок (не показываем для расшифровки)
         var freeClaimBtn = document.getElementById('payOvFreeClaimBtn');
         var hint = document.getElementById('payOvTrialHint');
-        if (freeTrialAvailable) {
+        var isAnalysisPayment = (pendingPaymentSku === 'deep_analysis_addon');
+        if (freeTrialAvailable && !isAnalysisPayment) {
           if (freeClaimBtn) freeClaimBtn.style.display = '';
           if (hint) hint.style.display = '';
         } else {
@@ -5628,7 +5630,7 @@
           subscriptionClaimInFlight = false;
         }
       }
-      var DEFAULT_PRICES = { single_song: { title: 'Single song', price: '5.99', currency: 'USDT' }, couple_song: { title: 'Couple song', price: '8.99', currency: 'USDT' }, transit_energy_song: { title: 'Transit energy song', price: '6.99', currency: 'USDT' } };
+      var DEFAULT_PRICES = { single_song: { title: 'Single song', price: '5.99', currency: 'USDT' }, couple_song: { title: 'Couple song', price: '8.99', currency: 'USDT' }, transit_energy_song: { title: 'Transit energy song', price: '6.99', currency: 'USDT' }, deep_analysis_addon: { title: 'Текстовая расшифровка', price: '3.99', currency: 'USDT' } };
       function updatePaymentUiFromCatalog() {
         try {
           var sku = getCurrentSku();
@@ -6819,11 +6821,52 @@
 
         window.startApp = function() {
           if (_isPaymentReturn || _hasSeenOnboarding()) {
-            // Повторный визит или возврат с оплаты — сразу на главную
             if (homePage) homePage.classList.add('active');
             try { localStorage.setItem(ONBOARDING_KEY, 'true'); } catch(_) {}
           } else {
             showOnboarding();
+          }
+
+          // Deep link: ?action=buy_analysis — создать заказ на расшифровку и открыть оверлей оплаты
+          var _actionParam = (_urlParams.match(/[?&]action=([^&]+)/) || [])[1];
+          if (_actionParam === 'buy_analysis') {
+            setTimeout(function() {
+              var _abApiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+              var _abInitData = (typeof getInitData === 'function') ? getInitData() : '';
+              if (!_abApiBase || !_abInitData) {
+                pendingPaymentSku = 'deep_analysis_addon';
+                try { localStorage.setItem('hot_pending_sku', 'deep_analysis_addon'); } catch(_) {}
+                if (typeof updatePaymentUiFromCatalog === 'function') updatePaymentUiFromCatalog();
+                if (typeof showPaymentOverlay === 'function') showPaymentOverlay();
+                return;
+              }
+              fetch(_abApiBase + '/api/payments/analysis/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': _abInitData },
+                body: JSON.stringify({ initData: _abInitData })
+              })
+              .then(function(r) { return r.json(); })
+              .then(function(data) {
+                if (data && data.already_available) {
+                  alert('Расшифровка уже доступна! Напиши боту @Yup_Soul_bot команду «расшифровка» чтобы получить её.');
+                  return;
+                }
+                if (data && data.success && data.request_id) {
+                  pendingPaymentRequestId = data.request_id;
+                  pendingPaymentSku = 'deep_analysis_addon';
+                  try { localStorage.setItem('hot_pending_request_id', data.request_id); } catch(_) {}
+                  try { localStorage.setItem('hot_pending_sku', 'deep_analysis_addon'); } catch(_) {}
+                  if (typeof updatePaymentUiFromCatalog === 'function') updatePaymentUiFromCatalog();
+                  if (typeof showPaymentOverlay === 'function') showPaymentOverlay();
+                } else {
+                  alert('Не удалось создать заказ: ' + (data && data.error || 'Попробуйте позже'));
+                }
+              })
+              .catch(function(e) {
+                console.error('[buy_analysis] Ошибка создания заказа:', e);
+                alert('Ошибка сети. Попробуйте позже.');
+              });
+            }, 600);
           }
         };
         var startApp = window.startApp;
@@ -8064,10 +8107,22 @@
             loadPricingCatalog().catch(function(e) { console.warn('[payment success] loadPricingCatalog error:', e); });
           }
         }, 1000);
+        var isAnalysisPaymentImmediate = pendingPayment && pendingPayment.type === 'analysis'
+          && pendingPayment.ts && (Date.now() - pendingPayment.ts) < 30 * 60 * 1000;
         var isSubPaymentImmediate = pendingPayment && pendingPayment.type === 'subscription'
-          && pendingPayment.ts && (Date.now() - pendingPayment.ts) < 30 * 60 * 1000; // не старше 30 мин
+          && pendingPayment.ts && (Date.now() - pendingPayment.ts) < 30 * 60 * 1000;
 
-        if (isSubPaymentImmediate) {
+        if (isAnalysisPaymentImmediate) {
+          var ptTitle = document.getElementById('paymentThanksTitle');
+          var ptSubtitle = document.getElementById('paymentThanksSubtitle');
+          var ptHint = document.getElementById('paymentThanksHint');
+          var ptBackBtn = document.getElementById('paymentThanksBackBtn');
+          if (ptTitle) ptTitle.textContent = 'Расшифровка оплачена!';
+          if (ptSubtitle) ptSubtitle.textContent = 'Текстовая расшифровка';
+          if (paymentThanksMsg) paymentThanksMsg.innerHTML = 'Теперь ты можешь получить подробный разбор своей песни.<br><br>Напиши боту <strong>@Yup_Soul_bot</strong> команду «расшифровка».';
+          if (ptHint) ptHint.style.display = 'none';
+          if (ptBackBtn) { ptBackBtn.textContent = 'Готово'; ptBackBtn.onclick = function() { goToPage('homePage'); }; }
+        } else if (isSubPaymentImmediate) {
           // Сразу показываем экран подписки — без ожидания API
           var subName = pendingPayment.plan_name || (
             pendingPayment.plan_key === 'plan_basic' ? 'Basic' :
@@ -8246,6 +8301,16 @@
                 paymentThanksMsg.innerHTML = 'Plan <strong>' + sn + '</strong> — ' + t('subscriptionActive');
                 if (ptH) ptH.style.display = 'none';
                 if (ptB) { ptB.textContent = t('subBtnProfile'); ptB.onclick = function() { goToPage('profilePage'); }; }
+              } else if (payMode === 'deep_analysis' || paySku === 'deep_analysis_addon') {
+                var ptT3 = document.getElementById('paymentThanksTitle');
+                var ptS3 = document.getElementById('paymentThanksSubtitle');
+                var ptH3 = document.getElementById('paymentThanksHint');
+                var ptB3 = document.getElementById('paymentThanksBackBtn');
+                if (ptT3) ptT3.textContent = 'Расшифровка оплачена!';
+                if (ptS3) ptS3.textContent = 'Текстовая расшифровка';
+                paymentThanksMsg.innerHTML = 'Теперь ты можешь получить подробный разбор своей песни.<br><br>Напиши боту <strong>@Yup_Soul_bot</strong> команду «расшифровка».';
+                if (ptH3) ptH3.style.display = 'none';
+                if (ptB3) { ptB3.textContent = 'Готово'; ptB3.onclick = function() { goToPage('homePage'); }; }
               } else if (paymentThanksMsg) {
                 paymentThanksMsg.textContent = t('songInProgressConfirmed');
               }
@@ -9152,6 +9217,11 @@
               localStorage.setItem('hot_pending_request_id', pendingPaymentRequestId);
               localStorage.setItem('hot_pending_sku', pendingPaymentSku || '');
             }
+            if (pendingPaymentSku === 'deep_analysis_addon') {
+              localStorage.setItem('pending_payment_type', JSON.stringify({
+                type: 'analysis', request_id: pendingPaymentRequestId || '', ts: Date.now()
+              }));
+            }
           } catch(_) {}
 
           try {
@@ -9243,6 +9313,8 @@
           if (paidIsSub) {
             await claimSubscriptionSafe(apiBase, initData, paidReqId);
             showConfirm('Подписка оплачена!', 'Активируем твой тариф.<br><br>Если статус не обновился сразу — обнови страницу или закрой и открой приложение.');
+          } else if (paidSku === 'deep_analysis_addon') {
+            showConfirm('Расшифровка оплачена!', 'Теперь ты можешь получить подробный разбор своей песни.<br><br>Напиши боту @Yup_Soul_bot команду «расшифровка» — и получишь текстовый анализ.');
           } else {
             showConfirm('Оплата подтверждена!', 'Запускаем создание твоей песни.<br><br>Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.');
           }

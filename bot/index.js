@@ -2367,17 +2367,49 @@ async function sendAnalysisIfPaid(ctx) {
   } catch (_) {}
 
   const allowFree = freeUsed == null;
-  const allowed = row.analysis_paid || allowFree;
+
+  // Подписчики получают расшифровки бесплатно
+  const sub = await getActiveSubscriptionFull(telegramUserId);
+  const hasSubscription = !!sub;
+
+  // Проверяем entitlement (купленный deep_analysis_addon)
+  let hasEntitlement = false;
+  if (!allowFree && !hasSubscription && !row.analysis_paid) {
+    try {
+      const { data: ent } = await supabase.from("user_entitlements")
+        .select("id, remaining_uses")
+        .eq("telegram_user_id", telegramUserId)
+        .eq("sku", "deep_analysis_addon")
+        .gt("remaining_uses", 0)
+        .limit(1)
+        .maybeSingle();
+      if (ent) {
+        hasEntitlement = true;
+        await supabase.from("user_entitlements")
+          .update({ remaining_uses: Math.max(0, (ent.remaining_uses || 1) - 1), updated_at: new Date().toISOString() })
+          .eq("id", ent.id);
+        await supabase.from("track_requests")
+          .update({ analysis_paid: true }).eq("id", row.id);
+      }
+    } catch (e) { console.warn("[analysis] entitlement check:", e?.message); }
+  }
+
+  const allowed = row.analysis_paid || allowFree || hasSubscription || hasEntitlement;
 
   if (!allowed) {
-    const ethicalText =
-      "Первую расшифровку ты уже получил(а) бесплатно — спасибо, что был(а) с нами.\n\n" +
-      "Если захочешь прочитать расшифровку к следующей песне — закажи новую в приложении: мы пришлём и трек, и текст. Так ты сможешь глубже прожить каждую песню.";
-    await ctx.reply(ethicalText, {
-      reply_markup: {
-        inline_keyboard: [[{ text: "🎵 Открыть приложение", web_app: { url: MINI_APP_STABLE_URL } }]],
-      },
-    });
+    const buyUrl = MINI_APP_STABLE_URL + (MINI_APP_STABLE_URL.includes("?") ? "&" : "?") + "action=buy_analysis";
+    await ctx.reply(
+      "Первую расшифровку ты уже получил(а) бесплатно.\n\n" +
+      "Чтобы открыть расшифровку к этой песне, выбери удобный способ:",
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "📜 Купить расшифровку — 290 ₽ / 3.99 USDT", web_app: { url: buyUrl } }],
+            [{ text: "💎 Оформить подписку (безлимит)", web_app: { url: MINI_APP_STABLE_URL } }],
+          ],
+        },
+      }
+    );
     return;
   }
 
@@ -2417,18 +2449,16 @@ async function sendAnalysisIfPaid(ctx) {
     ? { reply_markup: { inline_keyboard: [[{ text: "🎵 Текст песни", callback_data: "get_lyrics" }]] } }
     : {};
 
-  // После выдачи бесплатной расшифровки — мягкое предложение
+  // После выдачи расшифровки — мягкое предложение
+  const afterButtons = [];
+  if (hasLyrics) afterButtons.push([{ text: "🎵 Текст песни", callback_data: "get_lyrics" }]);
   if (allowFree) {
-    await ctx.reply("Если захочешь ещё одну песню и расшифровку к ней — закажи в приложении. Музыка твоей души 💫", {
-      reply_markup: {
-        inline_keyboard: [
-          ...(hasLyrics ? [[{ text: "🎵 Текст песни", callback_data: "get_lyrics" }]] : []),
-          [{ text: "🎵 Заказать песню", web_app: { url: MINI_APP_STABLE_URL } }],
-        ],
-      },
+    afterButtons.push([{ text: "🎵 Заказать песню", web_app: { url: MINI_APP_STABLE_URL } }]);
+    await ctx.reply("Это была твоя бесплатная расшифровка. Следующие доступны в подписке или за 290 ₽. Музыка твоей души 💫", {
+      reply_markup: { inline_keyboard: afterButtons },
     });
-  } else if (hasLyrics) {
-    await ctx.reply("Хочешь прочитать слова своей песни?", lyricsKeyboard);
+  } else if (afterButtons.length) {
+    await ctx.reply("Хочешь прочитать слова своей песни?", { reply_markup: { inline_keyboard: afterButtons } });
   }
 }
 
@@ -2478,6 +2508,23 @@ bot.callbackQuery("get_lyrics", async (ctx) => {
     console.error("[get_lyrics]", e?.message);
     await ctx.reply("Не удалось загрузить текст песни. Попробуй позже.");
   }
+});
+
+// Кнопка «Купить расшифровку» — открывает Mini App с action=buy_analysis
+bot.callbackQuery("buy_analysis", async (ctx) => {
+  await ctx.answerCallbackQuery().catch(() => {});
+  const buyUrl = MINI_APP_STABLE_URL + (MINI_APP_STABLE_URL.includes("?") ? "&" : "?") + "action=buy_analysis";
+  await ctx.reply(
+    "Выбери удобный способ оплаты расшифровки:",
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "💳 Оплатить картой / криптой", web_app: { url: buyUrl } }],
+          [{ text: "💎 Оформить подписку (безлимит)", web_app: { url: MINI_APP_STABLE_URL } }],
+        ],
+      },
+    }
+  );
 });
 
 // Определяем язык пользователя по Telegram language_code
@@ -3596,6 +3643,43 @@ app.post("/api/payments/hot/webhook", express.raw({ type: "*/*" }), async (req, 
             `🆔 Заявка: \`${shortId}\``
           , { parse_mode: "Markdown" }).catch(() => {});
         }
+      } else if (purchasedSku === "deep_analysis_addon") {
+        // Оплата текстовой расшифровки — не запускаем генерацию песни
+        const shortId = String(row.id || "").slice(0, 8);
+        console.log(`[webhook] deep_analysis_addon оплачен для ${row.telegram_user_id}, заявка ${shortId}`);
+
+        // Помечаем analysis_paid для последней завершённой заявки пользователя
+        try {
+          const { data: lastCompleted } = await supabase
+            .from("track_requests")
+            .select("id")
+            .eq("telegram_user_id", row.telegram_user_id)
+            .eq("status", "completed")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (lastCompleted) {
+            await supabase.from("track_requests")
+              .update({ analysis_paid: true })
+              .eq("id", lastCompleted.id);
+            console.log(`[webhook] analysis_paid=true для заявки ${lastCompleted.id}`);
+          }
+        } catch (e) {
+          console.warn("[webhook] Не удалось пометить analysis_paid:", e?.message);
+        }
+
+        bot.api.sendMessage(
+          row.telegram_user_id,
+          `✅ *Расшифровка оплачена!*\n\nТеперь ты можешь получить подробный текстовый разбор своей песни.`,
+          {
+            parse_mode: "Markdown",
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: "📜 Получить расшифровку", callback_data: "get_analysis" }],
+              ],
+            },
+          }
+        ).catch((e) => console.warn("[webhook] notify analysis user:", e?.message));
       } else {
         // Обычный звуковой ключ
         const gs = String(row.generation_status || row.status || "pending");
@@ -5125,6 +5209,41 @@ app.post("/api/subscription/claim", express.json(), asyncApi(async (req, res) =>
   }
   
   return res.json({ success: true, status: "activated", plan_sku: sku });
+}));
+
+// Создание заказа на покупку текстовой расшифровки (deep_analysis_addon)
+app.post("/api/payments/analysis/create-order", express.json(), asyncApi(async (req, res) => {
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+  const initData = req.headers["x-telegram-init"] || req.body?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, error: "Unauthorized" });
+
+  const sub = await getActiveSubscriptionFull(telegramUserId);
+  if (sub) return res.json({ success: true, already_available: true, reason: "subscription" });
+
+  const { data: ent } = await supabase.from("user_entitlements")
+    .select("id, remaining_uses")
+    .eq("telegram_user_id", telegramUserId)
+    .eq("sku", "deep_analysis_addon")
+    .gt("remaining_uses", 0)
+    .limit(1)
+    .maybeSingle();
+  if (ent) return res.json({ success: true, already_available: true, reason: "entitlement" });
+
+  const { data: row, error: insErr } = await supabase.from("track_requests").insert({
+    telegram_user_id: telegramUserId,
+    mode: "deep_analysis",
+    status: "pending_payment",
+    generation_status: "pending_payment",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }).select("id").single();
+  if (insErr || !row) {
+    console.error("[analysis/create-order] insert error:", insErr?.message);
+    return res.status(500).json({ success: false, error: "Не удалось создать заказ" });
+  }
+  console.log(`[analysis/create-order] Создан заказ ${row.id} для user ${telegramUserId}`);
+  return res.json({ success: true, request_id: row.id, sku: "deep_analysis_addon" });
 }));
 
 // create: owner-check (заявка принадлежит telegram_user_id), идемпотентность (already_paid + тот же payment_order_id)

@@ -2119,6 +2119,25 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
       transform: translateY(-2px) !important;
     }
+    #payOvCardBtn {
+      background: linear-gradient(135deg, #1a1f71 0%, #2d3494 50%, #1a237e 100%) !important;
+      border: 1px solid rgba(26, 31, 113, 0.5) !important;
+      box-shadow:
+        0 4px 16px rgba(26, 31, 113, 0.25),
+        0 2px 6px rgba(26, 31, 113, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+      color: #FFFFFF !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    }
+    #payOvCardBtn:hover {
+      background: linear-gradient(135deg, #283593 0%, #3949ab 50%, #2d3494 100%) !important;
+      border-color: rgba(45, 52, 148, 0.6) !important;
+      box-shadow:
+        0 8px 24px rgba(26, 31, 113, 0.35),
+        0 4px 10px rgba(26, 31, 113, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+      transform: translateY(-2px) !important;
+    }
 
     /* --- КНОПКА ИЗМЕНИТЬ В ПРОФИЛЕ --- */
     #profileEditBtn {
@@ -2791,6 +2810,21 @@
       border: 1px solid rgba(255,255,255,0.08) !important;
       border-radius: 24px !important;
     }
+    #paymentOverlay button {
+      margin-top: 0;
+      animation: none;
+      box-shadow: none;
+    }
+    #paymentOverlay button:hover {
+      transform: none;
+      box-shadow: none;
+    }
+    #paymentOverlay button:active {
+      transform: scale(0.98);
+    }
+    #paymentOverlay input:focus {
+      border-color: rgba(var(--primary-rgb), 0.5) !important;
+    }
 
     /* ── Тарифные карточки ───────────────────────────────────── */
     .ppc-card {
@@ -3161,6 +3195,11 @@
 
       <footer>
         <p>YupSoul • 2026 • v1.2.77</p>
+        <p id="homeSubCancelLink" style="display:none;margin-top:6px;">
+          <a href="#" onclick="event.preventDefault();goToPage('profilePage');setTimeout(function(){var el=document.getElementById('profileSubManage');if(el)el.scrollIntoView({behavior:'smooth'});},300);" style="color:rgba(255,255,255,0.25);font-size:0.7rem;text-decoration:underline;">Управление подпиской</a>
+          · <a href="/landing#offer" target="_blank" style="color:rgba(255,255,255,0.2);font-size:0.7rem;">Оферта</a>
+          · <a href="/landing#privacy" target="_blank" style="color:rgba(255,255,255,0.2);font-size:0.7rem;">Конфиденциальность</a>
+        </p>
       </footer>
     </div>
 
@@ -3391,6 +3430,22 @@
             </div>
             <button class="ppc-btn master-btn" id="planBtnMaster">Открыть Лабораторию</button>
             <button class="ppc-details-btn" id="planDetailsMaster" onclick="openPlanDetails('master')">Подробнее</button>
+          </div>
+        </div>
+
+        <!-- Управление подпиской -->
+        <div id="profileSubManage" style="display:none;margin-bottom:20px;">
+          <div style="background:rgba(var(--primary-rgb),0.06);border:1px solid rgba(var(--primary-rgb),0.15);border-radius:14px;padding:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <div style="font-size:0.9rem;font-weight:600;color:rgba(255,255,255,0.85);">Активная подписка</div>
+              <div id="profileSubPlan" style="font-size:0.82rem;font-weight:700;color:var(--primary-color);"></div>
+            </div>
+            <div id="profileSubRenew" style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-bottom:12px;"></div>
+            <div id="profileSubCard" style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-bottom:12px;display:none;"></div>
+            <button id="profileCancelSubBtn" type="button" onclick="cancelSubscription()"
+              style="width:100%;padding:10px;border-radius:10px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:rgba(239,68,68,0.8);font-size:0.82rem;cursor:pointer;font-family:inherit;font-weight:500;min-height:auto;margin:0;box-shadow:none;">
+              Отменить подписку
+            </button>
           </div>
         </div>
 
@@ -5434,6 +5489,7 @@
       var selectedMode = 'single';
 
       function getCurrentSku() {
+        if (pendingPaymentSku && pendingPaymentSku !== '') return pendingPaymentSku;
         var modeSku = (typeof selectedMode !== 'undefined' && selectedMode) ? selectedMode : 'single';
         if (modeSku === 'couple') return 'couple_song';
         if (modeSku === 'transit') return 'transit_energy_song';
@@ -5470,10 +5526,11 @@
         
         ov.scrollTop = 0;
         
-        // Free trial блок
+        // Free trial блок (не показываем для расшифровки)
         var freeClaimBtn = document.getElementById('payOvFreeClaimBtn');
         var hint = document.getElementById('payOvTrialHint');
-        if (freeTrialAvailable) {
+        var isAnalysisPayment = (pendingPaymentSku === 'deep_analysis_addon');
+        if (freeTrialAvailable && !isAnalysisPayment) {
           if (freeClaimBtn) freeClaimBtn.style.display = '';
           if (hint) hint.style.display = '';
         } else {
@@ -5573,7 +5630,7 @@
           subscriptionClaimInFlight = false;
         }
       }
-      var DEFAULT_PRICES = { single_song: { title: 'Single song', price: '5.99', currency: 'USDT' }, couple_song: { title: 'Couple song', price: '8.99', currency: 'USDT' }, transit_energy_song: { title: 'Transit energy song', price: '6.99', currency: 'USDT' } };
+      var DEFAULT_PRICES = { single_song: { title: 'Single song', price: '5.99', currency: 'USDT' }, couple_song: { title: 'Couple song', price: '8.99', currency: 'USDT' }, transit_energy_song: { title: 'Transit energy song', price: '6.99', currency: 'USDT' }, deep_analysis_addon: { title: 'Текстовая расшифровка', price: '3.99', currency: 'USDT' } };
       function updatePaymentUiFromCatalog() {
         try {
           var sku = getCurrentSku();
@@ -5637,6 +5694,26 @@
               priceHintOv.textContent = '💚 Скидка: ' + activePromo.discount_amount + ' ' + (activePromo.currency || 'USDT');
             } else {
               priceHintOv.textContent = '';
+            }
+          }
+          // Обновляем кнопку карты с рублёвой ценой
+          var cardPayBtn = document.getElementById('payOvCardBtn');
+          if (cardPayBtn && _tbankAvailable && _tbankPrices) {
+            var skuNow = sku || getCurrentSku();
+            var rubPrice = _tbankPrices[skuNow];
+            if (rubPrice) {
+              cardPayBtn.textContent = '💳 Оплатить картой — ' + rubPrice + ' ₽';
+            } else {
+              cardPayBtn.textContent = '💳 Оплатить картой';
+            }
+          }
+          // Показываем рублёвую цену рядом с USDT
+          if (priceHintOv && _tbankAvailable && _tbankPrices) {
+            var skuForRub = sku || getCurrentSku();
+            var rubP = _tbankPrices[skuForRub];
+            var existingHint = priceHintOv.textContent || '';
+            if (rubP && !existingHint) {
+              priceHintOv.textContent = '≈ ' + rubP + ' ₽ при оплате картой';
             }
           }
           var subEl = document.getElementById('payOvSubtitle');
@@ -5733,6 +5810,37 @@
           if (card) card.style.display = 'block';
         } catch (e) { console.warn('[Referral] Не удалось загрузить статистику:', e); }
       }
+
+      // Отмена подписки (T-Bank + HOT)
+      async function cancelSubscription() {
+        var btn = document.getElementById('profileCancelSubBtn');
+        if (btn && btn.disabled) return;
+        var confirmed = confirm('Вы уверены, что хотите отменить подписку?\n\nДоступ сохранится до конца оплаченного периода.');
+        if (!confirmed) return;
+        if (btn) { btn.disabled = true; btn.textContent = 'Отменяем…'; }
+        try {
+          var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+          var initData = getInitData();
+          var resp = await fetch(apiBase + '/api/payments/tbank/cancel-subscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+            body: JSON.stringify({ initData: initData }),
+          });
+          var data = await resp.json();
+          if (data.success) {
+            alert('Подписка отменена. Доступ сохранится до конца оплаченного периода.');
+            if (btn) btn.textContent = 'Подписка отменена';
+            if (typeof loadProfilePage === 'function') loadProfilePage().catch(function() {});
+          } else {
+            alert('Ошибка: ' + (data.error || 'не удалось отменить'));
+            if (btn) { btn.disabled = false; btn.textContent = 'Отменить подписку'; }
+          }
+        } catch (e) {
+          alert('Ошибка соединения: ' + (e.message || e));
+          if (btn) { btn.disabled = false; btn.textContent = 'Отменить подписку'; }
+        }
+      }
+      window.cancelSubscription = cancelSubscription;
 
       // Загружает данные профиля на страницу «Профиль»
       async function loadProfilePage() {
@@ -5909,6 +6017,9 @@
             hasSubscriptionActive = false;
             userTariff = 'basic';
           }
+          // Показываем ссылку на управление подпиской на главной
+          var homeSubLink = document.getElementById('homeSubCancelLink');
+          if (homeSubLink) homeSubLink.style.display = subActive ? 'block' : 'none';
 
           // Карта SKU → ID карточки и цвет
           var planCardMap = {
@@ -5953,6 +6064,29 @@
             var activeBtn = document.getElementById(pm.btnId);
             if (activeBtn) { activeBtn.textContent = '✓ Активен'; activeBtn.disabled = true; activeBtn.style.opacity = '0.5'; }
 
+            // Блок управления подпиской
+            var subManage = document.getElementById('profileSubManage');
+            if (subManage) {
+              subManage.style.display = 'block';
+              var subPlanEl = document.getElementById('profileSubPlan');
+              if (subPlanEl) subPlanEl.textContent = planName;
+              var subRenewEl = document.getElementById('profileSubRenew');
+              if (subRenewEl && renewDateStr) subRenewEl.textContent = 'Следующее списание: ' + renewDateStr;
+            }
+            // Показываем привязанную карту (если есть)
+            (async function() {
+              try {
+                var cardResp = await fetch(apiBase + '/api/payments/tbank/cards', { headers: { 'X-Telegram-Init': initData } });
+                var cardData = await cardResp.json();
+                if (cardData.cards && cardData.cards.length > 0) {
+                  var cardEl = document.getElementById('profileSubCard');
+                  if (cardEl) {
+                    cardEl.style.display = 'block';
+                    cardEl.textContent = '💳 ' + (cardData.cards[0].card_pan || 'Карта привязана');
+                  }
+                }
+              } catch(e) {}
+            })();
 
           } else {
             // Free план
@@ -6687,11 +6821,52 @@
 
         window.startApp = function() {
           if (_isPaymentReturn || _hasSeenOnboarding()) {
-            // Повторный визит или возврат с оплаты — сразу на главную
             if (homePage) homePage.classList.add('active');
             try { localStorage.setItem(ONBOARDING_KEY, 'true'); } catch(_) {}
           } else {
             showOnboarding();
+          }
+
+          // Deep link: ?action=buy_analysis — создать заказ на расшифровку и открыть оверлей оплаты
+          var _actionParam = (_urlParams.match(/[?&]action=([^&]+)/) || [])[1];
+          if (_actionParam === 'buy_analysis') {
+            setTimeout(function() {
+              var _abApiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+              var _abInitData = (typeof getInitData === 'function') ? getInitData() : '';
+              if (!_abApiBase || !_abInitData) {
+                pendingPaymentSku = 'deep_analysis_addon';
+                try { localStorage.setItem('hot_pending_sku', 'deep_analysis_addon'); } catch(_) {}
+                if (typeof updatePaymentUiFromCatalog === 'function') updatePaymentUiFromCatalog();
+                if (typeof showPaymentOverlay === 'function') showPaymentOverlay();
+                return;
+              }
+              fetch(_abApiBase + '/api/payments/analysis/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': _abInitData },
+                body: JSON.stringify({ initData: _abInitData })
+              })
+              .then(function(r) { return r.json(); })
+              .then(function(data) {
+                if (data && data.already_available) {
+                  alert('Расшифровка уже доступна! Напиши боту @Yup_Soul_bot команду «расшифровка» чтобы получить её.');
+                  return;
+                }
+                if (data && data.success && data.request_id) {
+                  pendingPaymentRequestId = data.request_id;
+                  pendingPaymentSku = 'deep_analysis_addon';
+                  try { localStorage.setItem('hot_pending_request_id', data.request_id); } catch(_) {}
+                  try { localStorage.setItem('hot_pending_sku', 'deep_analysis_addon'); } catch(_) {}
+                  if (typeof updatePaymentUiFromCatalog === 'function') updatePaymentUiFromCatalog();
+                  if (typeof showPaymentOverlay === 'function') showPaymentOverlay();
+                } else {
+                  alert('Не удалось создать заказ: ' + (data && data.error || 'Попробуйте позже'));
+                }
+              })
+              .catch(function(e) {
+                console.error('[buy_analysis] Ошибка создания заказа:', e);
+                alert('Ошибка сети. Попробуйте позже.');
+              });
+            }, 600);
           }
         };
         var startApp = window.startApp;
@@ -7932,10 +8107,22 @@
             loadPricingCatalog().catch(function(e) { console.warn('[payment success] loadPricingCatalog error:', e); });
           }
         }, 1000);
+        var isAnalysisPaymentImmediate = pendingPayment && pendingPayment.type === 'analysis'
+          && pendingPayment.ts && (Date.now() - pendingPayment.ts) < 30 * 60 * 1000;
         var isSubPaymentImmediate = pendingPayment && pendingPayment.type === 'subscription'
-          && pendingPayment.ts && (Date.now() - pendingPayment.ts) < 30 * 60 * 1000; // не старше 30 мин
+          && pendingPayment.ts && (Date.now() - pendingPayment.ts) < 30 * 60 * 1000;
 
-        if (isSubPaymentImmediate) {
+        if (isAnalysisPaymentImmediate) {
+          var ptTitle = document.getElementById('paymentThanksTitle');
+          var ptSubtitle = document.getElementById('paymentThanksSubtitle');
+          var ptHint = document.getElementById('paymentThanksHint');
+          var ptBackBtn = document.getElementById('paymentThanksBackBtn');
+          if (ptTitle) ptTitle.textContent = 'Расшифровка оплачена!';
+          if (ptSubtitle) ptSubtitle.textContent = 'Текстовая расшифровка';
+          if (paymentThanksMsg) paymentThanksMsg.innerHTML = 'Теперь ты можешь получить подробный разбор своей песни.<br><br>Напиши боту <strong>@Yup_Soul_bot</strong> команду «расшифровка».';
+          if (ptHint) ptHint.style.display = 'none';
+          if (ptBackBtn) { ptBackBtn.textContent = 'Готово'; ptBackBtn.onclick = function() { goToPage('homePage'); }; }
+        } else if (isSubPaymentImmediate) {
           // Сразу показываем экран подписки — без ожидания API
           var subName = pendingPayment.plan_name || (
             pendingPayment.plan_key === 'plan_basic' ? 'Basic' :
@@ -8114,6 +8301,16 @@
                 paymentThanksMsg.innerHTML = 'Plan <strong>' + sn + '</strong> — ' + t('subscriptionActive');
                 if (ptH) ptH.style.display = 'none';
                 if (ptB) { ptB.textContent = t('subBtnProfile'); ptB.onclick = function() { goToPage('profilePage'); }; }
+              } else if (payMode === 'deep_analysis' || paySku === 'deep_analysis_addon') {
+                var ptT3 = document.getElementById('paymentThanksTitle');
+                var ptS3 = document.getElementById('paymentThanksSubtitle');
+                var ptH3 = document.getElementById('paymentThanksHint');
+                var ptB3 = document.getElementById('paymentThanksBackBtn');
+                if (ptT3) ptT3.textContent = 'Расшифровка оплачена!';
+                if (ptS3) ptS3.textContent = 'Текстовая расшифровка';
+                paymentThanksMsg.innerHTML = 'Теперь ты можешь получить подробный разбор своей песни.<br><br>Напиши боту <strong>@Yup_Soul_bot</strong> команду «расшифровка».';
+                if (ptH3) ptH3.style.display = 'none';
+                if (ptB3) { ptB3.textContent = 'Готово'; ptB3.onclick = function() { goToPage('homePage'); }; }
               } else if (paymentThanksMsg) {
                 paymentThanksMsg.textContent = t('songInProgressConfirmed');
               }
@@ -9020,6 +9217,11 @@
               localStorage.setItem('hot_pending_request_id', pendingPaymentRequestId);
               localStorage.setItem('hot_pending_sku', pendingPaymentSku || '');
             }
+            if (pendingPaymentSku === 'deep_analysis_addon') {
+              localStorage.setItem('pending_payment_type', JSON.stringify({
+                type: 'analysis', request_id: pendingPaymentRequestId || '', ts: Date.now()
+              }));
+            }
           } catch(_) {}
 
           try {
@@ -9111,6 +9313,8 @@
           if (paidIsSub) {
             await claimSubscriptionSafe(apiBase, initData, paidReqId);
             showConfirm('Подписка оплачена!', 'Активируем твой тариф.<br><br>Если статус не обновился сразу — обнови страницу или закрой и открой приложение.');
+          } else if (paidSku === 'deep_analysis_addon') {
+            showConfirm('Расшифровка оплачена!', 'Теперь ты можешь получить подробный разбор своей песни.<br><br>Напиши боту @Yup_Soul_bot команду «расшифровка» — и получишь текстовый анализ.');
           } else {
             showConfirm('Оплата подтверждена!', 'Запускаем создание твоей песни.<br><br>Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.');
           }
@@ -9269,6 +9473,171 @@
         payWithStars(sku, pendingPaymentRequestId, payOvStarsBtn);
       });
 
+      // ── T-Bank: оплата картой ──────────────────────────────────────────
+      var _tbankAvailable = false;
+      var _tbankPrices = {};
+      (function loadTbankConfig() {
+        fetch(BACKEND_URL + '/api/payments/tbank/config')
+          .then(function(r) { return r.json(); })
+          .then(function(d) {
+            _tbankAvailable = !!d.available;
+            _tbankPrices = d.prices_rub || {};
+            var cardBtn = document.getElementById('payOvCardBtn');
+            if (cardBtn && _tbankAvailable) {
+              cardBtn.style.display = 'block';
+            }
+            console.log('[T-Bank] config:', _tbankAvailable ? 'доступен' : 'недоступен');
+          })
+          .catch(function(e) { console.warn('[T-Bank] config error:', e.message); });
+      })();
+
+      // T-Bank: глобальный таймер polling (чтобы можно было остановить извне)
+      var _tbankPollTimer = null;
+      function stopTbankPolling() {
+        if (_tbankPollTimer) { clearInterval(_tbankPollTimer); _tbankPollTimer = null; }
+      }
+
+      // Патчим hidePaymentOverlay чтобы останавливать T-Bank polling
+      var _origHidePaymentOverlay = hidePaymentOverlay;
+      hidePaymentOverlay = function() {
+        stopTbankPolling();
+        _origHidePaymentOverlay();
+      };
+
+      var payOvCardBtn = document.getElementById('payOvCardBtn');
+      if (payOvCardBtn) payOvCardBtn.addEventListener('click', async function() {
+        if (payOvCardBtn.disabled) return;
+        if (!_tbankAvailable) {
+          alert('Оплата картой временно недоступна');
+          return;
+        }
+        var sku = pendingPaymentSku || '';
+        var requestId = pendingPaymentRequestId || '';
+        if (!sku && !requestId) {
+          alert('Сначала заполни форму заявки.');
+          return;
+        }
+        var btn = payOvCardBtn;
+        var origText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Подключаемся к банку…';
+
+        try {
+          var initData = getInitData();
+
+          var resp = await fetch(BACKEND_URL + '/api/payments/tbank/init', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+            body: JSON.stringify({ sku: sku, request_id: requestId }),
+          });
+          var data = await resp.json().catch(function() { return {}; });
+
+          if (!data.success || !data.payment_url) {
+            btn.disabled = false;
+            btn.textContent = origText;
+            setPaymentStatus('Ошибка: ' + (data.error || 'не удалось создать платёж'), 'error');
+            return;
+          }
+
+          localStorage.setItem('tbank_payment_id', data.payment_id || '');
+          localStorage.setItem('tbank_order_id', data.order_id || '');
+          localStorage.setItem('pending_payment_type', sku);
+          localStorage.setItem('tbank_payment_url', data.payment_url || '');
+
+          // Открываем платёжную форму T-Bank
+          if (tg && typeof tg.openLink === 'function') {
+            tg.openLink(data.payment_url);
+          } else {
+            window.open(data.payment_url, '_blank');
+          }
+
+          btn.disabled = false;
+          btn.textContent = origText;
+
+          // Показываем fallback-ссылку
+          var linkRow = document.getElementById('payOvLinkRow');
+          var linkHint = document.getElementById('payOvLinkHint');
+          var copyBtn = document.getElementById('payOvCopyBtn');
+          if (linkRow) linkRow.style.display = 'block';
+          if (linkHint) linkHint.textContent = 'Если форма оплаты не открылась — скопируйте ссылку:';
+          if (copyBtn) {
+            copyBtn.onclick = function() {
+              try { navigator.clipboard.writeText(data.payment_url); copyBtn.textContent = 'Скопировано ✓'; setTimeout(function(){ copyBtn.textContent = 'Скопировать ссылку оплаты'; }, 2000); } catch(e){}
+            };
+          }
+
+          // Показываем кнопку «Я оплатил» с проверкой T-Bank (не HOT!)
+          var checkBtn = document.getElementById('payOvCheckBtn');
+          if (checkBtn) {
+            checkBtn.style.display = 'block';
+            checkBtn.textContent = 'Я оплатил картой — проверить';
+            checkBtn.onclick = async function() {
+              checkBtn.disabled = true;
+              checkBtn.textContent = 'Проверяем…';
+              try {
+                var sr = await fetch(BACKEND_URL + '/api/payments/tbank/status?payment_id=' + encodeURIComponent(data.payment_id) + '&initData=' + encodeURIComponent(initData));
+                var sd = await sr.json();
+                if (sd.paid) {
+                  onTbankPaymentSuccess(sku, requestId, initData);
+                } else {
+                  setPaymentStatus('Оплата ещё не подтверждена. Подождите пару минут и попробуйте снова.', 'warning');
+                  checkBtn.disabled = false;
+                  checkBtn.textContent = 'Я оплатил картой — проверить';
+                }
+              } catch(e) {
+                setPaymentStatus('Ошибка проверки: ' + (e.message || e), 'error');
+                checkBtn.disabled = false;
+                checkBtn.textContent = 'Я оплатил картой — проверить';
+              }
+            };
+          }
+
+          // Polling статуса T-Bank
+          stopTbankPolling();
+          var tbankPaymentId = data.payment_id;
+          if (tbankPaymentId) {
+            var tbankPollAttempts = 0;
+            var tbankPollMax = 30;
+            _tbankPollTimer = setInterval(async function() {
+              tbankPollAttempts++;
+              if (tbankPollAttempts > tbankPollMax) { stopTbankPolling(); return; }
+              try {
+                var sr = await fetch(BACKEND_URL + '/api/payments/tbank/status?payment_id=' + encodeURIComponent(tbankPaymentId) + '&initData=' + encodeURIComponent(getInitData()));
+                var sd = await sr.json();
+                if (sd.paid) {
+                  stopTbankPolling();
+                  onTbankPaymentSuccess(sku, requestId, getInitData());
+                }
+              } catch(e) { console.warn('[T-Bank poll]', e.message); }
+            }, 4000);
+          }
+        } catch (e) {
+          btn.disabled = false;
+          btn.textContent = origText;
+          setPaymentStatus('Ошибка соединения: ' + (e.message || e), 'error');
+        }
+      });
+
+      function onTbankPaymentSuccess(sku, requestId, initData) {
+        stopTbankPolling();
+        localStorage.removeItem('tbank_payment_id');
+        localStorage.removeItem('tbank_order_id');
+        localStorage.removeItem('tbank_payment_url');
+        localStorage.removeItem('pending_payment_type');
+        pendingPaymentRequestId = '';
+        pendingPaymentSku = '';
+        var isSub = ['soul_basic_sub','soul_plus_sub','master_monthly'].indexOf(sku) >= 0;
+        var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+        if (isSub && typeof claimSubscriptionSafe === 'function') {
+          claimSubscriptionSafe(apiBase, initData, requestId);
+        }
+        showConfirmOverlay(
+          'Оплата получена!',
+          isSub ? 'Подписка активирована. Добро пожаловать!' : 'Генерация запущена. Скоро ты получишь свою песню!',
+          function() { goToPage(isSub ? 'homePage' : 'loadingPage'); }
+        );
+      }
+
       window.showPlanConfirm = function showPlanConfirm(planKey, planName) {
         var overlay = document.getElementById('planConfirmOverlay');
         var title = document.getElementById('planConfirmTitle');
@@ -9377,12 +9746,20 @@
       if (profileRefShareBtn) profileRefShareBtn.addEventListener('click', function() {
         var link = (document.getElementById('profileRefLinkInput') || {}).value || '';
         if (!link) return;
+        var userName = '';
+        try { userName = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.first_name) || ''; } catch(e) {}
+        var shareText = userName
+          ? 'Привет! Я нашла приложение, которое создаёт персональную песню на основе даты рождения. Реально крутое — попробуй, первая песня бесплатно 🎵'
+          : 'Нашла крутое приложение — создаёт персональную песню на основе даты рождения. Первая песня бесплатно, попробуй 🎵';
+        var fullText = shareText + '\n\n' + link;
         if (tg && tg.openTelegramLink) {
-          tg.openTelegramLink('https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent('Попробуй YupSoul — первую песню получишь бесплатно'));
+          tg.openTelegramLink('https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(shareText));
+        } else if (navigator.share) {
+          navigator.share({ title: 'YupSoul — Музыка твоей души', text: shareText, url: link }).catch(function(){});
         } else {
           try {
             if (navigator.clipboard && navigator.clipboard.writeText) {
-              navigator.clipboard.writeText(link);
+              navigator.clipboard.writeText(fullText);
               profileRefShareBtn.textContent = t('profileShare') + ' ✓';
               setTimeout(function() { profileRefShareBtn.textContent = t('profileShare'); }, 2000);
             }
@@ -10136,6 +10513,20 @@
               } else {
                 bp.removeAttribute('data-lat');
                 bp.removeAttribute('data-lon');
+                if (typeof getPlacesSearchUrl === 'function') {
+                  (function(field, place) {
+                    var geoUrl = getPlacesSearchUrl(place);
+                    fetch(geoUrl, { headers: { 'Accept': 'application/json' } })
+                      .then(function(r) { return r.ok ? r.json() : []; })
+                      .then(function(list) {
+                        if (list && list.length > 0 && list[0].lat && list[0].lon) {
+                          field.setAttribute('data-lat', String(list[0].lat));
+                          field.setAttribute('data-lon', String(list[0].lon));
+                          console.log('[prefillFromProfile] Геокодинг профиля:', place, '→', list[0].lat, list[0].lon);
+                        }
+                      }).catch(function() {});
+                  })(bp, profileOrTgUser.birthplace);
+                }
               }
             } else {
               bp.removeAttribute('data-from-profile');
@@ -10171,12 +10562,30 @@
           bp.value = hero.birth_place || '';
           bp.removeAttribute('data-lat');
           bp.removeAttribute('data-lon');
+          if (hero.birth_lat != null && hero.birth_lon != null) {
+            bp.setAttribute('data-lat', String(hero.birth_lat));
+            bp.setAttribute('data-lon', String(hero.birth_lon));
+          }
           if (hero.birth_place && String(hero.birth_place).trim().length >= 3) {
             bp.setAttribute('data-from-profile', '1');
             bp.setAttribute('data-place-selected', '1');
             var bw = document.getElementById('birthplaceWrap'); if (bw) bw.classList.add('has-place');
             var bch = document.getElementById('birthplaceCheck'); if (bch) bch.setAttribute('aria-hidden', 'false');
             var bHint = document.getElementById('birthplaceHint'); if (bHint) bHint.style.display = 'none';
+            if (!bp.getAttribute('data-lat') && typeof getPlacesSearchUrl === 'function') {
+              (function(field, place) {
+                var geoUrl = getPlacesSearchUrl(place);
+                fetch(geoUrl, { headers: { 'Accept': 'application/json' } })
+                  .then(function(r) { return r.ok ? r.json() : []; })
+                  .then(function(list) {
+                    if (list && list.length > 0 && list[0].lat && list[0].lon) {
+                      field.setAttribute('data-lat', String(list[0].lat));
+                      field.setAttribute('data-lon', String(list[0].lon));
+                      console.log('[fillFormFromHero] Геокодинг героя:', place, '→', list[0].lat, list[0].lon);
+                    }
+                  }).catch(function(e) { console.warn('[fillFormFromHero] Геокодинг не удался:', e); });
+              })(bp, hero.birth_place);
+            }
           } else {
             bp.removeAttribute('data-from-profile');
             bp.removeAttribute('data-place-selected');
@@ -10362,96 +10771,111 @@
     color:#fff;
     font-family:'Comfortaa',sans-serif;
   ">
-    <div style="max-width:520px;margin:0 auto;padding:28px 18px 40px;">
-      <!-- Заголовок -->
-      <div style="text-align:center;margin-bottom:24px;">
-        <div style="font-size:1.9rem;font-weight:700;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color),var(--primary-color));background-size:300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">YupSoul</div>
-        <div style="font-size:0.72rem;font-weight:400;letter-spacing:0.12em;color:rgba(var(--primary-rgb),0.5);margin:2px 0 4px;text-transform:uppercase">Музыка твоей души</div>
-        <div id="payOvSubtitle" style="color:rgba(255,255,255,0.75);font-size:0.95rem;margin-top:2px;">Твоя песня</div>
+    <div style="max-width:480px;margin:0 auto;padding:max(env(safe-area-inset-top,20px),20px) 20px calc(env(safe-area-inset-bottom,24px) + 24px);">
+
+      <!-- Шапка -->
+      <div style="text-align:center;margin-bottom:28px;">
+        <div style="font-size:1.75rem;font-weight:700;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.01em;">YupSoul</div>
+        <div style="font-size:0.68rem;font-weight:400;letter-spacing:0.14em;color:rgba(var(--primary-rgb),0.45);margin:4px 0 0;text-transform:uppercase;">Музыка твоей души</div>
+        <div id="payOvSubtitle" style="color:rgba(255,255,255,0.6);font-size:0.88rem;margin-top:8px;font-weight:500;">Твоя песня</div>
       </div>
 
-      <!-- Карточка оплаты: один продукт, одна цена, один CTA -->
-      <div style="background:rgba(15,12,40,0.96);border:1px solid rgba(var(--primary-rgb),0.3);border-radius:18px;padding:24px 20px;">
-        <div id="payOvCardTitle" style="color:var(--primary-color);font-weight:700;font-size:1.05rem;margin-bottom:10px;">Оплата подписки / заявки</div>
+      <!-- Карточка оплаты -->
+      <div style="background:rgba(12,10,30,0.92);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:24px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.04);">
 
-        <!-- Подсказка для новичков (показывается только если free_trial доступен) -->
-        <div id="payOvTrialHint" style="display:none;background:rgba(5,150,105,0.15);border:1.5px solid rgba(16,185,129,0.5);border-radius:14px;padding:16px;margin-bottom:16px;">
-          <div style="font-size:0.95rem;color:#d1fae5;line-height:1.6;margin-bottom:12px;">
+        <div id="payOvCardTitle" style="color:var(--primary-color);font-weight:700;font-size:1rem;margin-bottom:16px;letter-spacing:-0.01em;">Оплата подписки / заявки</div>
+
+        <!-- Подарок (trial) -->
+        <div id="payOvTrialHint" style="display:none;background:rgba(5,150,105,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:14px;padding:16px;margin-bottom:18px;">
+          <div style="font-size:0.9rem;color:#d1fae5;line-height:1.6;margin-bottom:12px;">
             <strong id="payOvTrialText" style="color:#6ee7b7;">Первая песня — в подарок!</strong>
           </div>
           <button id="payOvFreeClaimBtn" type="button"
-            style="width:100%;padding:14px;border-radius:11px;background:linear-gradient(135deg,#059669,#10b981);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.2px;">
+            style="width:100%;padding:13px;border-radius:12px;background:linear-gradient(135deg,#059669,#10b981);border:none;color:#fff;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0;box-shadow:0 4px 16px rgba(5,150,105,0.3);min-height:46px;margin:0;">
             Получить бесплатно
           </button>
         </div>
 
-        <!-- Промокод — всегда видимое поле -->
-        <div style="margin-bottom:16px;">
+        <!-- Промокод -->
+        <div style="margin-bottom:18px;">
           <button type="button" id="payOvPromoToggle" style="display:none;">▸ Есть промокод?</button>
           <div id="payOvPromoSection" style="display:block;margin-top:0;">
+            <div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-bottom:8px;font-weight:500;letter-spacing:0.04em;">ПРОМОКОД</div>
             <div style="display:flex;gap:8px;align-items:stretch;">
-              <input id="payOvPromoInput" type="text" placeholder="Промокод"
-                style="flex:1;min-width:0;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(var(--primary-rgb),0.65);background:rgba(255,255,255,0.14);color:#fff;font-size:1rem;font-family:inherit;text-transform:uppercase;outline:none;-webkit-appearance:none;">
+              <input id="payOvPromoInput" type="text" placeholder="Введи код"
+                style="flex:1;min-width:0;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;font-size:0.95rem;font-family:inherit;text-transform:uppercase;outline:none;-webkit-appearance:none;transition:border-color .2s;">
               <button id="payOvPromoBtn" type="button"
-                style="flex:0 0 auto;padding:12px 18px;border-radius:10px;background:rgba(var(--primary-rgb),0.18);border:1.5px solid rgba(var(--primary-rgb),0.55);color:var(--primary-color);font-weight:600;font-size:0.9rem;cursor:pointer;font-family:inherit;white-space:nowrap;">
+                style="flex:0 0 auto;padding:12px 18px;border-radius:12px;background:rgba(var(--primary-rgb),0.12);border:1px solid rgba(var(--primary-rgb),0.35);color:var(--primary-color);font-weight:600;font-size:0.88rem;cursor:pointer;font-family:inherit;white-space:nowrap;min-height:auto;margin:0;box-shadow:none;transition:background .2s,border-color .2s;">
                 Применить
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Успешное применение промокода 100% -->
-        <div id="payOvPromoSuccessHint" style="display:none;background:rgba(5,150,105,0.15);border:1.5px solid rgba(16,185,129,0.5);border-radius:14px;padding:16px;margin-bottom:16px;">
-          <p style="color:#d1fae5;font-size:0.95rem;line-height:1.6;margin:0;">
+        <!-- Промокод 100% — результат -->
+        <div id="payOvPromoSuccessHint" style="display:none;background:rgba(5,150,105,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:14px;padding:14px 16px;margin-bottom:16px;">
+          <p style="color:#d1fae5;font-size:0.9rem;line-height:1.6;margin:0;">
             <strong style="color:#6ee7b7;">Промокод применён!</strong> Генерация бесплатна.
           </p>
         </div>
 
-        <!-- Кнопка подтверждения промокода 100% -->
-        <button id="payOvPromoConfirmBtn" type="button" style="display:none;width:100%;padding:16px;border-radius:13px;background:linear-gradient(135deg,#059669,#10b981);border:none;color:#fff;font-size:1.05rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:16px;letter-spacing:0.3px;">
+        <!-- Кнопка подтверждения 100% промокода -->
+        <button id="payOvPromoConfirmBtn" type="button" style="display:none;width:100%;padding:14px;border-radius:13px;background:linear-gradient(135deg,#059669,#10b981);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin:0 0 16px;letter-spacing:0;box-shadow:0 4px 16px rgba(5,150,105,0.3);min-height:48px;">
           Подтвердить и отправить
         </button>
 
-        <!-- Статус (ошибки, предупреждения) -->
-        <div id="payOvStatus" style="display:none;border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:0.88rem;line-height:1.5;"></div>
+        <!-- Статус -->
+        <div id="payOvStatus" style="display:none;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:0.85rem;line-height:1.5;"></div>
 
-        <!-- Секция оплаты (HOT Pay) -->
-        <div id="payOvPaymentSection" style="margin-bottom:16px;">
-          <p id="payOvOrPayText" style="color:rgba(255,255,255,0.8);font-size:0.95rem;margin-bottom:10px;">Или оплати:</p>
-          <div style="background:rgba(var(--primary-rgb),0.06);border-radius:12px;padding:14px;margin-bottom:12px;text-align:center;">
-            <div id="payOvPriceLabel" style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-bottom:4px;">Цена:</div>
-            <div id="payOvPriceDisplay" style="font-size:1.3rem;font-weight:700;color:var(--primary-color);">5.99 USDT</div>
-            <div id="payOvPriceHint" style="font-size:0.8rem;color:rgba(16,185,129,0.8);margin-top:6px;"></div>
+        <!-- Разделитель -->
+        <div id="payOvPaymentSection" style="margin-bottom:0;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+            <div style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></div>
+            <p id="payOvOrPayText" style="color:rgba(255,255,255,0.4);font-size:0.78rem;margin:0;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;flex-shrink:0;">Или оплати</p>
+            <div style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></div>
           </div>
+
+          <!-- Цена -->
+          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px;margin-bottom:14px;text-align:center;">
+            <div id="payOvPriceLabel" style="color:rgba(255,255,255,0.4);font-size:0.78rem;margin-bottom:6px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;">Цена</div>
+            <div id="payOvPriceDisplay" style="font-size:1.4rem;font-weight:700;color:var(--primary-color);letter-spacing:-0.02em;">5.99 USDT</div>
+            <div id="payOvPriceHint" style="font-size:0.78rem;color:rgba(16,185,129,0.7);margin-top:6px;"></div>
+          </div>
+
+          <!-- Кнопки оплаты -->
           <button id="payOvPayBtn" type="button"
-            style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;letter-spacing:0;">
+            style="width:100%;padding:14px 24px;border-radius:14px;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin:0 0 10px;letter-spacing:0;box-shadow:0 6px 24px rgba(var(--primary-rgb),0.3);min-height:50px;">
             Оплатить HOT
           </button>
+          <button id="payOvCardBtn" type="button"
+            style="width:100%;padding:14px 24px;border-radius:14px;background:linear-gradient(135deg,#1a1f71,#2d3494);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin:0 0 10px;letter-spacing:0;box-shadow:0 6px 24px rgba(26,31,113,0.25);min-height:50px;display:none;">
+            💳 Оплатить картой
+          </button>
           <button id="payOvStarsBtn" type="button"
-            style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:0;letter-spacing:0;">
+            style="width:100%;padding:14px 24px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin:0;letter-spacing:0;box-shadow:0 6px 24px rgba(124,58,237,0.25);min-height:50px;">
             Оплатить звёздами Telegram
           </button>
         </div>
 
-        <!-- Кнопка «скопировать ссылку» (показывается если openLink не сработал) -->
-        <div id="payOvLinkRow" style="display:none;margin-bottom:12px;">
-          <p id="payOvLinkHint" style="color:rgba(255,255,255,0.75);font-size:0.85rem;margin-bottom:6px;">
+        <!-- Ссылка (fallback) -->
+        <div id="payOvLinkRow" style="display:none;margin-top:14px;">
+          <p id="payOvLinkHint" style="color:rgba(255,255,255,0.5);font-size:0.82rem;margin-bottom:8px;line-height:1.5;">
             Если окно не открылось — скопируйте ссылку и вставьте в браузер:
           </p>
           <button id="payOvCopyBtn" type="button"
-            style="width:100%;padding:11px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:0.9rem;cursor:pointer;font-family:inherit;">
+            style="width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);font-size:0.88rem;cursor:pointer;font-family:inherit;min-height:auto;margin:0;box-shadow:none;">
             Скопировать ссылку оплаты
           </button>
         </div>
 
-        <!-- Кнопка ручной проверки (показывается после открытия HOT Pay) -->
-        <button id="payOvCheckBtn" type="button" style="display:none;width:100%;padding:13px;border-radius:13px;background:rgba(16,185,129,0.12);border:1.5px solid rgba(16,185,129,0.4);color:rgba(16,185,129,0.95);font-size:0.9rem;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:11px;">
+        <!-- Проверка оплаты -->
+        <button id="payOvCheckBtn" type="button" style="display:none;width:100%;padding:13px;border-radius:13px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);color:rgba(16,185,129,0.9);font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;margin:14px 0 0;min-height:auto;box-shadow:none;">
           Я уже оплатил — проверить
         </button>
 
-        <!-- Кнопка назад -->
+        <!-- Назад -->
         <button id="payOvBackBtn" type="button"
-          style="width:100%;padding:13px;border-radius:13px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.65);font-size:0.9rem;cursor:pointer;font-family:inherit;">
+          style="width:100%;padding:13px;border-radius:13px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-size:0.88rem;cursor:pointer;font-family:inherit;margin:14px 0 0;min-height:auto;box-shadow:none;font-weight:500;">
           ← Назад
         </button>
       </div>
