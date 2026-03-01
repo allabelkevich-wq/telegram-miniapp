@@ -4084,7 +4084,7 @@
         <p class="success-text" id="paymentThanksMessage" style="margin:0 0 24px 0; font-size:0.92rem; color:rgba(255,255,255,0.6); line-height:1.65">
           Проверяем платёж и обновляем доступ. Это может занять до минуты.
         </p>
-        <button id="paymentThanksBackBtn" class="primary" style="margin-bottom:12px">Создать свою песню</button>
+        <button id="paymentThanksBackBtn" type="button" onclick="if(typeof goToPage==='function')goToPage('formPage')" style="margin-bottom:12px;width:100%;max-width:320px;padding:14px 24px;border-radius:14px;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 6px 24px rgba(var(--primary-rgb),0.35);letter-spacing:0;min-height:48px;position:relative;z-index:10;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Создать свою песню</button>
         <p id="paymentThanksHint" style="font-size:0.72rem;color:rgba(255,255,255,0.3);line-height:1.5;margin:0;">Не пришла за 20 минут? Напиши боту «песня не пришла»</p>
       </div>
   </div>
