@@ -343,6 +343,19 @@
         <div id="activeSubsMsg" class="mono-msg"></div>
       </div>
 
+      <!-- ═══ ОЖИДАЮЩИЕ ОПЛАТЫ ═══ -->
+      <div class="details-section" id="monPendingPaySection" style="margin-bottom:20px;border:1.5px solid rgba(245,158,11,0.4);background:rgba(245,158,11,0.04);">
+        <div class="section-title" style="display:flex;align-items:center;gap:10px;">
+          💰 Ожидающие оплаты
+          <span id="monPendingBadge" style="background:#f59e0b;color:#000;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;min-width:18px;text-align:center;">0</span>
+          <button class="btn btn-primary" style="margin-left:auto;min-width:80px;padding:6px 10px;font-size:11px;" onclick="loadMonPendingPayments()">🔄</button>
+        </div>
+        <p class="mono-muted" style="margin-bottom:10px;">Заявки, по которым пользователь перешёл к оплате, но платёж ещё не подтверждён.</p>
+        <div id="monPendingList" style="display:flex;flex-direction:column;gap:8px;">
+          <div class="mono-muted" style="text-align:center;padding:16px;">Нажмите 🔄 для загрузки</div>
+        </div>
+      </div>
+
       <div class="details-section" style="margin-bottom:20px;">
         <div class="section-title">💳 Монетизация HOT</div>
         <p class="mono-muted">Управление тарифами, промокодами и быстрый просмотр статусов оплат.</p>
@@ -700,6 +713,7 @@
       if (tabId === 'referrals') { loadReferralData(); loadCampaigns(); }
       if (tabId === 'users') { loadUserStats(); }
       if (tabId === 'analytics') { loadAnalytics(); }
+      if (tabId === 'monetization') { loadMonPendingPayments(); }
     }
 
     function toggleRow(id) {
@@ -1506,6 +1520,58 @@
         list.innerHTML = '<div style="color:#e74c3c;padding:10px;">Ошибка загрузки: ' + escapeHtml((e && e.message) || String(e)) + '</div>';
       }
     }
+
+    // Загружает ожидающие оплаты во вкладку Монетизация
+    async function loadMonPendingPayments() {
+      const list = document.getElementById('monPendingList');
+      const badge = document.getElementById('monPendingBadge');
+      if (!list) return;
+      list.innerHTML = '<div class="loading"><div class="spinner"></div>Загрузка…</div>';
+      try {
+        const result = await fetchJson(
+          API_BASE + '/api/admin/requests?status=pending_payment&limit=50' + authQuery(),
+          { headers: authHeaders() }
+        );
+        const items = (result.json && (result.json.data || result.json.requests)) || [];
+        if (badge) badge.textContent = items.length;
+        if (!items.length) {
+          list.innerHTML = '<div style="text-align:center;padding:16px;color:#94a3b8;">✅ Нет ожидающих оплат</div>';
+          return;
+        }
+        list.innerHTML = items.map(function(r) {
+          const safeId = (r.id || '').replace(/'/g, "\\'");
+          const idShort = (r.id || '').substring(0, 8);
+          const name = escapeHtml(r.name || '—');
+          const userId = r.telegram_user_id || '—';
+          const date = r.created_at ? new Date(r.created_at).toLocaleString('ru-RU') : '—';
+          const amount = r.payment_amount ? (r.payment_amount + ' ' + (r.payment_currency || 'USDT')) : '—';
+          const mode = escapeHtml(r.mode || '—');
+          const provider = escapeHtml(r.payment_provider || '—');
+          const orderId = r.payment_order_id ? escapeHtml((r.payment_order_id || '').substring(0, 12) + '…') : '—';
+          return '<div style="background:#1e293b;border-radius:12px;padding:14px 16px;border-left:3px solid #f59e0b;">' +
+            '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">' +
+              '<div style="flex:1;min-width:200px;">' +
+                '<div style="font-weight:600;color:#e2e8f0;font-size:0.95rem;margin-bottom:4px;">' + name + '</div>' +
+                '<div style="font-size:0.8rem;color:#94a3b8;line-height:1.6;">' +
+                  'ID: <code style="color:#60a5fa;">' + escapeHtml(idShort) + '</code> · User: <code>' + userId + '</code><br>' +
+                  'Режим: ' + mode + ' · Провайдер: ' + provider + '<br>' +
+                  'Сумма: <strong style="color:#f59e0b;">' + escapeHtml(amount) + '</strong> · Order: <code>' + orderId + '</code><br>' +
+                  'Создана: ' + date +
+                '</div>' +
+              '</div>' +
+              '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;">' +
+                '<button class="btn btn-success" style="padding:8px 14px;font-size:12px;" onclick="markPaid(\'' + safeId + '\');setTimeout(loadMonPendingPayments,1000)">✅ Оплачено</button>' +
+                '<button class="btn btn-restore" style="padding:8px 14px;font-size:12px;background:#334155;border-color:#475569;color:#e2e8f0;" onclick="restoreRequest(\'' + safeId + '\',this);setTimeout(loadMonPendingPayments,1500)">🔄 Восстановить</button>' +
+                '<button class="btn btn-cancel" style="padding:8px 14px;font-size:12px;background:#7f1d1d;border-color:#991b1b;color:#fca5a5;" onclick="cancelRequest(\'' + safeId + '\',this);setTimeout(loadMonPendingPayments,1000)">❌ Отменить</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      } catch (e) {
+        list.innerHTML = '<div style="color:#e74c3c;padding:10px;">Ошибка: ' + escapeHtml((e && e.message) || String(e)) + '</div>';
+      }
+    }
+    window.loadMonPendingPayments = loadMonPendingPayments;
 
     // Отмена заявки из админки
     async function cancelRequest(id, btn) {

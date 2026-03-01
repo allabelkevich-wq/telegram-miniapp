@@ -2062,17 +2062,13 @@ bot.on("message:web_app_data", async (ctx) => {
   }
   await supabase?.from("track_requests").update(updatePayload).eq("id", requestId);
   if (access.source === "promo_free" && promoData && supabase) {
-    const { error: promoRedemptionErr } = await supabase.from("promo_redemptions").insert({
-      promo_code_id: promoData.id,
-      telegram_user_id: Number(telegramUserId),
-      request_id: requestId,
+    const promoObj = await getPromoByCode(promoData.code);
+    await redeemPromoUsage({
+      promo: promoObj || { id: promoData.id, used_count: 0 },
+      telegramUserId,
+      requestId,
+      discountAmount: promoData.discount || 0,
     });
-    if (promoRedemptionErr) console.warn("[Заявка] promo_redemptions insert:", promoRedemptionErr.message);
-    const { error: promoCounterErr } = await supabase
-      .from("promo_codes")
-      .update({ used_count: (promoData.used_count || 0) + 1, updated_at: new Date().toISOString() })
-      .eq("id", promoData.id);
-    if (promoCounterErr) console.warn("[Заявка] promo_codes update:", promoCounterErr.message);
   }
 
   if (supabase && birthdate && birthplace) {
@@ -6095,7 +6091,7 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
       if (applied.finalAmount === 0) {
         console.log("[submit-request] Промокод", promoCodeRaw, "тип:", checked.promo.type, "— даёт бесплатный доступ");
         promoGrantsAccess = true;
-        promoData = { code: promoCodeRaw, id: checked.promo.id, discount: applied.discountAmount, finalAmount: 0 };
+        promoData = { code: promoCodeRaw, id: checked.promo.id, discount: applied.discountAmount, finalAmount: 0, promo: checked.promo };
       }
     } else if (promoCodeRaw) {
       console.log("[submit-request] Промокод", promoCodeRaw, "отклонён:", checked.reason);
@@ -6185,21 +6181,12 @@ app.post("/api/submit-request", express.json(), async (req, res) => {
     updateData.promo_code = promoData.code;
     updateData.payment_amount = 0;
     updateData.payment_currency = "USDT";
-    // Записываем использование промокода
-    const { error: promoInsertErr2 } = await supabase.from("promo_redemptions").insert({
-      promo_code_id: promoData.id,
-      telegram_user_id: Number(telegramUserId),
-      request_id: requestId,
-      discount_amount: promoData.discount,
-      redeemed_at: new Date().toISOString(),
+    await redeemPromoUsage({
+      promo: promoData.promo,
+      telegramUserId,
+      requestId,
+      discountAmount: promoData.discount,
     });
-    if (promoInsertErr2) console.warn("[submit-request] promo_redemptions insert:", promoInsertErr2.message);
-    // Увеличиваем счётчик использований промокода
-    const { error: promoCounterErr2 } = await supabase
-      .from("promo_codes")
-      .update({ used_count: (promoData.used_count || 0) + 1, updated_at: new Date().toISOString() })
-      .eq("id", promoData.id);
-    if (promoCounterErr2) console.warn("[submit-request] promo_codes update:", promoCounterErr2.message);
   }
   
   await supabase.from("track_requests").update(updateData).eq("id", requestId);

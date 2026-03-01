@@ -7300,21 +7300,13 @@
           if (loadEl) loadEl.style.display = 'none';
         }
 
-        // Защита от зависания: через 3 сек принудительно убираем «Проверяем доступ» и показываем промо с сообщением об ошибке
+        // Защита от зависания: через 8 сек принудительно показываем промо с сообщением об ошибке
         var accessTimeout = setTimeout(function() {
-          var stillChecking = (loadEl && loadEl.style.display !== 'none') || (globalLoad && globalLoad.style.display !== 'none');
+          var stillChecking = (globalLoad && globalLoad.style.display !== 'none');
           if (stillChecking) {
-            hideGlobalLoading();
-            if (scHeader) scHeader.style.display = '';
-            if (scChatHdr) scChatHdr.style.display = 'none';
-            if (promoArea) promoArea.style.display = '';
-            if (chatEl) chatEl.style.display = 'none';
-            if (inputArea) inputArea.style.display = 'none';
-            if (giftWrap) giftWrap.style.display = 'none';
-            if (buyDayWrap) buyDayWrap.style.display = '';
-            if (errorWrap) errorWrap.style.display = '';
+            showPromo(true);
           }
-        }, 3000);
+        }, 8000);
 
         // Переключение между промо-режимом и чат-режимом. isLoadError = true при таймауте/сети/ошибке
         function showPromo(isLoadError) {
@@ -7337,17 +7329,17 @@
           if (inputArea)  inputArea.style.display   = '';
         }
 
-        // Сразу показываем экран подписки (шапка + промо), внутри — «Проверяем доступ…». Так пользователь не висит на полном экране загрузки.
-        if (scHeader)   scHeader.style.display   = '';
-        if (promoArea)  promoArea.style.display  = '';
-        if (loadEl)     loadEl.style.display     = 'block';
-        if (globalLoad) globalLoad.style.display = 'none';
+        // Нейтральный загрузочный экран — ни промо, ни чат не видны, пока API не ответит
+        if (scHeader)   scHeader.style.display   = 'none';
+        if (promoArea)  promoArea.style.display  = 'none';
         if (chatEl)     chatEl.style.display     = 'none';
         if (inputArea)  inputArea.style.display  = 'none';
         if (scChatHdr)  scChatHdr.style.display  = 'none';
         if (giftWrap)   giftWrap.style.display   = 'none';
         if (buyDayWrap) buyDayWrap.style.display  = 'none';
         if (errorWrap)  errorWrap.style.display   = 'none';
+        if (globalLoad) { globalLoad.style.display = 'flex'; }
+        if (loadEl)     loadEl.style.display     = 'none';
 
         try {
           var apiBase  = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
