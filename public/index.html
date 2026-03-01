@@ -5425,6 +5425,7 @@
       var pendingPaymentSku = null;
       var pendingPaymentPromo = null; // Промокод, который был отправлен с заявкой
       var paymentPollingActive = false; // Флаг для остановки polling
+      var subscriptionClaimInFlight = false; // Защита от параллельных claim
       var promoDebounceTimer = null; // Таймер для debounce промокода
       var isSubmitting = false; // Флаг для защиты от дублирования заявок
       var catalogCache = null; // Кэш каталога (5 минут)
@@ -5555,6 +5556,22 @@
         if (tone === 'error') { el.style.border = '1px solid rgba(var(--secondary-rgb),.5)';  el.style.background = 'rgba(var(--secondary-rgb),.12)'; return; }
         el.style.border = '1px solid rgba(var(--primary-rgb),.35)';
         el.style.background = 'rgba(var(--primary-rgb),.1)';
+      }
+      async function claimSubscriptionSafe(apiBase, initData, requestId) {
+        if (!apiBase || !initData || !requestId) return { skipped: true, reason: 'missing_args' };
+        if (subscriptionClaimInFlight) return { skipped: true, reason: 'in_flight' };
+        subscriptionClaimInFlight = true;
+        try {
+          var claimResp = await fetch(apiBase + '/api/subscription/claim', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+            body: JSON.stringify({ request_id: requestId, initData: initData })
+          });
+          var claimJson = await claimResp.json().catch(function(){ return {}; });
+          return { skipped: false, ok: !!(claimJson && claimJson.success), status: claimResp.status, json: claimJson };
+        } finally {
+          subscriptionClaimInFlight = false;
+        }
       }
       var DEFAULT_PRICES = { single_song: { title: 'Single song', price: '5.99', currency: 'USDT' }, couple_song: { title: 'Couple song', price: '8.99', currency: 'USDT' }, transit_energy_song: { title: 'Transit energy song', price: '6.99', currency: 'USDT' } };
       function updatePaymentUiFromCatalog() {
@@ -6222,7 +6239,10 @@
           var bannerText = document.getElementById('recoveryBannerText');
           var rb = document.getElementById('recoveryClaimBtn');
           if (banner) {
-            if (freeTrialAvailable) {
+            if (isSubscriptionSku(pendingPaymentSku)) {
+              if (bannerText) bannerText.innerHTML = '<strong style="color:#6ee7b7;">Незавершённая подписка</strong><br>Оплата ещё не подтверждена. Продолжи оформление тарифа.';
+              if (rb) rb.textContent = 'Продолжить оплату подписки';
+            } else if (freeTrialAvailable) {
               // Новый пользователь — предлагаем бесплатный ключ
               if (bannerText) bannerText.innerHTML = '<strong style="color:#6ee7b7;">Твоя заявка ждёт!</strong><br>Получи первую песню бесплатно.';
               if (rb) rb.textContent = 'Получить бесплатно';
@@ -6236,7 +6256,7 @@
             var refCard = document.getElementById('referralCard');
             if (refCard) refCard.style.display = 'none';
             var dismissBtn = document.getElementById('recoveryDismissBtn');
-            if (dismissBtn) dismissBtn.addEventListener('click', function() {
+            if (dismissBtn) dismissBtn.onclick = function() {
               banner.style.display = 'none';
               if (refCard) refCard.style.display = 'block';
               // Отменяем заявку на сервере — при следующем входе баннер не появится
@@ -6249,11 +6269,49 @@
                   body: JSON.stringify({ request_id: pendingPaymentRequestId })
                 }).catch(function() {});
               }
-            });
-            if (rb) rb.addEventListener('click', function() {
-              banner.style.display = 'none';
-              showPaymentOverlay();
-            });
+            };
+            if (rb) rb.onclick = function() {
+              var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+              var initData = getInitData();
+              if (!apiBase || !initData || !pendingPaymentRequestId) {
+                banner.style.display = 'none';
+                showPaymentOverlay();
+                return;
+              }
+              (async function smartPendingRecovery() {
+                try {
+                  var stResp = await fetch(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(pendingPaymentRequestId), {
+                    headers: { 'X-Telegram-Init': initData }
+                  });
+                  var stJson = await stResp.json().catch(function(){ return {}; });
+                  var ps = stJson && stJson.data ? String(stJson.data.payment_status || '').toLowerCase() : '';
+                  var sku = getPaymentSkuFromStatus(stJson) || pendingPaymentSku || '';
+                  if (ps === 'paid') {
+                    if (isSubscriptionSku(sku)) {
+                      await claimSubscriptionSafe(apiBase, initData, pendingPaymentRequestId);
+                      showConfirm('Подписка оплачена!', 'Проверяем активацию тарифа.<br><br>Если статус не обновился сразу — открой профиль через 10–20 секунд.');
+                    } else {
+                      await fetch(apiBase + '/api/payments/hot/confirm', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+                        body: JSON.stringify({ request_id: pendingPaymentRequestId, initData: initData })
+                      }).catch(function(){});
+                      showConfirm('Оплата подтверждена!', 'Заявка оплачена. Запускаем создание песни.');
+                    }
+                    banner.style.display = 'none';
+                    pendingPaymentRequestId = null;
+                    pendingPaymentSku = null;
+                    try { localStorage.removeItem('hot_pending_request_id'); localStorage.removeItem('hot_pending_sku'); localStorage.removeItem('pending_payment_type'); } catch(_) {}
+                    catalogCache = null; catalogCacheTime = 0;
+                    if (typeof loadProfilePage === 'function') loadProfilePage().catch(function(){});
+                    if (typeof loadPricingCatalog === 'function') loadPricingCatalog().catch(function(){});
+                    return;
+                  }
+                } catch (_) {}
+                banner.style.display = 'none';
+                showPaymentOverlay();
+              })();
+            };
           }
         } catch (e) { /* не критично */ }
       }
@@ -6703,7 +6761,7 @@
             if (!apiBase || !initData) return;
             console.log('[HOT recovery] Найден незавершённый платёж:', savedReqId.slice(0, 8), 'sku:', savedSku);
             (async function recoverHotPayment() {
-              var maxAttempts = 60;
+              var maxAttempts = 10;
               var authFailCount = 0;
               for (var i = 0; i < maxAttempts; i++) {
                 try {
@@ -6740,11 +6798,7 @@
                       var isSubSku = savedSku && (savedSku.indexOf('sub') !== -1 || savedSku.indexOf('master') !== -1);
                       if (isSubSku) {
                         try {
-                          await fetch(apiBase + '/api/subscription/claim', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
-                            body: JSON.stringify({ request_id: savedReqId, initData: initData })
-                          });
+                          await claimSubscriptionSafe(apiBase, initData, savedReqId);
                         } catch(claimErr) {
                           console.warn('[HOT recovery] subscription/claim ошибка:', claimErr && claimErr.message);
                         }
@@ -6772,7 +6826,7 @@
                     console.warn('[HOT recovery] poll error:', e && e.message);
                   }
                 }
-                await new Promise(function(r) { setTimeout(r, 3000); });
+                await new Promise(function(r) { setTimeout(r, 5000); });
               }
               console.log('[HOT recovery] Не подтверждено за', maxAttempts, 'попыток — оставляем для следующего запуска');
             })();
@@ -7947,17 +8001,13 @@
             // ── Для подписок: моментально запускаем claim (без задержки) и повторяем до успеха ──
             if (isSubPaymentImmediate && thanksRequestId) {
               (async function runClaimLoop() {
-                var maxClaimAttempts = 25;
-                var claimIntervalMs = 1500;
+                var maxClaimAttempts = 8;
+                var claimIntervalMs = 4000;
                 for (var ci = 0; ci < maxClaimAttempts; ci++) {
                   try {
-                    var claimResp = await fetch(apiBase + '/api/subscription/claim', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
-                      body: JSON.stringify({ request_id: thanksRequestId, initData: initData })
-                    });
-                    var claimJson = await claimResp.json().catch(function(){ return {}; });
-                    if (claimJson && claimJson.success) {
+                    var claimRes = await claimSubscriptionSafe(apiBase, initData, thanksRequestId);
+                    if (claimRes && !claimRes.skipped && claimRes.ok) {
+                      var claimJson = claimRes.json || {};
                       console.log('[sub] claim ok:', claimJson.status, 'plan:', claimJson.plan_sku);
                       paymentReturnClaimSucceeded = true;
                       try { if (paymentReturnClaimKey) sessionStorage.setItem(paymentReturnClaimKey, '1'); } catch (_) {}
@@ -7972,7 +8022,7 @@
                       }
                       return;
                     }
-                    if (claimResp.status !== 202) break;
+                    if (claimRes && !claimRes.skipped && claimRes.status !== 202) break;
                   } catch(claimErr) {
                     console.warn('[sub] claim attempt', ci, claimErr && claimErr.message);
                   }
@@ -7993,7 +8043,7 @@
                 var rawStatus = statusJson && statusJson.data && statusJson.data.payment_status;
                 payStatus = (rawStatus !== null && rawStatus !== undefined) ? String(rawStatus).toLowerCase() : '';
                 payMode = statusJson && statusJson.data && statusJson.data.mode ? String(statusJson.data.mode) : '';
-                paySku = statusJson && statusJson.data && statusJson.data.payment_raw && statusJson.data.payment_raw.sku ? String(statusJson.data.payment_raw.sku) : '';
+                paySku = getPaymentSkuFromStatus(statusJson);
                 if (payStatus === 'paid') break;
               } catch (statusErr) {
                 console.warn('[payment/return] status attempt', attempt, statusErr && statusErr.message);
@@ -8019,11 +8069,7 @@
             } else if (isSub && thanksRequestId && !paymentReturnClaimSucceeded) {
               // Вебхук не пришёл за 60 сек — финальный вызов claim (страховка)
               try {
-                await fetch(apiBase + '/api/subscription/claim', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
-                  body: JSON.stringify({ request_id: thanksRequestId, initData: initData })
-                });
+                await claimSubscriptionSafe(apiBase, initData, thanksRequestId);
               } catch(e) {
                 console.warn('[payment/return] final claim failed:', e && e.message);
               }
@@ -8125,11 +8171,13 @@
               var json = await resp.json().catch(function() { return {}; });
               var gs = json && json.data ? String(json.data.generation_status || '').toLowerCase() : '';
               var ps = json && json.data ? String(json.data.payment_status || '').toLowerCase() : '';
+              var statusSku = getPaymentSkuFromStatus(json);
               if (gs === 'pending_payment' || ps === 'requires_payment') {
                 // Заявка ещё не оплачена — показываем оверлей оплаты
                 pendingPaymentRequestId = botRequestId;
                 var mode = json.data && json.data.mode ? String(json.data.mode) : 'single';
-                if (mode === 'couple') pendingPaymentSku = 'couple_song';
+                if (isSubscriptionSku(statusSku)) pendingPaymentSku = statusSku;
+                else if (mode === 'couple') pendingPaymentSku = 'couple_song';
                 else if (mode === 'transit') pendingPaymentSku = 'transit_energy_song';
                 else pendingPaymentSku = 'single_song';
                 showPaymentOverlay();
@@ -8431,19 +8479,16 @@
         if (birthplace1.length < 3) { alert(t('alertBirthplace')); return; }
         if (!birthtimeUnknown1 && !birthtime1) { alert(t('alertBirthtime')); return; }
         
-        // Валидация формата времени (HH:MM)
+        // Валидация/нормализация формата времени (HH:MM)
         if (!birthtimeUnknown1 && birthtime1) {
-          var timeMatch = birthtime1.match(/^(\d{1,2}):(\d{2})$/);
-          if (!timeMatch) {
+          var normalizedTime1 = normalizeBirthTimeInput(birthtime1);
+          if (!normalizedTime1) {
             alert('⚠️ Неверный формат времени\n\nИспользуй формат ЧЧ:ММ (например, 14:30)');
             return;
           }
-          var hours = parseInt(timeMatch[1], 10);
-          var minutes = parseInt(timeMatch[2], 10);
-          if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-            alert('⚠️ Неверное время\n\nЧасы: 0-23, минуты: 0-59');
-            return;
-          }
+          birthtime1 = normalizedTime1;
+          var birthtimeInput1 = document.getElementById('birthtime');
+          if (birthtimeInput1) birthtimeInput1.value = normalizedTime1;
         }
         
         if (!gender1) { alert(t('alertGender')); return; }
@@ -8483,19 +8528,16 @@
           if (birthplace2.length < 3) { alert(t('alertBirthplace2')); return; }
           if (!birthtimeUnknown2 && !birthtime2) { alert(t('alertBirthtime2')); return; }
           
-          // Валидация формата времени для второго человека
+          // Валидация/нормализация формата времени для второго человека
           if (!birthtimeUnknown2 && birthtime2) {
-            var timeMatch2 = birthtime2.match(/^(\d{1,2}):(\d{2})$/);
-            if (!timeMatch2) {
+            var normalizedTime2 = normalizeBirthTimeInput(birthtime2);
+            if (!normalizedTime2) {
               alert('⚠️ Неверный формат времени (Человек 2)\n\nИспользуй формат ЧЧ:ММ (например, 14:30)');
               return;
             }
-            var hours2 = parseInt(timeMatch2[1], 10);
-            var minutes2 = parseInt(timeMatch2[2], 10);
-            if (hours2 < 0 || hours2 > 23 || minutes2 < 0 || minutes2 > 59) {
-              alert('⚠️ Неверное время (Человек 2)\n\nЧасы: 0-23, минуты: 0-59');
-              return;
-            }
+            birthtime2 = normalizedTime2;
+            var birthtimeInput2 = document.getElementById('birthtime2');
+            if (birthtimeInput2) birthtimeInput2.value = normalizedTime2;
           }
           
           if (!gender2) { alert(t('alertGender2')); return; }
@@ -9033,12 +9075,12 @@
           
           // Запускаем polling с возможностью отмены
           paymentPollingActive = true;
-          var maxAttempts = 60;
+          var maxAttempts = 20;
           var attempt = 0;
           var paid = false;
           while (attempt < maxAttempts && paymentPollingActive) {
             attempt += 1;
-            await new Promise(function(resolve) { setTimeout(resolve, 3000); });
+            await new Promise(function(resolve) { setTimeout(resolve, 4000); });
             
             // Проверяем, не закрыл ли пользователь overlay
             if (!paymentPollingActive) {
@@ -9065,16 +9107,22 @@
             body: JSON.stringify({ request_id: pendingPaymentRequestId, initData: initData })
           });
           if (!confirmResp.ok) throw new Error('Ошибка подтверждения оплаты (' + confirmResp.status + ')');
+          var paidReqId = pendingPaymentRequestId;
+          var paidSku = pendingPaymentSku;
+          var paidIsSub = isSubscriptionSku(paidSku);
           pendingPaymentRequestId = null;
           pendingPaymentSku = null;
           pendingPaymentPromo = null;
-          try { localStorage.removeItem('hot_pending_request_id'); localStorage.removeItem('hot_pending_sku'); } catch(_) {}
-          // Сбрасываем кэш каталога, чтобы подписка и тарифы подтянулись свежими
+          try { localStorage.removeItem('hot_pending_request_id'); localStorage.removeItem('hot_pending_sku'); localStorage.removeItem('pending_payment_type'); } catch(_) {}
           catalogCache = null;
           catalogCacheTime = 0;
           hidePaymentOverlay();
-          showConfirm('Оплата подтверждена!', 'Запускаем создание твоей песни.<br><br>Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.');
-          // HOT Pay: сразу обновляем профиль и каталог в фоне — подписка отобразится при переходе в кабинет
+          if (paidIsSub) {
+            await claimSubscriptionSafe(apiBase, initData, paidReqId);
+            showConfirm('Подписка оплачена!', 'Активируем твой тариф.<br><br>Если статус не обновился сразу — обнови страницу или закрой и открой приложение.');
+          } else {
+            showConfirm('Оплата подтверждена!', 'Запускаем создание твоей песни.<br><br>Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.');
+          }
           setTimeout(function() {
             if (typeof loadProfilePage === 'function') loadProfilePage().catch(function() {});
             if (typeof loadPricingCatalog === 'function') loadPricingCatalog().catch(function() {});
@@ -9121,6 +9169,48 @@
       function isSubscriptionSku(sku) {
         var s = String(sku || '').toLowerCase();
         return s === 'soul_basic_sub' || s === 'soul_plus_sub' || s === 'master_monthly';
+      }
+      function getPaymentSkuFromStatus(statusJson) {
+        var data = statusJson && statusJson.data ? statusJson.data : {};
+        if (data.payment_sku) return String(data.payment_sku);
+        if (data.payment_raw && typeof data.payment_raw === 'object' && data.payment_raw.sku) return String(data.payment_raw.sku);
+        if (data.payment_raw && typeof data.payment_raw === 'string') {
+          try {
+            var parsed = JSON.parse(data.payment_raw);
+            if (parsed && parsed.sku) return String(parsed.sku);
+          } catch(_) {}
+        }
+        return '';
+      }
+      function normalizeBirthTimeInput(rawValue) {
+        var raw = String(rawValue || '').trim();
+        if (!raw) return '';
+        var m = raw.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+        if (m) {
+          var h = parseInt(m[1], 10);
+          var mm = parseInt(m[2], 10);
+          if (h >= 0 && h <= 23 && mm >= 0 && mm <= 59) {
+            return String(h).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+          }
+          return '';
+        }
+        m = raw.match(/^(\d{1,2})[.\-](\d{2})$/);
+        if (m) {
+          var h2 = parseInt(m[1], 10);
+          var mm2 = parseInt(m[2], 10);
+          if (h2 >= 0 && h2 <= 23 && mm2 >= 0 && mm2 <= 59) {
+            return String(h2).padStart(2, '0') + ':' + String(mm2).padStart(2, '0');
+          }
+        }
+        m = raw.match(/^(\d{1,2})(\d{2})$/);
+        if (m) {
+          var h3 = parseInt(m[1], 10);
+          var mm3 = parseInt(m[2], 10);
+          if (h3 >= 0 && h3 <= 23 && mm3 >= 0 && mm3 <= 59) {
+            return String(h3).padStart(2, '0') + ':' + String(mm3).padStart(2, '0');
+          }
+        }
+        return '';
       }
 
       // ── Stars: универсальная функция открытия инвойса ─────────────────────

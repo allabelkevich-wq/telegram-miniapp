@@ -687,13 +687,13 @@
       .date-group{flex-direction:column;align-items:stretch;gap:12px}
       .date-group select{width:100%;max-width:none;min-width:0;min-height:48px;font-size:1rem;-webkit-tap-highlight-color:rgba(var(--primary-rgb),0.15)}
     }
-    .time-group{display:flex;flex-direction:column;align-items:flex-start;gap:var(--spacing-sm);margin:0}
-    .time-group-input{flex:0 0 auto;min-width:0;width:100%;max-width:none}
-    .time-group-checkbox{margin:0;width:100%;align-self:flex-start;justify-content:flex-start}
-    .checkbox{display:flex;align-items:center;gap:10px;margin-top:0}
-    .checkbox input{width:22px;height:22px;min-width:22px;accent-color:var(--primary-color);opacity:.65}
+    .time-group{display:flex;flex-direction:row;align-items:center;gap:12px;margin:0;flex-wrap:nowrap}
+    .time-group-input{flex:0 0 auto;min-width:0;width:auto;max-width:140px}
+    .time-group-checkbox{margin:0;flex:1 1 auto;white-space:nowrap}
+    .checkbox{display:flex;align-items:center;gap:8px;margin-top:0}
+    .checkbox input{width:20px;height:20px;min-width:20px;accent-color:var(--primary-color);opacity:.65;flex-shrink:0}
     .time-group .checkbox input{opacity:.45}
-    .checkbox label{margin-bottom:0;font-weight:500;color:var(--tg-theme-text-color,#fff);font-size:1rem;display:flex;align-items:center;gap:6px;opacity:.88}
+    .checkbox label{margin-bottom:0;font-weight:500;color:var(--tg-theme-text-color,#fff);font-size:0.88rem;display:flex;align-items:center;gap:5px;opacity:.88;white-space:nowrap;line-height:1.2}
     select{appearance:none;background:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23FF6B35' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 16px center;background-size:20px;padding-right:48px}
     textarea:not(.request-textarea){min-height:140px;line-height:1.6;resize:vertical}
     textarea.request-textarea{line-height:1.6;}
@@ -3479,13 +3479,12 @@
           <div id="heroesPromoFeaturesTitle" style="color:var(--primary-color);font-weight:600;margin-bottom:8px">Что входит в тариф:</div>
           <div id="heroesF1">✦ Неограниченное число героев</div>
           <div id="heroesF2">✦ Быстрый запуск соло и совместных песен</div>
-          <div id="heroesF3">✦ Предпочтения по стилю музыки</div>
           <div id="heroesF4">✦ Полная история генераций с текстами и анализом</div>
           <div id="heroesF5">✦ Аудио прямо из карточки героя</div>
         </div>
         <button type="button" id="masterTrialBtn" aria-label="Получить 1 день бесплатного доступа к Лаборатории" style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.2),rgba(var(--primary-rgb),0.08));border:1px solid rgba(var(--primary-rgb),0.4);color:var(--primary-color);font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">1 день бесплатно — попробовать</button>
         <button type="button" id="masterSubBtn" onclick="showPlanConfirm('plan_master','Лаборатория')" aria-label="Оформить подписку на Лабораторию за $39.99 в месяц" style="width:100%;padding:14px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(167,139,250,0.15),rgba(167,139,250,0.06));border:1.5px solid rgba(167,139,250,0.35);color:rgba(167,139,250,0.9);font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:none;animation:none;letter-spacing:0;min-height:48px">Оформить Лабораторию — $39.99/мес</button>
-        <div id="heroesSubNote" style="font-size:0.7rem;color:rgba(255,255,255,0.22);text-align:center;margin-top:12px">30 треков в месяц · Оплата через HOT Pay</div>
+        <div id="heroesSubNote" style="font-size:0.7rem;color:rgba(255,255,255,0.22);text-align:center;margin-top:12px">30 треков в месяц · Оплата через HOT</div>
       </div>
 
       <!-- Кабинет героев (показывается если есть доступ) -->
@@ -3554,7 +3553,7 @@
             <input type="time" id="heroBirthtime" class="time-group-input">
             <div class="checkbox time-group-checkbox">
               <input type="checkbox" id="heroBirthtimeUnknown">
-              <label for="heroBirthtimeUnknown">Не знаю точное время</label>
+              <label for="heroBirthtimeUnknown">Не знаю</label>
             </div>
           </div>
         </div>
@@ -3664,8 +3663,8 @@
           <div class="time-group" role="group" aria-label="Время рождения">
             <input type="time" id="birthtime" required aria-label="Время" class="time-group-input">
             <div class="checkbox time-group-checkbox">
-              <input type="checkbox" id="unknown" aria-label="Не знаю точное время">
-              <label for="unknown">Не знаю точное время</label>
+              <input type="checkbox" id="unknown" aria-label="Не знаю время">
+              <label for="unknown">Не знаю</label>
             </div>
           </div>
         </div>
@@ -3737,8 +3736,8 @@
                 <div class="time-group" role="group">
                   <input type="time" id="birthtime2" aria-label="Время" class="time-group-input">
                   <div class="checkbox time-group-checkbox">
-                    <input type="checkbox" id="unknown2" aria-label="Не знаю точное время">
-                    <label for="unknown2">Не знаю точное время</label>
+                    <input type="checkbox" id="unknown2" aria-label="Не знаю время">
+                    <label for="unknown2">Не знаю</label>
                   </div>
                 </div>
               </div>
@@ -4081,9 +4080,9 @@
       </header>
       <div class="section page-scroll" style="text-align:center; padding-top:40px">
         <div id="paymentThanksIcon" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,rgba(var(--primary-rgb),0.2),rgba(var(--primary-rgb),0.06));border:1.5px solid rgba(var(--primary-rgb),0.35);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.8rem;color:var(--primary-color);font-weight:300"></div>
-        <h2 id="paymentThanksTitle" class="success-title" style="font-size:1.5rem; margin:0 0 12px 0">Оплата прошла</h2>
+        <h2 id="paymentThanksTitle" class="success-title" style="font-size:1.5rem; margin:0 0 12px 0">Оплата получена</h2>
         <p class="success-text" id="paymentThanksMessage" style="margin:0 0 24px 0; font-size:0.92rem; color:rgba(255,255,255,0.6); line-height:1.65">
-          Песня создаётся. Придёт в чат с ботом. Можно закрыть окно.
+          Проверяем платёж и обновляем доступ. Это может занять до минуты.
         </p>
         <button id="paymentThanksBackBtn" class="primary" style="margin-bottom:12px">Создать свою песню</button>
         <p id="paymentThanksHint" style="font-size:0.72rem;color:rgba(255,255,255,0.3);line-height:1.5;margin:0;">Не пришла за 20 минут? Напиши боту «песня не пришла»</p>
@@ -4191,7 +4190,7 @@
           paymentPageIntroAfterSubmit: 'Заявка отправлена. Введите промокод или нажмите кнопку ниже для оплаты через HOT Pay.',
           paymentPageIntroOrPay: 'Или введите промокод, или оплатите через HOT Pay.',
           paymentPageTagline: 'Промокод или оплата',
-          payWithHot: 'Оплатить через HOT Pay',
+          payWithHot: 'Оплатить HOT',
           firstFree: 'Первая песня доступна бесплатно.',
           paymentRequired: 'Оплата требуется для новых заявок.',
           subscriptionActive: 'У вас активная подписка — можно продолжить.',
@@ -4300,7 +4299,7 @@
           heroesF3: '✦ Предпочтения по стилю музыки', heroesF4: '✦ Полная история генераций с текстами и анализом',
           heroesF5: '✦ Аудио прямо из карточки героя',
           heroesTrialBtn: '1 день бесплатно — попробовать', heroesSubBtn: 'Оформить Лабораторию — $39.99/мес',
-          heroesSubNote: '30 треков в месяц · Оплата через HOT Pay',
+          heroesSubNote: '30 треков в месяц · Оплата через HOT',
           heroFormTitle: 'Добавить героя', heroRelLabel: 'Кто для тебя', heroBirthdateHint: 'Выбери день, месяц и год',
           heroTimeBirthLabel: 'Время рождения', heroStyleLabel: 'Любимые стили музыки', heroStylePh: 'поп, джаз, электронная…',
           requestPreferredStyleLabel: 'Стиль песни',
@@ -4342,7 +4341,7 @@
           payOvLinkHint: 'Если окно не открылось — скопируйте ссылку и вставьте в браузер:',
           payOvCopyBtn: 'Скопировать ссылку оплаты', payOvCheckBtn: 'Я уже оплатил — проверить',
           payOvPromoConfirmBtn: 'Подтвердить и отправить',
-          paymentThanksTitle: 'Оплата прошла', paymentThanksMsg: 'Песня создаётся. Придёт в чат с ботом. Можно закрыть окно.',
+          paymentThanksTitle: 'Оплата получена', paymentThanksMsg: 'Проверяем платёж и обновляем доступ. Это может занять до минуты.',
           paymentThanksHintText: 'Не пришла за 20 минут? Напиши боту «песня не пришла»'
         },
         en: {
@@ -4380,7 +4379,7 @@
           submitHint: 'The song will arrive in this chat with the bot. If you haven\'t pressed «Start» in the bot yet — do it now.',
           paymentPageIntroAfterSubmit: 'Request submitted. Enter a promo code or tap the button below to pay via HOT Pay.',
           paymentPageTagline: 'Promo code or payment',
-          payWithHot: 'Pay via HOT Pay',
+          payWithHot: 'Pay HOT',
           firstFree: 'Your first sound key is free.',
           paymentRequired: 'Payment required for new requests.',
           subscriptionActive: 'You have an active subscription — continue.',
@@ -4489,7 +4488,7 @@
           heroesF3: '✦ Music style preferences', heroesF4: '✦ Full history with lyrics & analysis',
           heroesF5: '✦ Audio straight from the person\'s card',
           heroesTrialBtn: '1 day free — try it out', heroesSubBtn: 'Subscribe to Laboratory — $39.99/mo',
-          heroesSubNote: '30 tracks/month · Payment via HOT Pay',
+          heroesSubNote: '30 tracks/month · Payment via HOT',
           heroFormTitle: 'Add person', heroRelLabel: 'Relationship', heroBirthdateHint: 'Select day, month and year',
           heroTimeBirthLabel: 'Time of birth', heroStyleLabel: 'Favourite music styles', heroStylePh: 'pop, jazz, electronic…',
           requestPreferredStyleLabel: 'Song style',
@@ -4569,7 +4568,7 @@
           submitHint: 'Das Lied kommt in diesen Chat mit dem Bot. Falls Sie im Bot noch nicht auf «Start» geklickt haben — tun Sie es jetzt.',
           paymentPageIntroAfterSubmit: 'Anfrage gesendet. Gutscheincode eingeben oder unten tippen für Zahlung via HOT Pay.',
           paymentPageTagline: 'Gutscheincode oder Zahlung',
-          payWithHot: 'Zahlen via HOT Pay',
+          payWithHot: 'Zahlen HOT',
           firstFree: 'Dein erster Klangschlüssel ist kostenlos.',
           subscriptionActive: 'Du hast ein aktives Abo — fahre fort.',
           catalogLoadFailed: 'Tarife konnten nicht geladen werden. Tippe «Zur Kasse» — der Backend bestimmt den Preis.',
@@ -4678,7 +4677,7 @@
           heroesF3: '✦ Musikstil-Präferenzen', heroesF4: '✦ Komplette Geschichte mit Texten & Analyse',
           heroesF5: '✦ Audio direkt aus der Personenkarte',
           heroesTrialBtn: '1 Tag kostenlos — ausprobieren', heroesSubBtn: 'Labor abonnieren — $39.99/Mon.',
-          heroesSubNote: '30 Tracks/Monat · Zahlung via HOT Pay',
+          heroesSubNote: '30 Tracks/Monat · Zahlung via HOT',
           heroFormTitle: 'Person hinzufügen', heroRelLabel: 'Beziehung', heroBirthdateHint: 'Tag, Monat und Jahr wählen',
           heroTimeBirthLabel: 'Geburtszeit', heroStyleLabel: 'Lieblingsmusikstile', heroStylePh: 'Pop, Jazz, Elektronisch…',
           requestPreferredStyleLabel: 'Song-Stil',
@@ -4758,7 +4757,7 @@
           submitHint: 'La chanson arrivera dans ce chat avec le bot. Si vous n\'avez pas encore appuyé sur «Démarrer» dans le bot — faites-le maintenant.',
           paymentPageIntroAfterSubmit: 'Demande envoyée. Entre le code promo ou appuie ci-dessous pour payer via HOT Pay.',
           paymentPageTagline: 'Code promo ou paiement',
-          payWithHot: 'Payer via HOT Pay',
+          payWithHot: 'Payer HOT',
           firstFree: 'Ta première clé sonore est gratuite.',
           subscriptionActive: 'Tu as un abonnement actif — continue.',
           catalogLoadFailed: 'Tarifs non chargés. Appuie sur «Payer» — le backend déterminera le prix.',
@@ -5029,7 +5028,7 @@
         var heroFemale = document.querySelector('#heroGender option[value="female"]'); if (heroFemale) heroFemale.textContent = t('female');
         document.getElementById('birthplaceHint') && (document.getElementById('birthplaceHint').textContent = t('birthplaceHint'));
         document.getElementById('birthplace2Hint') && (document.getElementById('birthplace2Hint').textContent = t('birthplaceHint'));
-        document.querySelector('label[for="unknown"]') && (document.querySelector('label[for="unknown"]').textContent = t('unknownTime'));
+        document.querySelector('label[for="unknown"]') && (document.querySelector('label[for="unknown"]').textContent = t('unknownTimeShort'));
         document.querySelector('label[for="unknown2"]') && (document.querySelector('label[for="unknown2"]').textContent = t('unknownTimeShort'));
         var quickBtns = document.querySelectorAll('.example-btn'); var quickK = ['quick1','quick2','quick3','quick4','quick5','quick6','quick7','quick8','quick9','quick10','quick11','quick12']; var quickT = ['quick1t','quick2t','quick3t','quick4t','quick5t','quick6t','quick7t','quick8t','quick9t','quick10t','quick11t','quick12t'];
         quickBtns.forEach(function(btn, i) { if (btn && i < quickK.length) { btn.textContent = t(quickK[i]); btn.setAttribute('data-text', t(quickT[i])); } });
@@ -5178,7 +5177,7 @@
         var sku = pendingPaymentSku || getCurrentSku();
         var item = pricingCatalog && pricingCatalog.find(function(x) { return x && x.sku === sku; });
         var priceStr = item ? (String(item.price) + ' ' + (item.currency || 'USDT')) : '';
-        payBtn.textContent = priceStr ? ('Оплатить ' + priceStr) : 'Оплатить через HOT Pay';
+        payBtn.textContent = priceStr ? ('Оплатить ' + priceStr) : 'Оплатить HOT';
         payBtn.style.background = 'linear-gradient(135deg,var(--primary-color),var(--secondary-color))';
       }
       function isTelegramWebApp() {
@@ -5426,6 +5425,7 @@
       var pendingPaymentSku = null;
       var pendingPaymentPromo = null; // Промокод, который был отправлен с заявкой
       var paymentPollingActive = false; // Флаг для остановки polling
+      var subscriptionClaimInFlight = false; // Защита от параллельных claim
       var promoDebounceTimer = null; // Таймер для debounce промокода
       var isSubmitting = false; // Флаг для защиты от дублирования заявок
       var catalogCache = null; // Кэш каталога (5 минут)
@@ -5556,6 +5556,22 @@
         if (tone === 'error') { el.style.border = '1px solid rgba(var(--secondary-rgb),.5)';  el.style.background = 'rgba(var(--secondary-rgb),.12)'; return; }
         el.style.border = '1px solid rgba(var(--primary-rgb),.35)';
         el.style.background = 'rgba(var(--primary-rgb),.1)';
+      }
+      async function claimSubscriptionSafe(apiBase, initData, requestId) {
+        if (!apiBase || !initData || !requestId) return { skipped: true, reason: 'missing_args' };
+        if (subscriptionClaimInFlight) return { skipped: true, reason: 'in_flight' };
+        subscriptionClaimInFlight = true;
+        try {
+          var claimResp = await fetch(apiBase + '/api/subscription/claim', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+            body: JSON.stringify({ request_id: requestId, initData: initData })
+          });
+          var claimJson = await claimResp.json().catch(function(){ return {}; });
+          return { skipped: false, ok: !!(claimJson && claimJson.success), status: claimResp.status, json: claimJson };
+        } finally {
+          subscriptionClaimInFlight = false;
+        }
       }
       var DEFAULT_PRICES = { single_song: { title: 'Single song', price: '5.99', currency: 'USDT' }, couple_song: { title: 'Couple song', price: '8.99', currency: 'USDT' }, transit_energy_song: { title: 'Transit energy song', price: '6.99', currency: 'USDT' } };
       function updatePaymentUiFromCatalog() {
@@ -6223,7 +6239,10 @@
           var bannerText = document.getElementById('recoveryBannerText');
           var rb = document.getElementById('recoveryClaimBtn');
           if (banner) {
-            if (freeTrialAvailable) {
+            if (isSubscriptionSku(pendingPaymentSku)) {
+              if (bannerText) bannerText.innerHTML = '<strong style="color:#6ee7b7;">Незавершённая подписка</strong><br>Оплата ещё не подтверждена. Продолжи оформление тарифа.';
+              if (rb) rb.textContent = 'Продолжить оплату подписки';
+            } else if (freeTrialAvailable) {
               // Новый пользователь — предлагаем бесплатный ключ
               if (bannerText) bannerText.innerHTML = '<strong style="color:#6ee7b7;">Твоя заявка ждёт!</strong><br>Получи первую песню бесплатно.';
               if (rb) rb.textContent = 'Получить бесплатно';
@@ -6237,7 +6256,7 @@
             var refCard = document.getElementById('referralCard');
             if (refCard) refCard.style.display = 'none';
             var dismissBtn = document.getElementById('recoveryDismissBtn');
-            if (dismissBtn) dismissBtn.addEventListener('click', function() {
+            if (dismissBtn) dismissBtn.onclick = function() {
               banner.style.display = 'none';
               if (refCard) refCard.style.display = 'block';
               // Отменяем заявку на сервере — при следующем входе баннер не появится
@@ -6250,11 +6269,49 @@
                   body: JSON.stringify({ request_id: pendingPaymentRequestId })
                 }).catch(function() {});
               }
-            });
-            if (rb) rb.addEventListener('click', function() {
-              banner.style.display = 'none';
-              showPaymentOverlay();
-            });
+            };
+            if (rb) rb.onclick = function() {
+              var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
+              var initData = getInitData();
+              if (!apiBase || !initData || !pendingPaymentRequestId) {
+                banner.style.display = 'none';
+                showPaymentOverlay();
+                return;
+              }
+              (async function smartPendingRecovery() {
+                try {
+                  var stResp = await fetch(apiBase + '/api/payments/hot/status?request_id=' + encodeURIComponent(pendingPaymentRequestId), {
+                    headers: { 'X-Telegram-Init': initData }
+                  });
+                  var stJson = await stResp.json().catch(function(){ return {}; });
+                  var ps = stJson && stJson.data ? String(stJson.data.payment_status || '').toLowerCase() : '';
+                  var sku = getPaymentSkuFromStatus(stJson) || pendingPaymentSku || '';
+                  if (ps === 'paid') {
+                    if (isSubscriptionSku(sku)) {
+                      await claimSubscriptionSafe(apiBase, initData, pendingPaymentRequestId);
+                      showConfirm('Подписка оплачена!', 'Проверяем активацию тарифа.<br><br>Если статус не обновился сразу — открой профиль через 10–20 секунд.');
+                    } else {
+                      await fetch(apiBase + '/api/payments/hot/confirm', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
+                        body: JSON.stringify({ request_id: pendingPaymentRequestId, initData: initData })
+                      }).catch(function(){});
+                      showConfirm('Оплата подтверждена!', 'Заявка оплачена. Запускаем создание песни.');
+                    }
+                    banner.style.display = 'none';
+                    pendingPaymentRequestId = null;
+                    pendingPaymentSku = null;
+                    try { localStorage.removeItem('hot_pending_request_id'); localStorage.removeItem('hot_pending_sku'); localStorage.removeItem('pending_payment_type'); } catch(_) {}
+                    catalogCache = null; catalogCacheTime = 0;
+                    if (typeof loadProfilePage === 'function') loadProfilePage().catch(function(){});
+                    if (typeof loadPricingCatalog === 'function') loadPricingCatalog().catch(function(){});
+                    return;
+                  }
+                } catch (_) {}
+                banner.style.display = 'none';
+                showPaymentOverlay();
+              })();
+            };
           }
         } catch (e) { /* не критично */ }
       }
@@ -6610,6 +6667,19 @@
         var _qsStart = _urlParams.match(/[?&](?:tgWebAppStartParam|startapp|start_param)=([^&]+)/);
         if (!_tgStartParam && _qsStart && _qsStart[1]) _tgStartParam = decodeURIComponent(_qsStart[1]);
         var _isPaymentReturn = _urlParams.indexOf('payment=success') !== -1 || /^pay_/.test(_tgStartParam);
+        function normalizeRequestId(rawValue) {
+          var raw = rawValue == null ? '' : String(rawValue);
+          if (!raw) return null;
+          var decoded = raw;
+          try { decoded = decodeURIComponent(raw); } catch(_) {}
+          var m = decoded.match(/[?&]request_id=([^&#]+)/i);
+          if (m && m[1]) decoded = m[1];
+          decoded = decoded.split('#')[0];
+          decoded = decoded.replace(/[?&](memo|order_id)=.*$/i, '');
+          decoded = decoded.split('?')[0].split('&')[0].trim();
+          var uuid = decoded.match(/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i);
+          return uuid ? uuid[0] : decoded;
+        }
 
         function _hasSeenOnboarding() {
           try { return !!localStorage.getItem(ONBOARDING_KEY); } catch(_) { return false; }
@@ -6670,15 +6740,28 @@
         // Восстановление незавершённого HOT-платежа (Mini App могла закрыться на iOS)
         setTimeout(function() {
           try {
-            var savedReqId = (localStorage.getItem('hot_pending_request_id') || '').trim();
-            if (!savedReqId || savedReqId.length < 10) return;
+            var savedReqId = normalizeRequestId((localStorage.getItem('hot_pending_request_id') || '').trim()) || '';
             var savedSku = localStorage.getItem('hot_pending_sku') || '';
+            if (!savedReqId) {
+              try {
+                var _ppRecoveryRaw = localStorage.getItem('pending_payment_type') || '';
+                if (_ppRecoveryRaw) {
+                  var _ppRecovery = JSON.parse(_ppRecoveryRaw);
+                  savedReqId = normalizeRequestId(_ppRecovery && _ppRecovery.request_id ? _ppRecovery.request_id : '') || '';
+                  if (!savedSku && _ppRecovery && _ppRecovery.plan_key) {
+                    var _planSkuMap = { plan_basic: 'soul_basic_sub', plan_plus: 'soul_plus_sub', plan_master: 'master_monthly' };
+                    savedSku = _planSkuMap[_ppRecovery.plan_key] || '';
+                  }
+                }
+              } catch(_) {}
+            }
+            if (!savedReqId || savedReqId.length < 10) return;
             var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
             var initData = typeof getInitData === 'function' ? getInitData() : '';
             if (!apiBase || !initData) return;
             console.log('[HOT recovery] Найден незавершённый платёж:', savedReqId.slice(0, 8), 'sku:', savedSku);
             (async function recoverHotPayment() {
-              var maxAttempts = 60;
+              var maxAttempts = 10;
               var authFailCount = 0;
               for (var i = 0; i < maxAttempts; i++) {
                 try {
@@ -6712,6 +6795,14 @@
                         continue;
                       }
                       console.log('[HOT recovery] confirm успешен');
+                      var isSubSku = savedSku && (savedSku.indexOf('sub') !== -1 || savedSku.indexOf('master') !== -1);
+                      if (isSubSku) {
+                        try {
+                          await claimSubscriptionSafe(apiBase, initData, savedReqId);
+                        } catch(claimErr) {
+                          console.warn('[HOT recovery] subscription/claim ошибка:', claimErr && claimErr.message);
+                        }
+                      }
                     } catch(ce) {
                       console.warn('[HOT recovery] confirm ошибка:', ce && ce.message, '— повторяем');
                       await new Promise(function(r) { setTimeout(r, 3000); });
@@ -6719,6 +6810,7 @@
                     }
                     localStorage.removeItem('hot_pending_request_id');
                     localStorage.removeItem('hot_pending_sku');
+                    localStorage.removeItem('pending_payment_type');
                     catalogCache = null; catalogCacheTime = 0;
                     if (typeof loadProfilePage === 'function') loadProfilePage().catch(function() {});
                     if (typeof loadPricingCatalog === 'function') loadPricingCatalog().catch(function() {});
@@ -6734,7 +6826,7 @@
                     console.warn('[HOT recovery] poll error:', e && e.message);
                   }
                 }
-                await new Promise(function(r) { setTimeout(r, 3000); });
+                await new Promise(function(r) { setTimeout(r, 5000); });
               }
               console.log('[HOT recovery] Не подтверждено за', maxAttempts, 'попыток — оставляем для следующего запуска');
             })();
@@ -7812,7 +7904,7 @@
         goToPage('paymentThanksPage');
         var requestIdMatch = search.match(/request_id=([^&\s]+)/);
         var thanksRequestIdRaw = requestIdMatch ? decodeURIComponent(requestIdMatch[1]) : (startParamRequestId || null);
-        var thanksRequestId = thanksRequestIdRaw ? String(thanksRequestIdRaw).split('?')[0].split('#')[0].trim() : null;
+        var thanksRequestId = normalizeRequestId(thanksRequestIdRaw);
         var uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
         if (thanksRequestId && !uuidRe.test(thanksRequestId)) {
           thanksRequestId = null;
@@ -7832,6 +7924,10 @@
           var _pp = localStorage.getItem('pending_payment_type');
           if (_pp) { pendingPayment = JSON.parse(_pp); localStorage.removeItem('pending_payment_type'); }
         } catch(e) {}
+        if (!thanksRequestId && pendingPayment && pendingPayment.request_id) {
+          var pendingReqId = normalizeRequestId(pendingPayment.request_id);
+          if (pendingReqId && uuidRe.test(pendingReqId)) thanksRequestId = pendingReqId;
+        }
         
         // КРИТИЧНО: сбрасываем кэш и перезагружаем профиль/каталог для актуального статуса подписки
         catalogCache = null;
@@ -7877,8 +7973,8 @@
               var ptTitle = document.getElementById('paymentThanksTitle');
               var ptSub = document.getElementById('paymentThanksSubtitle');
               var ptBack = document.getElementById('paymentThanksBackBtn');
-              if (paymentThanksMsg) paymentThanksMsg.textContent = t('songInProgress');
-              if (ptTitle) ptTitle.textContent = typeof t === 'function' ? t('paymentThanks') : 'Спасибо за оплату';
+              if (paymentThanksMsg) paymentThanksMsg.textContent = 'Платёж получен. Проверяем активацию доступа…';
+              if (ptTitle) ptTitle.textContent = typeof t === 'function' ? t('paymentThanks') : 'Оплата получена';
               if (ptSub) ptSub.textContent = typeof t === 'function' ? t('thanksSubtitle') : 'заявка принята';
               if (ptBack) { ptBack.textContent = (typeof t === 'function' ? t('paymentThanksBackToForm') : 'Создать свою песню'); ptBack.onclick = function() { goToPage('formPage'); }; }
             }
@@ -7887,12 +7983,13 @@
           var apiBase = (window.BACKEND_URL || window.HEROES_API_BASE || '').replace(/\/$/, '');
           var initData = (tg && tg.initData) ? tg.initData : (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
           if (!apiBase || !initData) {
-            if (paymentThanksMsg && !isSubPaymentImmediate) paymentThanksMsg.textContent = t('songInProgress');
+            if (paymentThanksMsg && !isSubPaymentImmediate) paymentThanksMsg.textContent = 'Платёж получен. Проверяем активацию доступа…';
             return;
           }
           try {
             var payStatus = '';
             var payMode = '';
+            var paySku = '';
             var isSub = isSubPaymentImmediate;
 
             // Определяем ожидаемый plan_sku по plan_key из localStorage
@@ -7904,17 +8001,13 @@
             // ── Для подписок: моментально запускаем claim (без задержки) и повторяем до успеха ──
             if (isSubPaymentImmediate && thanksRequestId) {
               (async function runClaimLoop() {
-                var maxClaimAttempts = 25;
-                var claimIntervalMs = 1500;
+                var maxClaimAttempts = 8;
+                var claimIntervalMs = 4000;
                 for (var ci = 0; ci < maxClaimAttempts; ci++) {
                   try {
-                    var claimResp = await fetch(apiBase + '/api/subscription/claim', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
-                      body: JSON.stringify({ request_id: thanksRequestId, initData: initData })
-                    });
-                    var claimJson = await claimResp.json().catch(function(){ return {}; });
-                    if (claimJson && claimJson.success) {
+                    var claimRes = await claimSubscriptionSafe(apiBase, initData, thanksRequestId);
+                    if (claimRes && !claimRes.skipped && claimRes.ok) {
+                      var claimJson = claimRes.json || {};
                       console.log('[sub] claim ok:', claimJson.status, 'plan:', claimJson.plan_sku);
                       paymentReturnClaimSucceeded = true;
                       try { if (paymentReturnClaimKey) sessionStorage.setItem(paymentReturnClaimKey, '1'); } catch (_) {}
@@ -7929,7 +8022,7 @@
                       }
                       return;
                     }
-                    if (claimResp.status !== 202) break;
+                    if (claimRes && !claimRes.skipped && claimRes.status !== 202) break;
                   } catch(claimErr) {
                     console.warn('[sub] claim attempt', ci, claimErr && claimErr.message);
                   }
@@ -7950,13 +8043,14 @@
                 var rawStatus = statusJson && statusJson.data && statusJson.data.payment_status;
                 payStatus = (rawStatus !== null && rawStatus !== undefined) ? String(rawStatus).toLowerCase() : '';
                 payMode = statusJson && statusJson.data && statusJson.data.mode ? String(statusJson.data.mode) : '';
+                paySku = getPaymentSkuFromStatus(statusJson);
                 if (payStatus === 'paid') break;
               } catch (statusErr) {
                 console.warn('[payment/return] status attempt', attempt, statusErr && statusErr.message);
               }
               if (attempt < maxAttempts - 1) await new Promise(function(r) { setTimeout(r, delayMs); });
             }
-            isSub = isSubPaymentImmediate || (payMode && payMode.startsWith('sub_'));
+            isSub = isSubPaymentImmediate || (payMode && payMode.startsWith('sub_')) || isSubscriptionSku(paySku);
 
             if (payStatus === 'paid') {
               // Моментально: confirm + один запрос subscription/status (запускает repair_on_read)
@@ -7975,11 +8069,7 @@
             } else if (isSub && thanksRequestId && !paymentReturnClaimSucceeded) {
               // Вебхук не пришёл за 60 сек — финальный вызов claim (страховка)
               try {
-                await fetch(apiBase + '/api/subscription/claim', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', 'X-Telegram-Init': initData },
-                  body: JSON.stringify({ request_id: thanksRequestId, initData: initData })
-                });
+                await claimSubscriptionSafe(apiBase, initData, thanksRequestId);
               } catch(e) {
                 console.warn('[payment/return] final claim failed:', e && e.message);
               }
@@ -7989,8 +8079,9 @@
             // Важно: проверяем конкретный plan_sku (защита от апгрейда Basic→Plus,
             // когда subscription_active=true ещё от Basic, но Plus ещё не активирован)
             if (isSub) {
-              var expectedSkuFromMode = payMode.startsWith('sub_') ? payMode.slice(4) : null;
-              var targetPlanSku = expectedSkuFromMode || expectedPlanSku || null;
+              var expectedSkuFromMode = payMode && payMode.startsWith('sub_') ? payMode.slice(4) : null;
+              var expectedSkuFromStatus = isSubscriptionSku(paySku) ? paySku : null;
+              var targetPlanSku = expectedSkuFromStatus || expectedSkuFromMode || expectedPlanSku || null;
               var subCheckDelayMs = 800;
               for (var si = 0; si < 20; si++) {
                 if (si > 0) await new Promise(function(r){ setTimeout(r, subCheckDelayMs); });
@@ -8018,9 +8109,11 @@
             }
             // Если не знали про подписку из localStorage — определяем по mode
             if (!isSubPaymentImmediate) {
-              var isSubFromMode = payMode.startsWith('sub_');
+              var isSubFromMode = (payMode && payMode.startsWith('sub_')) || isSubscriptionSku(paySku);
               if (isSubFromMode && paymentThanksMsg) {
-                var sn = payMode.includes('basic') ? 'Basic' : payMode.includes('plus') ? 'Plus' : 'Лаборатория';
+                var sn = isSubscriptionSku(paySku)
+                  ? (paySku === 'soul_basic_sub' ? 'Basic' : (paySku === 'soul_plus_sub' ? 'Plus' : 'Лаборатория'))
+                  : (payMode.includes('basic') ? 'Basic' : payMode.includes('plus') ? 'Plus' : 'Лаборатория');
                 var ptT = document.getElementById('paymentThanksTitle');
                 var ptS = document.getElementById('paymentThanksSubtitle');
                 var ptH = document.getElementById('paymentThanksHint');
@@ -8078,11 +8171,13 @@
               var json = await resp.json().catch(function() { return {}; });
               var gs = json && json.data ? String(json.data.generation_status || '').toLowerCase() : '';
               var ps = json && json.data ? String(json.data.payment_status || '').toLowerCase() : '';
+              var statusSku = getPaymentSkuFromStatus(json);
               if (gs === 'pending_payment' || ps === 'requires_payment') {
                 // Заявка ещё не оплачена — показываем оверлей оплаты
                 pendingPaymentRequestId = botRequestId;
                 var mode = json.data && json.data.mode ? String(json.data.mode) : 'single';
-                if (mode === 'couple') pendingPaymentSku = 'couple_song';
+                if (isSubscriptionSku(statusSku)) pendingPaymentSku = statusSku;
+                else if (mode === 'couple') pendingPaymentSku = 'couple_song';
                 else if (mode === 'transit') pendingPaymentSku = 'transit_energy_song';
                 else pendingPaymentSku = 'single_song';
                 showPaymentOverlay();
@@ -8384,19 +8479,16 @@
         if (birthplace1.length < 3) { alert(t('alertBirthplace')); return; }
         if (!birthtimeUnknown1 && !birthtime1) { alert(t('alertBirthtime')); return; }
         
-        // Валидация формата времени (HH:MM)
+        // Валидация/нормализация формата времени (HH:MM)
         if (!birthtimeUnknown1 && birthtime1) {
-          var timeMatch = birthtime1.match(/^(\d{1,2}):(\d{2})$/);
-          if (!timeMatch) {
+          var normalizedTime1 = normalizeBirthTimeInput(birthtime1);
+          if (!normalizedTime1) {
             alert('⚠️ Неверный формат времени\n\nИспользуй формат ЧЧ:ММ (например, 14:30)');
             return;
           }
-          var hours = parseInt(timeMatch[1], 10);
-          var minutes = parseInt(timeMatch[2], 10);
-          if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-            alert('⚠️ Неверное время\n\nЧасы: 0-23, минуты: 0-59');
-            return;
-          }
+          birthtime1 = normalizedTime1;
+          var birthtimeInput1 = document.getElementById('birthtime');
+          if (birthtimeInput1) birthtimeInput1.value = normalizedTime1;
         }
         
         if (!gender1) { alert(t('alertGender')); return; }
@@ -8436,19 +8528,16 @@
           if (birthplace2.length < 3) { alert(t('alertBirthplace2')); return; }
           if (!birthtimeUnknown2 && !birthtime2) { alert(t('alertBirthtime2')); return; }
           
-          // Валидация формата времени для второго человека
+          // Валидация/нормализация формата времени для второго человека
           if (!birthtimeUnknown2 && birthtime2) {
-            var timeMatch2 = birthtime2.match(/^(\d{1,2}):(\d{2})$/);
-            if (!timeMatch2) {
+            var normalizedTime2 = normalizeBirthTimeInput(birthtime2);
+            if (!normalizedTime2) {
               alert('⚠️ Неверный формат времени (Человек 2)\n\nИспользуй формат ЧЧ:ММ (например, 14:30)');
               return;
             }
-            var hours2 = parseInt(timeMatch2[1], 10);
-            var minutes2 = parseInt(timeMatch2[2], 10);
-            if (hours2 < 0 || hours2 > 23 || minutes2 < 0 || minutes2 > 59) {
-              alert('⚠️ Неверное время (Человек 2)\n\nЧасы: 0-23, минуты: 0-59');
-              return;
-            }
+            birthtime2 = normalizedTime2;
+            var birthtimeInput2 = document.getElementById('birthtime2');
+            if (birthtimeInput2) birthtimeInput2.value = normalizedTime2;
           }
           
           if (!gender2) { alert(t('alertGender2')); return; }
@@ -8986,12 +9075,12 @@
           
           // Запускаем polling с возможностью отмены
           paymentPollingActive = true;
-          var maxAttempts = 60;
+          var maxAttempts = 20;
           var attempt = 0;
           var paid = false;
           while (attempt < maxAttempts && paymentPollingActive) {
             attempt += 1;
-            await new Promise(function(resolve) { setTimeout(resolve, 3000); });
+            await new Promise(function(resolve) { setTimeout(resolve, 4000); });
             
             // Проверяем, не закрыл ли пользователь overlay
             if (!paymentPollingActive) {
@@ -9018,16 +9107,22 @@
             body: JSON.stringify({ request_id: pendingPaymentRequestId, initData: initData })
           });
           if (!confirmResp.ok) throw new Error('Ошибка подтверждения оплаты (' + confirmResp.status + ')');
+          var paidReqId = pendingPaymentRequestId;
+          var paidSku = pendingPaymentSku;
+          var paidIsSub = isSubscriptionSku(paidSku);
           pendingPaymentRequestId = null;
           pendingPaymentSku = null;
           pendingPaymentPromo = null;
-          try { localStorage.removeItem('hot_pending_request_id'); localStorage.removeItem('hot_pending_sku'); } catch(_) {}
-          // Сбрасываем кэш каталога, чтобы подписка и тарифы подтянулись свежими
+          try { localStorage.removeItem('hot_pending_request_id'); localStorage.removeItem('hot_pending_sku'); localStorage.removeItem('pending_payment_type'); } catch(_) {}
           catalogCache = null;
           catalogCacheTime = 0;
           hidePaymentOverlay();
-          showConfirm('Оплата подтверждена!', 'Запускаем создание твоей песни.<br><br>Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.');
-          // HOT Pay: сразу обновляем профиль и каталог в фоне — подписка отобразится при переходе в кабинет
+          if (paidIsSub) {
+            await claimSubscriptionSafe(apiBase, initData, paidReqId);
+            showConfirm('Подписка оплачена!', 'Активируем твой тариф.<br><br>Если статус не обновился сразу — обнови страницу или закрой и открой приложение.');
+          } else {
+            showConfirm('Оплата подтверждена!', 'Запускаем создание твоей песни.<br><br>Песня придёт в этот чат. Можешь закрыть приложение — ничего не пропадёт.');
+          }
           setTimeout(function() {
             if (typeof loadProfilePage === 'function') loadProfilePage().catch(function() {});
             if (typeof loadPricingCatalog === 'function') loadPricingCatalog().catch(function() {});
@@ -9056,7 +9151,7 @@
           payBtn.disabled = false;
           // Текст кнопки: сбрасываем в HOT Pay (активный промокод уже очищен при ошибке промокода)
           var isFreeAfterError = activePromo && Number(activePromo.amount_after) === 0;
-          payBtn.textContent = isFreeAfterError ? 'Получить бесплатно' : 'Оплатить через HOT Pay';
+          payBtn.textContent = isFreeAfterError ? 'Получить бесплатно' : 'Оплатить HOT';
           payBtn.style.background = isFreeAfterError ? 'linear-gradient(135deg,#059669,#10b981)' : 'linear-gradient(135deg,var(--primary-color),var(--secondary-color))';
         }
       });
@@ -9071,6 +9166,52 @@
       var PLAN_TRACKS = { plan_basic: '5', plan_plus: '10', plan_master: '30' };
       var PLAN_SKU_MAP = { plan_basic: 'soul_basic_sub', plan_plus: 'soul_plus_sub', plan_master: 'master_monthly' };
       var PLAN_STARS = { plan_basic: '1 150 ⭐', plan_plus: '1 920 ⭐', plan_master: '3 070 ⭐' };
+      function isSubscriptionSku(sku) {
+        var s = String(sku || '').toLowerCase();
+        return s === 'soul_basic_sub' || s === 'soul_plus_sub' || s === 'master_monthly';
+      }
+      function getPaymentSkuFromStatus(statusJson) {
+        var data = statusJson && statusJson.data ? statusJson.data : {};
+        if (data.payment_sku) return String(data.payment_sku);
+        if (data.payment_raw && typeof data.payment_raw === 'object' && data.payment_raw.sku) return String(data.payment_raw.sku);
+        if (data.payment_raw && typeof data.payment_raw === 'string') {
+          try {
+            var parsed = JSON.parse(data.payment_raw);
+            if (parsed && parsed.sku) return String(parsed.sku);
+          } catch(_) {}
+        }
+        return '';
+      }
+      function normalizeBirthTimeInput(rawValue) {
+        var raw = String(rawValue || '').trim();
+        if (!raw) return '';
+        var m = raw.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+        if (m) {
+          var h = parseInt(m[1], 10);
+          var mm = parseInt(m[2], 10);
+          if (h >= 0 && h <= 23 && mm >= 0 && mm <= 59) {
+            return String(h).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+          }
+          return '';
+        }
+        m = raw.match(/^(\d{1,2})[.\-](\d{2})$/);
+        if (m) {
+          var h2 = parseInt(m[1], 10);
+          var mm2 = parseInt(m[2], 10);
+          if (h2 >= 0 && h2 <= 23 && mm2 >= 0 && mm2 <= 59) {
+            return String(h2).padStart(2, '0') + ':' + String(mm2).padStart(2, '0');
+          }
+        }
+        m = raw.match(/^(\d{1,2})(\d{2})$/);
+        if (m) {
+          var h3 = parseInt(m[1], 10);
+          var mm3 = parseInt(m[2], 10);
+          if (h3 >= 0 && h3 <= 23 && mm3 >= 0 && mm3 <= 59) {
+            return String(h3).padStart(2, '0') + ':' + String(mm3).padStart(2, '0');
+          }
+        }
+        return '';
+      }
 
       // ── Stars: универсальная функция открытия инвойса ─────────────────────
       window.payWithStars = async function payWithStars(sku, requestId, btn) {
@@ -9177,15 +9318,17 @@
               if (!data.success || !data.checkout_url) {
                 btn.textContent = 'Перейти к оплате →';
                 btn.disabled = false;
-                alert('Не удалось создать ссылку на оплату. Попробуй ещё раз.');
+                alert(data && data.error ? ('Не удалось создать ссылку на оплату: ' + data.error) : 'Не удалось создать ссылку на оплату. Попробуй ещё раз.');
                 return;
               }
               overlay.style.display = 'none';
               // Сохраняем в localStorage что это оплата подписки — нужно для экрана после возврата
               try {
                 localStorage.setItem('pending_payment_type', JSON.stringify({
-                  type: 'subscription', plan_key: planKey, plan_name: planName, ts: Date.now()
+                  type: 'subscription', plan_key: planKey, plan_name: planName, request_id: data.request_id || '', ts: Date.now()
                 }));
+                if (data.request_id) localStorage.setItem('hot_pending_request_id', String(data.request_id));
+                localStorage.setItem('hot_pending_sku', PLAN_SKU_MAP[planKey] || '');
               } catch(e) {}
               // Открываем оплату без закрытия приложения
               if (tg && tg.openLink) {
@@ -10251,16 +10394,18 @@
           </button>
         </div>
 
-        <!-- Промокод — раскрываемый блок, чтобы не перегружать экран -->
+        <!-- Промокод — всегда видимое поле -->
         <div style="margin-bottom:16px;">
-          <button type="button" id="payOvPromoToggle" style="width:100%;padding:10px 0;background:none;border:none;color:rgba(var(--primary-rgb),0.85);font-size:0.9rem;cursor:pointer;font-family:inherit;text-align:left;">▸ Есть промокод?</button>
-          <div id="payOvPromoSection" style="display:none;margin-top:8px;">
-            <input id="payOvPromoInput" type="text" placeholder="Введите промокод"
-              style="display:block;width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(var(--primary-rgb),0.65);background:rgba(255,255,255,0.14);color:#fff;font-size:1rem;font-family:inherit;text-transform:uppercase;outline:none;-webkit-appearance:none;margin-bottom:8px;">
-            <button id="payOvPromoBtn" type="button"
-              style="display:block;width:100%;box-sizing:border-box;padding:11px;border-radius:10px;background:rgba(var(--primary-rgb),0.18);border:1.5px solid rgba(var(--primary-rgb),0.55);color:var(--primary-color);font-weight:600;font-size:0.9rem;cursor:pointer;font-family:inherit;">
-              Применить
-            </button>
+          <button type="button" id="payOvPromoToggle" style="display:none;">▸ Есть промокод?</button>
+          <div id="payOvPromoSection" style="display:block;margin-top:0;">
+            <div style="display:flex;gap:8px;align-items:stretch;">
+              <input id="payOvPromoInput" type="text" placeholder="Промокод"
+                style="flex:1;min-width:0;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(var(--primary-rgb),0.65);background:rgba(255,255,255,0.14);color:#fff;font-size:1rem;font-family:inherit;text-transform:uppercase;outline:none;-webkit-appearance:none;">
+              <button id="payOvPromoBtn" type="button"
+                style="flex:0 0 auto;padding:12px 18px;border-radius:10px;background:rgba(var(--primary-rgb),0.18);border:1.5px solid rgba(var(--primary-rgb),0.55);color:var(--primary-color);font-weight:600;font-size:0.9rem;cursor:pointer;font-family:inherit;white-space:nowrap;">
+                Применить
+              </button>
+            </div>
           </div>
         </div>
 
@@ -10289,7 +10434,7 @@
           </div>
           <button id="payOvPayBtn" type="button"
             style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;letter-spacing:0;">
-            Оплатить через HOT Pay
+            Оплатить HOT
           </button>
           <button id="payOvStarsBtn" type="button"
             style="width:100%;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:0;letter-spacing:0;">

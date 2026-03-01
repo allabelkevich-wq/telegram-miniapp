@@ -3500,7 +3500,6 @@ app.get("/api/payments/hot/return", async (req, res) => {
   const startPayload = requestId ? ("pay_" + requestId) : "pay_return";
   const startPayloadEncoded = encodeURIComponent(startPayload);
   const telegramDeepLink = "https://t.me/" + botUsername + "?startapp=" + startPayloadEncoded;
-  const telegramResolveLink = "tg://resolve?domain=" + encodeURIComponent(botUsername) + "&startapp=" + startPayloadEncoded;
   const telegramChatLink = "https://t.me/" + botUsername + "?start=" + encodeURIComponent(startPayload);
   console.log("[hot/return] Redirect после оплаты:", { requestId: requestId?.slice(0, 8), telegramDeepLink, telegramChatLink });
 
@@ -3566,13 +3565,9 @@ app.get("/api/payments/hot/return", async (req, res) => {
     '<a href="' + telegramDeepLink.replace(/"/g, '&quot;') + '">Открыть YupSoul в Telegram</a>' +
     '<a href="' + telegramChatLink.replace(/"/g, '&quot;') + '" style="margin-top:10px;background:rgba(255,255,255,.12)">Открыть чат с ботом</a>' +
     '<script>' +
-    'var _tgLinks=[' +
-      '"' + telegramResolveLink.replace(/"/g, '\\"') + '",' +
-      '"' + telegramDeepLink.replace(/"/g, '\\"') + '",' +
-      '"' + telegramChatLink.replace(/"/g, '\\"') + '"' +
-    '];' +
-    'function _openTg(i){if(i>=_tgLinks.length)return;try{window.location.href=_tgLinks[i];}catch(e){}if(i<_tgLinks.length-1){setTimeout(function(){_openTg(i+1);},1500);}}' +
-    'setTimeout(function(){_openTg(0);},700);' +
+    // Один автоматический переход вместо каскада ссылок:
+    // множественные deep-link подряд создают "прыгающие" вкладки и ломают UX.
+    'setTimeout(function(){try{window.location.replace("' + telegramDeepLink.replace(/"/g, '\\"') + '");}catch(e){}},700);' +
     '</script></body></html>'
   );
 });
@@ -4998,16 +4993,65 @@ app.get("/api/my/pending-request", asyncApi(async (req, res) => {
   const initData = req.headers["x-telegram-init"] || req.query?.initData || "";
   const telegramUserId = validateInitData(initData, BOT_TOKEN);
   if (!telegramUserId) return res.status(401).json({ ok: false });
-  const { data } = await supabase
+  const { data: rows } = await supabase
     .from("track_requests")
-    .select("id,mode,created_at,generation_status,payment_status")
+    .select("id,mode,created_at,generation_status,payment_status,payment_provider,payment_order_id,payment_raw")
     .eq("telegram_user_id", Number(telegramUserId))
     .eq("generation_status", "pending_payment")
     .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (!data) return res.json({ ok: true, pending: false });
-  return res.json({ ok: true, pending: true, request_id: data.id, mode: data.mode, created_at: data.created_at });
+    .limit(5);
+  if (!rows || rows.length === 0) return res.json({ ok: true, pending: false });
+
+  // Самовосстановление: если pending_payment уже фактически оплачен — обновляем и не показываем баннер.
+  for (const row of rows) {
+    const paymentStatus = String(row.payment_status || "").toLowerCase();
+    if (paymentStatus === "paid") {
+      return res.json({
+        ok: true,
+        pending: false,
+        repaired: true,
+        repaired_request_id: row.id,
+      });
+    }
+    if (row.payment_order_id && String(row.payment_provider || "").toLowerCase() === "hot") {
+      const hotResult = await checkHotPaymentViaApi(row.payment_order_id, row.id);
+      if (hotResult?.paid) {
+        const marked = await markPaidFromHotApi(row, hotResult);
+        if (marked) {
+          const sku = resolveSkuFromRequestRow(row);
+          if (isSubscriptionSku(sku)) {
+            await grantPurchaseBySku({
+              telegramUserId: Number(telegramUserId),
+              sku,
+              source: "pending_request_start_repair",
+              orderId: row.payment_order_id || null,
+              requestId: row.id,
+            });
+            await supabase.from("track_requests").update({
+              subscription_activated_at: new Date().toISOString(),
+            }).eq("id", row.id);
+          }
+          return res.json({
+            ok: true,
+            pending: false,
+            repaired: true,
+            repaired_request_id: row.id,
+          });
+        }
+      }
+    }
+  }
+
+  const activePending = rows[0];
+  const pendingSku = resolveSkuFromRequestRow(activePending);
+  return res.json({
+    ok: true,
+    pending: true,
+    request_id: activePending.id,
+    mode: activePending.mode,
+    sku: pendingSku,
+    created_at: activePending.created_at,
+  });
 }));
 
 // Отменяет незавершённую заявку пользователя (нажал крестик на баннере)
@@ -5109,6 +5153,10 @@ app.get("/api/payments/hot/status", asyncApi(async (req, res) => {
   if (Number(data.telegram_user_id) !== Number(telegramUserId)) {
     return res.status(403).json({ success: false, error: "Нет доступа к этой заявке" });
   }
+  const paymentRawParsed = parseJsonSafe(data.payment_raw, {}) || {};
+  data.payment_raw = paymentRawParsed;
+  data.payment_sku = resolveSkuFromRequestRow(data);
+  data.is_subscription = isSubscriptionSku(data.payment_sku);
   // Если payment_status ещё не paid — проверяем через HOT Pay API (webhook мог не прийти)
   if (String(data.payment_status || "").toLowerCase() !== "paid" && data.payment_order_id) {
     const hotResult = await checkHotPaymentViaApi(data.payment_order_id, requestId);
@@ -5139,6 +5187,8 @@ app.get("/api/payments/hot/status", asyncApi(async (req, res) => {
       }
     }
   }
+  data.payment_sku = resolveSkuFromRequestRow(data);
+  data.is_subscription = isSubscriptionSku(data.payment_sku);
   return res.json({ success: true, data });
 }));
 
