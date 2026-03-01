@@ -1305,7 +1305,7 @@ ${extBlock ? "\n" + extBlock : ""}
     // Шаг 10: Сохранить поля песни в БД, но НЕ ставить completed — статус поставим после проверки доставки
     const updatePayload = {
       audio_url: audioUrl,
-      detailed_analysis: fullResponse,
+      detailed_analysis: parsed.detailed_analysis || fullResponse,
       lyrics: lyricsForSuno,
       title: parsed.title,
       language: request.language || 'ru',

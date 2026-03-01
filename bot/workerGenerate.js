@@ -392,6 +392,27 @@ async function processOneRequest(row) {
     if (parsed.companion_letter) {
       await sendMsg(parsed.companion_letter, "Markdown");
     }
+
+    // Кнопки расшифровки и текста песни
+    try {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: telegramUserId,
+          text: "Хочешь узнать больше о своей песне? Первая расшифровка — бесплатно.",
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "📜 Расшифровка запроса", callback_data: "get_analysis" }],
+              [{ text: "🎵 Текст песни", callback_data: "get_lyrics" }],
+              [{ text: "🔔 Песня не пришла?", callback_data: "song_not_arrived" }],
+            ],
+          },
+        })
+      });
+    } catch (e) {
+      console.warn("[Worker] Не удалось отправить кнопки расшифровки:", e?.message);
+    }
   }
 }
 
