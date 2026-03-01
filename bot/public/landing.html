@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08071a">
+  <title>YupSoul — Музыка твоей души</title>
+  <meta name="description" content="YupSoul создаёт персональную песню на основе даты, времени и места рождения. Звуковой ключ — песня о твоих реальных качествах, пути и силе.">
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #08071a;
+      --surface: rgba(12,10,30,0.92);
+      --border: rgba(255,255,255,0.08);
+      --text: #fff;
+      --text-muted: rgba(255,255,255,0.55);
+      --text-dim: rgba(255,255,255,0.35);
+      --accent: #fff;
+      --accent-rgb: 255,255,255;
+      --green: #10b981;
+      --radius: 16px;
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      font-family:'Comfortaa',system-ui,sans-serif;
+      background:linear-gradient(165deg,#0d0b1e 0%,#160a2e 45%,#0d1830 100%);
+      color:var(--text);
+      line-height:1.7;
+      min-height:100vh;
+      -webkit-font-smoothing:antialiased;
+    }
+    a { color:var(--accent); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+
+    .container {
+      max-width:720px;
+      margin:0 auto;
+      padding:0 20px;
+    }
+
+    /* Hero */
+    .hero {
+      text-align:center;
+      padding:80px 20px 48px;
+    }
+    .hero-logo {
+      font-size:2.4rem;
+      font-weight:700;
+      background:linear-gradient(135deg,#fff,rgba(255,255,255,0.7));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+      margin-bottom:8px;
+    }
+    .hero-tagline {
+      font-size:0.72rem;
+      font-weight:400;
+      letter-spacing:0.16em;
+      color:rgba(255,255,255,0.35);
+      text-transform:uppercase;
+      margin-bottom:20px;
+    }
+    .hero-desc {
+      font-size:1.05rem;
+      color:rgba(255,255,255,0.7);
+      max-width:520px;
+      margin:0 auto 28px;
+      line-height:1.8;
+    }
+    .hero-cta {
+      display:inline-block;
+      padding:14px 36px;
+      border-radius:14px;
+      background:linear-gradient(135deg,#fff,rgba(255,255,255,0.8));
+      color:#0a0a1a;
+      font-weight:700;
+      font-size:1rem;
+      font-family:inherit;
+      box-shadow:0 6px 24px rgba(255,255,255,0.15);
+      transition:transform .2s,box-shadow .2s;
+      text-decoration:none;
+    }
+    .hero-cta:hover {
+      transform:translateY(-2px);
+      box-shadow:0 10px 32px rgba(255,255,255,0.2);
+      text-decoration:none;
+    }
+
+    /* Sections */
+    section { padding:48px 0; }
+    .section-title {
+      font-size:1.3rem;
+      font-weight:700;
+      margin-bottom:20px;
+      color:#fff;
+    }
+    .card {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:24px;
+      margin-bottom:16px;
+      box-shadow:0 4px 20px rgba(0,0,0,0.2);
+    }
+
+    /* Products */
+    .products-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+      gap:16px;
+    }
+    .product-card {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:24px;
+      display:flex;
+      flex-direction:column;
+    }
+    .product-name {
+      font-size:1rem;
+      font-weight:700;
+      margin-bottom:6px;
+    }
+    .product-desc {
+      font-size:0.85rem;
+      color:var(--text-muted);
+      flex:1;
+      margin-bottom:12px;
+      line-height:1.6;
+    }
+    .product-price {
+      font-size:1.15rem;
+      font-weight:700;
+      color:var(--accent);
+    }
+
+    /* Payment logos */
+    .payment-logos {
+      display:flex;
+      align-items:center;
+      gap:20px;
+      flex-wrap:wrap;
+      margin-top:16px;
+    }
+    .payment-logo {
+      height:28px;
+      opacity:0.7;
+      filter:grayscale(0.3);
+    }
+
+    /* Legal */
+    .legal-section { padding:32px 0; }
+    .legal-section .section-title { font-size:1.1rem; }
+    .legal-text {
+      font-size:0.85rem;
+      color:var(--text-muted);
+      line-height:1.8;
+    }
+    .legal-text p { margin-bottom:12px; }
+    .legal-text ul { padding-left:20px; margin-bottom:12px; }
+    .legal-text li { margin-bottom:6px; }
+    .legal-text h3 {
+      font-size:0.92rem;
+      color:rgba(255,255,255,0.8);
+      margin:20px 0 8px;
+      font-weight:600;
+    }
+
+    /* Nav */
+    .site-nav {
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px 16px;
+      justify-content:center;
+      padding:20px;
+      font-size:0.82rem;
+    }
+    .site-nav a { color:var(--text-muted); }
+    .site-nav a:hover { color:#fff; }
+
+    /* Footer */
+    footer {
+      border-top:1px solid var(--border);
+      padding:32px 20px;
+      text-align:center;
+      font-size:0.78rem;
+      color:var(--text-dim);
+    }
+    footer a { color:var(--text-muted); }
+
+    /* Subscription cancel */
+    .cancel-box {
+      background:rgba(239,68,68,0.08);
+      border:1px solid rgba(239,68,68,0.2);
+      border-radius:var(--radius);
+      padding:20px;
+      margin-top:16px;
+    }
+    .cancel-box p { color:rgba(255,255,255,0.7); font-size:0.88rem; line-height:1.7; }
+
+    @media (max-width:480px) {
+      .hero { padding:56px 16px 36px; }
+      .hero-logo { font-size:1.9rem; }
+      .hero-desc { font-size:0.95rem; }
+      .products-grid { grid-template-columns:1fr; }
+      section { padding:36px 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Навигация -->
+  <nav class="site-nav">
+    <a href="#products">Услуги</a>
+    <a href="#payments">Оплата</a>
+    <a href="#offer">Оферта</a>
+    <a href="#privacy">Конфиденциальность</a>
+    <a href="#subscription">Подписка</a>
+    <a href="#contacts">Контакты</a>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-logo">YupSoul</div>
+    <div class="hero-tagline">Музыка твоей души</div>
+    <p class="hero-desc">
+      Персональная песня на основе даты, времени и места рождения.
+      Система анализирует твою личность и создаёт звуковой ключ —
+      песню о твоих реальных качествах, пути и силе.
+    </p>
+    <a href="https://t.me/YupSoulBot" class="hero-cta">Открыть в Telegram</a>
+  </div>
+
+  <div class="container">
+
+    <!-- Описание услуг -->
+    <section id="products">
+      <div class="section-title">Услуги и цены</div>
+      <div class="products-grid">
+        <div class="product-card">
+          <div class="product-name">Звуковой ключ</div>
+          <div class="product-desc">Полный разбор светового узора души + персональная песня. Один человек.</div>
+          <div class="product-price">490 ₽ / 5.99 USDT</div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">Совместимость</div>
+          <div class="product-desc">Узор соединения двух людей. Анализ двух карт + песня для двоих.</div>
+          <div class="product-price">890 ₽ / 8.99 USDT</div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">Вопрос узору</div>
+          <div class="product-desc">Один вопрос — развёрнутый ответ на основе твоего светового узора.</div>
+          <div class="product-price">290 ₽ / 3.99 USDT</div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">YupSoul Basic</div>
+          <div class="product-desc">Подписка. Доступ к расширенным функциям, Soul Chat и генерациям.</div>
+          <div class="product-price">14.99 USDT / мес</div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">YupSoul Plus</div>
+          <div class="product-desc">Премиум-подписка. Безлимитные разборы, вопросы и приоритетная генерация.</div>
+          <div class="product-price">24.99 USDT / мес</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Способы оплаты -->
+    <section id="payments">
+      <div class="section-title">Способы оплаты</div>
+      <div class="card">
+        <p style="color:rgba(255,255,255,0.7);font-size:0.9rem;line-height:1.7;margin-bottom:12px;">
+          Оплата принимается следующими способами:
+        </p>
+        <ul style="color:rgba(255,255,255,0.7);font-size:0.9rem;line-height:1.8;padding-left:20px;">
+          <li><strong>Банковские карты</strong> — Visa, Mastercard, МИР (через T-Bank Acquiring)</li>
+          <li><strong>Telegram Stars</strong> — встроенная валюта Telegram</li>
+          <li><strong>Криптовалюта</strong> — USDT через HOT Pay</li>
+        </ul>
+        <p style="color:rgba(255,255,255,0.45);font-size:0.82rem;margin-top:12px;">
+          Приём платежей по банковским картам осуществляется через защищённый платёжный шлюз
+          <a href="https://www.tbank.ru" target="_blank" rel="noopener">Т-Банк (Tinkoff)</a>.
+          Данные карт обрабатываются на стороне банка и не хранятся на наших серверах.
+        </p>
+        <div class="payment-logos">
+          <svg width="60" height="28" viewBox="0 0 60 28" fill="none"><rect width="60" height="28" rx="4" fill="#1A1F71"/><text x="30" y="18" text-anchor="middle" fill="#fff" font-size="11" font-weight="700" font-family="sans-serif">VISA</text></svg>
+          <svg width="60" height="28" viewBox="0 0 60 28" fill="none"><rect width="60" height="28" rx="4" fill="#1a1a1a"/><circle cx="24" cy="14" r="9" fill="#EB001B"/><circle cx="36" cy="14" r="9" fill="#F79E1B"/><path d="M30 7.5a9 9 0 010 13 9 9 0 010-13z" fill="#FF5F00"/></svg>
+          <svg width="60" height="28" viewBox="0 0 60 28" fill="none"><rect width="60" height="28" rx="4" fill="#4DB45E"/><text x="30" y="18" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="sans-serif">МИР</text></svg>
+          <svg width="60" height="28" viewBox="0 0 60 28" fill="none"><rect width="60" height="28" rx="4" fill="#FFDD2D"/><text x="30" y="18" text-anchor="middle" fill="#333" font-size="8" font-weight="700" font-family="sans-serif">T-Bank</text></svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Оферта -->
+    <section id="offer" class="legal-section">
+      <div class="section-title">Публичная оферта</div>
+      <div class="card legal-text">
+        <p><strong>Дата публикации:</strong> 1 марта 2026 г.</p>
+
+        <h3>1. Общие положения</h3>
+        <p>Настоящий документ является публичной офертой (далее — Оферта) и определяет условия предоставления услуг
+        сервиса YupSoul (далее — Сервис) любому физическому лицу (далее — Пользователь), принявшему условия настоящей Оферты.</p>
+        <p>Акцептом Оферты является совершение оплаты любой из услуг Сервиса. С момента акцепта Оферта считается заключённым договором.</p>
+
+        <h3>2. Предмет оферты</h3>
+        <p>Исполнитель обязуется оказать Пользователю услуги по генерации персонального аудиоконтента (звукового ключа)
+        на основе предоставленных Пользователем данных (дата, время и место рождения, текстовый запрос),
+        а Пользователь обязуется оплатить указанные услуги в порядке и на условиях, определённых настоящей Офертой.</p>
+
+        <h3>3. Описание услуг</h3>
+        <ul>
+          <li><strong>Звуковой ключ</strong> — генерация персональной песни на основе анализа данных рождения одного человека.</li>
+          <li><strong>Совместимость</strong> — анализ данных двух людей и генерация совместной песни.</li>
+          <li><strong>Вопрос узору</strong> — развёрнутый текстовый ответ на вопрос Пользователя.</li>
+          <li><strong>Подписка (Basic / Plus)</strong> — ежемесячный доступ к расширенным функциям Сервиса.</li>
+        </ul>
+
+        <h3>4. Стоимость и порядок оплаты</h3>
+        <p>Актуальные цены указаны в разделе «Услуги и цены» настоящей страницы и в интерфейсе приложения.
+        Цена включает все применимые налоги и сборы. Оплата производится одним из доступных способов:
+        банковская карта (Visa, Mastercard, МИР), Telegram Stars, криптовалюта USDT.</p>
+
+        <h3>5. Подписка и рекуррентные платежи</h3>
+        <p>При оформлении подписки Пользователь даёт согласие на автоматическое ежемесячное списание средств
+        с привязанной банковской карты. Сумма списания соответствует стоимости выбранного тарифа на момент списания.</p>
+        <p>Валюта транзакции: российский рубль (₽) при оплате картой, USDT при оплате криптовалютой.</p>
+        <p>Пользователь может отменить подписку в любой момент через интерфейс приложения (раздел «Профиль»)
+        или написав в поддержку. Отмена вступает в силу по окончании текущего оплаченного периода.</p>
+
+        <h3>6. Возврат средств</h3>
+        <p>Возврат средств за разовые услуги возможен в течение 14 дней с момента оплаты, если генерация ещё не была запущена.
+        Если генерация уже выполнена и результат доставлен — возврат не производится, так как услуга считается оказанной в полном объёме.</p>
+        <p>Возврат средств за подписку: неиспользованная часть оплаченного периода возвращается пропорционально оставшимся дням.</p>
+        <p>Для оформления возврата обратитесь в поддержку: <a href="mailto:support@yupsoul.com">support@yupsoul.com</a>.</p>
+
+        <h3>7. Гарантии и ограничения</h3>
+        <p>Сервис предоставляет развлекательный контент. Результаты генерации не являются медицинскими, психологическими
+        или финансовыми рекомендациями. Исполнитель не несёт ответственности за решения, принятые Пользователем
+        на основе полученного контента.</p>
+
+        <h3>8. Срок действия</h3>
+        <p>Оферта действует с момента публикации и до её отзыва Исполнителем. Исполнитель вправе изменить условия Оферты,
+        уведомив Пользователей путём публикации новой редакции на данной странице.</p>
+      </div>
+    </section>
+
+    <!-- Политика конфиденциальности -->
+    <section id="privacy" class="legal-section">
+      <div class="section-title">Политика конфиденциальности</div>
+      <div class="card legal-text">
+        <p><strong>Дата публикации:</strong> 1 марта 2026 г.</p>
+
+        <h3>1. Какие данные мы собираем</h3>
+        <ul>
+          <li>Данные Telegram-аккаунта (user ID, имя, фото — передаются через Telegram Mini App API)</li>
+          <li>Данные рождения (дата, время, место) — предоставляются Пользователем добровольно для генерации контента</li>
+          <li>Платёжные данные — обрабатываются на стороне платёжного провайдера (Т-Банк), не хранятся на наших серверах</li>
+          <li>Техническая информация (IP-адрес, user-agent) — для обеспечения работоспособности сервиса</li>
+        </ul>
+
+        <h3>2. Цели обработки</h3>
+        <ul>
+          <li>Предоставление услуг Сервиса (генерация контента)</li>
+          <li>Обработка платежей и управление подписками</li>
+          <li>Техническая поддержка и коммуникация с Пользователем</li>
+          <li>Улучшение качества Сервиса</li>
+        </ul>
+
+        <h3>3. Хранение и защита</h3>
+        <p>Персональные данные хранятся на защищённых серверах (Supabase, Render).
+        Мы применяем технические и организационные меры для защиты данных от несанкционированного доступа.</p>
+        <p>Данные банковских карт обрабатываются исключительно на стороне Т-Банка в соответствии со стандартом PCI DSS.
+        Мы не имеем доступа к полным реквизитам карт.</p>
+
+        <h3>4. Передача третьим лицам</h3>
+        <p>Мы не продаём и не передаём персональные данные третьим лицам, за исключением случаев:</p>
+        <ul>
+          <li>Передача платёжному провайдеру для обработки транзакций</li>
+          <li>Требования законодательства РФ</li>
+        </ul>
+
+        <h3>5. Права пользователя</h3>
+        <p>Пользователь вправе запросить удаление своих персональных данных, обратившись в поддержку:
+        <a href="mailto:support@yupsoul.com">support@yupsoul.com</a>.</p>
+
+        <h3>6. Согласие</h3>
+        <p>Используя Сервис и совершая оплату, Пользователь даёт согласие на обработку персональных данных
+        в соответствии с настоящей Политикой конфиденциальности и Федеральным законом №152-ФЗ «О персональных данных».</p>
+      </div>
+    </section>
+
+    <!-- Соглашение о подписке -->
+    <section id="subscription" class="legal-section">
+      <div class="section-title">Соглашение о подписке</div>
+      <div class="card legal-text">
+        <p><strong>Дата публикации:</strong> 1 марта 2026 г.</p>
+        <p>Настоящее Соглашение регулирует условия подписки на услуги YupSoul отдельно от Публичной оферты.</p>
+
+        <h3>1. Условия подписки</h3>
+        <ul>
+          <li><strong>YupSoul Basic</strong> — 14.99 USDT / месяц (эквивалент ~1 490 ₽)</li>
+          <li><strong>YupSoul Plus</strong> — 24.99 USDT / месяц (эквивалент ~2 490 ₽)</li>
+        </ul>
+        <p>Точная сумма списания в рублях определяется по курсу на момент транзакции.
+        При оплате банковской картой сумма фиксируется в рублях согласно актуальному тарифу.</p>
+
+        <h3>2. Валюта</h3>
+        <p>Транзакции по банковским картам проводятся в российских рублях (₽).
+        Транзакции через HOT Pay проводятся в USDT.</p>
+
+        <h3>3. Периодичность списаний</h3>
+        <p>Списание производится автоматически каждые 30 дней с даты первой оплаты подписки.
+        Уведомление об успешном списании направляется через Telegram-бота.</p>
+
+        <h3>4. Отмена подписки</h3>
+        <p>Пользователь может отменить подписку в любой момент:</p>
+        <ul>
+          <li>В приложении: Профиль → Управление подпиской → Отменить</li>
+          <li>Написав в поддержку: <a href="mailto:support@yupsoul.com">support@yupsoul.com</a></li>
+          <li>Через Telegram-бота: команда /cancel_subscription</li>
+        </ul>
+        <p>После отмены подписка остаётся активной до конца оплаченного периода.
+        Новые списания не производятся.</p>
+
+        <h3>5. Возврат</h3>
+        <p>Возврат неиспользованной части подписки производится пропорционально оставшимся дням.
+        Для оформления возврата обратитесь в поддержку.</p>
+      </div>
+
+      <div class="cancel-box">
+        <p><strong>Отмена подписки:</strong> вы можете отменить подписку в любой момент через приложение
+        (Профиль → Управление подпиской) или написав на <a href="mailto:support@yupsoul.com">support@yupsoul.com</a>.
+        Списания прекратятся со следующего периода.</p>
+      </div>
+    </section>
+
+    <!-- Реквизиты и контакты -->
+    <section id="contacts" class="legal-section">
+      <div class="section-title">Реквизиты и контакты</div>
+      <div class="card legal-text">
+        <h3>Исполнитель</h3>
+        <p>
+          ИП Сибирский Ярослав Олегович<br>
+          ИНН: <em>[укажите ИНН]</em><br>
+          ОГРНИП: <em>[укажите ОГРНИП]</em>
+        </p>
+
+        <h3>Адрес</h3>
+        <p><em>[укажите фактический или юридический адрес]</em></p>
+
+        <h3>Контакты</h3>
+        <p>
+          Email: <a href="mailto:support@yupsoul.com">support@yupsoul.com</a><br>
+          Telegram: <a href="https://t.me/YupSoulBot" target="_blank" rel="noopener">@YupSoulBot</a><br>
+          Телефон: <em>[укажите номер телефона]</em>
+        </p>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p style="margin-bottom:8px;">
+        <a href="#offer">Оферта</a> · <a href="#privacy">Конфиденциальность</a> · <a href="#subscription">Подписка</a> · <a href="#contacts">Контакты</a>
+      </p>
+      <p>© 2026 YupSoul. Все права защищены.</p>
+      <p style="margin-top:8px;">Приём платежей осуществляется через Т-Банк (АО «Тинькофф Банк»). Лицензия ЦБ РФ.</p>
+    </div>
+  </footer>
+
+</body>
+</html>

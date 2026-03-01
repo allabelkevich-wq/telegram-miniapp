@@ -75,6 +75,23 @@ const SUPPORT_TG_USERNAME = (process.env.SUPPORT_TG_USERNAME || "yupsoul").trim(
 const HOT_WEBHOOK_SECRET = process.env.HOT_WEBHOOK_SECRET || "";
 const HOT_PAYMENT_URL = (process.env.HOT_PAYMENT_URL || "https://pay.hot-labs.org/payment").trim();
 
+// ── T-Bank (Tinkoff) Acquiring ──────────────────────────────────────────────
+const TBANK_TERMINAL_KEY = (process.env.TBANK_TERMINAL_KEY || "").trim();
+const TBANK_PASSWORD = (process.env.TBANK_PASSWORD || "").trim();
+const TBANK_API_URL = (process.env.TBANK_API_URL || "https://securepay.tinkoff.ru/v2").trim().replace(/\/$/, "");
+const TBANK_SUCCESS_URL = (process.env.TBANK_SUCCESS_URL || "").trim();
+const TBANK_FAIL_URL = (process.env.TBANK_FAIL_URL || "").trim();
+const _tbankNotifyBase = (process.env.RENDER_EXTERNAL_URL || process.env.BACKEND_URL || MINI_APP_BASE || "").replace(/\/$/, "").replace(/\/app\/?$/, "");
+const TBANK_NOTIFICATION_URL = (process.env.TBANK_NOTIFICATION_URL || (_tbankNotifyBase + "/api/payments/tbank/notification")).trim();
+
+if (TBANK_TERMINAL_KEY) {
+  console.log("[T-Bank] TerminalKey:", TBANK_TERMINAL_KEY.slice(0, 6) + "…");
+  console.log("[T-Bank] API:", TBANK_API_URL);
+  console.log("[T-Bank] NotificationURL:", TBANK_NOTIFICATION_URL);
+} else {
+  console.log("[T-Bank] Не настроен (TBANK_TERMINAL_KEY не задан). Оплата картой недоступна.");
+}
+
 if (!BOT_TOKEN) {
   console.error("Укажи BOT_TOKEN в .env (получить у @BotFather)");
   process.exit(1);
@@ -924,6 +941,142 @@ async function grantPurchaseBySku({ telegramUserId, sku, source = "hot_payment",
     return activateSoulChatDay(telegramUserId, orderId);
   }
   return grantEntitlement({ telegramUserId, sku: normalizedSku, uses: 1, source });
+}
+
+// ── T-Bank Acquiring: утилиты ───────────────────────────────────────────────
+
+function tbankGenerateToken(params) {
+  const flat = { ...params, Password: TBANK_PASSWORD };
+  delete flat.Token;
+  delete flat.Receipt;
+  delete flat.DATA;
+  delete flat.Shops;
+  const sorted = Object.keys(flat).sort();
+  const concatenated = sorted.map(k => String(flat[k] ?? "")).join("");
+  return crypto.createHash("sha256").update(concatenated, "utf8").digest("hex");
+}
+
+function tbankVerifyToken(params) {
+  const received = params.Token;
+  if (!received) return false;
+  const expected = tbankGenerateToken(params);
+  try {
+    return crypto.timingSafeEqual(Buffer.from(received.toLowerCase()), Buffer.from(expected.toLowerCase()));
+  } catch (_) {
+    return received.toLowerCase() === expected.toLowerCase();
+  }
+}
+
+async function tbankApiCall(method, params) {
+  const body = { ...params, TerminalKey: TBANK_TERMINAL_KEY };
+  body.Token = tbankGenerateToken(body);
+  const url = `${TBANK_API_URL}/${method}`;
+  console.log(`[T-Bank] → ${method}`, { OrderId: body.OrderId, Amount: body.Amount, CustomerKey: body.CustomerKey });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+  try {
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => "");
+      console.error(`[T-Bank] ← ${method} HTTP ${resp.status}:`, text.slice(0, 300));
+      return { Success: false, ErrorCode: String(resp.status), Message: `HTTP ${resp.status}`, Details: text.slice(0, 200) };
+    }
+    const data = await resp.json();
+    console.log(`[T-Bank] ← ${method}`, { Success: data.Success, ErrorCode: data.ErrorCode, Status: data.Status, PaymentId: data.PaymentId });
+    return data;
+  } catch (e) {
+    clearTimeout(timeout);
+    console.error(`[T-Bank] ← ${method} ERROR:`, e?.message || e);
+    return { Success: false, ErrorCode: "NETWORK", Message: e?.message || "Network error" };
+  }
+}
+
+async function tbankAddCustomer(customerKey, email, phone) {
+  const params = { CustomerKey: String(customerKey) };
+  if (email) params.Email = email;
+  if (phone) params.Phone = phone;
+  return tbankApiCall("AddCustomer", params);
+}
+
+async function tbankInit({ orderId, amount, customerKey, description, recurrent = false, operationInitiatorType, successUrl, failUrl }) {
+  const params = {
+    Amount: Math.round(amount * 100),
+    OrderId: String(orderId),
+    Description: String(description || "YupSoul").slice(0, 140),
+    PayType: "O",
+    Language: "ru",
+    NotificationURL: TBANK_NOTIFICATION_URL,
+    SuccessURL: successUrl || TBANK_SUCCESS_URL || (MINI_APP_BASE + "/app?page=paymentThanks&provider=tbank"),
+    FailURL: failUrl || TBANK_FAIL_URL || (MINI_APP_BASE + "/app?page=formPage&payment_failed=1"),
+  };
+  if (customerKey) params.CustomerKey = String(customerKey);
+  if (recurrent) params.Recurrent = "Y";
+  if (operationInitiatorType) params.OperationInitiatorType = String(operationInitiatorType);
+  return tbankApiCall("Init", params);
+}
+
+async function tbankCharge({ paymentId, rebillId, sendEmail, infoEmail, ip }) {
+  const params = { PaymentId: String(paymentId), RebillId: String(rebillId) };
+  if (sendEmail) params.SendEmail = true;
+  if (infoEmail) params.InfoEmail = infoEmail;
+  if (ip) params.IP = ip;
+  return tbankApiCall("Charge", params);
+}
+
+async function tbankGetState(paymentId) {
+  return tbankApiCall("GetState", { PaymentId: String(paymentId) });
+}
+
+async function tbankCancel(paymentId, amount) {
+  const params = { PaymentId: String(paymentId) };
+  if (amount) params.Amount = Math.round(amount * 100);
+  return tbankApiCall("Cancel", params);
+}
+
+async function tbankRemoveCustomer(customerKey) {
+  return tbankApiCall("RemoveCustomer", { CustomerKey: String(customerKey) });
+}
+
+async function tbankGetCardList(customerKey) {
+  return tbankApiCall("GetCardList", { CustomerKey: String(customerKey) });
+}
+
+const TBANK_PAID_STATUSES = ["AUTHORIZED", "CONFIRMED"];
+function isTbankPaid(status) {
+  return TBANK_PAID_STATUSES.includes(String(status || "").toUpperCase());
+}
+
+// ── T-Bank: сохранение RebillId для рекуррентных платежей ───────────────────
+
+async function tbankSaveRebillId(telegramUserId, rebillId, cardInfo) {
+  if (!supabase || !rebillId) return;
+  const { error } = await supabase.from("tbank_cards").upsert({
+    telegram_user_id: Number(telegramUserId),
+    rebill_id: String(rebillId),
+    card_pan: cardInfo?.Pan || null,
+    card_exp: cardInfo?.ExpDate || null,
+    card_id: cardInfo?.CardId || null,
+    active: true,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: "telegram_user_id" });
+  if (error) console.warn("[T-Bank] Ошибка сохранения RebillId:", error.message);
+  else console.log(`[T-Bank] RebillId сохранён для user ${telegramUserId}`);
+}
+
+async function tbankGetRebillId(telegramUserId) {
+  if (!supabase) return null;
+  const { data } = await supabase.from("tbank_cards")
+    .select("rebill_id")
+    .eq("telegram_user_id", Number(telegramUserId))
+    .eq("active", true)
+    .maybeSingle();
+  return data?.rebill_id || null;
 }
 
 function isAdmin(telegramId) {
@@ -1960,7 +2113,7 @@ bot.on("message:web_app_data", async (ctx) => {
 
   let requestId;
   try {
-    requestId = await saveRequest({
+    const webAppSaveData = {
     telegram_user_id: telegramUserId,
     name: name || "",
     birthdate: birthdate || "",
@@ -1971,7 +2124,12 @@ bot.on("message:web_app_data", async (ctx) => {
     language: language || null,
     request: userRequest || "",
     client_id: clientId || null,
-  });
+  };
+    if (birthplaceLat != null && birthplaceLon != null) {
+      webAppSaveData.birthplaceLat = birthplaceLat;
+      webAppSaveData.birthplaceLon = birthplaceLon;
+    }
+    requestId = await saveRequest(webAppSaveData);
   } catch (err) {
     console.error("[Заявка] Ошибка saveRequest:", err?.message || err, err?.stack);
     await ctx.reply(bMsg(ctx, 'requestError'));
@@ -3727,6 +3885,16 @@ function serveMiniApp(req, res) {
   });
 }
 app.get(["/", "/app", "/app/"], serveMiniApp);
+app.get(["/landing", "/landing/"], (req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=3600");
+  const landingPath = path.join(publicDir, "landing.html");
+  res.sendFile(landingPath, (err) => {
+    if (err) {
+      console.error("[landing] sendFile error:", err.message);
+      res.status(404).send("Страница не найдена");
+    }
+  });
+});
 app.use("/", express.static(publicDir, { index: false }));
 app.use("/app", express.static(publicDir, { index: false }));
 // Обработчик /api/me (чтобы не было 500 ошибки)
@@ -5429,6 +5597,339 @@ app.post("/api/payments/hot/confirm", express.json(), asyncApi(async (req, res) 
   }).catch((err) => console.error("[payments/hot/confirm] import worker:", err?.message || err));
   return res.json({ success: true, started: true, status: "pending" });
 }));
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ── T-Bank (Tinkoff) Acquiring: эндпоинты ──────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// 1. Инициализация платежа (разовый или родительский для подписки)
+app.post("/api/payments/tbank/init", express.json(), asyncApi(async (req, res) => {
+  if (!TBANK_TERMINAL_KEY) return res.status(503).json({ success: false, error: "T-Bank не настроен" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+
+  const initData = req.headers["x-telegram-init"] || req.body?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, error: "Unauthorized" });
+
+  const { sku, request_id, amount_rub } = req.body || {};
+  const skuNorm = String(sku || "single_song").trim();
+  const isSubscription = ["soul_basic_sub", "soul_plus_sub", "master_monthly"].includes(skuNorm);
+
+  // Определяем сумму
+  let amountRub = Number(amount_rub) || 0;
+  if (!amountRub) {
+    const priceMap = { single_song: 490, couple_song: 890, deep_analysis_addon: 290, soul_basic_sub: 1490, soul_plus_sub: 2490, master_monthly: 3990 };
+    amountRub = priceMap[skuNorm] || 490;
+  }
+
+  const orderId = `tbank_${telegramUserId}_${Date.now()}`;
+
+  // Для подписок — регистрируем клиента и делаем рекуррентный Init
+  if (isSubscription) {
+    await tbankAddCustomer(String(telegramUserId));
+  }
+
+  const initResult = await tbankInit({
+    orderId,
+    amount: amountRub,
+    customerKey: isSubscription ? String(telegramUserId) : undefined,
+    description: isSubscription ? `Подписка YupSoul (${skuNorm})` : "YupSoul — Звуковой ключ",
+    recurrent: isSubscription,
+    operationInitiatorType: isSubscription ? "0" : undefined,
+  });
+
+  if (!initResult.Success || initResult.ErrorCode !== "0") {
+    console.error("[T-Bank] Init failed:", initResult);
+    return res.status(400).json({ success: false, error: initResult.Message || initResult.Details || "payment_init_failed", errorCode: initResult.ErrorCode });
+  }
+
+  // Сохраняем в track_requests
+  if (request_id) {
+    const { error: upErr } = await supabase.from("track_requests").update({
+      payment_provider: "tbank",
+      payment_order_id: orderId,
+      tbank_payment_id: String(initResult.PaymentId),
+      status: "pending_payment",
+      updated_at: new Date().toISOString(),
+    }).eq("id", request_id).eq("telegram_user_id", Number(telegramUserId));
+    if (upErr) console.warn("[T-Bank] update track_requests:", upErr.message);
+  } else if (isSubscription) {
+    const { error: insErr } = await supabase.from("track_requests").insert({
+      telegram_user_id: Number(telegramUserId),
+      mode: skuNorm,
+      status: "pending_payment",
+      payment_provider: "tbank",
+      payment_order_id: orderId,
+      tbank_payment_id: String(initResult.PaymentId),
+      created_at: new Date().toISOString(),
+    });
+    if (insErr) console.warn("[T-Bank] insert track_requests:", insErr.message);
+  }
+
+  console.log(`[T-Bank] Init OK: orderId=${orderId}, paymentId=${initResult.PaymentId}, amount=${amountRub}₽, sku=${skuNorm}, user=${telegramUserId}`);
+  return res.json({
+    success: true,
+    payment_url: initResult.PaymentURL,
+    payment_id: String(initResult.PaymentId),
+    order_id: orderId,
+    amount: amountRub,
+  });
+}));
+
+// 2. Notification (callback) от T-Bank
+app.post("/api/payments/tbank/notification", express.json(), async (req, res) => {
+  try {
+    const body = req.body || {};
+    console.log("[T-Bank notification]", JSON.stringify({
+      OrderId: body.OrderId, Status: body.Status, Success: body.Success,
+      PaymentId: body.PaymentId, ErrorCode: body.ErrorCode, Amount: body.Amount,
+      RebillId: body.RebillId, CardId: body.CardId, Pan: body.Pan,
+    }));
+
+    // Верификация токена
+    if (!tbankVerifyToken(body)) {
+      console.error("[T-Bank notification] Неверный Token! Возможна подделка. Отклоняем.");
+      return res.status(403).send("INVALID TOKEN");
+    }
+
+    const { OrderId, Status, PaymentId, Amount, RebillId, CardId, Pan, ExpDate, ErrorCode } = body;
+    const isPaid = isTbankPaid(Status);
+
+    // Сохраняем RebillId для рекуррентных платежей (только при успешных статусах)
+    if (RebillId && OrderId && isPaid) {
+      const match = String(OrderId).match(/^tbank_(?:recur_)?(\d+)_/);
+      if (match) {
+        await tbankSaveRebillId(match[1], RebillId, { Pan, ExpDate, CardId });
+      }
+    }
+
+    if (!isPaid) {
+      console.log(`[T-Bank notification] Статус ${Status} — не финальный, ждём.`);
+      if (Status === "REJECTED" || Status === "REVERSED" || Status === "REFUNDED") {
+        // Обновляем статус заявки
+        if (supabase && OrderId) {
+          await supabase.from("track_requests").update({
+            status: Status === "REJECTED" ? "payment_failed" : "refunded",
+            updated_at: new Date().toISOString(),
+          }).eq("payment_order_id", String(OrderId));
+        }
+      }
+      return res.status(200).send("OK");
+    }
+
+    // Платёж успешен — активируем
+    if (!supabase) return res.status(200).send("OK");
+
+    const { data: reqRow } = await supabase.from("track_requests")
+      .select("*")
+      .eq("payment_order_id", String(OrderId))
+      .maybeSingle();
+
+    if (!reqRow) {
+      console.warn(`[T-Bank notification] Заявка не найдена: OrderId=${OrderId}`);
+      return res.status(200).send("OK");
+    }
+
+    // Идемпотентность: если уже paid — не обрабатываем повторно
+    if (reqRow.status === "paid") {
+      console.log(`[T-Bank notification] Заявка уже paid: OrderId=${OrderId}, пропускаем`);
+      return res.status(200).send("OK");
+    }
+
+    const telegramUserId = reqRow.telegram_user_id;
+    const sku = reqRow.mode || reqRow.sku || "single_song";
+    const amountRub = Amount ? (Amount / 100) : null;
+
+    // Обновляем запись
+    const updatePayload = {
+      status: "paid",
+      payment_provider: "tbank",
+      tbank_payment_id: String(PaymentId),
+      paid_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    if (amountRub) updatePayload.payment_amount = amountRub;
+    updatePayload.payment_currency = "RUB";
+
+    const { error: upErr } = await supabase.from("track_requests").update(updatePayload).eq("id", reqRow.id);
+    if (upErr) console.warn("[T-Bank notification] update error:", upErr.message);
+
+    // Активируем подписку/entitlement
+    const grantResult = await grantPurchaseBySku({ telegramUserId, sku, source: "tbank_payment", orderId: OrderId, requestId: reqRow.id });
+    if (grantResult?.ok) {
+      console.log(`[T-Bank notification] Активировано: sku=${sku}, user=${telegramUserId}`);
+    } else {
+      console.error(`[T-Bank notification] Ошибка активации: sku=${sku}, user=${telegramUserId}, error=${grantResult?.error}`);
+      await logSubscriptionActivationError({
+        telegramUserId, requestId: reqRow.id, paymentOrderId: OrderId,
+        planSku: sku, errorMessage: grantResult?.error || "tbank_activation_failed",
+        errorSource: "tbank_notification", paymentProvider: "tbank",
+      });
+    }
+
+    // Для разовых заявок — запускаем генерацию
+    const isSubscription = ["soul_basic_sub", "soul_plus_sub", "master_monthly"].includes(sku);
+    if (!isSubscription && reqRow.id) {
+      const gs = String(reqRow.generation_status || "pending");
+      if (!["completed", "processing", "lyrics_generated", "suno_processing", "astro_calculated"].includes(gs)) {
+        import("./workerSoundKey.js").then(({ generateSoundKey }) => {
+          generateSoundKey(reqRow.id).catch(e => console.error("[T-Bank] generate:", e?.message || e));
+        }).catch(e => console.error("[T-Bank] import worker:", e?.message || e));
+      }
+    }
+
+    // Уведомляем пользователя через бота
+    try {
+      const msg = isSubscription
+        ? `✅ Подписка ${sku} активирована! Оплата ${amountRub ? amountRub + "₽" : ""} получена.`
+        : `✅ Оплата ${amountRub ? amountRub + "₽" : ""} получена! Генерация запущена.`;
+      await bot.api.sendMessage(Number(telegramUserId), msg);
+    } catch (e) {
+      console.warn("[T-Bank notification] Не удалось уведомить пользователя:", e?.message);
+    }
+
+    return res.status(200).send("OK");
+  } catch (err) {
+    console.error("[T-Bank notification] Ошибка:", err?.message || err);
+    return res.status(200).send("OK");
+  }
+});
+
+// 3. Проверка статуса платежа T-Bank
+app.get("/api/payments/tbank/status", asyncApi(async (req, res) => {
+  if (!TBANK_TERMINAL_KEY) return res.status(503).json({ success: false, error: "T-Bank не настроен" });
+  const initData = req.headers["x-telegram-init"] || req.query?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, error: "Unauthorized" });
+
+  const paymentId = req.query.payment_id;
+  if (!paymentId) return res.status(400).json({ success: false, error: "payment_id required" });
+
+  const result = await tbankGetState(paymentId);
+  return res.json({
+    success: true,
+    status: result.Status,
+    paid: isTbankPaid(result.Status),
+    amount: result.Amount ? (result.Amount / 100) : null,
+    order_id: result.OrderId,
+  });
+}));
+
+// 4. Рекуррентное списание (для CRON или ручного вызова)
+app.post("/api/payments/tbank/charge", express.json(), asyncApi(async (req, res) => {
+  if (!TBANK_TERMINAL_KEY) return res.status(503).json({ success: false, error: "T-Bank не настроен" });
+  const auth = resolveAdminAuth(req);
+  if (!auth) return res.status(403).json({ success: false, error: "Admin only" });
+
+  const { telegram_user_id, sku, amount_rub } = req.body || {};
+  if (!telegram_user_id) return res.status(400).json({ success: false, error: "telegram_user_id required" });
+
+  const rebillId = await tbankGetRebillId(telegram_user_id);
+  if (!rebillId) return res.status(400).json({ success: false, error: "no_card_linked", message: "У пользователя нет привязанной карты" });
+
+  const skuNorm = String(sku || "soul_basic_sub").trim();
+  const priceMap = { soul_basic_sub: 1490, soul_plus_sub: 2490, master_monthly: 3990 };
+  const amountRub = Number(amount_rub) || priceMap[skuNorm] || 1490;
+  const orderId = `tbank_recur_${telegram_user_id}_${Date.now()}`;
+
+  // Init для рекуррентного списания
+  const initResult = await tbankInit({
+    orderId,
+    amount: amountRub,
+    customerKey: String(telegram_user_id),
+    description: `Продление подписки YupSoul (${skuNorm})`,
+    operationInitiatorType: "R",
+  });
+
+  if (!initResult.Success || initResult.ErrorCode !== "0") {
+    return res.status(400).json({ success: false, error: "init_failed", details: initResult.Message });
+  }
+
+  // Charge
+  const chargeResult = await tbankCharge({ paymentId: initResult.PaymentId, rebillId });
+  if (!chargeResult.Success || chargeResult.ErrorCode !== "0") {
+    return res.status(400).json({ success: false, error: "charge_failed", details: chargeResult.Message, status: chargeResult.Status });
+  }
+
+  // Сохраняем в track_requests
+  if (supabase) {
+    await supabase.from("track_requests").insert({
+      telegram_user_id: Number(telegram_user_id),
+      mode: skuNorm,
+      status: "paid",
+      payment_provider: "tbank",
+      payment_order_id: orderId,
+      tbank_payment_id: String(initResult.PaymentId),
+      payment_amount: amountRub,
+      payment_currency: "RUB",
+      paid_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+    });
+  }
+
+  // Активируем подписку
+  const grantResult = await grantPurchaseBySku({ telegramUserId: telegram_user_id, sku: skuNorm, source: "tbank_recurrent", orderId });
+  console.log(`[T-Bank Charge] OK: user=${telegram_user_id}, sku=${skuNorm}, amount=${amountRub}₽`);
+
+  return res.json({ success: true, status: chargeResult.Status, order_id: orderId, grant: grantResult });
+}));
+
+// 5. Отмена подписки (удаление привязанной карты)
+app.post("/api/payments/tbank/cancel-subscription", express.json(), asyncApi(async (req, res) => {
+  if (!TBANK_TERMINAL_KEY) return res.status(503).json({ success: false, error: "T-Bank не настроен" });
+  if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
+
+  const initData = req.headers["x-telegram-init"] || req.body?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, error: "Unauthorized" });
+
+  // Деактивируем карту в нашей БД
+  const { error: cardErr } = await supabase.from("tbank_cards")
+    .update({ active: false, updated_at: new Date().toISOString() })
+    .eq("telegram_user_id", Number(telegramUserId));
+  if (cardErr) console.warn("[T-Bank] deactivate card:", cardErr.message);
+
+  // Удаляем клиента в T-Bank (опционально)
+  try {
+    await tbankRemoveCustomer(String(telegramUserId));
+  } catch (e) {
+    console.warn("[T-Bank] RemoveCustomer:", e?.message);
+  }
+
+  // Деактивируем подписку в Supabase
+  const { error: subErr } = await supabase.from("subscriptions")
+    .update({ status: "cancelled", cancelled_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq("telegram_user_id", Number(telegramUserId))
+    .eq("status", "active");
+  if (subErr) console.warn("[T-Bank] cancel subscription:", subErr.message);
+
+  console.log(`[T-Bank] Подписка отменена: user=${telegramUserId}`);
+  return res.json({ success: true, message: "Подписка отменена. Доступ сохранится до конца оплаченного периода." });
+}));
+
+// 6. Получить привязанные карты пользователя
+app.get("/api/payments/tbank/cards", asyncApi(async (req, res) => {
+  if (!TBANK_TERMINAL_KEY) return res.status(503).json({ success: false, error: "T-Bank не настроен" });
+  const initData = req.headers["x-telegram-init"] || req.query?.initData || "";
+  const telegramUserId = validateInitData(initData, BOT_TOKEN);
+  if (telegramUserId == null) return res.status(401).json({ success: false, error: "Unauthorized" });
+
+  if (!supabase) return res.json({ success: true, cards: [] });
+  const { data } = await supabase.from("tbank_cards")
+    .select("card_pan, card_exp, active, updated_at")
+    .eq("telegram_user_id", Number(telegramUserId))
+    .eq("active", true);
+
+  return res.json({ success: true, cards: data || [] });
+}));
+
+// 7. Конфиг T-Bank для фронтенда
+app.get("/api/payments/tbank/config", (_req, res) => {
+  res.json({
+    available: !!TBANK_TERMINAL_KEY,
+    prices_rub: { single_song: 490, couple_song: 890, deep_analysis_addon: 290, soul_basic_sub: 1490, soul_plus_sub: 2490, master_monthly: 3990 },
+  });
+});
 
 app.get("/api/subscription/status", asyncApi(async (req, res) => {
   if (!supabase) return res.status(503).json({ success: false, error: "Supabase недоступен" });
